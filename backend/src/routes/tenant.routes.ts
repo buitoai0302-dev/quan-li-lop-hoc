@@ -1,10 +1,12 @@
 import { Router } from 'express';
-import { getTenant, updateTenant } from '../controllers/tenant.controller';
-import { requireRole } from '../middlewares/auth.middleware';
+import { getTenant, updateTenant, getApiKey, generateApiKey } from '../controllers/tenant.controller';
+import { authMiddleware, requireRole } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-router.get('/', requireRole(['admin']), getTenant);
-router.put('/', requireRole(['admin']), updateTenant);
+router.get('/', authMiddleware, requireRole(['admin']), getTenant);
+router.put('/', authMiddleware, requireRole(['admin']), updateTenant);
+router.get('/api-key', authMiddleware, requireRole(['admin']), getApiKey);
+router.post('/api-key', authMiddleware, requireRole(['admin']), generateApiKey);
 
 export default router;

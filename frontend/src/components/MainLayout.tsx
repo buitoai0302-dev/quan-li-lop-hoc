@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Calendar, Users, LayoutDashboard, Settings, Menu, X, LogOut, Building, BookOpen, DoorOpen, Globe, Moon, Sun, Monitor, Import } from 'lucide-react';
+import { Calendar, Users, LayoutDashboard, Settings, Menu, X, LogOut, Building, BookOpen, DoorOpen, Globe, Moon, Sun, Monitor, Import, Shield, List, HelpCircle, CreditCard, Clock, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
+import HelpWidget from './HelpWidget';
 
 const MainLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -36,15 +37,20 @@ const MainLayout: React.FC = () => {
   };
 
   const menuItems = [
-    { path: '/dashboard', icon: <LayoutDashboard size={20} />, label: t('menu.dashboard'), roles: ['admin', 'staff', 'teacher', 'student'] },
-    { path: '/schedule', icon: <Calendar size={20} />, label: user?.role === 'teacher' ? t('menu.teachingSchedule') : (user?.role === 'student' ? t('menu.learningSchedule') : t('menu.schedule')), roles: ['admin', 'staff', 'teacher', 'student'] },
-    { path: '/classes', icon: <BookOpen size={20} />, label: t('menu.classes'), roles: ['admin', 'staff', 'teacher'] },
-    { path: '/students', icon: <Users size={20} />, label: t('menu.students'), roles: ['admin', 'staff'] },
-    { path: '/teachers', icon: <Users size={20} />, label: t('menu.teachers'), roles: ['admin', 'staff'] },
-    { path: '/rooms', icon: <DoorOpen size={20} />, label: t('menu.rooms'), roles: ['admin', 'staff'] },
-    { path: '/branches', icon: <Building size={20} />, label: t('menu.branches'), roles: ['admin', 'staff'] },
-    { path: '/import', icon: <Import size={20} />, label: t('menu.import'), roles: ['admin', 'staff'] },
-    { path: '/settings', icon: <Settings size={20} />, label: t('menu.settings'), roles: ['admin'] },
+    { path: '/dashboard', icon: <LayoutDashboard size={20} />, label: t('menu.dashboard'), roles: ['admin', 'staff', 'teacher', 'student', 'super_admin'] },
+    { path: '/schedule', icon: <Calendar size={20} />, label: user?.role === 'teacher' ? t('menu.teachingSchedule') : (user?.role === 'student' ? t('menu.learningSchedule') : t('menu.schedule')), roles: ['admin', 'staff', 'teacher', 'student', 'super_admin'] },
+    { path: '/classes', icon: <BookOpen size={20} />, label: t('menu.classes'), roles: ['admin', 'staff', 'teacher', 'super_admin'] },
+    { path: '/students', icon: <Users size={20} />, label: t('menu.students'), roles: ['admin', 'staff', 'super_admin'] },
+    { path: '/teachers', icon: <Users size={20} />, label: t('menu.teachers'), roles: ['admin', 'staff', 'super_admin'] },
+    { path: '/rooms', icon: <DoorOpen size={20} />, label: t('menu.rooms'), roles: ['admin', 'staff', 'super_admin'] },
+    { path: '/branches', icon: <Building size={20} />, label: t('menu.branches'), roles: ['admin', 'staff', 'super_admin'], isPremium: true },
+    { path: '/import', icon: <Import size={20} />, label: t('menu.import'), roles: ['admin', 'staff', 'super_admin'] },
+    { path: '/help', icon: <HelpCircle size={20} />, label: t('menu.help'), roles: ['admin', 'staff', 'teacher', 'student', 'super_admin'] },
+    { path: '/subscription', icon: <CreditCard size={20} />, label: t('menu.subscription'), roles: ['admin', 'super_admin'] },
+    { path: '/settings', icon: <Settings size={20} />, label: t('menu.settings'), roles: ['admin', 'super_admin'] },
+    { path: '/admin/tenants', icon: <Shield size={20} />, label: t('menu.adminTenants'), roles: ['super_admin'] },
+    { path: '/admin/requests', icon: <Clock size={20} />, label: t('menu.planRequests'), roles: ['super_admin'] },
+    { path: '/admin/plans', icon: <List size={20} />, label: t('menu.adminPlans'), roles: ['super_admin'] },
   ];
 
   const visibleMenuItems = menuItems.filter(item => user?.role && item.roles.includes(user.role));
@@ -96,7 +102,12 @@ const MainLayout: React.FC = () => {
                   <div className={isActive ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}>
                     {item.icon}
                   </div>
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {item.isPremium && (
+                    <div className="flex items-center justify-center w-5 h-5 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-lg shadow-lg shadow-orange-500/20">
+                      <Zap size={10} className="text-white" fill="currentColor" />
+                    </div>
+                  )}
                 </>
               )}
             </NavLink>
@@ -160,6 +171,7 @@ const MainLayout: React.FC = () => {
         <div className="flex-1 p-4 md:p-8 overflow-auto bg-gray-50/50 dark:bg-gray-900/50">
           <Outlet />
         </div>
+        <HelpWidget />
       </main>
     </div>
   );

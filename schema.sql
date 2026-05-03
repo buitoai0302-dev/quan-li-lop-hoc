@@ -18,7 +18,8 @@ CREATE TABLE plan_definitions (
     id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     code            VARCHAR(50) UNIQUE NOT NULL, -- e.g., 'FREE', 'PRO', 'BUSINESS', 'ENTERPRISE'
     name            VARCHAR(150) NOT NULL,
-    price_monthly   NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
+    price_vnd       NUMERIC(12, 0) NOT NULL DEFAULT 0,
+    price_usd       NUMERIC(10, 2) NOT NULL DEFAULT 0.00,
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
     sort_order      INT NOT NULL DEFAULT 0,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -48,6 +49,8 @@ CREATE TABLE tenants (
     name            VARCHAR(150) NOT NULL,
     domain          VARCHAR(100) UNIQUE, -- optional custom domain/subdomain
     contact_email   VARCHAR(150),
+    status          VARCHAR(30) NOT NULL DEFAULT 'active', -- 'active', 'pending', 'suspended'
+    api_key         VARCHAR(255), -- for external API access
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -84,6 +87,19 @@ CREATE TABLE users (
     full_name       VARCHAR(200) NOT NULL,
     role            VARCHAR(50) NOT NULL DEFAULT 'teacher', -- 'admin', 'staff', 'teacher'
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
+    
+    -- Email Verification
+    is_email_verified BOOLEAN NOT NULL DEFAULT FALSE,
+    verification_token VARCHAR(255),
+    
+    -- Google Calendar Integration
+    google_access_token TEXT,
+    google_refresh_token TEXT,
+    google_calendar_id VARCHAR(255),
+    
+    -- Notification Preferences
+    notify_upcoming_sessions BOOLEAN NOT NULL DEFAULT TRUE,
+
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (tenant_id, email)
@@ -186,10 +202,44 @@ CREATE TABLE schedule_sessions (
     session_type    VARCHAR(30) NOT NULL DEFAULT 'lecture',
     notes           TEXT,
     status          VARCHAR(30) NOT NULL DEFAULT 'scheduled',
+    is_notified     BOOLEAN NOT NULL DEFAULT FALSE, -- for cron email reminders
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CHECK (end_time > start_time)
 );
+
+-- ============================================================
+-- ATTENDANCE TRACKING
+-- ============================================================
+
+CREATE TABLE attendance (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id   UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    session_id  UUID NOT NULL REFERENCES schedule_sessions(id) ON DELETE CASCADE,
+    student_id  UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+    status      VARCHAR(20) NOT NULL DEFAULT 'absent', -- 'present', 'absent', 'late', 'excused'
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE (session_id, student_id)
+);
+
+CREATE INDEX idx_attendance_tenant ON attendance(tenant_id);
+CREATE INDEX idx_attendance_session ON attendance(session_id);
+
+-- ============================================================
+-- PLAN UPGRADE REQUESTS
+-- ============================================================
+
+CREATE TABLE plan_requests (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+    requested_plan_id UUID NOT NULL REFERENCES plan_definitions(id) ON DELETE CASCADE,
+    status          VARCHAR(30) NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
+    reviewed_at     TIMESTAMPTZ,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX idx_plan_requests_tenant ON plan_requests(tenant_id);
+CREATE INDEX idx_plan_requests_status ON plan_requests(status);
 
 -- ============================================================
 -- INDEXES FOR PERFORMANCE & ISOLATION
@@ -269,35 +319,39 @@ CREATE TRIGGER trg_users_updated_at      BEFORE UPDATE ON users      FOR EACH RO
 -- ============================================================
 
 -- 1. Insert Plans
-INSERT INTO plan_definitions (id, code, name, price_monthly, sort_order) VALUES 
-    ('ffffffff-0000-0000-0000-000000000001', 'FREE', 'Free', 0, 1),
-    ('ffffffff-0000-0000-0000-000000000002', 'PRO', 'Pro', 49.99, 2),
-    ('ffffffff-0000-0000-0000-000000000003', 'BUSINESS', 'Business', 99.99, 3),
-    ('ffffffff-0000-0000-0000-000000000004', 'ENTERPRISE', 'Enterprise', 299.99, 4);
+INSERT INTO plan_definitions (id, code, name, price_vnd, price_usd, sort_order) VALUES 
+    ('ffffffff-0000-0000-0000-000000000001', 'FREE', 'Free', 0, 0, 1),
+    ('ffffffff-0000-0000-0000-000000000002', 'PRO', 'Pro', 499000, 19.99, 2),
+    ('ffffffff-0000-0000-0000-000000000003', 'BUSINESS', 'Business', 1499000, 59.99, 3),
+    ('ffffffff-0000-0000-0000-000000000004', 'ENTERPRISE', 'Enterprise', 4999000, 199.99, 4);
 
 -- 2. Insert Plan Limits
 -- FREE
 INSERT INTO plan_limits (plan_id, limit_key, limit_value) VALUES 
     ('ffffffff-0000-0000-0000-000000000001', 'max_branches', 1),
     ('ffffffff-0000-0000-0000-000000000001', 'max_classes', 30),
+    ('ffffffff-0000-0000-0000-000000000001', 'max_students', 50),
     ('ffffffff-0000-0000-0000-000000000001', 'max_teachers', 5),
     ('ffffffff-0000-0000-0000-000000000001', 'max_rooms', 10);
 -- PRO
 INSERT INTO plan_limits (plan_id, limit_key, limit_value) VALUES 
     ('ffffffff-0000-0000-0000-000000000002', 'max_branches', 3),
     ('ffffffff-0000-0000-0000-000000000002', 'max_classes', 150),
+    ('ffffffff-0000-0000-0000-000000000002', 'max_students', 500),
     ('ffffffff-0000-0000-0000-000000000002', 'max_teachers', 50),
     ('ffffffff-0000-0000-0000-000000000002', 'max_rooms', 50);
 -- BUSINESS
 INSERT INTO plan_limits (plan_id, limit_key, limit_value) VALUES 
     ('ffffffff-0000-0000-0000-000000000003', 'max_branches', 10),
-    ('ffffffff-0000-0000-0000-000000000003', 'max_classes', -1), -- unlimited
+    ('ffffffff-0000-0000-0000-000000000003', 'max_classes', -1),
+    ('ffffffff-0000-0000-0000-000000000003', 'max_students', -1),
     ('ffffffff-0000-0000-0000-000000000003', 'max_teachers', -1),
     ('ffffffff-0000-0000-0000-000000000003', 'max_rooms', -1);
 -- ENTERPRISE
 INSERT INTO plan_limits (plan_id, limit_key, limit_value) VALUES 
     ('ffffffff-0000-0000-0000-000000000004', 'max_branches', -1),
     ('ffffffff-0000-0000-0000-000000000004', 'max_classes', -1),
+    ('ffffffff-0000-0000-0000-000000000004', 'max_students', -1),
     ('ffffffff-0000-0000-0000-000000000004', 'max_teachers', -1),
     ('ffffffff-0000-0000-0000-000000000004', 'max_rooms', -1);
 

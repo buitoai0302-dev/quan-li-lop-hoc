@@ -1,32 +1,32 @@
-import { Request, Response } from 'express';
-import { query } from '../db';
+import { Request, Response, NextFunction } from 'express';
+import pool, { query } from '../db';
+import { syncEventToGoogle } from '../services/google.service';
+import { AuthRequest } from '../middlewares/auth.middleware';
+import { ValidationError, NotFoundError } from '../utils/errors';
 
-export const getWeeklySchedule = async (req: Request, res: Response): Promise<void> => {
+export const getWeeklySchedule = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const tenantId = req.tenant?.id;
+    const tenantId = req.tenantId || req.user?.tenantId;
     const { weekStart, startDate, endDate, branchId, teacherId, classId } = req.query;
 
     const queryStartDate = (startDate as string) || (weekStart as string);
 
     if (!queryStartDate) {
-      res.status(400).json({ success: false, message: 'startDate or weekStart is required' });
-      return;
+      throw new ValidationError('startDate or weekStart is required', 'MISSING_REQUIRED_FIELDS');
     }
 
-    // Role-based filtering
-    const userRole = (req as any).user?.role;
-    const userId = (req as any).user?.userId;
-    let userEmail = (req as any).user?.email;
+    const userRole = req.user?.role;
+    let userEmail = req.user?.email;
 
-    if (!userEmail && userId) {
-      const userRes = await query('SELECT email FROM users WHERE id = $1', [userId]);
+    if (!userEmail && req.user?.userId) {
+      const userRes = await pool.query('SELECT email FROM users WHERE id = $1', [req.user.userId]);
       if (userRes.rows.length > 0) {
         userEmail = userRes.rows[0].email;
       }
     }
+
     let queryEndDate = endDate as string;
     if (!queryEndDate) {
-      // Default to 7 days if no endDate provided
       const tempDate = new Date(queryStartDate);
       tempDate.setDate(tempDate.getDate() + 6);
       queryEndDate = tempDate.toISOString().split('T')[0];
@@ -51,29 +51,24 @@ export const getWeeklySchedule = async (req: Request, res: Response): Promise<vo
     const params: any[] = [tenantId, queryStartDate, queryEndDate];
 
     if (userRole === 'teacher') {
-      // Find teacher_id by email
-      const teacherRes = await query('SELECT id FROM teachers WHERE email = $1', [userEmail]);
+      const teacherRes = await pool.query('SELECT id FROM teachers WHERE email = $1 AND tenant_id = $2', [userEmail, tenantId]);
       if (teacherRes.rows.length > 0) {
         params.push(teacherRes.rows[0].id);
         sql += ` AND s.teacher_id = $${params.length}`;
       } else {
-        // If teacher record not found, return empty
         res.json({ success: true, data: { startDate: queryStartDate, endDate: queryEndDate, sessions: [] } });
         return;
       }
     } else if (userRole === 'student') {
-      // Find student_id by email
-      const studentRes = await query('SELECT id FROM students WHERE email = $1', [userEmail]);
+      const studentRes = await pool.query('SELECT id FROM students WHERE email = $1 AND tenant_id = $2', [userEmail, tenantId]);
       if (studentRes.rows.length > 0) {
         params.push(studentRes.rows[0].id);
         sql += ` AND s.class_id IN (SELECT class_id FROM class_students WHERE student_id = $${params.length})`;
       } else {
-        // If student record not found, return empty
         res.json({ success: true, data: { startDate: queryStartDate, endDate: queryEndDate, sessions: [] } });
         return;
       }
     } else {
-      // Admins and Staff can view all, or apply requested filters
       if (teacherId) {
         params.push(teacherId);
         sql += ` AND s.teacher_id = $${params.length}`;
@@ -90,7 +85,7 @@ export const getWeeklySchedule = async (req: Request, res: Response): Promise<vo
 
     sql += ` ORDER BY s.session_date, s.start_time`;
 
-    const result = await query(sql, params);
+    const result = await pool.query(sql, params);
     
     res.json({
       success: true,
@@ -100,24 +95,20 @@ export const getWeeklySchedule = async (req: Request, res: Response): Promise<vo
         sessions: result.rows
       }
     });
-  } catch (error: any) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  } catch (error) {
+    next(error);
   }
 };
 
-export const createSession = async (req: Request, res: Response): Promise<void> => {
+export const createSession = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const tenantId = req.tenant?.id;
+    const tenantId = req.tenantId || req.user?.tenantId;
     const { classId, roomId, teacherId, sessionDate, startTime, endTime, sessionType, notes } = req.body;
 
-    // 1. Conflict Detection
-    const conflictSql = `
-      SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)
-    `;
+    const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)`;
     const conflictParams = [tenantId, teacherId, roomId, classId, sessionDate, startTime, endTime];
     
-    const conflictResult = await query(conflictSql, conflictParams);
+    const conflictResult = await pool.query(conflictSql, conflictParams);
 
     if (conflictResult.rows.length > 0) {
       res.status(409).json({
@@ -128,7 +119,6 @@ export const createSession = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // 2. Insert if no conflict
     const insertSql = `
       INSERT INTO schedule_sessions 
         (tenant_id, class_id, room_id, teacher_id, session_date, start_time, end_time, session_type, notes)
@@ -137,31 +127,42 @@ export const createSession = async (req: Request, res: Response): Promise<void> 
     `;
     const insertParams = [tenantId, classId, roomId, teacherId, sessionDate, startTime, endTime, sessionType || 'lecture', notes || ''];
 
-    const newSession = await query(insertSql, insertParams);
+    const newSession = await pool.query(insertSql, insertParams);
+    const sessionData = newSession.rows[0];
+
+    const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [classId]);
+    const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [roomId]);
+    
+    if (req.user?.userId) {
+      await syncEventToGoogle(req.user.userId, {
+        id: sessionData.id,
+        className: classRes.rows[0]?.name || 'Class',
+        roomName: roomRes.rows[0]?.name || 'Room',
+        date: sessionData.session_date,
+        startTime: sessionData.start_time,
+        endTime: sessionData.end_time
+      });
+    }
 
     res.status(201).json({
       success: true,
-      data: newSession.rows[0]
+      data: sessionData
     });
-  } catch (error: any) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  } catch (error) {
+    next(error);
   }
 };
 
-export const updateSession = async (req: Request, res: Response): Promise<void> => {
+export const updateSession = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const tenantId = req.tenant?.id;
+    const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
     const { classId, roomId, teacherId, sessionDate, startTime, endTime, sessionType, notes } = req.body;
 
-    // 1. Get existing session to fallback values
-    const getSql = `SELECT * FROM schedule_sessions WHERE id = $1 AND tenant_id = $2`;
-    const getResult = await query(getSql, [id, tenantId]);
+    const getResult = await pool.query(`SELECT * FROM schedule_sessions WHERE id = $1 AND tenant_id = $2`, [id, tenantId]);
     
     if (getResult.rows.length === 0) {
-      res.status(404).json({ success: false, message: 'Session not found' });
-      return;
+      throw new NotFoundError('Session not found', 'NOT_FOUND');
     }
     
     const session = getResult.rows[0];
@@ -172,22 +173,10 @@ export const updateSession = async (req: Request, res: Response): Promise<void> 
     const newStartTime = startTime || session.start_time;
     const newEndTime = endTime || session.end_time;
     
-    // 2. Conflict Detection (exclude current session id)
-    const conflictSql = `
-      SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7, $8)
-    `;
-    const conflictParams = [
-      tenantId, 
-      newTeacherId, 
-      newRoomId, 
-      newClassId, 
-      newSessionDate, 
-      newStartTime, 
-      newEndTime,
-      id // p_exclude_id
-    ];
+    const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7, $8)`;
+    const conflictParams = [tenantId, newTeacherId, newRoomId, newClassId, newSessionDate, newStartTime, newEndTime, id];
     
-    const conflictResult = await query(conflictSql, conflictParams);
+    const conflictResult = await pool.query(conflictSql, conflictParams);
 
     if (conflictResult.rows.length > 0) {
       res.status(409).json({
@@ -198,7 +187,6 @@ export const updateSession = async (req: Request, res: Response): Promise<void> 
       return;
     }
 
-    // 3. Update session
     const updateSql = `
       UPDATE schedule_sessions 
       SET session_date = $1, start_time = $2, end_time = $3, room_id = $4, teacher_id = $5, class_id = $6, session_type = $7, notes = $8
@@ -207,37 +195,48 @@ export const updateSession = async (req: Request, res: Response): Promise<void> 
     `;
     const updateParams = [newSessionDate, newStartTime, newEndTime, newRoomId, newTeacherId, newClassId, sessionType || session.session_type, notes !== undefined ? notes : session.notes, id, tenantId];
 
-    const updatedSession = await query(updateSql, updateParams);
+    const updatedSession = await pool.query(updateSql, updateParams);
+    const sessionData = updatedSession.rows[0];
+
+    const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [newClassId]);
+    const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [newRoomId]);
+
+    if (req.user?.userId) {
+      await syncEventToGoogle(req.user.userId, {
+        id: sessionData.id,
+        className: classRes.rows[0]?.name || 'Class',
+        roomName: roomRes.rows[0]?.name || 'Room',
+        date: sessionData.session_date,
+        startTime: sessionData.start_time,
+        endTime: sessionData.end_time
+      });
+    }
 
     res.status(200).json({
       success: true,
-      data: updatedSession.rows[0]
+      data: sessionData
     });
-  } catch (error: any) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  } catch (error) {
+    next(error);
   }
 };
 
-export const deleteSession = async (req: Request, res: Response): Promise<void> => {
+export const deleteSession = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
   try {
-    const tenantId = req.tenant?.id;
+    const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
 
-    const result = await query(
+    const result = await pool.query(
       `UPDATE schedule_sessions SET status = 'cancelled' WHERE id = $1 AND tenant_id = $2 RETURNING *`,
       [id, tenantId]
     );
 
     if (result.rows.length === 0) {
-      res.status(404).json({ success: false, message: 'Session not found' });
-      return;
+      throw new NotFoundError('Session not found', 'NOT_FOUND');
     }
 
     res.json({ success: true, message: 'Session deleted successfully' });
-  } catch (error: any) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Server Error', error: error.message });
+  } catch (error) {
+    next(error);
   }
 };
-

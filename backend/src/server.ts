@@ -1,6 +1,8 @@
+import dotenv from 'dotenv';
+dotenv.config();
+
 import express from 'express';
 import cors from 'cors';
-import dotenv from 'dotenv';
 import path from 'path';
 import { tenantMiddleware } from './middlewares/tenant.middleware';
 import { authMiddleware } from './middlewares/auth.middleware';
@@ -14,8 +16,17 @@ import tenantRoutes from './routes/tenant.routes';
 import dashboardRoutes from './routes/dashboard.routes';
 import studentRoutes from './routes/student.routes';
 import importRoutes from './routes/import.routes';
+import googleRoutes from './routes/google.routes';
+import adminRoutes from './routes/admin.routes';
+import planRoutes from './routes/plan.routes';
+import { initCronJobs } from './cron/notification.cron';
+
+import { errorMiddleware } from './middlewares/error.middleware';
+import { NotFoundError } from './utils/errors';
 
 dotenv.config();
+
+import { apiKeyMiddleware } from './middlewares/api.middleware';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -25,10 +36,13 @@ app.use(express.json());
 
 // Public routes
 app.use('/api/auth', authRoutes);
+app.use('/api/auth/google', googleRoutes);
 
-// Protected routes - Apply auth middleware globally for API routes except auth
-// authMiddleware will also set req.tenantId if present in token
-app.use('/api', authMiddleware, tenantMiddleware);
+// Protected routes - Apply API Key check first, then Auth middleware
+app.use('/api', apiKeyMiddleware, authMiddleware, tenantMiddleware);
+
+// Initialize background jobs
+initCronJobs();
 
 // Routes
 app.use('/api/schedule', scheduleRoutes);
@@ -40,6 +54,8 @@ app.use('/api/rooms', roomRoutes);
 app.use('/api/tenant', tenantRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/import', importRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/plans', planRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -55,9 +71,12 @@ app.use((req, res, next) => {
   if (req.method === 'GET' && !req.path.startsWith('/api/')) {
     res.sendFile(path.join(frontendDistPath, 'index.html'));
   } else {
-    res.status(404).json({ error: 'Not found' });
+    next(new NotFoundError());
   }
 });
+
+// Global error handler
+app.use(errorMiddleware);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);

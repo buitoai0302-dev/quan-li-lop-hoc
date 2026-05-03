@@ -191,18 +191,44 @@ const ImportData: React.FC = () => {
     }
   };
 
+  const downloadTemplate = () => {
+    let templateData: any[] = [];
+    if (importType === 'students') {
+      templateData = [{ 'Họ Tên': 'Nguyễn Văn A', 'Email': 'student@example.com', 'SĐT': '0901234567', 'Ngày sinh': '2010-05-20' }];
+    } else if (importType === 'teachers') {
+      templateData = [{ 'Họ Tên': 'Trần Thị B', 'Email': 'teacher@example.com', 'SĐT': '0987654321', 'Chuyên môn': 'Toán học' }];
+    } else if (importType === 'rooms') {
+      templateData = [{ 'Tên Phòng': 'Phòng 101', 'Sức chứa': '30', 'Loại phòng': 'Lý thuyết' }];
+    } else {
+      templateData = [{ 'Tên Lớp': 'Toán 10A1', 'Sĩ số tối đa': '30', 'Ngày bắt đầu': '2024-09-01', 'Ngày kết thúc': '2025-05-31', 'Email Giáo Viên': 'teacher@example.com' }];
+    }
+
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Template");
+    XLSX.writeFile(wb, `Template_Import_${importType}.xlsx`);
+  };
+
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-full flex flex-col transition-colors">
-      <div className="mb-6">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t('import.title')}</h2>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('import.subtitle')}</p>
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-full flex flex-col transition-colors overflow-y-auto">
+      <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t('import.title')}</h2>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t('import.subtitle')}</p>
+        </div>
+        <button
+          onClick={downloadTemplate}
+          className="flex items-center justify-center px-4 py-2 text-sm font-medium text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg transition-colors"
+        >
+          <FileText size={16} className="mr-2" /> {t('import.downloadTemplate', 'Tải file mẫu')}
+        </button>
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('import.dataType')} *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('import.dataType')} *</label>
           <select
-            className="block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:text-white"
+            className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm dark:bg-gray-700 dark:text-white transition-all"
             value={importType}
             onChange={(e) => {
               setImportType(e.target.value as ImportType);
@@ -217,9 +243,9 @@ const ImportData: React.FC = () => {
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t('import.branch')} *</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1.5">{t('import.branch')} *</label>
           <select
-            className="block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:text-white"
+            className="block w-full border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm py-2.5 px-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary sm:text-sm dark:bg-gray-700 dark:text-white transition-all"
             value={selectedBranch}
             onChange={(e) => setSelectedBranch(e.target.value)}
           >
@@ -232,33 +258,65 @@ const ImportData: React.FC = () => {
       </div>
 
       <div className="mb-6">
-        <div className="p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-100 dark:border-blue-800/50">
-          <h3 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2 flex items-center">
-            <AlertCircle size={16} className="mr-2" /> {t('import.guideTitle')}
+        <div className="p-5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl border border-blue-100 dark:border-blue-800/50">
+          <h3 className="text-sm font-bold text-blue-800 dark:text-blue-300 mb-3 flex items-center">
+            <AlertCircle size={18} className="mr-2 text-blue-600 dark:text-blue-400" /> {t('import.guideTitle')}
           </h3>
-          <p className="text-sm text-blue-700 dark:text-blue-400">
+          <p className="text-sm text-blue-700 dark:text-blue-400 leading-relaxed mb-4">
             {t('import.guideDesc')}
           </p>
-          <ul className="list-disc list-inside text-sm text-blue-700 dark:text-blue-400 mt-2 ml-2">
-            {(importType === 'students' || importType === 'teachers') && (
-              <>
-                <li><strong>{t('import.required')}:</strong> <code>{t('import.fields.name')}</code>, <code>{t('import.fields.email')}</code></li>
-                <li><strong>{t('import.optional')}:</strong> <code>{t('import.fields.phone')}</code>, {importType === 'students' ? <code>{t('import.fields.dob')}</code> : <code>{t('import.fields.specialization')}</code>}</li>
-              </>
-            )}
-            {importType === 'rooms' && (
-              <>
-                <li><strong>{t('import.required')}:</strong> <code>{t('import.fields.roomName')}</code></li>
-                <li><strong>{t('import.optional')}:</strong> <code>{t('import.fields.capacity')}</code>, <code>{t('import.fields.roomType')}</code></li>
-              </>
-            )}
-            {importType === 'classes' && (
-              <>
-                <li><strong>{t('import.required')}:</strong> <code>{t('import.fields.className')}</code>, <code>{t('import.fields.teacherEmail')}</code></li>
-                <li><strong>{t('import.optional')}:</strong> <code>{t('import.fields.maxCapacity')}</code>, <code>{t('import.fields.startDate')}</code>, <code>{t('import.fields.endDate')}</code></li>
-              </>
-            )}
-          </ul>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="bg-red-50/50 dark:bg-red-900/10 p-4 rounded-xl border border-red-100 dark:border-red-900/30">
+              <span className="text-xs font-black uppercase text-red-600 dark:text-red-400 block mb-2 flex items-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-red-600 mr-2"></div>
+                {t('import.required')}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {(importType === 'students' || importType === 'teachers') && (
+                  <>
+                    <code className="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 px-2 py-1 rounded text-xs font-bold text-red-700 dark:text-red-300 shadow-sm">{t('import.fields.name')}</code>
+                    <code className="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 px-2 py-1 rounded text-xs font-bold text-red-700 dark:text-red-300 shadow-sm">{t('import.fields.email')}</code>
+                  </>
+                )}
+                {importType === 'rooms' && (
+                  <code className="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 px-2 py-1 rounded text-xs font-bold text-red-700 dark:text-red-300 shadow-sm">{t('import.fields.roomName')}</code>
+                )}
+                {importType === 'classes' && (
+                  <>
+                    <code className="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 px-2 py-1 rounded text-xs font-bold text-red-700 dark:text-red-300 shadow-sm">{t('import.fields.className')}</code>
+                    <code className="bg-white dark:bg-gray-800 border border-red-200 dark:border-red-800 px-2 py-1 rounded text-xs font-bold text-red-700 dark:text-red-300 shadow-sm">{t('import.fields.teacherEmail')}</code>
+                  </>
+                )}
+              </div>
+            </div>
+            <div className="bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-xl border border-blue-100 dark:border-blue-900/30">
+              <span className="text-xs font-black uppercase text-blue-600 dark:text-blue-400 block mb-2 flex items-center">
+                <div className="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2"></div>
+                {t('import.optional')}
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {(importType === 'students' || importType === 'teachers') && (
+                  <>
+                    <code className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded text-xs font-bold text-blue-700 dark:text-blue-300 shadow-sm">{t('import.fields.phone')}</code>
+                    {importType === 'students' ? <code className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded text-xs font-bold text-blue-700 dark:text-blue-300 shadow-sm">{t('import.fields.dob')}</code> : <code className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded text-xs font-bold text-blue-700 dark:text-blue-300 shadow-sm">{t('import.fields.specialization')}</code>}
+                  </>
+                )}
+                {importType === 'rooms' && (
+                  <>
+                    <code className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded text-xs font-bold text-blue-700 dark:text-blue-300 shadow-sm">{t('import.fields.capacity')}</code>
+                    <code className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded text-xs font-bold text-blue-700 dark:text-blue-300 shadow-sm">{t('import.fields.roomType')}</code>
+                  </>
+                )}
+                {importType === 'classes' && (
+                  <>
+                    <code className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded text-xs font-bold text-blue-700 dark:text-blue-300 shadow-sm">{t('import.fields.maxCapacity')}</code>
+                    <code className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded text-xs font-bold text-blue-700 dark:text-blue-300 shadow-sm">{t('import.fields.startDate')}</code>
+                    <code className="bg-white dark:bg-gray-800 border border-blue-200 dark:border-blue-800 px-2 py-1 rounded text-xs font-bold text-blue-700 dark:text-blue-300 shadow-sm">{t('import.fields.endDate')}</code>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 

@@ -5,6 +5,7 @@ import ConfirmModal from '../components/ConfirmModal';
 import Pagination from '../components/Pagination';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import { handleApiError } from '../utils/errorHelper';
 
 interface Teacher {
   id: string;
@@ -35,6 +36,9 @@ const Teachers: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
+  const [searchTerm, setSearchTerm] = useState('');
+  const [branchFilter, setBranchFilter] = useState('');
+
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -59,7 +63,7 @@ const Teachers: React.FC = () => {
         setFormData(prev => ({ ...prev, branch_id: branchesRes.data[0].id }));
       }
     } catch (error) {
-      toast.error(t('common.error'));
+      handleApiError(error, t);
       console.error(error);
     } finally {
       setLoading(false);
@@ -69,6 +73,17 @@ const Teachers: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  const filteredTeachers = teachers.filter(teacher => {
+    const matchesSearch = 
+      teacher.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      teacher.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (teacher.phone && teacher.phone.includes(searchTerm));
+    
+    const matchesBranch = branchFilter === '' || teacher.branch_id === branchFilter;
+    
+    return matchesSearch && matchesBranch;
+  });
 
   const handleOpenModal = (teacher?: Teacher) => {
     if (teacher) {
@@ -113,7 +128,7 @@ const Teachers: React.FC = () => {
       handleCloseModal();
       fetchData();
     } catch (error: any) {
-      toast.error(error.response?.data?.error || t('common.error'));
+      handleApiError(error, t);
     }
   };
 
@@ -122,22 +137,45 @@ const Teachers: React.FC = () => {
     try {
       await api.delete(`/teachers/${deletingId}`);
       toast.success(t('common.success'));
+      setDeletingId(null);
       fetchData();
     } catch (error: any) {
-      toast.error(t('common.error'));
+      handleApiError(error, t);
     }
   };
 
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-full flex flex-col transition-colors">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
         <h2 className="text-xl font-bold text-gray-800 dark:text-white">{t('teachers.title')}</h2>
-        <button 
-          onClick={() => handleOpenModal()}
-          className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-        >
-          {t('teachers.addTeacher')}
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <input 
+              type="text"
+              placeholder={t('common.search')}
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:bg-gray-700 dark:text-white text-sm"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <svg className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+          </div>
+          <select
+            className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:bg-gray-700 dark:text-white"
+            value={branchFilter}
+            onChange={(e) => setBranchFilter(e.target.value)}
+          >
+            <option value="">{t('import.selectBranch')}</option>
+            {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
+          </select>
+          <button 
+            onClick={() => handleOpenModal()}
+            className="bg-primary hover:bg-primary-dark text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+          >
+            {t('teachers.addTeacher')}
+          </button>
+        </div>
       </div>
       
       <div className="flex-1 overflow-x-auto">
@@ -152,13 +190,13 @@ const Teachers: React.FC = () => {
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('teachers.name')}</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('classes.branch')}</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chuyên môn</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('teachers.specialization')}</th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{t('common.status')}</th>
                 <th className="relative px-6 py-3"><span className="sr-only">{t('common.actions')}</span></th>
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-              {teachers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((teacher) => (
+              {filteredTeachers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage).map((teacher) => (
                 <tr key={teacher.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -195,10 +233,10 @@ const Teachers: React.FC = () => {
                   </td>
                 </tr>
               ))}
-              {teachers.length === 0 && (
+              {filteredTeachers.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                    {t('teachers.noData')}
+                    {searchTerm || branchFilter ? t('pagination.noData') : t('teachers.noData')}
                   </td>
                 </tr>
               )}
@@ -206,7 +244,7 @@ const Teachers: React.FC = () => {
           </table>
           <Pagination 
             currentPage={currentPage}
-            totalItems={teachers.length}
+            totalItems={filteredTeachers.length}
             itemsPerPage={itemsPerPage}
             onPageChange={setCurrentPage}
             onItemsPerPageChange={(limit) => {
@@ -255,7 +293,7 @@ const Teachers: React.FC = () => {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Chuyên môn</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('teachers.specialization')}</label>
             <input 
               type="text" 
               className="mt-1 block w-full border border-gray-300 dark:border-gray-600 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm dark:bg-gray-700 dark:text-white"

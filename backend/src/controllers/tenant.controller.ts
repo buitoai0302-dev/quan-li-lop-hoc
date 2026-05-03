@@ -1,6 +1,59 @@
 import { Response } from 'express';
+import crypto from 'crypto';
 import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
+
+export const getApiKey = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const tenantId = req.user?.tenantId;
+    
+    // Check if plan supports API Access
+    const planResult = await pool.query(`
+      SELECT pf.is_enabled 
+      FROM tenants t
+      JOIN plan_features pf ON t.plan_id = pf.plan_id
+      WHERE t.id = $1 AND pf.feature_key = 'api_access'
+    `, [tenantId]);
+
+    if (!planResult.rows[0]?.is_enabled) {
+      res.status(403).json({ error: 'API Access is not included in your current plan. Please upgrade to Business or Enterprise.' });
+      return;
+    }
+
+    const result = await pool.query('SELECT api_key FROM tenants WHERE id = $1', [tenantId]);
+    res.json({ apiKey: result.rows[0]?.api_key });
+  } catch (error) {
+    console.error('Error in getApiKey:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const generateApiKey = async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const tenantId = req.user?.tenantId;
+
+    // Check if plan supports API Access
+    const planResult = await pool.query(`
+      SELECT pf.is_enabled 
+      FROM tenants t
+      JOIN plan_features pf ON t.plan_id = pf.plan_id
+      WHERE t.id = $1 AND pf.feature_key = 'api_access'
+    `, [tenantId]);
+
+    if (!planResult.rows[0]?.is_enabled) {
+      res.status(403).json({ error: 'API Access is not included in your current plan.' });
+      return;
+    }
+
+    const newKey = `sk_${crypto.randomBytes(24).toString('hex')}`;
+    await pool.query('UPDATE tenants SET api_key = $1 WHERE id = $2', [newKey, tenantId]);
+
+    res.json({ apiKey: newKey });
+  } catch (error) {
+    console.error('Error in generateApiKey:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
 
 export const getTenant = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
@@ -11,7 +64,7 @@ export const getTenant = async (req: AuthRequest, res: Response): Promise<void> 
     }
 
     const result = await pool.query(
-      'SELECT id, name, domain, contact_email FROM tenants WHERE id = $1 AND is_active = true',
+      'SELECT id, name, domain, contact_email, plan_id FROM tenants WHERE id = $1 AND is_active = true',
       [tenantId]
     );
 

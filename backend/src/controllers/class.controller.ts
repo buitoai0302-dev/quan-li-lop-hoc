@@ -1,8 +1,10 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { checkPlanLimit } from '../utils/limitChecker';
+import { NotFoundError, ValidationError } from '../utils/errors';
 
-export const getClasses = async (req: AuthRequest, res: Response) => {
+export const getClasses = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     
@@ -18,19 +20,21 @@ export const getClasses = async (req: AuthRequest, res: Response) => {
 
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching classes:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 };
 
-export const createClass = async (req: AuthRequest, res: Response) => {
+export const createClass = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { branch_id, subject_id, teacher_id, name, max_capacity, start_date, end_date } = req.body;
 
     if (!branch_id || !name) {
-      return res.status(400).json({ error: 'Branch ID and Name are required' });
+      throw new ValidationError('Vui lòng điền tên lớp và chi nhánh', 'MISSING_REQUIRED_FIELDS');
     }
+
+    // Check Plan Limit
+    await checkPlanLimit(tenantId as string, 'max_classes', 'classes', 'LIMIT_EXCEEDED');
 
     let actualSubjectId = subject_id;
     if (!actualSubjectId) {
@@ -38,7 +42,6 @@ export const createClass = async (req: AuthRequest, res: Response) => {
       if (subjectRes.rows.length > 0) {
         actualSubjectId = subjectRes.rows[0].id;
       } else {
-        // Create a default subject if none exists
         const newSub = await pool.query(`INSERT INTO subjects (tenant_id, name, code) VALUES ($1, 'General', 'GEN') RETURNING id`, [tenantId]);
         actualSubjectId = newSub.rows[0].id;
       }
@@ -55,47 +58,43 @@ export const createClass = async (req: AuthRequest, res: Response) => {
     const newClass = await pool.query(insertSql, insertParams);
 
     res.status(201).json(newClass.rows[0]);
-  } catch (error: any) {
-    console.error('Error creating class:', error);
-    res.status(500).json({ error: 'Internal server error' });
+  } catch (error) {
+    next(error);
   }
 };
 
-export const updateClass = async (req: AuthRequest, res: Response) => {
+export const updateClass = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
     const { branch_id, subject_id, teacher_id, name, max_capacity, start_date, end_date, status } = req.body;
 
-    const updateSql = `
-      UPDATE classes 
-      SET branch_id = COALESCE($1, branch_id),
-          subject_id = COALESCE($2, subject_id),
-          teacher_id = $3,
-          name = COALESCE($4, name),
-          max_capacity = COALESCE($5, max_capacity),
-          start_date = COALESCE($6, start_date),
-          end_date = COALESCE($7, end_date),
-          status = COALESCE($8, status)
-      WHERE id = $9 AND tenant_id = $10
-      RETURNING *
-    `;
-    const updateParams = [branch_id, subject_id || null, teacher_id || null, name, max_capacity, start_date || null, end_date || null, status, id, tenantId];
-
-    const result = await pool.query(updateSql, updateParams);
+    const result = await pool.query(
+      `UPDATE classes 
+       SET branch_id = COALESCE($1, branch_id),
+           subject_id = COALESCE($2, subject_id),
+           teacher_id = $3,
+           name = COALESCE($4, name),
+           max_capacity = COALESCE($5, max_capacity),
+           start_date = COALESCE($6, start_date),
+           end_date = COALESCE($7, end_date),
+           status = COALESCE($8, status)
+       WHERE id = $9 AND tenant_id = $10
+       RETURNING *`,
+      [branch_id, subject_id || null, teacher_id || null, name, max_capacity, start_date || null, end_date || null, status, id, tenantId]
+    );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Class not found' });
+      throw new NotFoundError('Không tìm thấy lớp học', 'CLASS_NOT_FOUND');
     }
 
     res.json(result.rows[0]);
-  } catch (error: any) {
-    console.error('Error updating class:', error);
-    res.status(500).json({ error: 'Internal server error' });
+  } catch (error) {
+    next(error);
   }
 };
 
-export const deleteClass = async (req: AuthRequest, res: Response) => {
+export const deleteClass = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
@@ -106,12 +105,11 @@ export const deleteClass = async (req: AuthRequest, res: Response) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Class not found' });
+      throw new NotFoundError('Không tìm thấy lớp học', 'CLASS_NOT_FOUND');
     }
 
-    res.json({ success: true, message: 'Class deleted successfully' });
-  } catch (error: any) {
-    console.error('Error deleting class:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.json({ success: true, message: 'Lớp học đã được xóa thành công' });
+  } catch (error) {
+    next(error);
   }
 };

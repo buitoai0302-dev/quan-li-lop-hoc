@@ -4,6 +4,7 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import type { Session } from '../types';
 import api from '../api';
 import { format, startOfWeek, addDays, startOfMonth, endOfMonth, endOfWeek, isSameDay } from 'date-fns';
+import { vi, enUS } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import DraggableSessionCard from './DraggableSessionCard';
 import DroppableDaySlot from './DroppableDaySlot';
@@ -12,13 +13,16 @@ import ConfirmModal from './ConfirmModal';
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../context/AuthContext';
+import { handleApiError } from '../utils/errorHelper';
 
 type ViewMode = 'day' | 'week' | 'month';
 
 const ScheduleBoard: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const canEdit = user?.role === 'admin' || user?.role === 'staff';
+  const currentLocale = i18n.language === 'vi' ? vi : enUS;
+  
+  const canEdit = user?.role === 'admin' || user?.role === 'staff' || user?.role === 'super_admin';
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
@@ -89,7 +93,7 @@ const ScheduleBoard: React.FC = () => {
       }
     } catch (error) {
       console.error("Failed to fetch data", error);
-      toast.error("Failed to load schedule data.");
+      handleApiError(error, t);
     }
   };
 
@@ -133,7 +137,7 @@ const ScheduleBoard: React.FC = () => {
       if (error.response?.status === 409) {
         toast.error(`${t('schedule.conflictError')}: ${error.response.data.conflicts[0].detail}`);
       } else {
-        toast.error(t('common.error'));
+        handleApiError(error, t);
       }
     }
   };
@@ -201,7 +205,7 @@ const ScheduleBoard: React.FC = () => {
       if (error.response?.status === 409) {
         toast.error(`${t('schedule.conflictError')}: ${error.response.data.conflicts[0].detail}`);
       } else {
-        toast.error(t('common.error'));
+        handleApiError(error, t);
       }
     }
   };
@@ -214,11 +218,9 @@ const ScheduleBoard: React.FC = () => {
       handleCloseModal();
       fetchData();
     } catch (error) {
-      toast.error(t('common.error'));
+      handleApiError(error, t);
     }
   };
-
-  // Moved getDaysToShow and daysToShow to the top for fetchData to use
 
   const handlePrev = () => {
     if (viewMode === 'day') setSelectedDate(addDays(selectedDate, -1));
@@ -306,7 +308,15 @@ const ScheduleBoard: React.FC = () => {
         <div className="flex-1 overflow-auto bg-white dark:bg-gray-800 flex flex-col">
           {viewMode === 'month' && (
             <div className="grid grid-cols-7 border-b border-border dark:border-gray-600 bg-gray-50 dark:bg-gray-900 sticky top-0 z-20 min-w-[700px] sm:min-w-[1000px]">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, i) => (
+              {[
+                t('schedule.days.mon'), 
+                t('schedule.days.tue'), 
+                t('schedule.days.wed'), 
+                t('schedule.days.thu'), 
+                t('schedule.days.fri'), 
+                t('schedule.days.sat'), 
+                t('schedule.days.sun')
+              ].map((d, i) => (
                 <div key={i} className="p-2 text-center text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300 border-r border-border dark:border-gray-600 last:border-r-0">
                   {d}
                 </div>
@@ -324,7 +334,7 @@ const ScheduleBoard: React.FC = () => {
                   {viewMode !== 'month' ? (
                     <div className={`p-1 sm:p-3 text-center border-b border-border dark:border-gray-600 ${isToday ? 'bg-blue-50 dark:bg-blue-900/40' : 'bg-gray-50/80 dark:bg-gray-800'} backdrop-blur-sm sticky top-0 z-10`}>
                       <div className={`font-semibold ${isToday ? 'text-primary dark:text-blue-300' : 'text-gray-700 dark:text-gray-200'} text-xs sm:text-sm`}>
-                        {format(day, 'EEEE')}
+                        {format(day, 'EEEE', { locale: currentLocale })}
                       </div>
                       <div className={`text-xs sm:text-sm ${isToday ? 'text-primary font-bold dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'}`}>
                         {format(day, 'dd/MM')}
@@ -468,7 +478,7 @@ const ScheduleBoard: React.FC = () => {
           setIsDeleteModalOpen(false);
         }}
         title={t('common.confirmDelete')}
-        message={t('common.deleteWarning', 'Hành động này sẽ đưa dữ liệu vào thùng rác. Bạn có chắc chắn muốn xóa?')}
+        message={t('common.deleteWarning')}
       />
     </div>
   );

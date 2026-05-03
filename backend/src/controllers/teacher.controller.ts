@@ -1,8 +1,10 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { checkPlanLimit } from '../utils/limitChecker';
+import { NotFoundError, ValidationError } from '../utils/errors';
 
-export const getTeachers = async (req: AuthRequest, res: Response) => {
+export const getTeachers = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     
@@ -17,19 +19,21 @@ export const getTeachers = async (req: AuthRequest, res: Response) => {
 
     res.json(result.rows);
   } catch (error) {
-    console.error('Error fetching teachers:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 };
 
-export const createTeacher = async (req: AuthRequest, res: Response) => {
+export const createTeacher = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { full_name, email, phone, specialization, branch_id } = req.body;
 
     if (!full_name || !email || !branch_id) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      throw new ValidationError('Vui lòng điền đầy đủ thông tin bắt buộc', 'MISSING_REQUIRED_FIELDS');
     }
+
+    // Check Plan Limit
+    await checkPlanLimit(tenantId as string, 'max_teachers', 'teachers', 'Bạn đã đạt giới hạn tối đa số lượng nhân sự/giáo viên.');
 
     const result = await pool.query(
       `INSERT INTO teachers (tenant_id, branch_id, full_name, email, phone, specialization) 
@@ -39,15 +43,14 @@ export const createTeacher = async (req: AuthRequest, res: Response) => {
 
     res.status(201).json(result.rows[0]);
   } catch (error: any) {
-    console.error('Error creating teacher:', error);
-    if (error.code === '23505') { // Unique violation
-      return res.status(400).json({ error: 'Email already exists' });
+    if (error.code === '23505') {
+      return next(new ValidationError('Email này đã tồn tại trong hệ thống', 'EMAIL_ALREADY_EXISTS'));
     }
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 };
 
-export const updateTeacher = async (req: AuthRequest, res: Response) => {
+export const updateTeacher = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
@@ -65,17 +68,16 @@ export const updateTeacher = async (req: AuthRequest, res: Response) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Teacher not found' });
+      throw new NotFoundError('Không tìm thấy nhân sự', 'TEACHER_NOT_FOUND');
     }
 
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error updating teacher:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 };
 
-export const deleteTeacher = async (req: AuthRequest, res: Response) => {
+export const deleteTeacher = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
@@ -86,12 +88,11 @@ export const deleteTeacher = async (req: AuthRequest, res: Response) => {
     );
 
     if (result.rows.length === 0) {
-      return res.status(404).json({ error: 'Teacher not found' });
+      throw new NotFoundError('Không tìm thấy nhân sự', 'TEACHER_NOT_FOUND');
     }
 
-    res.json({ success: true, message: 'Teacher deleted successfully' });
+    res.json({ success: true, message: 'Nhân sự đã được xóa thành công' });
   } catch (error) {
-    console.error('Error deleting teacher:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 };
