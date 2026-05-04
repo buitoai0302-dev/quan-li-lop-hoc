@@ -40,6 +40,8 @@ interface DashboardStats {
   students?: number;
   upcomingSessions?: number;
   enrolledClasses?: number;
+  studentTrend?: string;
+  classTrend?: string;
   studentTrends?: { month: string; count: number }[];
   classDistribution?: { status: string; count: number }[];
   recentActivities?: {
@@ -176,28 +178,28 @@ const Dashboard: React.FC = () => {
           icon={<Users size={18} />}
           label={t('dashboard.students')}
           value={stats?.students || 0}
-          trend="+4.5%"
+          trend={stats?.studentTrend || '—'}
           color="indigo"
         />
         <QuickStat
           icon={<BookOpen size={18} />}
           label={t('dashboard.activeClasses')}
           value={stats?.activeClasses || 0}
-          trend="+2"
+          trend={stats?.classTrend || '—'}
           color="emerald"
         />
         <QuickStat
           icon={<Calendar size={18} />}
           label={t('dashboard.upcomingSessions')}
           value={stats?.upcomingSessions || 0}
-          trend={t('dashboard.nextSession') + ": 2h"}
+          trend={t('dashboard.thisWeek', 'Tuần này')}
           color="amber"
         />
         <QuickStat
           icon={stats?.isGlobal ? <Building size={18} /> : <Crown size={18} />}
           label={stats?.isGlobal ? t('admin.tenantsTitle') : t('admin.plan')}
           value={stats?.isGlobal ? (stats?.tenants || 0) : t(`admin.planNames.${displayPlan.toUpperCase()}`, displayPlan)}
-          trend="Active"
+          trend={t('common.active', 'Hoạt động')}
           color="indigo"
         />
       </div>
@@ -306,7 +308,7 @@ const Dashboard: React.FC = () => {
                         dataKey="count"
                         nameKey="label"
                       >
-                        {(stats?.classDistribution || []).map((entry, index) => (
+                        {(stats?.classDistribution || []).map((_, index) => (
                           <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                         ))}
                       </Pie>

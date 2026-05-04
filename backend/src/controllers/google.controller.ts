@@ -2,26 +2,36 @@ import { Request, Response } from 'express';
 import { getAuthUrl, handleCallback } from '../services/google.service';
 import pool from '../db';
 
+import jwt from 'jsonwebtoken';
+
+import { config } from '../utils/config';
+
 export const googleAuthUrl = (req: Request, res: Response) => {
   const userId = (req as any).user?.userId;
   if (!userId) return res.status(401).json({ error: 'Unauthorized' });
 
-  const url = getAuthUrl(userId);
+  // Sign the state to prevent CSRF
+  const state = jwt.sign({ userId }, config.jwtSecret(), { expiresIn: '15m' });
+  
+  const url = getAuthUrl(state);
   res.json({ url });
 };
 
 export const googleCallback = async (req: Request, res: Response) => {
   const { code, state } = req.query;
-  const userId = state as string;
 
-  if (!code || !userId) {
-    return res.status(400).send('Invalid callback');
+  if (!code || !state || typeof state !== 'string') {
+    return res.status(400).send('Invalid callback parameters');
   }
 
   try {
+    // Verify the signed state
+    const decoded = jwt.verify(state, config.jwtSecret()) as { userId: string };
+    const userId = decoded.userId;
+
     await handleCallback(code as string, userId);
     // Sau khi lưu token xong, redirect về frontend setting page
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const frontendUrl = config.frontendUrl();
     res.redirect(`${frontendUrl}/settings?google_sync=success`);
   } catch (error) {
     console.error('Google callback error:', error);

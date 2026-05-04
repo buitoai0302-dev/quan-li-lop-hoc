@@ -101,16 +101,20 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response, next: N
 };
 
 export const createSession = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+  const client = await pool.connect();
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { classId, roomId, teacherId, sessionDate, startTime, endTime, sessionType, notes } = req.body;
 
+    await client.query('BEGIN');
+
     const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)`;
     const conflictParams = [tenantId, teacherId, roomId, classId, sessionDate, startTime, endTime];
     
-    const conflictResult = await pool.query(conflictSql, conflictParams);
+    const conflictResult = await client.query(conflictSql, conflictParams);
 
     if (conflictResult.rows.length > 0) {
+      await client.query('ROLLBACK');
       res.status(409).json({
         success: false,
         error: 'SCHEDULE_CONFLICT',
@@ -127,8 +131,10 @@ export const createSession = async (req: AuthRequest, res: Response, next: NextF
     `;
     const insertParams = [tenantId, classId, roomId, teacherId, sessionDate, startTime, endTime, sessionType || 'lecture', notes || ''];
 
-    const newSession = await pool.query(insertSql, insertParams);
+    const newSession = await client.query(insertSql, insertParams);
     const sessionData = newSession.rows[0];
+
+    await client.query('COMMIT');
 
     const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [classId]);
     const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [roomId]);
@@ -149,7 +155,10 @@ export const createSession = async (req: AuthRequest, res: Response, next: NextF
       data: sessionData
     });
   } catch (error) {
+    await client.query('ROLLBACK');
     next(error);
+  } finally {
+    client.release();
   }
 };
 

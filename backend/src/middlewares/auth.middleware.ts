@@ -13,8 +13,10 @@ export interface AuthRequest extends Request {
   tenantId?: string;
 }
 
+import { config } from '../utils/config';
+
 export const authMiddleware = (req: AuthRequest, res: Response, next: NextFunction) => {
-  const JWT_SECRET = process.env.JWT_SECRET || 'eduschedule-super-secret-jwt-key-2024-change-in-production';
+  const JWT_SECRET = config.jwtSecret();
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

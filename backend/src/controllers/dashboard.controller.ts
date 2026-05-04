@@ -110,7 +110,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
 
     // Default for admin/staff
     const period = (req.query.period as string) === 'yearly' ? 12 : 6;
-    const [classesRes, teachersRes, studentsRes, trendsRes, distributionRes, activitiesRes, attendanceRes, attendanceRateRes, tenantRes] = await Promise.all([
+    const [classesRes, teachersRes, studentsRes, trendsRes, distributionRes, activitiesRes, attendanceRes, attendanceRateRes, tenantRes, prevStudentsRes, prevClassesRes, upcomingRes] = await Promise.all([
       pool.query(`SELECT COUNT(*) FROM classes WHERE tenant_id = $1 AND status = 'active' AND is_deleted = false`, [tenantId]),
       pool.query(`SELECT COUNT(*) FROM teachers WHERE tenant_id = $1 AND is_active = true AND is_deleted = false`, [tenantId]),
       pool.query(`SELECT COUNT(*) FROM students WHERE tenant_id = $1 AND is_active = true AND is_deleted = false`, [tenantId]),
@@ -155,20 +155,26 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
         FROM attendance
         WHERE tenant_id = $1 AND created_at > CURRENT_DATE - INTERVAL '30 days'
       `, [tenantId]),
-      // Tenant info - select plan code and plan id (limits are in plan_limits table)
+      // Tenant info
       pool.query(`
         SELECT p.code as plan_code, p.id as plan_id,
                (SELECT COUNT(*) FROM branches WHERE tenant_id = $1 AND is_deleted = false) as branch_count
         FROM tenants t
         LEFT JOIN plan_definitions p ON t.plan_id = p.id
         WHERE t.id = $1
-      `, [tenantId])
+      `, [tenantId]),
+      // Previous period students (for trend %)
+      pool.query(`SELECT COUNT(*) FROM students WHERE tenant_id = $1 AND is_active = true AND is_deleted = false AND created_at < CURRENT_DATE - INTERVAL '30 days'`, [tenantId]),
+      // Previous period classes
+      pool.query(`SELECT COUNT(*) FROM classes WHERE tenant_id = $1 AND status = 'active' AND is_deleted = false AND created_at < CURRENT_DATE - INTERVAL '30 days'`, [tenantId]),
+      // Upcoming sessions count
+      pool.query(`SELECT COUNT(*) FROM schedule_sessions WHERE tenant_id = $1 AND session_date >= CURRENT_DATE AND status != 'cancelled'`, [tenantId]),
     ]);
 
     const tenantInfo = tenantRes.rows[0];
     const planId = tenantInfo?.plan_id;
 
-    // Fetch plan limits from plan_limits table (not from plan_definitions)
+    // Fetch plan limits from plan_limits table
     const limitsRes = planId
       ? await pool.query('SELECT limit_key, limit_value FROM plan_limits WHERE plan_id = $1', [planId])
       : { rows: [] as any[] };
@@ -177,10 +183,26 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
       return acc;
     }, {});
 
+    // Calculate real trend percentages (vs previous 30 days)
+    const currentStudents = parseInt(studentsRes.rows[0].count, 10);
+    const prevStudents = parseInt(prevStudentsRes.rows[0].count, 10);
+    const currentClasses = parseInt(classesRes.rows[0].count, 10);
+    const prevClasses = parseInt(prevClassesRes.rows[0].count, 10);
+
+    const calcTrend = (current: number, previous: number): string => {
+      if (previous === 0) return current > 0 ? `+${current}` : '—';
+      const diff = current - previous;
+      const pct = ((diff / previous) * 100).toFixed(1);
+      return diff >= 0 ? `+${pct}%` : `${pct}%`;
+    };
+
     res.json({
-      activeClasses: parseInt(classesRes.rows[0].count, 10),
+      activeClasses: currentClasses,
       teachers: parseInt(teachersRes.rows[0].count, 10),
-      students: parseInt(studentsRes.rows[0].count, 10),
+      students: currentStudents,
+      upcomingSessions: parseInt(upcomingRes.rows[0].count, 10),
+      studentTrend: calcTrend(currentStudents, prevStudents),
+      classTrend: calcTrend(currentClasses, prevClasses),
       studentTrends: trendsRes.rows.map(r => ({ month: r.month, count: parseInt(r.count, 10) })),
       classDistribution: distributionRes.rows.map(r => ({ status: r.status, count: parseInt(r.count, 10) })),
       recentActivities: activitiesRes.rows.map(r => ({ 
@@ -195,11 +217,11 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
         { day: 'Mon', rate: 0 }, { day: 'Tue', rate: 0 }, { day: 'Wed', rate: 0 },
         { day: 'Thu', rate: 0 }, { day: 'Fri', rate: 0 }, { day: 'Sat', rate: 0 }, { day: 'Sun', rate: 0 }
       ],
-      overallAttendance: parseInt(attendanceRateRes.rows[0].rate || 0, 10),
+      overallAttendance: parseInt(attendanceRateRes.rows[0]?.rate || 0, 10),
       plan: tenantInfo?.plan_code || 'FREE',
       usage: {
-        students: { used: parseInt(studentsRes.rows[0].count, 10), limit: limits.max_students ?? -1 },
-        classes: { used: parseInt(classesRes.rows[0].count, 10), limit: limits.max_classes ?? -1 },
+        students: { used: currentStudents, limit: limits.max_students ?? -1 },
+        classes: { used: currentClasses, limit: limits.max_classes ?? -1 },
         branches: { used: parseInt(tenantInfo?.branch_count || 0, 10), limit: limits.max_branches ?? -1 }
       }
     });

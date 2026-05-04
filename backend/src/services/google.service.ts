@@ -1,17 +1,19 @@
 import { google } from 'googleapis';
 import pool from '../db';
 
+import { config } from '../utils/config';
+
 const oauth2Client = new google.auth.OAuth2(
-  process.env.GOOGLE_CLIENT_ID,
-  process.env.GOOGLE_CLIENT_SECRET,
-  `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/auth/google/callback`
+  config.google.clientId(),
+  config.google.clientSecret(),
+  config.google.redirectUri()
 );
 
-export const getAuthUrl = (userId: string) => {
+export const getAuthUrl = (state: string) => {
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: ['https://www.googleapis.com/auth/calendar.events'],
-    state: userId,
+    state: state,
     prompt: 'consent' // Để luôn trả về refresh_token
   });
 };
@@ -37,8 +39,8 @@ const getClientForUser = async (userId: string) => {
   if (!user || !user.google_access_token) return null;
 
   const client = new google.auth.OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET
+    config.google.clientId(),
+    config.google.clientSecret()
   );
   
   client.setCredentials({

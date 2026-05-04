@@ -7,11 +7,10 @@ import { OAuth2Client } from 'google-auth-library';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email.service';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-import { checkRateLimit, recordFailedAttempt, clearAttempts } from '../services/rateLimit.service';
+import { checkRateLimit, recordFailedAttempt, clearAttempts, checkEmailRateLimit, recordEmailAttempt } from '../services/rateLimit.service';
 import { ValidationError, AuthenticationError, ForbiddenError, NotFoundError } from '../utils/errors';
 
-const getJwtSecret = () => process.env.JWT_SECRET || 'eduschedule-super-secret-jwt-key-2024-change-in-production';
-const getJwtExpiresIn = () => process.env.JWT_EXPIRES_IN || '7d';
+import { config } from '../utils/config';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -89,8 +88,8 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
         branchId: user.branch_id,
         role: user.role,
       },
-      getJwtSecret(),
-      { expiresIn: getJwtExpiresIn() as any }
+      config.jwtSecret(),
+      { expiresIn: config.jwtExpiresIn() as any }
     );
 
     const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } = user;
@@ -155,8 +154,8 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
         branchId: user.branch_id,
         role: user.role,
       },
-      getJwtSecret(),
-      { expiresIn: getJwtExpiresIn() as any }
+      config.jwtSecret(),
+      { expiresIn: config.jwtExpiresIn() as any }
     );
 
     const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } = user;
@@ -262,6 +261,12 @@ export const resendVerification = async (req: Request, res: Response, next: Next
   }
 
   try {
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    const rateCheck = checkEmailRateLimit(ip);
+    if (rateCheck.blocked) {
+      return next(new ForbiddenError(`Too many requests. Please try again in ${rateCheck.retryAfter} seconds.`, 'RATE_LIMIT_EXCEEDED'));
+    }
+
     const result = await pool.query('SELECT id, is_email_verified FROM users WHERE email = $1', [email]);
 
     if (result.rows.length === 0 || result.rows[0].is_email_verified) {
@@ -276,6 +281,7 @@ export const resendVerification = async (req: Request, res: Response, next: Next
       [newToken, tokenExpires, email]
     );
 
+    recordEmailAttempt(ip);
     await sendVerificationEmail(email, newToken);
     res.json({ message: 'Sent', code: 'RESEND_VERIFICATION_SENT' });
   } catch (error) {
@@ -293,6 +299,12 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
   }
 
   try {
+    const ip = req.ip || req.socket?.remoteAddress || 'unknown';
+    const rateCheck = checkEmailRateLimit(ip);
+    if (rateCheck.blocked) {
+      return next(new ForbiddenError(`Too many requests. Please try again in ${rateCheck.retryAfter} seconds.`, 'RATE_LIMIT_EXCEEDED'));
+    }
+
     const result = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
 
     if (result.rows.length === 0) {
@@ -307,6 +319,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
       [resetToken, resetExpires, email]
     );
 
+    recordEmailAttempt(ip);
     await sendPasswordResetEmail(email, resetToken);
     res.json({ message: 'Sent', code: 'FORGOT_PASSWORD_SENT' });
   } catch (error) {
