@@ -229,3 +229,60 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
     next(error);
   }
 };
+
+export const getActivities = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = (page - 1) * limit;
+
+    const sql = `
+      SELECT * FROM (
+        (SELECT 'student' as type, full_name as user, 'vừa đăng ký học' as action, '' as target, created_at FROM students WHERE tenant_id = $1 AND is_deleted = false)
+        UNION ALL
+        (SELECT 'class' as type, name as user, 'vừa được khởi tạo' as action, '' as target, created_at FROM classes WHERE tenant_id = $1 AND is_deleted = false)
+        UNION ALL
+        (SELECT 'teacher' as type, full_name as user, 'vừa tham gia đội ngũ' as action, '' as target, created_at FROM teachers WHERE tenant_id = $1 AND is_deleted = false)
+      ) combined
+      ORDER BY created_at DESC
+      LIMIT $2 OFFSET $3
+    `;
+
+    const countSql = `
+      SELECT COUNT(*) FROM (
+        (SELECT id FROM students WHERE tenant_id = $1 AND is_deleted = false)
+        UNION ALL
+        (SELECT id FROM classes WHERE tenant_id = $1 AND is_deleted = false)
+        UNION ALL
+        (SELECT id FROM teachers WHERE tenant_id = $1 AND is_deleted = false)
+      ) combined
+    `;
+
+    const [activitiesRes, countRes] = await Promise.all([
+      pool.query(sql, [tenantId, limit, offset]),
+      pool.query(countSql, [tenantId])
+    ]);
+
+    const total = parseInt(countRes.rows[0].count, 10);
+
+    res.json({
+      activities: activitiesRes.rows.map(r => ({ 
+        id: r.created_at + r.user, 
+        user: r.user, 
+        action: r.action, 
+        target: r.target, 
+        time: r.created_at,
+        type: r.type
+      })),
+      pagination: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};

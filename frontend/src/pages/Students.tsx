@@ -30,6 +30,7 @@ const Students: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
@@ -102,6 +103,8 @@ const Students: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       if (editingId) {
         await api.put(`/students/${editingId}`, formData);
@@ -114,6 +117,8 @@ const Students: React.FC = () => {
       fetchData();
     } catch (error: any) {
       toast.error(error.response?.data?.error || t('common.error'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -296,9 +301,10 @@ const Students: React.FC = () => {
           <div className="mt-5 sm:mt-6 sm:grid sm:grid-cols-2 sm:gap-3 sm:grid-flow-row-dense pt-4 border-t border-gray-200 dark:border-gray-700">
             <button
               type="submit"
-              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:col-start-2 sm:text-sm"
+              disabled={isSubmitting}
+              className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:col-start-2 sm:text-sm disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {t('common.save')}
+              {isSubmitting ? t('common.saving', 'Đang lưu...') : t('common.save')}
             </button>
             <button
               type="button"

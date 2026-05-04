@@ -4,7 +4,8 @@ import {
   createPlanRequest, 
   getPlanRequests, 
   approvePlanRequest,
-  rejectPlanRequest
+  rejectPlanRequest,
+  getPlanRequestStatus
 } from '../controllers/plan.controller';
 import { authMiddleware, requireRole } from '../middlewares/auth.middleware';
 
@@ -12,6 +13,7 @@ const router = Router();
 
 // Publicly available (for logged in users) to see plans
 router.get('/', authMiddleware, getPlans);
+router.get('/request/status', authMiddleware, getPlanRequestStatus);
 
 // Request upgrade (Admin of tenant)
 router.post('/request', authMiddleware, requireRole(['admin', 'super_admin']), createPlanRequest);

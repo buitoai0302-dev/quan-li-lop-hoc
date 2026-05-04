@@ -44,6 +44,7 @@ const Subscription: React.FC = () => {
   const [plans, setPlans] = useState<Plan[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentTenantPlanId, setCurrentTenantPlanId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const isVi = i18n.language === 'vi';
 
@@ -54,15 +55,21 @@ const Subscription: React.FC = () => {
     return '$' + plan.price_usd;
   };
 
+  const [pendingPlanId, setPendingPlanId] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [plansRes, tenantRes] = await Promise.all([
+        const [plansRes, tenantRes, requestsRes] = await Promise.all([
           api.get('/plans'),
-          api.get('/tenant')
+          api.get('/tenant'),
+          api.get('/plans/request/status').catch(() => ({ data: null })) // New endpoint to check pending status
         ]);
         setPlans(plansRes.data);
         setCurrentTenantPlanId(tenantRes.data.plan_id);
+        if (requestsRes.data?.status === 'pending') {
+          setPendingPlanId(requestsRes.data.requested_plan_id);
+        }
       } catch (err) {
         toast.error(t('common.error'));
       } finally {
@@ -73,11 +80,15 @@ const Subscription: React.FC = () => {
   }, [t]);
 
   const handleRequestUpgrade = async (planId: string, planName: string) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
     try {
       await api.post('/plans/request', { planId });
       toast.success(t('subscription.requestSent', { planName }));
     } catch (err: any) {
       toast.error(err.response?.data?.error || t('common.error'));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -205,15 +216,19 @@ const Subscription: React.FC = () => {
               </div>
 
               <button
-                disabled={isCurrent}
+                disabled={isCurrent || isSubmitting || plan.id === pendingPlanId}
                 onClick={() => handleRequestUpgrade(plan.id, plan.name)}
                 className={`w-full py-3 px-6 rounded-2xl font-bold transition-all ${
-                  isCurrent
+                  isCurrent || isSubmitting || plan.id === pendingPlanId
                     ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-default'
                     : 'bg-gray-900 dark:bg-white text-white dark:text-gray-900 hover:scale-[1.02] active:scale-95 shadow-lg'
                 }`}
               >
-                {isCurrent ? t('subscription.current', 'Đang sử dụng') : (isFree ? t('subscription.downgrade', 'Về gói Free') : t('subscription.upgrade', 'Nâng cấp ngay'))}
+                {isSubmitting 
+                  ? t('common.sending', 'Đang gửi...') 
+                  : plan.id === pendingPlanId
+                    ? t('subscription.pending', 'Đang chờ duyệt')
+                    : (isCurrent ? t('subscription.current', 'Đang sử dụng') : (isFree ? t('subscription.downgrade', 'Về gói Free') : t('subscription.upgrade', 'Nâng cấp ngay')))}
               </button>
             </div>
           );

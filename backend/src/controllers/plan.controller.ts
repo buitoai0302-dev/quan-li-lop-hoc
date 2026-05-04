@@ -38,12 +38,12 @@ export const createPlanRequest = async (req: Request, res: Response) => {
 
     const result = await pool.query(
       'INSERT INTO plan_requests (tenant_id, requested_plan_id, notes) VALUES ($1, $2, $3) RETURNING *',
-      [tenantId, planId, notes]
+      [tenantId, planId, notes || null]
     );
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('Error in createPlanRequest:', err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -120,5 +120,25 @@ export const rejectPlanRequest = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Internal server error' });
   } finally {
     client.release();
+  }
+};
+
+export const getPlanRequestStatus = async (req: Request, res: Response) => {
+  const tenantId = (req as any).user.tenantId;
+
+  try {
+    const result = await pool.query(
+      'SELECT status, requested_plan_id FROM plan_requests WHERE tenant_id = $1 AND status = $2 LIMIT 1',
+      [tenantId, 'pending']
+    );
+
+    if (result.rows.length === 0) {
+      return res.json(null);
+    }
+
+    res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error in getPlanRequestStatus:', err);
+    res.status(500).json({ error: 'Internal server error' });
   }
 };

@@ -91,6 +91,11 @@ CREATE TABLE users (
     -- Email Verification
     is_email_verified BOOLEAN NOT NULL DEFAULT FALSE,
     verification_token VARCHAR(255),
+    verification_token_expires TIMESTAMPTZ,
+    
+    -- Password Reset
+    reset_password_token VARCHAR(255),
+    reset_password_expires TIMESTAMPTZ,
     
     -- Google Calendar Integration
     google_access_token TEXT,
@@ -172,6 +177,7 @@ CREATE TABLE classes (
     start_date      DATE NOT NULL,
     end_date        DATE NOT NULL,
     status          VARCHAR(30) NOT NULL DEFAULT 'active',
+    is_deleted      BOOLEAN NOT NULL DEFAULT FALSE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CHECK (end_date >= start_date)
@@ -234,10 +240,13 @@ CREATE TABLE plan_requests (
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     requested_plan_id UUID NOT NULL REFERENCES plan_definitions(id) ON DELETE CASCADE,
     status          VARCHAR(30) NOT NULL DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
+    notes           TEXT,
     reviewed_at     TIMESTAMPTZ,
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_plan_requests_tenant ON plan_requests(tenant_id);
 CREATE INDEX idx_plan_requests_status ON plan_requests(status);
 

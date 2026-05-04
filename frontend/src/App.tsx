@@ -22,12 +22,15 @@ import Subscription from './pages/Subscription';
 import AdminTenants from './pages/AdminTenants';
 import AdminPlans from './pages/AdminPlans';
 import AdminPlanRequests from './pages/AdminPlanRequests';
+import ActivityLog from './pages/ActivityLog';
 import { Toaster } from 'react-hot-toast';
+import ErrorBoundary from './components/ErrorBoundary';
 
 function App() {
   return (
     <AuthProvider>
-      <BrowserRouter>
+      <ErrorBoundary>
+        <BrowserRouter>
         <Toaster position="top-right" />
         <Routes>
           {/* Public Auth Routes */}
@@ -54,6 +57,7 @@ function App() {
             <Route path="/admin/tenants" element={<ProtectedRoute roles={['super_admin']}><AdminTenants /></ProtectedRoute>} />
             <Route path="/admin/requests" element={<ProtectedRoute roles={['super_admin']}><AdminPlanRequests /></ProtectedRoute>} />
             <Route path="/admin/plans" element={<ProtectedRoute roles={['super_admin']}><AdminPlans /></ProtectedRoute>} />
+            <Route path="activities" element={<ActivityLog />} />
             <Route path="settings" element={<Settings />} />
           </Route>
 
@@ -61,8 +65,9 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
-    </AuthProvider>
-  );
+    </ErrorBoundary>
+  </AuthProvider>
+);
 }
 
 export default App;

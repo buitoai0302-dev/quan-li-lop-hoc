@@ -9,7 +9,7 @@ import ConfirmModal from '../components/ConfirmModal';
 const Settings: React.FC = () => {
   const { t } = useTranslation();
   const { theme, setTheme } = useTheme();
-  
+
   const [centerName, setCenterName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [fullName, setFullName] = useState('');
@@ -19,7 +19,7 @@ const Settings: React.FC = () => {
   const [hasApiAccess, setHasApiAccess] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generatingKey, setGeneratingKey] = useState(false);
-  const [confirmModal, setConfirmModal] = useState<{ open: boolean; message: string; onConfirm: () => void }>({ open: false, message: '', onConfirm: () => {} });
+  const [confirmModal, setConfirmModal] = useState<{ open: boolean; message: string; onConfirm: () => void }>({ open: false, message: '', onConfirm: () => { } });
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -28,10 +28,10 @@ const Settings: React.FC = () => {
           api.get('/tenant'),
           api.get('/auth/me')
         ]);
-        
+
         setCenterName(tenantRes.data.name || '');
         setContactEmail(tenantRes.data.contact_email || '');
-        
+
         setFullName(userRes.data.full_name || '');
         setNotifySessions(userRes.data.notify_upcoming_sessions);
         setIsGoogleConnected(userRes.data.is_google_connected);
@@ -55,6 +55,7 @@ const Settings: React.FC = () => {
 
   const handleSaveTenant = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (saving) return;
     setSaving(true);
     try {
       await api.put('/tenant', { name: centerName, contact_email: contactEmail });
@@ -67,11 +68,12 @@ const Settings: React.FC = () => {
   };
 
   const handleSaveUser = async () => {
+    if (saving) return;
     setSaving(true);
     try {
-      await api.put('/auth/me', { 
-        full_name: fullName, 
-        notify_upcoming_sessions: notifySessions 
+      await api.put('/auth/me', {
+        full_name: fullName,
+        notify_upcoming_sessions: notifySessions
       });
       toast.success(t('common.success'));
     } catch (error) {
@@ -150,36 +152,34 @@ const Settings: React.FC = () => {
   return (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-3xl mx-auto space-y-10">
       <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">{t('settings.title')}</h2>
-      
+
       {/* Cấu hình Trung tâm */}
       <section className="space-y-6">
         <div>
           <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">{t('settings.basicInfo')}</h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{t('settings.basicInfoDesc')}</p>
         </div>
-        
+
         <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
           <div className="sm:col-span-4">
             <label htmlFor="company-name" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.centerName')}</label>
             <div className="mt-1">
-              <input 
-                type="text" 
+              <input
+                type="text"
                 value={centerName}
                 onChange={(e) => setCenterName(e.target.value)}
-                className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 border dark:bg-gray-700 dark:text-white" 
-              />
+                className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 border dark:bg-gray-700 dark:text-white" />
             </div>
           </div>
 
           <div className="sm:col-span-4">
             <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.contactEmail')}</label>
             <div className="mt-1">
-              <input 
-                type="email" 
+              <input
+                type="email"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
-                className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 border dark:bg-gray-700 dark:text-white" 
-              />
+                className="shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 border dark:bg-gray-700 dark:text-white" />
             </div>
           </div>
         </div>
@@ -200,12 +200,11 @@ const Settings: React.FC = () => {
         <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
           <div className="sm:col-span-4">
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.displayName')}</label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
-              className="mt-1 shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 border dark:bg-gray-700 dark:text-white" 
-            />
+              className="mt-1 shadow-sm focus:ring-primary focus:border-primary block w-full sm:text-sm border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 border dark:bg-gray-700 dark:text-white" />
           </div>
 
           <div className="sm:col-span-6 flex items-center justify-between">
@@ -213,7 +212,7 @@ const Settings: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('settings.notifications')}</label>
               <p className="text-xs text-gray-500">{t('settings.notificationDesc')}</p>
             </div>
-            <div 
+            <div
               onClick={() => setNotifySessions(!notifySessions)}
               className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${notifySessions ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}
             >
@@ -228,7 +227,7 @@ const Settings: React.FC = () => {
         </div>
       </section>
 
-      {/* Kết nối Google Calendar */}
+      {/* Kết nối Ứng dụng */}
       <section className="pt-6 border-t border-gray-200 dark:border-gray-700 space-y-6">
         <div>
           <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">{t('settings.appConnection')}</h3>
@@ -250,6 +249,24 @@ const Settings: React.FC = () => {
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${isGoogleConnected ? 'text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400' : 'text-primary bg-primary/10 hover:bg-primary/20'}`}
           >
             {isGoogleConnected ? t('settings.disconnect') : t('settings.connect')}
+          </button>
+        </div>
+
+        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm">
+              <img src="https://img.icons8.com/color/48/zalo.png" alt="Zalo" className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-gray-900 dark:text-white">Zalo Official Account</p>
+              <p className="text-xs text-gray-500">{t('settings.zaloNotConnected', 'Chưa kết nối Zalo OA')}</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => toast.success(t('settings.zaloComingSoon', 'Tính năng kết nối Zalo OA đang được phê duyệt bởi Zalo. Vui lòng thử lại sau.'))}
+            className="px-4 py-2 rounded-md text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
+          >
+            {t('settings.connect')}
           </button>
         </div>
       </section>
@@ -333,7 +350,6 @@ const Settings: React.FC = () => {
           </div>
         )}
       </section>
-
       {/* Giao diện */}
       <section className="pt-6 border-t border-gray-200 dark:border-gray-700">
         <div>

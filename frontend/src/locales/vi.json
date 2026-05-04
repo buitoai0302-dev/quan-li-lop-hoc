@@ -189,6 +189,7 @@
     "current": "Đang sử dụng",
     "upgrade": "Nâng cấp ngay",
     "downgrade": "Về gói Free",
+    "pending": "Đang chờ duyệt",
     "requestSent": "Yêu cầu nâng cấp lên gói {{planName}} đã được gửi. Chúng tôi sẽ liên hệ với bạn sớm nhất!",
     "customTitle": "Bạn cần giải pháp đặc thù?",
     "customSubtitle": "Hãy liên hệ với đội ngũ chuyên gia.",

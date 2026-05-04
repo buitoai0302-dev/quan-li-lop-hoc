@@ -37,28 +37,31 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '2mb' }));
 
-// Public routes
+// 1. Public routes (No authentication or tenant context needed)
 app.use('/api/auth', authRoutes);
-app.use('/api/auth/google', googleRoutes);
+app.use('/api/google', googleRoutes);
+app.use('/health', (req, res) => res.json({ status: 'ok' }));
 
-// Protected routes - Apply API Key check first, then Auth middleware
-app.use('/api', apiKeyMiddleware, authMiddleware, tenantMiddleware);
+// 2. Protected routes - Core Business Logic (Auth & Tenant required)
+const protectedRoutes = express.Router();
+protectedRoutes.use(apiKeyMiddleware, authMiddleware, tenantMiddleware);
+
+protectedRoutes.use('/schedule', scheduleRoutes);
+protectedRoutes.use('/classes', classRoutes);
+protectedRoutes.use('/branches', branchRoutes);
+protectedRoutes.use('/teachers', teacherRoutes);
+protectedRoutes.use('/students', studentRoutes);
+protectedRoutes.use('/rooms', roomRoutes);
+protectedRoutes.use('/tenant', tenantRoutes);
+protectedRoutes.use('/dashboard', dashboardRoutes);
+protectedRoutes.use('/import', importRoutes);
+protectedRoutes.use('/admin', adminRoutes);
+protectedRoutes.use('/plans', planRoutes);
+
+app.use('/api', protectedRoutes);
 
 // Initialize background jobs
 initCronJobs();
-
-// Routes
-app.use('/api/schedule', scheduleRoutes);
-app.use('/api/classes', classRoutes);
-app.use('/api/branches', branchRoutes);
-app.use('/api/teachers', teacherRoutes);
-app.use('/api/students', studentRoutes);
-app.use('/api/rooms', roomRoutes);
-app.use('/api/tenant', tenantRoutes);
-app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/import', importRoutes);
-app.use('/api/admin', adminRoutes);
-app.use('/api/plans', planRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

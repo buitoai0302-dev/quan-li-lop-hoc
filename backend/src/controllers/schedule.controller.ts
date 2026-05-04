@@ -107,6 +107,7 @@ export const createSession = async (req: AuthRequest, res: Response, next: NextF
     const { classId, roomId, teacherId, sessionDate, startTime, endTime, sessionType, notes } = req.body;
 
     await client.query('BEGIN');
+    await client.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
 
     const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)`;
     const conflictParams = [tenantId, teacherId, roomId, classId, sessionDate, startTime, endTime];

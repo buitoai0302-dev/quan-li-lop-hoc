@@ -110,13 +110,13 @@ quan-li-lop-hoc/
 | POST | /api/import/:type | import.importData | ✅ JWT | ❌ |
 | GET | /api/plans | plan.getPlans | ✅ JWT | ❌ |
 | POST | /api/plans/request | plan.createPlanRequest | ✅ JWT | ❌ |
-| GET | /api/plans/requests | plan.getPlanRequests | ✅ JWT | ⚠️ thiếu super_admin check |
-| POST | /api/plans/requests/:id/approve | plan.approvePlanRequest | ✅ JWT | ⚠️ thiếu super_admin check |
-| GET | /api/admin/tenants | admin.getAllTenants | ✅ JWT | ⚠️ thiếu super_admin check |
-| PUT | /api/admin/tenants/:id | admin.updateTenant | ✅ JWT | ⚠️ thiếu super_admin check |
-| GET | /api/admin/plans | admin.getPlans | ✅ JWT | ⚠️ thiếu super_admin check |
-| PUT | /api/admin/plans/:id | admin.updatePlanDetails | ✅ JWT | ⚠️ thiếu super_admin check |
-| GET | /api/admin/stats | admin.getSystemStats | ✅ JWT | ⚠️ thiếu super_admin check |
+| GET | /api/plans/requests | plan.getPlanRequests | ✅ JWT | ✅ requireRole(['super_admin']) |
+| POST | /api/plans/requests/:id/approve | plan.approvePlanRequest | ✅ JWT | ✅ requireRole(['super_admin']) |
+| GET | /api/admin/tenants | admin.getAllTenants | ✅ JWT | ✅ requireRole(['super_admin']) |
+| PUT | /api/admin/tenants/:id | admin.updateTenant | ✅ JWT | ✅ requireRole(['super_admin']) |
+| GET | /api/admin/plans | admin.getPlans | ✅ JWT | ✅ requireRole(['super_admin']) |
+| PUT | /api/admin/plans/:id | admin.updatePlanDetails | ✅ JWT | ✅ requireRole(['super_admin']) |
+| GET | /api/admin/stats | admin.getSystemStats | ✅ JWT | ✅ requireRole(['super_admin']) |
 
 ### Vấn đề Routes
 
@@ -126,8 +126,8 @@ quan-li-lop-hoc/
 - `GET/PUT /api/admin/*` — Toàn bộ admin routes không có role guard trong route file. Chỉ kiểm tra JWT, không kiểm tra `super_admin` role.
 
 **🟡 WARNING**
-- `POST /api/import/:type` — Không giới hạn kích thước payload. Có thể import 100,000 records cùng lúc → DB overload.
-- `GET /api/auth/google/callback` — Public route, không validate `state` parameter → CSRF risk.
+- `POST /api/import/:type` — ✅ Đã giới hạn 500 records/batch và limit payload 2MB.
+- `GET /api/auth/google/callback` — ✅ Đã thêm `state` parameter (signed JWT) để chống CSRF.
 - Rate limiting chỉ áp dụng cho `/api/auth/login`. Các route khác như `forgot-password`, `resend-verification` không có rate limit → spam email attack.
 
 **🟢 INFO**

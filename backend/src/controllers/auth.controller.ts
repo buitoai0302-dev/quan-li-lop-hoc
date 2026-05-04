@@ -43,7 +43,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
   try {
     const result = await pool.query(
-      `SELECT u.*, t.name as tenant_name, t.plan_id, t.status as tenant_status 
+      `SELECT u.*, t.name as tenant_name, t.plan_id, t.is_active as tenant_active
        FROM users u 
        JOIN tenants t ON u.tenant_id = t.id 
        WHERE u.email = $1 AND u.is_active = true`,
@@ -57,14 +57,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     const user = result.rows[0];
 
-    // Check Tenant Status
-    if (user.role !== 'super_admin') {
-      if (user.tenant_status === 'pending') {
-        return next(new ForbiddenError('Your center is pending approval', 'TENANT_PENDING'));
-      }
-      if (user.tenant_status === 'suspended') {
-        return next(new ForbiddenError('Your center has been suspended', 'TENANT_SUSPENDED'));
-      }
+    // Check Tenant Status using is_active as source of truth
+    if (user.role !== 'super_admin' && !user.tenant_active) {
+      return next(new ForbiddenError('Your center is inactive or suspended', 'TENANT_INACTIVE'));
     }
     
     if (!user.is_email_verified) {
@@ -119,7 +114,7 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     const email = payload.email;
 
     const result = await pool.query(
-      `SELECT u.*, t.name as tenant_name, t.plan_id, t.status as tenant_status 
+      `SELECT u.*, t.name as tenant_name, t.plan_id, t.is_active as tenant_active
        FROM users u 
        JOIN tenants t ON u.tenant_id = t.id 
        WHERE u.email = $1 AND u.is_active = true`,
@@ -133,13 +128,8 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     const user = result.rows[0];
 
     // Check Tenant Status
-    if (user.role !== 'super_admin') {
-      if (user.tenant_status === 'pending') {
-        return next(new ForbiddenError('Your center is pending approval', 'TENANT_PENDING'));
-      }
-      if (user.tenant_status === 'suspended') {
-        return next(new ForbiddenError('Your center has been suspended', 'TENANT_SUSPENDED'));
-      }
+    if (user.role !== 'super_admin' && !user.tenant_active) {
+      return next(new ForbiddenError('Your center is inactive or suspended', 'TENANT_INACTIVE'));
     }
 
     // Google-authenticated users still need email verified (auto-mark as verified if signing in via Google)

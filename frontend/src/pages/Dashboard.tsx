@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
@@ -17,7 +18,8 @@ import {
   Clock,
   ChevronRight,
   MoreHorizontal,
-  Building
+  Building,
+  Plus
 } from 'lucide-react';
 import {
   XAxis,
@@ -69,6 +71,7 @@ const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 const Dashboard: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [chartPeriod, setChartPeriod] = useState<'6months' | 'yearly'>('6months');
@@ -170,6 +173,46 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Quick Actions - Professional Shortcuts */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <ShortcutButton 
+          icon={<Plus size={16} />} 
+          label={t('common.addStudent', 'Thêm Học sinh')} 
+          onClick={() => navigate('/students')} 
+          color="indigo" 
+        />
+        <ShortcutButton 
+          icon={<BookOpen size={16} />} 
+          label={t('common.addClass', 'Mở Lớp mới')} 
+          onClick={() => navigate('/classes')} 
+          color="emerald" 
+        />
+        <ShortcutButton 
+          icon={<Calendar size={16} />} 
+          label={t('common.schedule', 'Lên Lịch học')} 
+          onClick={() => navigate('/schedule')} 
+          color="amber" 
+        />
+        <ShortcutButton 
+          icon={<Building size={16} />} 
+          label={t('common.addBranch', 'Thêm Chi nhánh')} 
+          onClick={() => navigate('/branches')} 
+          color="indigo" 
+        />
+        <ShortcutButton 
+          icon={<Users size={16} />} 
+          label={t('common.addTeacher', 'Thêm Giáo viên')} 
+          onClick={() => navigate('/teachers')} 
+          color="rose" 
+        />
+        <ShortcutButton 
+          icon={<Activity size={16} />} 
+          label={t('dashboard.activityLog', 'Nhật ký')} 
+          onClick={() => navigate('/activities')} 
+          color="gray" 
+        />
       </div>
 
       {/* Quick Stats - Balanced Row */}
@@ -388,10 +431,29 @@ const Dashboard: React.FC = () => {
                 )}
               </div>
               {!isFree && (stats?.recentActivities?.length || 0) > 0 && (
-                <button className="w-full mt-4 py-3 bg-gray-50 dark:bg-gray-900/50 text-[10px] font-black text-gray-400 uppercase tracking-widest rounded-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-2">
+                <button 
+                  onClick={() => navigate('/activities')}
+                  className="w-full mt-4 py-3 bg-gray-50 dark:bg-gray-900/50 text-[10px] font-black text-gray-400 uppercase tracking-widest rounded-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
+                >
                   {t('dashboard.viewAllEvents')} <ChevronRight size={14} />
                 </button>
               )}
+            </div>
+
+            {/* Zalo Integration Card */}
+            <div className="bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-[2rem] shadow-xl relative overflow-hidden group cursor-pointer" onClick={() => navigate('/settings')}>
+              <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
+              <div className="relative z-10 flex items-center gap-4">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg">
+                  <img src="https://img.icons8.com/color/48/zalo.png" alt="Zalo" className="w-8 h-8" />
+                </div>
+                <div>
+                  <h4 className="text-white font-black text-sm uppercase tracking-wider">{t('dashboard.zaloConnect', 'Kết nối Zalo OA')}</h4>
+                  <p className="text-white/70 text-[10px] font-medium leading-relaxed mt-1">
+                    {t('dashboard.zaloDesc', 'Gửi thông báo học phí, lịch học qua Zalo cho phụ huynh và học sinh.')}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -410,7 +472,7 @@ const Dashboard: React.FC = () => {
                 {t('dashboard.upgradeDescFull', 'Mở khóa toàn bộ tính năng phân tích chuyên sâu, dự báo tăng trưởng và dòng hoạt động thời gian thực để tối ưu hóa trung tâm của bạn.')}
               </p>
               <button
-                onClick={() => window.location.href = '/subscription'}
+                onClick={() => navigate('/subscription')}
                 className="w-full py-5 bg-gradient-to-r from-indigo-600 to-primary hover:from-indigo-700 hover:to-primary-dark text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-indigo-500/30 transition-all active:scale-95"
               >
                 {t('dashboard.unlockNow', 'Nâng cấp Ngay')}
@@ -420,6 +482,25 @@ const Dashboard: React.FC = () => {
         )}
       </div>
     </div>
+  );
+};
+
+const ShortcutButton: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; color: string }> = ({ icon, label, onClick, color }) => {
+  const bgLight: Record<string, string> = {
+    indigo: 'bg-indigo-50 dark:bg-indigo-900/10 text-indigo-600',
+    emerald: 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600',
+    amber: 'bg-amber-50 dark:bg-amber-900/10 text-amber-600',
+    rose: 'bg-rose-50 dark:bg-rose-900/10 text-rose-600',
+    gray: 'bg-gray-50 dark:bg-gray-900 text-gray-600'
+  };
+  return (
+    <button
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center gap-3 p-4 ${bgLight[color]} rounded-3xl border border-transparent hover:border-current transition-all hover:scale-105 active:scale-95 group shadow-sm`}
+    >
+      <div className="group-hover:scale-125 transition-transform">{icon}</div>
+      <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
+    </button>
   );
 };
 

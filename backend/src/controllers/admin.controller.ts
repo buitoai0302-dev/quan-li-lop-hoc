@@ -29,7 +29,8 @@ export const getSystemStats = async (req: AuthRequest, res: Response, next: Next
 export const getAllTenants = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const result = await pool.query(
-      `SELECT t.*, p.name as plan_name, p.code as plan_code,
+      `SELECT t.id, t.name, t.domain, t.contact_email, t.plan_id, t.is_active, t.created_at,
+              p.name as plan_name, p.code as plan_code,
               (SELECT COUNT(*) FROM users WHERE tenant_id = t.id) as user_count,
               (SELECT COUNT(*) FROM branches WHERE tenant_id = t.id) as branch_count
        FROM tenants t
@@ -63,12 +64,6 @@ export const updateTenant = async (req: AuthRequest, res: Response, next: NextFu
     if (isActive !== undefined) {
       params.push(isActive);
       updates.push(`is_active = $${params.length}`);
-      // Auto-sync status if isActive is changed manually
-      if (isActive) {
-        updates.push(`status = 'active'`);
-      } else {
-        updates.push(`status = 'suspended'`);
-      }
     }
 
     if (status) {
