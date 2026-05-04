@@ -53,7 +53,7 @@ function App() {
             <Route path="/subscription" element={<ProtectedRoute roles={['admin', 'super_admin']}><Subscription /></ProtectedRoute>} />
             <Route path="/admin/tenants" element={<ProtectedRoute roles={['super_admin']}><AdminTenants /></ProtectedRoute>} />
             <Route path="/admin/requests" element={<ProtectedRoute roles={['super_admin']}><AdminPlanRequests /></ProtectedRoute>} />
-            <Route path="admin/plans" element={<AdminPlans />} />
+            <Route path="/admin/plans" element={<ProtectedRoute roles={['super_admin']}><AdminPlans /></ProtectedRoute>} />
             <Route path="settings" element={<Settings />} />
           </Route>
 

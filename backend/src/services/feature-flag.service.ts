@@ -2,7 +2,7 @@ import NodeCache from 'node-cache';
 import { query } from '../db';
 
 // Cache for 60 seconds as specified in the diagram
-const cache = new NodeCache({ stdTTL: 60 });
+export const cache = new NodeCache({ stdTTL: 60 });
 
 interface PlanDetails {
   plan_id: string;

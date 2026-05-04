@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { getClasses, createClass, updateClass, deleteClass } from '../controllers/class.controller';
 import { enforceLimit } from '../middlewares/feature.middleware';
 import { requireRole } from '../middlewares/auth.middleware';
+import { validateUUID } from '../middlewares/validate.middleware';
 
 const router = Router();
 
@@ -15,7 +16,7 @@ router.post(
   createClass
 );
 
-router.put('/:id', updateClass);
-router.delete('/:id', deleteClass);
+router.put('/:id', requireRole(['admin', 'staff']), validateUUID(['id']), updateClass);
+router.delete('/:id', requireRole(['admin', 'staff']), validateUUID(['id']), deleteClass);
 
 export default router;

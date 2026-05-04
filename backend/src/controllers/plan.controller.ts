@@ -1,9 +1,5 @@
 import { Request, Response } from 'express';
-import NodeCache from 'node-cache';
-
-// Import cache instance from feature-flag service to allow invalidation
-// We redeclare here to match the same key pattern used in FeatureFlagService
-const planCache = new NodeCache({ stdTTL: 60 });
+import { cache as planCache } from '../services/feature-flag.service';
 import pool from '../db';
 
 export const getPlans = async (req: Request, res: Response) => {

@@ -39,6 +39,6 @@ export class NotFoundError extends AppError {
 
 export class LimitExceededError extends AppError {
   constructor(message: string = 'Plan limit exceeded', errorCode: string = 'LIMIT_EXCEEDED') {
-    super(message, 429, errorCode);
+    super(message, 403, errorCode);
   }
 }
