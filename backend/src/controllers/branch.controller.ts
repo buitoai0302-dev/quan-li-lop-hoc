@@ -88,3 +88,41 @@ export const deleteBranch = async (req: AuthRequest, res: Response, next: NextFu
     next(error);
   }
 };
+
+export const updateFirstBranch = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const { name, address, phone } = req.body;
+
+    if (!name) {
+      throw new ValidationError('Tên chi nhánh không được để trống', 'MISSING_REQUIRED_FIELDS');
+    }
+
+    // Bước 1: Tìm chi nhánh đầu tiên của tenant
+    const findResult = await pool.query(
+      `SELECT id FROM branches WHERE tenant_id = $1 AND is_deleted = false ORDER BY created_at ASC LIMIT 1`,
+      [tenantId]
+    );
+
+    let result;
+    if (findResult.rows.length > 0) {
+      // Cập nhật chi nhánh đã có
+      result = await pool.query(
+        `UPDATE branches 
+         SET name = $1, address = COALESCE($2, address), phone = COALESCE($3, phone)
+         WHERE id = $4 AND tenant_id = $5 RETURNING *`,
+        [name, address, phone, findResult.rows[0].id, tenantId]
+      );
+    } else {
+      // Chưa có chi nhánh → tạo mới
+      result = await pool.query(
+        `INSERT INTO branches (tenant_id, name, address, phone) VALUES ($1, $2, $3, $4) RETURNING *`,
+        [tenantId, name, address, phone]
+      );
+    }
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+};

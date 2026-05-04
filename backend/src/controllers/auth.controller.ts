@@ -200,6 +200,12 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       [tenantId, email, passwordHash, fullName, verificationToken, tokenExpires]
     );
 
+    // Tạo chi nhánh mặc định - sẽ được người dùng đặt tên lại trong bước onboarding
+    await client.query(
+      `INSERT INTO branches (tenant_id, name) VALUES ($1, $2)`,
+      [tenantId, tenantName || 'Chi nhánh chính']
+    );
+
     await client.query('COMMIT');
     await sendVerificationEmail(email, verificationToken);
 
@@ -366,6 +372,7 @@ export const getMe = async (req: Request, res: Response, next: NextFunction) => 
 
     const result = await pool.query(
       `SELECT u.id, u.tenant_id, u.branch_id, u.email, u.full_name, u.role, 
+              u.onboarding_completed,
               u.notify_upcoming_sessions,
               (u.google_refresh_token IS NOT NULL) as is_google_connected,
               t.name as tenant_name 
@@ -399,6 +406,19 @@ export const updateMe = async (req: Request, res: Response, next: NextFunction) 
     if (result.rows.length === 0) throw new NotFoundError('User not found', 'USER_NOT_FOUND');
 
     res.json(result.rows[0]);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─── Complete Onboarding ──────────────────────────────────────────────────────
+
+export const completeOnboarding = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const userId = (req as any).user?.userId;
+    // Direct UPDATE — cột onboarding_completed đã tồn tại sau khi chạy migration
+    await pool.query('UPDATE users SET onboarding_completed = true WHERE id = $1', [userId]);
+    res.json({ success: true });
   } catch (error) {
     next(error);
   }

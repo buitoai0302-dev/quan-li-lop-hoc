@@ -9,6 +9,7 @@ import {
   googleLogin,
   getMe,
   updateMe,
+  completeOnboarding
 } from '../controllers/auth.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 
@@ -26,5 +27,6 @@ router.post('/reset-password', resetPassword);
 // Protected routes
 router.get('/me', authMiddleware, getMe);
 router.put('/me', authMiddleware, updateMe);
+router.post('/onboarding/complete', authMiddleware, completeOnboarding);
 
 export default router;
