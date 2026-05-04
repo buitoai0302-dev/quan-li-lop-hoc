@@ -18,8 +18,9 @@ export const initCronJobs = () => {
 
       // Lấy các session chưa được thông báo trong khung giờ sắp tới
       const sql = `
-        SELECT DISTINCT s.id, s.session_date, s.start_time, c.name as class_name, r.name as room_name, 
-               u.email as recipient_email, u.notify_upcoming_sessions
+        SELECT DISTINCT s.id, s.session_date, s.start_time, s.end_time,
+               c.name as class_name, r.name as room_name, 
+               u.email as recipient_email
         FROM schedule_sessions s
         JOIN classes c ON s.class_id = c.id
         JOIN rooms r ON s.room_id = r.id
@@ -42,27 +43,49 @@ export const initCronJobs = () => {
         return;
       }
 
-      // Gửi email
-      const sessionIds = new Set<string>();
+      // Group by session_id, track which sessions had ALL emails sent successfully
+      const sessionSuccess = new Map<string, boolean>();
+
       for (const recipient of result.rows) {
-        await sendReminderEmail(recipient.recipient_email, {
+        const sessionId = recipient.id;
+        // Initialize as true first time we see this session
+        if (!sessionSuccess.has(sessionId)) {
+          sessionSuccess.set(sessionId, true);
+        }
+
+        const sent = await sendReminderEmail(recipient.recipient_email, {
           className: recipient.class_name,
           roomName: recipient.room_name,
           date: recipient.session_date,
-          startTime: recipient.start_time
+          startTime: recipient.start_time,
+          endTime: recipient.end_time
         });
-        console.log(`[Cron] Sent reminder to ${recipient.recipient_email} for session ${recipient.id}`);
-        sessionIds.add(recipient.id);
+
+        // If any email fails for this session, mark session as failed
+        if (!sent) {
+          sessionSuccess.set(sessionId, false);
+          console.warn(`[Cron] Failed to send reminder to ${recipient.recipient_email} for session ${sessionId}`);
+        } else {
+          console.log(`[Cron] Sent reminder to ${recipient.recipient_email} for session ${sessionId}`);
+        }
       }
 
-      // Đánh dấu đã thông báo để tránh gửi trùng
-      if (sessionIds.size > 0) {
-        const ids = Array.from(sessionIds);
+      // Only mark sessions as notified if ALL their recipient emails were sent successfully
+      const fullyNotifiedIds = Array.from(sessionSuccess.entries())
+        .filter(([, success]) => success)
+        .map(([id]) => id);
+
+      if (fullyNotifiedIds.length > 0) {
         await pool.query(
           `UPDATE schedule_sessions SET is_notified = true WHERE id = ANY($1)`,
-          [ids]
+          [fullyNotifiedIds]
         );
-        console.log(`[Cron] Marked ${ids.length} session(s) as notified.`);
+        console.log(`[Cron] Marked ${fullyNotifiedIds.length} session(s) as notified.`);
+      }
+
+      const failedCount = sessionSuccess.size - fullyNotifiedIds.length;
+      if (failedCount > 0) {
+        console.warn(`[Cron] ${failedCount} session(s) had email failures and will retry next run.`);
       }
 
     } catch (error) {
@@ -72,3 +95,4 @@ export const initCronJobs = () => {
   
   console.log('[Cron] Jobs initialized (runs every 15 minutes)');
 };
+

@@ -18,7 +18,6 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
   const authHeader = req.headers.authorization;
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.log('[AUTH] No Bearer token');
     return res.status(401).json({ error: 'No token provided' });
   }
 
@@ -35,14 +34,12 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     
     next();
   } catch (error) {
-    console.error('[AUTH] Token verification failed:', error);
     return res.status(401).json({ error: 'Invalid token' });
   }
 };
 
 export const requireRole = (roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    console.log(`[AUTH] Path: ${req.path}, User: ${req.user?.email}, Role: ${req.user?.role}, Required: ${roles}`);
     
     // Super Admin always has access to everything
     if (req.user?.role === 'super_admin') {

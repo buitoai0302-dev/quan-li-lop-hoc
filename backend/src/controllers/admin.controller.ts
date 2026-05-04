@@ -143,7 +143,9 @@ export const updatePlanDetails = async (req: AuthRequest, res: Response, next: N
     }
 
     if (limits) {
+      const ALLOWED_LIMIT_KEYS = ['max_branches', 'max_classes', 'max_students', 'max_teachers', 'max_rooms'];
       for (const [key, value] of Object.entries(limits)) {
+        if (!ALLOWED_LIMIT_KEYS.includes(key)) continue; // Silently skip unknown keys
         await pool.query(
           'INSERT INTO plan_limits (plan_id, limit_key, limit_value) VALUES ($1, $2, $3) ON CONFLICT (plan_id, limit_key) DO UPDATE SET limit_value = $3',
           [id, key, value]
@@ -152,7 +154,9 @@ export const updatePlanDetails = async (req: AuthRequest, res: Response, next: N
     }
 
     if (features) {
+      const ALLOWED_FEATURE_KEYS = ['google_calendar_sync', 'attendance_tracking', 'advanced_analytics', 'api_access', 'multi_branch', 'custom_domain', 'yearly_chart'];
       for (const [key, value] of Object.entries(features)) {
+        if (!ALLOWED_FEATURE_KEYS.includes(key)) continue; // Silently skip unknown keys
         await pool.query(
           'INSERT INTO plan_features (plan_id, feature_key, is_enabled) VALUES ($1, $2, $3) ON CONFLICT (plan_id, feature_key) DO UPDATE SET is_enabled = $3',
           [id, key, value]

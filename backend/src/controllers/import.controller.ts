@@ -13,6 +13,10 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
       throw new ValidationError('No data provided', 'MISSING_REQUIRED_FIELDS');
     }
 
+    if (data.length > 500) {
+      throw new ValidationError('Import batch too large. Maximum 500 records per request.', 'IMPORT_BATCH_TOO_LARGE');
+    }
+
     let successCount = 0;
     let skipCount = 0;
 

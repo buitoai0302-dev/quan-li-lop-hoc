@@ -1,9 +1,18 @@
 import nodemailer from 'nodemailer';
 
+// Escape user-controlled strings before injecting into HTML templates
+const escapeHtml = (str: string): string =>
+  String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST || 'smtp.ethereal.email',
   port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_PORT === '465', // true for 465, false for other ports
+  secure: process.env.SMTP_PORT === '465',
   auth: {
     user: process.env.SMTP_USER,
     pass: process.env.SMTP_PASS,
@@ -18,6 +27,7 @@ const logPreviewUrl = (info: any) => {
     }
   }
 };
+
 
 // ─── Shared HTML Helpers ────────────────────────────────────────────────────
 
@@ -167,6 +177,12 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
 export const sendReminderEmail = async (to: string, sessionDetails: any) => {
   const { className, date, startTime, endTime, roomName } = sessionDetails;
 
+  // Escape user-controlled strings to prevent HTML injection
+  const safeClassName = escapeHtml(className || '');
+  const safeRoomName = escapeHtml(roomName || '');
+  const safeStartTime = escapeHtml(startTime || '');
+  const safeEndTime = endTime ? escapeHtml(endTime) : '';
+
   // Format date thân thiện
   const dateObj = new Date(date);
   const viDate = dateObj.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -180,10 +196,10 @@ export const sendReminderEmail = async (to: string, sessionDetails: any) => {
     </p>
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f9ff;border-radius:8px;padding:0;margin-bottom:8px;">
       <tr><td style="padding:16px 20px;">
-        <p style="margin:0 0 8px;font-size:14px;color:#1e293b;"><strong>📚 Lớp học:</strong> ${className}</p>
-        <p style="margin:0 0 8px;font-size:14px;color:#1e293b;"><strong>🏫 Phòng học:</strong> ${roomName}</p>
+        <p style="margin:0 0 8px;font-size:14px;color:#1e293b;"><strong>📚 Lớp học:</strong> ${safeClassName}</p>
+        <p style="margin:0 0 8px;font-size:14px;color:#1e293b;"><strong>🏫 Phòng học:</strong> ${safeRoomName}</p>
         <p style="margin:0 0 8px;font-size:14px;color:#1e293b;"><strong>📅 Ngày:</strong> ${viDate}</p>
-        <p style="margin:0;font-size:14px;color:#1e293b;"><strong>🕐 Giờ:</strong> ${startTime}${endTime ? ' – ' + endTime : ''}</p>
+        <p style="margin:0;font-size:14px;color:#1e293b;"><strong>🕐 Giờ:</strong> ${safeStartTime}${safeEndTime ? ' – ' + safeEndTime : ''}</p>
       </td></tr>
     </table>
 
@@ -196,10 +212,10 @@ export const sendReminderEmail = async (to: string, sessionDetails: any) => {
     </p>
     <table width="100%" cellpadding="0" cellspacing="0" style="background:#f0f9ff;border-radius:8px;padding:0;">
       <tr><td style="padding:16px 20px;">
-        <p style="margin:0 0 8px;font-size:14px;color:#1e293b;"><strong>📚 Class:</strong> ${className}</p>
-        <p style="margin:0 0 8px;font-size:14px;color:#1e293b;"><strong>🏫 Room:</strong> ${roomName}</p>
+        <p style="margin:0 0 8px;font-size:14px;color:#1e293b;"><strong>📚 Class:</strong> ${safeClassName}</p>
+        <p style="margin:0 0 8px;font-size:14px;color:#1e293b;"><strong>🏫 Room:</strong> ${safeRoomName}</p>
         <p style="margin:0 0 8px;font-size:14px;color:#1e293b;"><strong>📅 Date:</strong> ${enDate}</p>
-        <p style="margin:0;font-size:14px;color:#1e293b;"><strong>🕐 Time:</strong> ${startTime}${endTime ? ' – ' + endTime : ''}</p>
+        <p style="margin:0;font-size:14px;color:#1e293b;"><strong>🕐 Time:</strong> ${safeStartTime}${safeEndTime ? ' – ' + safeEndTime : ''}</p>
       </td></tr>
     </table>
   `;
@@ -208,11 +224,14 @@ export const sendReminderEmail = async (to: string, sessionDetails: any) => {
     const info = await transporter.sendMail({
       from: `"EduSchedule Notifier" <${process.env.SMTP_USER || 'no-reply@eduschedule.com'}>`,
       to,
-      subject: `[EduSchedule] ⏰ Nhắc nhở lịch học: ${className} · Class reminder`,
+      subject: `[EduSchedule] ⏰ Nhắc nhở lịch học: ${safeClassName} · Class reminder`,
       html: emailWrapper(body),
     });
     logPreviewUrl(info);
+    return true;
   } catch (error) {
     console.error('Error sending reminder email:', error);
+    return false;
   }
 };
+

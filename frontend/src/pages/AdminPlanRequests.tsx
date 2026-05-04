@@ -17,7 +17,7 @@ const AdminPlanRequests: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [requests, setRequests] = useState<PlanRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; id: string | null }>({ isOpen: false, id: null });
+  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; id: string | null; action: 'approve' | 'reject' }>({ isOpen: false, id: null, action: 'approve' });
 
   const fetchRequests = async () => {
     try {
@@ -37,9 +37,13 @@ const AdminPlanRequests: React.FC = () => {
   const handleApprove = async () => {
     if (!confirmModal.id) return;
     try {
-      await api.post(`/plans/requests/${confirmModal.id}/approve`);
+      if (confirmModal.action === 'approve') {
+        await api.post(`/plans/requests/${confirmModal.id}/approve`);
+      } else {
+        await api.post(`/plans/requests/${confirmModal.id}/reject`);
+      }
       toast.success(t('common.success'));
-      setConfirmModal({ isOpen: false, id: null });
+      setConfirmModal({ isOpen: false, id: null, action: 'approve' });
       fetchRequests();
     } catch (err) {
       toast.error(t('common.error'));
@@ -67,24 +71,39 @@ const AdminPlanRequests: React.FC = () => {
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-gray-900/40 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white dark:bg-gray-800 p-10 rounded-[2.5rem] shadow-2xl border border-white/20 dark:border-gray-700 max-w-sm w-full text-center animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-3xl flex items-center justify-center mx-auto mb-6 text-emerald-600 dark:text-emerald-400">
-              <Shield size={40} strokeWidth={2.5} />
-            </div>
+          <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg"
+               style={{ background: confirmModal.action === 'approve' ? '' : '' }}
+          >
+            {confirmModal.action === 'approve'
+              ? <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-3xl flex items-center justify-center text-emerald-600 dark:text-emerald-400"><Shield size={40} strokeWidth={2.5} /></div>
+              : <div className="w-20 h-20 bg-rose-100 dark:bg-rose-900/30 rounded-3xl flex items-center justify-center text-rose-600 dark:text-rose-400"><X size={40} strokeWidth={2.5} /></div>
+            }
+          </div>
             <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
-              {t('admin.approveConfirmTitle', 'Xác nhận Phê duyệt')}
+              {confirmModal.action === 'approve'
+                ? t('admin.approveConfirmTitle', 'Xác nhận Phê duyệt')
+                : t('admin.rejectConfirmTitle', 'Xác nhận Từ chối')}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
-              {t('admin.approveConfirm', 'Bạn có chắc chắn muốn phê duyệt yêu cầu nâng cấp này?')}
+              {confirmModal.action === 'approve'
+                ? t('admin.approveConfirm', 'Bạn có chắc chắn muốn phê duyệt yêu cầu nâng cấp này?')
+                : t('admin.rejectConfirm', 'Bạn có chắc chắn muốn từ chối yêu cầu này? Hành động không thể hoàn tác.')}
             </p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleApprove}
-                className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-emerald-500/30 transition-all active:scale-95"
+                className={`w-full py-4 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg transition-all active:scale-95 ${
+                  confirmModal.action === 'approve'
+                    ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30'
+                    : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/30'
+                }`}
               >
-                {t('admin.approve', 'Phê duyệt Ngay')}
+                {confirmModal.action === 'approve'
+                  ? t('admin.approve', 'Phê duyệt Ngay')
+                  : t('admin.reject', 'Từ chối')}
               </button>
               <button
-                onClick={() => setConfirmModal({ isOpen: false, id: null })}
+                onClick={() => setConfirmModal({ isOpen: false, id: null, action: 'approve' })}
                 className="w-full py-4 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all"
               >
                 {t('common.cancel', 'Hủy bỏ')}
@@ -183,12 +202,18 @@ const AdminPlanRequests: React.FC = () => {
                     </td>
                     <td className="px-8 py-6 text-right">
                       {req.status === 'pending' && (
-                        <div className="flex justify-end gap-3">
+                        <div className="flex justify-end gap-2">
                           <button
-                            onClick={() => setConfirmModal({ isOpen: true, id: req.id })}
+                            onClick={() => setConfirmModal({ isOpen: true, id: req.id, action: 'approve' })}
                             className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/30"
                           >
                             <Check size={14} strokeWidth={3} /> {t('admin.approve')}
+                          </button>
+                          <button
+                            onClick={() => setConfirmModal({ isOpen: true, id: req.id, action: 'reject' })}
+                            className="flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold text-xs transition-all hover:scale-105 active:scale-95 shadow-lg shadow-rose-500/30"
+                          >
+                            <X size={14} strokeWidth={3} /> {t('admin.reject', 'Từ chối')}
                           </button>
                         </div>
                       )}

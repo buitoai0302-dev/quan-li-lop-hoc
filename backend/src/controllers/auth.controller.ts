@@ -143,6 +143,11 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
       }
     }
 
+    // Google-authenticated users still need email verified (auto-mark as verified if signing in via Google)
+    if (!user.is_email_verified) {
+      await pool.query('UPDATE users SET is_email_verified = true WHERE id = $1', [user.id]);
+    }
+
     const token = jwt.sign(
       {
         userId: user.id,

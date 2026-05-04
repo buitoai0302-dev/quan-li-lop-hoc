@@ -1,4 +1,9 @@
 import { Request, Response } from 'express';
+import NodeCache from 'node-cache';
+
+// Import cache instance from feature-flag service to allow invalidation
+// We redeclare here to match the same key pattern used in FeatureFlagService
+const planCache = new NodeCache({ stdTTL: 60 });
 import pool from '../db';
 
 export const getPlans = async (req: Request, res: Response) => {
@@ -36,7 +41,7 @@ export const createPlanRequest = async (req: Request, res: Response) => {
     }
 
     const result = await pool.query(
-      'INSERT INTO plan_requests (tenant_id, plan_id, notes) VALUES ($1, $2, $3) RETURNING *',
+      'INSERT INTO plan_requests (tenant_id, requested_plan_id, notes) VALUES ($1, $2, $3) RETURNING *',
       [tenantId, planId, notes]
     );
 
@@ -53,7 +58,7 @@ export const getPlanRequests = async (req: Request, res: Response) => {
       SELECT pr.*, t.name as tenant_name, pd.name as plan_name 
       FROM plan_requests pr
       JOIN tenants t ON pr.tenant_id = t.id
-      JOIN plan_definitions pd ON pr.plan_id = pd.id
+      JOIN plan_definitions pd ON pr.requested_plan_id = pd.id
       ORDER BY pr.created_at DESC
     `);
     res.json(result.rows);
@@ -65,29 +70,59 @@ export const getPlanRequests = async (req: Request, res: Response) => {
 
 export const approvePlanRequest = async (req: Request, res: Response) => {
   const { id } = req.params;
+  const client = await pool.connect();
 
   try {
-    const requestResult = await pool.query('SELECT * FROM plan_requests WHERE id = $1', [id]);
+    const requestResult = await client.query('SELECT * FROM plan_requests WHERE id = $1 AND status = $2', [id, 'pending']);
     if (requestResult.rows.length === 0) {
-      return res.status(404).json({ error: 'Request not found' });
+      return res.status(404).json({ error: 'Request not found or already processed' });
     }
     const request = requestResult.rows[0];
 
-    // Begin transaction
-    await pool.query('BEGIN');
+    await client.query('BEGIN');
 
     // Update tenant plan
-    await pool.query('UPDATE tenants SET plan_id = $1 WHERE id = $2', [request.plan_id, request.tenant_id]);
+    await client.query('UPDATE tenants SET plan_id = $1 WHERE id = $2', [request.requested_plan_id, request.tenant_id]);
 
     // Update request status
-    await pool.query('UPDATE plan_requests SET status = $1, updated_at = NOW() WHERE id = $2', ['approved', id]);
+    await client.query('UPDATE plan_requests SET status = $1, updated_at = NOW() WHERE id = $2', ['approved', id]);
 
-    await pool.query('COMMIT');
+    await client.query('COMMIT');
+
+    // Invalidate FeatureFlagService cache so tenant gets new plan immediately
+    planCache.del(`tenant_plan_${request.tenant_id}`);
 
     res.json({ message: 'Plan request approved and tenant updated successfully' });
   } catch (err) {
-    await pool.query('ROLLBACK');
+    await client.query('ROLLBACK');
     console.error(err);
     res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
+  }
+};
+
+export const rejectPlanRequest = async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+    const result = await client.query(
+      'UPDATE plan_requests SET status = $1, updated_at = NOW() WHERE id = $2 AND status = $3 RETURNING *',
+      ['rejected', id, 'pending']
+    );
+    await client.query('COMMIT');
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: 'Request not found or already processed' });
+    }
+    res.json({ message: 'Plan request rejected' });
+  } catch (err) {
+    await client.query('ROLLBACK');
+    console.error(err);
+    res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
   }
 };
