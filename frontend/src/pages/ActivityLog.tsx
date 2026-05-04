@@ -93,7 +93,7 @@ const ActivityLog: React.FC = () => {
           </div>
         ) : activities.length > 0 ? (
           <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
-            {activities.map((act, index) => (
+            {activities.map((act) => (
               <div key={act.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors flex gap-5 group">
                 <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   {getActivityIcon(act.type)}

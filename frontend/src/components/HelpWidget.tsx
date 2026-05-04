@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HelpCircle, X, ChevronRight, BookOpen, UserPlus, Calendar, Layout } from 'lucide-react';
+import { HelpCircle, X, BookOpen, UserPlus, Calendar, Layout } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 

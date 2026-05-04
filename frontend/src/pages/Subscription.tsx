@@ -7,7 +7,6 @@ import {
   Crown, 
   Building, 
   Users, 
-  Calendar, 
   Layout, 
   MessageSquare,
   ArrowRight,
