@@ -254,6 +254,23 @@
       "totalSessions": "Tổng số Buổi học"
     }
   },
+  "onboarding": {
+    "welcome": "Chào mừng",
+    "welcomeDesc": "EduSchedule sẽ giúp bạn quản lý trung tâm đào tạo một cách chuyên nghiệp và hiệu quả nhất. Hãy cùng bắt đầu nhé!",
+    "step2Title": "3 Bước để bắt đầu",
+    "setupBranch": "Kiểm tra Chi nhánh",
+    "setupBranchDesc": "Chúng tôi đã tạo sẵn 1 chi nhánh mặc định cho bạn.",
+    "addTeachers": "Thêm Giáo viên & Học sinh",
+    "addTeachersDesc": "Nhập danh sách nhân sự và học viên của trung tâm.",
+    "createSchedule": "Sắp xếp Thời khóa biểu",
+    "createScheduleDesc": "Tạo lớp học và bắt đầu xếp lịch dạy.",
+    "ready": "Tất cả đã sẵn sàng!",
+    "readyDesc": "Chúc bạn có những trải nghiệm tuyệt vời cùng EduSchedule. Nếu cần trợ giúp, đừng ngần ngại nhấn vào biểu tượng (?) nhé.",
+    "startNow": "Bắt đầu ngay",
+    "branchDesc": "Nhập thông tin cơ bản để chúng tôi thiết lập chi nhánh đầu tiên cho bạn.",
+    "branchNamePlace": "Ví dụ: Trung tâm Tiếng Anh ABC",
+    "addressPlace": "Số 123, Đường ABC, Quận XYZ"
+  },
   "common": {
     "add": "Thêm mới",
     "edit": "Sửa",

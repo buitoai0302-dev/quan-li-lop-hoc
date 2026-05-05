@@ -3,6 +3,7 @@ import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { checkPlanLimit } from '../utils/limitChecker';
 import { NotFoundError, ValidationError } from '../utils/errors';
+import { FeatureFlagService } from '../services/feature-flag.service';
 
 export const getStudents = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -16,6 +17,11 @@ export const getStudents = async (req: AuthRequest, res: Response, next: NextFun
        ORDER BY s.created_at DESC`,
       [tenantId]
     );
+
+    const limit = await FeatureFlagService.checkLimit(tenantId as string, 'max_students');
+    if (limit > 0) {
+      return res.json(result.rows.slice(0, limit));
+    }
 
     res.json(result.rows);
   } catch (error) {

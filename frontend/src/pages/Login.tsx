@@ -30,7 +30,7 @@ const Login: React.FC = () => {
     try {
       const { credential } = credentialResponse;
       const response = await api.post('/auth/google', { credential });
-      login(response.data.token, response.data.user);
+      login(response.data.token, response.data.user, response.data.refreshToken);
       toast.success(t('auth.loginSuccess'));
       navigate('/schedule');
     } catch (error: any) {
@@ -46,7 +46,7 @@ const Login: React.FC = () => {
     setEmailNotVerified(false);
     try {
       const response = await api.post('/auth/login', { email, password });
-      login(response.data.token, response.data.user);
+      login(response.data.token, response.data.user, response.data.refreshToken);
       toast.success(t('auth.loginSuccess'));
       navigate('/schedule');
     } catch (error: any) {

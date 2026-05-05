@@ -12,7 +12,7 @@ router.get('/', requireRole(['admin', 'staff', 'teacher', 'student']), getClasse
 router.post(
   '/', 
   requireRole(['admin', 'staff']),
-  enforceLimit('max_classes', 'SELECT COUNT(*) FROM classes WHERE tenant_id = $1 AND is_active = true'), 
+  enforceLimit('max_classes', 'SELECT COUNT(*) FROM classes WHERE tenant_id = $1 AND is_deleted = false'), 
   createClass
 );
 

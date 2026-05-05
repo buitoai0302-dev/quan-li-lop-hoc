@@ -21,6 +21,27 @@ const validatePassword = (password: string): { valid: boolean; errorCode?: strin
   return { valid: true };
 };
 
+// Helper: tạo cặp access_token + refresh_token và lưu refresh_token vào DB
+const issueTokens = async (user: any) => {
+  const payload = {
+    userId: user.id,
+    tenantId: user.tenant_id,
+    branchId: user.branch_id,
+    role: user.role,
+  };
+
+  const accessToken = jwt.sign(payload, config.jwtSecret(), { expiresIn: config.jwtExpiresIn() as any });
+  const refreshToken = crypto.randomBytes(64).toString('hex');
+  const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 ngày
+
+  await pool.query(
+    'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
+    [user.id, refreshToken, expiresAt]
+  );
+
+  return { accessToken, refreshToken };
+};
+
 // ─── Login ───────────────────────────────────────────────────────────────────
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
@@ -32,7 +53,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   }
 
   // Rate limiting check
-  const rateCheck = checkRateLimit(ip, email);
+  const rateCheck = await checkRateLimit(ip, email);
   if (rateCheck.blocked) {
     return res.status(429).json({
       error: `Too many failed attempts. Try again in ${Math.ceil(rateCheck.retryAfter! / 60)} min.`,
@@ -51,7 +72,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     );
 
     if (result.rows.length === 0) {
-      recordFailedAttempt(ip, email);
+      await recordFailedAttempt(ip, email);
       return next(new AuthenticationError('Invalid email or password', 'INVALID_CREDENTIALS'));
     }
 
@@ -68,27 +89,17 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
-      recordFailedAttempt(ip, email);
-      const remaining = checkRateLimit(ip, email).remainingAttempts;
+      await recordFailedAttempt(ip, email);
+      const remaining = (await checkRateLimit(ip, email)).remainingAttempts;
       return next(new AuthenticationError(`Invalid email or password. ${remaining} attempts left.`, 'INVALID_CREDENTIALS'));
     }
 
     // Success
-    clearAttempts(ip, email);
+    await clearAttempts(ip, email);
 
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        tenantId: user.tenant_id,
-        branchId: user.branch_id,
-        role: user.role,
-      },
-      config.jwtSecret(),
-      { expiresIn: config.jwtExpiresIn() as any }
-    );
-
+    const { accessToken, refreshToken } = await issueTokens(user);
     const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } = user;
-    res.json({ token, user: userWithoutSensitive });
+    res.json({ token: accessToken, refreshToken, user: userWithoutSensitive });
   } catch (error) {
     next(error);
   }
@@ -137,19 +148,9 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
       await pool.query('UPDATE users SET is_email_verified = true WHERE id = $1', [user.id]);
     }
 
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        tenantId: user.tenant_id,
-        branchId: user.branch_id,
-        role: user.role,
-      },
-      config.jwtSecret(),
-      { expiresIn: config.jwtExpiresIn() as any }
-    );
-
+    const { accessToken, refreshToken } = await issueTokens(user);
     const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } = user;
-    res.json({ token, user: userWithoutSensitive });
+    res.json({ token: accessToken, refreshToken, user: userWithoutSensitive });
   } catch (error) {
     next(error);
   }
@@ -258,7 +259,7 @@ export const resendVerification = async (req: Request, res: Response, next: Next
 
   try {
     const ip = req.ip || req.socket?.remoteAddress || 'unknown';
-    const rateCheck = checkEmailRateLimit(ip);
+    const rateCheck = await checkEmailRateLimit(ip);
     if (rateCheck.blocked) {
       return next(new ForbiddenError(`Too many requests. Please try again in ${rateCheck.retryAfter} seconds.`, 'RATE_LIMIT_EXCEEDED'));
     }
@@ -277,7 +278,7 @@ export const resendVerification = async (req: Request, res: Response, next: Next
       [newToken, tokenExpires, email]
     );
 
-    recordEmailAttempt(ip);
+    await recordEmailAttempt(ip);
     await sendVerificationEmail(email, newToken);
     res.json({ message: 'Sent', code: 'RESEND_VERIFICATION_SENT' });
   } catch (error) {
@@ -296,7 +297,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
 
   try {
     const ip = req.ip || req.socket?.remoteAddress || 'unknown';
-    const rateCheck = checkEmailRateLimit(ip);
+    const rateCheck = await checkEmailRateLimit(ip);
     if (rateCheck.blocked) {
       return next(new ForbiddenError(`Too many requests. Please try again in ${rateCheck.retryAfter} seconds.`, 'RATE_LIMIT_EXCEEDED'));
     }
@@ -315,7 +316,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
       [resetToken, resetExpires, email]
     );
 
-    recordEmailAttempt(ip);
+    await recordEmailAttempt(ip);
     await sendPasswordResetEmail(email, resetToken);
     res.json({ message: 'Sent', code: 'FORGOT_PASSWORD_SENT' });
   } catch (error) {
@@ -423,3 +424,57 @@ export const completeOnboarding = async (req: Request, res: Response, next: Next
     next(error);
   }
 };
+
+// ─── Refresh Token ────────────────────────────────────────────────────────────
+
+export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+  const { refreshToken: token } = req.body;
+  if (!token) return next(new ValidationError('Refresh token required', 'MISSING_REQUIRED_FIELDS'));
+
+  try {
+    // Tìm refresh token trong DB, kiểm tra còn hạn
+    const result = await pool.query(
+      `SELECT rt.user_id, u.tenant_id, u.branch_id, u.role
+       FROM refresh_tokens rt
+       JOIN users u ON rt.user_id = u.id
+       WHERE rt.token = $1 AND rt.expires_at > NOW()`,
+      [token]
+    );
+
+    if (result.rows.length === 0) {
+      return next(new AuthenticationError('Invalid or expired refresh token', 'INVALID_REFRESH_TOKEN'));
+    }
+
+    const user = result.rows[0];
+
+    // Xóa token cũ (rotation: mỗi lần refresh tạo token mới)
+    await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [token]);
+
+    // Phát token mới
+    const { accessToken, refreshToken: newRefreshToken } = await issueTokens({
+      id: user.user_id,
+      tenant_id: user.tenant_id,
+      branch_id: user.branch_id,
+      role: user.role,
+    });
+
+    res.json({ token: accessToken, refreshToken: newRefreshToken });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─── Logout ───────────────────────────────────────────────────────────────────
+
+export const logout = async (req: Request, res: Response, next: NextFunction) => {
+  const { refreshToken: token } = req.body;
+  try {
+    if (token) {
+      await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [token]);
+    }
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+

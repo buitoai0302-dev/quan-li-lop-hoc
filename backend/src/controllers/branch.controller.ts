@@ -3,6 +3,7 @@ import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { checkPlanLimit } from '../utils/limitChecker';
 import { NotFoundError, ValidationError } from '../utils/errors';
+import { FeatureFlagService } from '../services/feature-flag.service';
 
 export const getBranches = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -12,6 +13,11 @@ export const getBranches = async (req: AuthRequest, res: Response, next: NextFun
       `SELECT * FROM branches WHERE tenant_id = $1 AND is_deleted = false ORDER BY created_at ASC`,
       [tenantId]
     );
+
+    const limit = await FeatureFlagService.checkLimit(tenantId as string, 'max_branches');
+    if (limit > 0) {
+      return res.json(result.rows.slice(0, limit));
+    }
 
     res.json(result.rows);
   } catch (error) {

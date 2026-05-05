@@ -3,6 +3,7 @@ import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { checkPlanLimit } from '../utils/limitChecker';
 import { NotFoundError, ValidationError } from '../utils/errors';
+import { FeatureFlagService } from '../services/feature-flag.service';
 
 export const getRooms = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -17,6 +18,11 @@ export const getRooms = async (req: AuthRequest, res: Response, next: NextFuncti
       [tenantId]
     );
 
+    const limit = await FeatureFlagService.checkLimit(tenantId as string, 'max_rooms');
+    if (limit > 0) {
+      return res.json(result.rows.slice(0, limit));
+    }
+
     res.json(result.rows);
   } catch (error) {
     next(error);
@@ -26,7 +32,7 @@ export const getRooms = async (req: AuthRequest, res: Response, next: NextFuncti
 export const createRoom = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
-    const { branch_id, name, capacity, type } = req.body;
+    const { branch_id, name, capacity, room_type } = req.body;
 
     if (!branch_id || !name) {
       throw new ValidationError('Vui lòng điền tên phòng và chi nhánh', 'MISSING_REQUIRED_FIELDS');
@@ -36,9 +42,9 @@ export const createRoom = async (req: AuthRequest, res: Response, next: NextFunc
     await checkPlanLimit(tenantId as string, 'max_rooms', 'rooms', 'LIMIT_EXCEEDED');
 
     const result = await pool.query(
-      `INSERT INTO rooms (tenant_id, branch_id, name, capacity, type) 
+      `INSERT INTO rooms (tenant_id, branch_id, name, capacity, room_type) 
        VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [tenantId, branch_id, name, capacity || 30, type || 'classroom']
+      [tenantId, branch_id, name, capacity || 30, room_type || 'classroom']
     );
 
     res.status(201).json(result.rows[0]);
@@ -51,17 +57,17 @@ export const updateRoom = async (req: AuthRequest, res: Response, next: NextFunc
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
-    const { branch_id, name, capacity, type, is_active } = req.body;
+    const { branch_id, name, capacity, room_type, is_active } = req.body;
 
     const result = await pool.query(
       `UPDATE rooms 
        SET branch_id = COALESCE($1, branch_id),
            name = COALESCE($2, name),
            capacity = COALESCE($3, capacity),
-           type = COALESCE($4, type),
+           room_type = COALESCE($4, room_type),
            is_active = COALESCE($5, is_active)
        WHERE id = $6 AND tenant_id = $7 RETURNING *`,
-      [branch_id, name, capacity, type, is_active, id, tenantId]
+      [branch_id, name, capacity, room_type, is_active, id, tenantId]
     );
 
     if (result.rows.length === 0) {

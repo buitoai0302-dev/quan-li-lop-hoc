@@ -3,6 +3,7 @@ import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { checkPlanLimit } from '../utils/limitChecker';
 import { NotFoundError, ValidationError } from '../utils/errors';
+import { FeatureFlagService } from '../services/feature-flag.service';
 
 export const getClasses = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -17,6 +18,11 @@ export const getClasses = async (req: AuthRequest, res: Response, next: NextFunc
        ORDER BY c.created_at DESC`,
       [tenantId]
     );
+
+    const limit = await FeatureFlagService.checkLimit(tenantId as string, 'max_classes');
+    if (limit > 0) {
+      return res.json(result.rows.slice(0, limit));
+    }
 
     res.json(result.rows);
   } catch (error) {
@@ -58,8 +64,9 @@ export const createClass = async (req: AuthRequest, res: Response, next: NextFun
     const newClass = await pool.query(insertSql, insertParams);
 
     res.status(201).json(newClass.rows[0]);
-  } catch (error) {
-    next(error);
+  } catch (error: any) {
+    console.error('CREATE CLASS ERROR:', error);
+    res.status(500).json({ error: error.message, stack: error.stack });
   }
 };
 

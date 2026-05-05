@@ -16,12 +16,12 @@ export const getApiKey = async (req: AuthRequest, res: Response): Promise<void> 
     `, [tenantId]);
 
     if (!planResult.rows[0]?.is_enabled) {
-      res.status(403).json({ error: 'API Access is not included in your current plan. Please upgrade to Business or Enterprise.' });
+      res.json({ hasAccess: false, apiKey: null });
       return;
     }
 
     const result = await pool.query('SELECT api_key FROM tenants WHERE id = $1', [tenantId]);
-    res.json({ apiKey: result.rows[0]?.api_key });
+    res.json({ hasAccess: true, apiKey: result.rows[0]?.api_key });
   } catch (error) {
     console.error('Error in getApiKey:', error);
     res.status(500).json({ error: 'Internal server error' });

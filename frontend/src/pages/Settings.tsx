@@ -39,12 +39,15 @@ const Settings: React.FC = () => {
         // Fetch API Key if available
         try {
           const apiRes = await api.get('/tenant/api-key');
-          setApiKey(apiRes.data.apiKey);
-          setHasApiAccess(true);
-        } catch (err: any) {
-          if (err.response?.status === 403) {
+          if (apiRes.data.hasAccess) {
+            setApiKey(apiRes.data.apiKey);
+            setHasApiAccess(true);
+          } else {
             setHasApiAccess(false);
           }
+        } catch (err: any) {
+          console.error('Failed to fetch API key info:', err);
+          setHasApiAccess(false);
         }
       } catch (error) {
         toast.error(t('common.error'));
@@ -85,7 +88,7 @@ const Settings: React.FC = () => {
 
   const handleConnectGoogle = async () => {
     try {
-      const response = await api.get('/auth/google/url');
+      const response = await api.get('/google/url');
       window.location.href = response.data.url;
     } catch (error) {
       toast.error(t('settings.googleUrlError'));
@@ -98,7 +101,7 @@ const Settings: React.FC = () => {
       message: t('settings.disconnectConfirm'),
       onConfirm: async () => {
         try {
-          await api.delete('/auth/google/disconnect');
+          await api.delete('/google/disconnect');
           setIsGoogleConnected(false);
           toast.success(t('settings.disconnectSuccess'));
         } catch (error) {

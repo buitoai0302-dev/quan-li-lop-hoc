@@ -171,7 +171,7 @@ CREATE TABLE classes (
     tenant_id       UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     branch_id       UUID NOT NULL REFERENCES branches(id) ON DELETE RESTRICT,
     subject_id      UUID NOT NULL REFERENCES subjects(id) ON DELETE RESTRICT,
-    teacher_id      UUID NOT NULL REFERENCES teachers(id) ON DELETE RESTRICT,
+    teacher_id      UUID REFERENCES teachers(id) ON DELETE SET NULL,
     name            VARCHAR(200) NOT NULL,
     max_capacity    INT NOT NULL DEFAULT 30 CHECK (max_capacity > 0),
     start_date      DATE NOT NULL,

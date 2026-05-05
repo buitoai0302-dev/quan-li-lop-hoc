@@ -9,13 +9,15 @@ interface User {
   full_name: string;
   role: string;
   tenant_name: string;
+  onboarding_completed: boolean;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (token: string, userData: User) => void;
+  login: (token: string, userData: User, refresh?: string) => void;
   logout: () => void;
+  updateUser: (updates: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -43,18 +45,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
-  const login = (token: string, userData: User) => {
+  const login = (token: string, userData: User, refresh?: string) => {
     localStorage.setItem('token', token);
+    if (refresh) localStorage.setItem('refreshToken', refresh);
     setUser(userData);
   };
 
   const logout = () => {
+    const refreshToken = localStorage.getItem('refreshToken');
+    // Thu hồi refresh token phía server (non-blocking)
+    if (refreshToken) {
+      api.post('/auth/logout', { refreshToken }).catch(() => {});
+    }
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     setUser(null);
   };
 
+  const updateUser = (updates: Partial<User>) => {
+    setUser(prev => prev ? { ...prev, ...updates } : prev);
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

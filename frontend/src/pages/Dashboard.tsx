@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
+import OnboardingModal from '../components/OnboardingModal';
 import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
 import {
@@ -75,6 +76,7 @@ const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [chartPeriod, setChartPeriod] = useState<'6months' | 'yearly'>('6months');
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
@@ -107,7 +109,13 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    const fetchData = async () => {
+    if (user && !user.onboarding_completed) {
+      setShowOnboarding(true);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    const fetchStats = async () => {
       try {
         const statsRes = await api.get(`/dashboard/stats?period=${chartPeriod}`);
         setStats(statsRes.data);
@@ -117,7 +125,7 @@ const Dashboard: React.FC = () => {
         setLoading(false);
       }
     };
-    fetchData();
+    fetchStats();
   }, [chartPeriod]);
 
   const planCode = stats?.plan?.toUpperCase() || 'FREE';
@@ -481,6 +489,12 @@ const Dashboard: React.FC = () => {
           </div>
         )}
       </div>
+
+      <OnboardingModal 
+        isOpen={showOnboarding} 
+        onComplete={() => setShowOnboarding(false)} 
+        userName={user?.full_name || ''} 
+      />
     </div>
   );
 };
