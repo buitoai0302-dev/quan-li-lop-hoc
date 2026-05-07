@@ -19,8 +19,8 @@ async function setup() {
     const tenantId = tenantResult.rows[0].id;
 
     // 2. Create Super Admin User
-    const email = 'superadmin@eduschedule.com';
-    const password = 'Admin@123456';
+    const email = process.env.SUPERADMIN_EMAIL || 'superadmin@eduschedule.com';
+    const password = process.env.SUPERADMIN_PASSWORD || 'Admin@123456';
     const hashedPassword = await bcrypt.hash(password, 10);
 
     await pool.query(
@@ -32,7 +32,11 @@ async function setup() {
 
     console.log('--- Super Admin Account Created ---');
     console.log(`Email: ${email}`);
-    console.log(`Password: ${password}`);
+    if (process.env.NODE_ENV === 'development' || !process.env.SUPERADMIN_PASSWORD) {
+      console.log(`Password: ${password}`);
+    } else {
+      console.log(`Password: ******** (set via ENV)`);
+    }
     console.log('-----------------------------------');
     process.exit(0);
   } catch (err) {

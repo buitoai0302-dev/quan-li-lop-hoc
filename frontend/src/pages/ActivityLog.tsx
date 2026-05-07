@@ -71,44 +71,44 @@ const ActivityLog: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex items-center justify-between">
+    <div className="max-w-4xl mx-auto space-y-4 sm:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700 px-2 sm:px-0">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
-            <div className="p-3 bg-primary/10 rounded-2xl text-primary">
-              <Activity size={28} />
+          <h1 className="text-2xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
+            <div className="p-2 sm:p-3 bg-primary/10 rounded-xl sm:rounded-2xl text-primary">
+              <Activity size={24} className="sm:w-7 sm:h-7" />
             </div>
-            {t('dashboard.activityLog', 'Nhật ký hoạt động')}
+            {t('dashboard.activityLog')}
           </h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
-            {t('dashboard.activityLogDesc', 'Theo dõi toàn bộ thay đổi và hoạt động quan trọng trong hệ thống.')}
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-1 sm:mt-2">
+            {t('dashboard.activityLogDesc')}
           </p>
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
         {loading ? (
-          <div className="p-20 flex justify-center">
-             <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary/20 border-t-primary"></div>
+          <div className="p-12 sm:p-20 flex justify-center">
+             <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary/20 border-t-primary"></div>
           </div>
         ) : activities.length > 0 ? (
           <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
             {activities.map((act) => (
-              <div key={act.id} className="p-6 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors flex gap-5 group">
-                <div className="w-12 h-12 rounded-2xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <div key={act.id} className="p-4 sm:p-6 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors flex gap-3 sm:gap-5 group">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                   {getActivityIcon(act.type)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-bold text-gray-900 dark:text-white leading-relaxed">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2">
+                    <p className="text-sm font-bold text-gray-900 dark:text-white leading-tight sm:leading-relaxed break-words">
                       <span className="text-primary">{act.user}</span> {act.action} <span className="text-gray-400">{act.target}</span>
                     </p>
-                    <div className="flex items-center gap-1 text-[10px] text-gray-400 uppercase font-black shrink-0">
-                      <Clock size={12} />
+                    <div className="flex items-center gap-1 text-[9px] sm:text-[10px] text-gray-400 uppercase font-black shrink-0">
+                      <Clock size={10} className="sm:w-3 sm:h-3" />
                       {getTimeAgo(act.time)}
                     </div>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1 flex items-center gap-2">
+                  <p className="text-[10px] sm:text-xs text-gray-400 mt-1 flex items-center gap-1.5">
                     <span className="w-1 h-1 rounded-full bg-gray-300"></span>
                     {t(`common.${act.type}`, act.type)}
                   </p>
@@ -117,30 +117,30 @@ const ActivityLog: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="p-20 text-center text-gray-400 italic">
-            {t('dashboard.noActivity', 'Không có hoạt động nào.')}
+          <div className="p-12 sm:p-20 text-center text-gray-400 italic text-sm">
+            {t('dashboard.noActivity')}
           </div>
         )}
 
         {/* Pagination */}
-        <div className="p-6 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-          <p className="text-xs text-gray-500 font-bold uppercase tracking-widest">
-            {t('common.page', 'Trang')} {pagination.page} / {pagination.totalPages}
+        <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+          <p className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-widest">
+            {t('common.page')} {pagination.page} / {pagination.totalPages}
           </p>
           <div className="flex gap-2">
             <button
               onClick={() => fetchActivities(pagination.page - 1)}
               disabled={pagination.page <= 1 || loading}
-              className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl disabled:opacity-30 hover:bg-gray-50 transition-colors"
+              className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl disabled:opacity-30 hover:bg-gray-50 transition-colors shadow-sm active:scale-95"
             >
-              <ChevronLeft size={20} />
+              <ChevronLeft size={18} />
             </button>
             <button
               onClick={() => fetchActivities(pagination.page + 1)}
               disabled={pagination.page >= pagination.totalPages || loading}
-              className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl disabled:opacity-30 hover:bg-gray-50 transition-colors"
+              className="p-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl disabled:opacity-30 hover:bg-gray-50 transition-colors shadow-sm active:scale-95"
             >
-              <ChevronRight size={20} />
+              <ChevronRight size={18} />
             </button>
           </div>
         </div>

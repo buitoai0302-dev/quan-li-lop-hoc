@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import api from '../api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import OnboardingModal from '../components/OnboardingModal';
 import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
@@ -22,6 +22,7 @@ import {
   Building,
   Plus
 } from 'lucide-react';
+import { TENANT_STATUS, PLAN_CODES } from '../utils/constants';
 import {
   XAxis,
   YAxis,
@@ -80,10 +81,10 @@ const Dashboard: React.FC = () => {
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      active: t('common.active', 'Hoạt động'),
-      pending: t('common.pending', 'Chờ duyệt'),
-      inactive: t('common.inactive', 'Tạm dừng'),
-      completed: t('common.completed', 'Hoàn thành')
+      [TENANT_STATUS.ACTIVE]: t('common.active'),
+      [TENANT_STATUS.PENDING]: t('common.pending'),
+      [TENANT_STATUS.SUSPENDED]: t('common.inactive'),
+      completed: t('common.completed')
     };
     return labels[status] || status;
   };
@@ -128,9 +129,9 @@ const Dashboard: React.FC = () => {
     fetchStats();
   }, [chartPeriod]);
 
-  const planCode = stats?.plan?.toUpperCase() || 'FREE';
-  const isFree = planCode === 'FREE' && user?.role !== 'super_admin';
-  const canViewYearly = ['BUSINESS', 'ENTERPRISE', 'SUPER ADMIN'].includes(planCode) || user?.role === 'super_admin';
+  const planCode = stats?.plan?.toUpperCase() || PLAN_CODES.FREE;
+  const isFree = planCode === PLAN_CODES.FREE && user?.role !== 'super_admin';
+  const canViewYearly = [PLAN_CODES.BUSINESS, PLAN_CODES.ENTERPRISE, 'SUPER ADMIN'].includes(planCode) || user?.role === 'super_admin';
   const displayPlan = planCode;
 
   if (loading) {
@@ -187,37 +188,37 @@ const Dashboard: React.FC = () => {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <ShortcutButton 
           icon={<Plus size={16} />} 
-          label={t('common.addStudent', 'Thêm Học sinh')} 
+          label={t('students.addStudent')} 
           onClick={() => navigate('/students')} 
           color="indigo" 
         />
         <ShortcutButton 
           icon={<BookOpen size={16} />} 
-          label={t('common.addClass', 'Mở Lớp mới')} 
+          label={t('classes.addClass')} 
           onClick={() => navigate('/classes')} 
           color="emerald" 
         />
         <ShortcutButton 
           icon={<Calendar size={16} />} 
-          label={t('common.schedule', 'Lên Lịch học')} 
+          label={t('schedule.title')} 
           onClick={() => navigate('/schedule')} 
           color="amber" 
         />
         <ShortcutButton 
           icon={<Building size={16} />} 
-          label={t('common.addBranch', 'Thêm Chi nhánh')} 
+          label={t('branches.addBranch')} 
           onClick={() => navigate('/branches')} 
           color="indigo" 
         />
         <ShortcutButton 
           icon={<Users size={16} />} 
-          label={t('common.addTeacher', 'Thêm Giáo viên')} 
+          label={t('teachers.addTeacher')} 
           onClick={() => navigate('/teachers')} 
           color="rose" 
         />
         <ShortcutButton 
           icon={<Activity size={16} />} 
-          label={t('dashboard.activityLog', 'Nhật ký')} 
+          label={t('dashboard.liveFeed')} 
           onClick={() => navigate('/activities')} 
           color="gray" 
         />
@@ -243,14 +244,14 @@ const Dashboard: React.FC = () => {
           icon={<Calendar size={18} />}
           label={t('dashboard.upcomingSessions')}
           value={stats?.upcomingSessions || 0}
-          trend={t('dashboard.thisWeek', 'Tuần này')}
+          trend={t('dashboard.thisWeek')}
           color="amber"
         />
         <QuickStat
           icon={stats?.isGlobal ? <Building size={18} /> : <Crown size={18} />}
           label={stats?.isGlobal ? t('admin.tenantsTitle') : t('admin.plan')}
           value={stats?.isGlobal ? (stats?.tenants || 0) : t(`admin.planNames.${displayPlan.toUpperCase()}`, displayPlan)}
-          trend={t('common.active', 'Hoạt động')}
+          trend={t('common.active')}
           color="indigo"
         />
       </div>
@@ -280,7 +281,7 @@ const Dashboard: React.FC = () => {
                           ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600'
                           : 'text-gray-400 hover:text-gray-600'
                       }`}
-                    title={!canViewYearly ? t('dashboard.yearlyLocked', 'Yêu cầu gói Business trở lên') : ''}
+                    title={!canViewYearly ? t('dashboard.yearlyLocked') : ''}
                   >
                     {!canViewYearly && <Zap size={10} className="text-amber-400" />}
                     {t('dashboard.yearly')}
@@ -448,21 +449,7 @@ const Dashboard: React.FC = () => {
               )}
             </div>
 
-            {/* Zalo Integration Card */}
-            <div className="bg-gradient-to-br from-blue-600 to-blue-800 p-6 rounded-[2rem] shadow-xl relative overflow-hidden group cursor-pointer" onClick={() => navigate('/settings')}>
-              <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full blur-3xl group-hover:scale-150 transition-transform duration-700"></div>
-              <div className="relative z-10 flex items-center gap-4">
-                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg">
-                  <img src="https://img.icons8.com/color/48/zalo.png" alt="Zalo" className="w-8 h-8" />
-                </div>
-                <div>
-                  <h4 className="text-white font-black text-sm uppercase tracking-wider">{t('dashboard.zaloConnect', 'Kết nối Zalo OA')}</h4>
-                  <p className="text-white/70 text-[10px] font-medium leading-relaxed mt-1">
-                    {t('dashboard.zaloDesc', 'Gửi thông báo học phí, lịch học qua Zalo cho phụ huynh và học sinh.')}
-                  </p>
-                </div>
-              </div>
-            </div>
+
           </div>
         </div>
 
@@ -474,16 +461,16 @@ const Dashboard: React.FC = () => {
                 <Crown size={40} fill="currentColor" />
               </div>
               <h4 className="text-2xl font-black text-gray-900 dark:text-white mb-4 italic tracking-tight">
-                {t('dashboard.upgradeTitle', 'Kích hoạt Trí tuệ Doanh nghiệp')}
+                {t('dashboard.upgradeTitle')}
               </h4>
               <p className="text-sm text-gray-500 dark:text-gray-400 mb-10 leading-relaxed">
-                {t('dashboard.upgradeDescFull', 'Mở khóa toàn bộ tính năng phân tích chuyên sâu, dự báo tăng trưởng và dòng hoạt động thời gian thực để tối ưu hóa trung tâm của bạn.')}
+                {t('dashboard.upgradeDescFull')}
               </p>
               <button
                 onClick={() => navigate('/subscription')}
                 className="w-full py-5 bg-gradient-to-r from-indigo-600 to-primary hover:from-indigo-700 hover:to-primary-dark text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-indigo-500/30 transition-all active:scale-95"
               >
-                {t('dashboard.unlockNow', 'Nâng cấp Ngay')}
+                {t('dashboard.unlockNow')}
               </button>
             </div>
           </div>

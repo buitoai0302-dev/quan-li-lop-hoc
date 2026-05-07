@@ -1,12 +1,13 @@
 import { FeatureFlagService } from '../services/feature-flag.service';
 import { LimitExceededError } from '../utils/errors';
 import pool from '../db';
+import { ERROR_CODES } from './constants';
 
 export const checkPlanLimit = async (
   tenantId: string,
   limitKey: string,
   tableName: string,
-  errorKey: string = 'LIMIT_EXCEEDED'
+  errorKey: string = ERROR_CODES.LIMIT_EXCEEDED
 ) => {
   const limit = await FeatureFlagService.checkLimit(tenantId, limitKey);
   

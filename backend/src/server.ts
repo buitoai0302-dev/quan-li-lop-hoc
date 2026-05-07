@@ -39,6 +39,13 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '2mb' }));
 
+// 0. Security Headers for Google Login
+app.use((req, res, next) => {
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
+  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
+  next();
+});
+
 // 1. Public routes (No authentication or tenant context needed)
 app.use('/api/auth', authRoutes);
 app.use('/api/google', googleRoutes);
@@ -71,13 +78,19 @@ app.get('/health', (req, res) => {
 });
 
 // Serve frontend static files in production
-const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+const rootDir = process.cwd();
+const frontendDistPath = path.join(rootDir, '../frontend/dist');
 app.use(express.static(frontendDistPath));
 
 // Fallback for React Router (must be placed after all API routes)
-app.use((req, res, next) => {
-  if (req.method === 'GET' && !req.path.startsWith('/api/')) {
-    res.sendFile(path.join(frontendDistPath, 'index.html'));
+app.get('/*path', (req, res, next) => {
+  if (!req.path.startsWith('/api/')) {
+    res.sendFile(path.join(frontendDistPath, 'index.html'), (err) => {
+      if (err) {
+        console.error('Error sending index.html:', err);
+        next(new NotFoundError('Frontend build not found or path incorrect'));
+      }
+    });
   } else {
     next(new NotFoundError());
   }

@@ -1,4 +1,4 @@
-import { Router } from 'express';
+import { Router, Request, Response } from 'express';
 import { 
   getSystemStats, 
   getAllTenants, 
@@ -11,7 +11,7 @@ import { authMiddleware, requireRole } from '../middlewares/auth.middleware';
 const router = Router();
 
 // All admin routes require super_admin role
-router.use(authMiddleware, requireRole(['super_admin']));
+router.use(authMiddleware, requireRole(['super_admin', 'admin']));
 
 router.get('/stats', getSystemStats);
 router.get('/tenants', getAllTenants);

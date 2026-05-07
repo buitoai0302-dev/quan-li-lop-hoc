@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { getAuthUrl, handleCallback } from '../services/google.service';
+import { getAuthUrl, handleCallback, syncAllSessionsToGoogle } from '../services/google.service';
 import pool from '../db';
 
 import jwt from 'jsonwebtoken';
@@ -51,5 +51,23 @@ export const disconnectGoogle = async (req: Request, res: Response) => {
     res.json({ message: 'Đã ngắt kết nối Google Calendar' });
   } catch (error) {
     res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+export const syncAll = async (req: Request, res: Response) => {
+  const userId = (req as any).user?.userId;
+  const tenantId = (req as any).user?.tenantId;
+  const userRole = (req as any).user?.role;
+  
+  console.log(`[GoogleSync] Request from user ${userId}, role: ${userRole}, tenantId: ${tenantId}`);
+
+  if (!userId || !tenantId) return res.status(401).json({ error: 'Unauthorized' });
+
+  try {
+    const count = await syncAllSessionsToGoogle(userId, tenantId);
+    res.json({ message: `Đã đồng bộ thành công ${count} buổi học lên Google Calendar`, count });
+  } catch (error: any) {
+    console.error('Sync all error:', error);
+    res.status(500).json({ error: error.message || 'Lỗi khi đồng bộ dữ liệu' });
   }
 };

@@ -69,8 +69,8 @@ const Help: React.FC = () => {
   ];
 
   const handleContactSupport = () => {
-    const subject = encodeURIComponent(`Hỗ trợ kỹ thuật EduSchedule`);
-    const body = encodeURIComponent(`Chào đội ngũ hỗ trợ,\n\nTôi đang gặp vấn đề sau cần được giải đáp:\n\n[Mô tả vấn đề của bạn ở đây]`);
+    const subject = encodeURIComponent(t('help.supportSubject'));
+    const body = encodeURIComponent(t('help.supportBody'));
     window.location.href = `mailto:support@eduschedule.com?subject=${subject}&body=${body}`;
   };
 
@@ -257,7 +257,7 @@ const Help: React.FC = () => {
               onClick={handleContactSupport}
               className="flex items-center gap-3 px-8 py-4 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/30 hover:scale-105 transition-all active:scale-95"
             >
-              <MessageSquare size={20} /> {t('help.contactSupport', 'Gửi yêu cầu hỗ trợ')}
+              <MessageSquare size={20} /> {t('help.contactSupport')}
             </button>
             <a 
               href={`https://zalo.me/${import.meta.env.VITE_SUPPORT_ZALO_ID || '0912345678'}`} 

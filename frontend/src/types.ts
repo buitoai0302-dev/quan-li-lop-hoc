@@ -13,6 +13,7 @@ export interface Session {
   class_name?: string;
   teacher_name?: string;
   room_name?: string;
+  branch_name?: string;
 }
 
 export interface WeeklyScheduleData {

@@ -13,8 +13,10 @@ import {
   Info
 } from 'lucide-react';
 import api from '../api';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { handleApiError } from '../utils/errorHelper';
+import { PLAN_CODES } from '../utils/constants';
 
 interface PlanLimit {
   limit_key: string;
@@ -70,7 +72,7 @@ const Subscription: React.FC = () => {
           setPendingPlanId(requestsRes.data.requested_plan_id);
         }
       } catch (err) {
-        toast.error(t('common.error'));
+        handleApiError(err, t);
       } finally {
         setLoading(false);
       }
@@ -85,7 +87,7 @@ const Subscription: React.FC = () => {
       await api.post('/plans/request', { planId });
       toast.success(t('subscription.requestSent', { planName }));
     } catch (err: any) {
-      toast.error(err.response?.data?.error || t('common.error'));
+      handleApiError(err, t);
     } finally {
       setIsSubmitting(false);
     }
@@ -93,8 +95,8 @@ const Subscription: React.FC = () => {
 
   const handleContactSales = () => {
     const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'support@eduschedule.com';
-    const subject = encodeURIComponent(`Yêu cầu tư vấn EduSchedule - ${user?.email}`);
-    const body = encodeURIComponent(`Chào đội ngũ EduSchedule,\n\nTôi đang quan tâm đến các giải pháp đặc thù cho trung tâm của mình. Rất mong nhận được sự tư vấn từ quý vị.\n\nThông tin liên hệ:\nEmail: ${user?.email}`);
+    const subject = encodeURIComponent(t('subscription.consultSubject'));
+    const body = encodeURIComponent(t('subscription.consultBody', { email: user?.email }));
     window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
   };
 
@@ -121,36 +123,36 @@ const Subscription: React.FC = () => {
       {/* Header */}
       <div className="text-center space-y-4">
         <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white tracking-tight">
-          {t('subscription.title', 'Nâng tầm Trung tâm của bạn')}
+          {t('subscription.title')}
         </h1>
         <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-          {t('subscription.subtitle', 'Chọn gói dịch vụ phù hợp với quy mô và nhu cầu phát triển của bạn.')}
+          {t('subscription.subtitle')}
         </p>
       </div>
 
       {/* Pricing Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 px-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-10 px-6 max-w-[1400px] mx-auto">
         {plans
           .filter(p => p.is_active || p.id === currentTenantPlanId)
           .map((plan) => {
           const isCurrent = plan.id === currentTenantPlanId;
-          const isFree = plan.code === 'FREE';
-          const isPro = plan.code === 'PRO';
-          const isBusiness = plan.code === 'BUSINESS';
-          const isEnterprise = plan.code === 'ENTERPRISE';
+          const isFree = plan.code === PLAN_CODES.FREE;
+          const isPro = plan.code === PLAN_CODES.PRO;
+          const isBusiness = plan.code === PLAN_CODES.BUSINESS;
+          const isEnterprise = plan.code === PLAN_CODES.ENTERPRISE;
 
           return (
             <div 
               key={plan.id}
-              className={`relative flex flex-col p-8 bg-white dark:bg-gray-800 rounded-3xl border transition-all duration-300 ${
+              className={`relative flex flex-col p-8 bg-white dark:bg-gray-800 rounded-[2.5rem] border transition-all duration-500 ${
                 isCurrent 
-                  ? 'border-primary ring-2 ring-primary/20 shadow-xl scale-105 z-10' 
-                  : 'border-gray-100 dark:border-gray-700 hover:shadow-lg'
+                  ? 'border-primary ring-4 ring-primary/10 shadow-2xl xl:scale-[1.08] z-10' 
+                  : 'border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-2'
               }`}
             >
               {isCurrent && (
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-[10px] font-black px-4 py-1 rounded-full uppercase tracking-widest shadow-lg">
-                  {t('subscription.currentPlan', 'Gói hiện tại')}
+                  {t('subscription.currentPlan')}
                 </div>
               )}
 
@@ -224,10 +226,10 @@ const Subscription: React.FC = () => {
                 }`}
               >
                 {isSubmitting 
-                  ? t('common.sending', 'Đang gửi...') 
+                  ? t('common.sending') 
                   : plan.id === pendingPlanId
-                    ? t('subscription.pending', 'Đang chờ duyệt')
-                    : (isCurrent ? t('subscription.current', 'Đang sử dụng') : (isFree ? t('subscription.downgrade', 'Về gói Free') : t('subscription.upgrade', 'Nâng cấp ngay')))}
+                    ? t('subscription.pending')
+                    : (isCurrent ? t('subscription.current') : (isFree ? t('subscription.downgrade') : t('subscription.upgrade')))}
               </button>
             </div>
           );
@@ -235,22 +237,22 @@ const Subscription: React.FC = () => {
       </div>
 
       {/* Support CTA */}
-      <div className="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-[3rem] p-12 text-white relative overflow-hidden shadow-2xl">
-        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+      <div className="bg-gradient-to-br from-indigo-900 to-blue-900 rounded-[2.5rem] md:rounded-[4rem] p-8 md:p-16 text-white relative overflow-hidden shadow-2xl mx-4 md:mx-0">
+        <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-10">
           <div className="space-y-4 text-center md:text-left">
             <h2 className="text-3xl font-black leading-tight">
-              {t('subscription.customTitle', 'Bạn cần giải pháp đặc thù?')}<br/>
-              <span className="text-blue-400">{t('subscription.customSubtitle', 'Hãy liên hệ với đội ngũ chuyên gia.')}</span>
+              {t('subscription.customTitle')}<br/>
+              <span className="text-blue-400">{t('subscription.customSubtitle')}</span>
             </h2>
             <p className="text-indigo-100/80 max-w-lg">
-              {t('subscription.customDesc', 'Chúng tôi sẵn sàng tư vấn và xây dựng các tính năng riêng biệt phù hợp với quy trình vận hành của trung tâm bạn.')}
+              {t('subscription.customDesc')}
             </p>
           </div>
           <button 
             onClick={handleContactSales}
             className="flex items-center gap-3 px-10 py-5 bg-white text-indigo-900 rounded-full font-black text-lg hover:bg-blue-50 transition-colors shadow-xl"
           >
-            <MessageSquare /> {t('subscription.contactSales', 'Liên hệ tư vấn')} <ArrowRight />
+            <MessageSquare /> {t('subscription.contactSales')} <ArrowRight />
           </button>
         </div>
         
@@ -264,7 +266,7 @@ const Subscription: React.FC = () => {
         <div className="flex items-center gap-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700">
           <Info className="text-primary" size={20} />
           <span className="text-sm text-gray-500 dark:text-gray-400">
-            {t('subscription.policy', 'Tất cả các gói đều bao gồm hỗ trợ kỹ thuật 24/7 và sao lưu dữ liệu tự động.')}
+            {t('subscription.policy')}
           </span>
         </div>
       </div>

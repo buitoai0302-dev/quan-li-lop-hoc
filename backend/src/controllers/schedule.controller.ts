@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import pool, { query } from '../db';
-import { syncEventToGoogle } from '../services/google.service';
+import { syncEventToGoogle, deleteEventFromGoogle } from '../services/google.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ValidationError, NotFoundError } from '../utils/errors';
 
@@ -139,12 +139,15 @@ export const createSession = async (req: AuthRequest, res: Response, next: NextF
 
     const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [classId]);
     const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [roomId]);
+    const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [teacherId]);
     
     if (req.user?.userId) {
       await syncEventToGoogle(req.user.userId, {
         id: sessionData.id,
         className: classRes.rows[0]?.name || 'Class',
         roomName: roomRes.rows[0]?.name || 'Room',
+        teacherName: teacherRes.rows[0]?.full_name,
+        notes: sessionData.notes,
         date: sessionData.session_date,
         startTime: sessionData.start_time,
         endTime: sessionData.end_time
@@ -210,12 +213,15 @@ export const updateSession = async (req: AuthRequest, res: Response, next: NextF
 
     const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [newClassId]);
     const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [newRoomId]);
+    const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [newTeacherId]);
 
     if (req.user?.userId) {
       await syncEventToGoogle(req.user.userId, {
         id: sessionData.id,
         className: classRes.rows[0]?.name || 'Class',
         roomName: roomRes.rows[0]?.name || 'Room',
+        teacherName: teacherRes.rows[0]?.full_name,
+        notes: sessionData.notes,
         date: sessionData.session_date,
         startTime: sessionData.start_time,
         endTime: sessionData.end_time
@@ -243,6 +249,10 @@ export const deleteSession = async (req: AuthRequest, res: Response, next: NextF
 
     if (result.rows.length === 0) {
       throw new NotFoundError('Session not found', 'NOT_FOUND');
+    }
+
+    if (req.user?.userId) {
+      await deleteEventFromGoogle(req.user.userId, id as string);
     }
 
     res.json({ success: true, message: 'Session deleted successfully' });

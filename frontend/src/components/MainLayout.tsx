@@ -1,19 +1,21 @@
 import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Calendar, Users, LayoutDashboard, Settings, Menu, X, LogOut, Building, BookOpen, DoorOpen, Globe, Moon, Sun, Monitor, Import, Shield, List, HelpCircle, CreditCard, Clock, Zap } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
 import HelpWidget from './HelpWidget';
 
+import NotificationPopover from './NotificationPopover';
+
 const MainLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
-
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -62,13 +64,13 @@ const MainLayout: React.FC = () => {
       {/* Mobile Sidebar Overlay */}
       {isMobileMenuOpen && (
         <div
-          className="fixed inset-0 bg-gray-900/50 z-20 md:hidden backdrop-blur-sm transition-opacity"
+          className="fixed inset-0 bg-gray-900/60 z-[60] md:hidden backdrop-blur-sm transition-opacity duration-300"
           onClick={() => setIsMobileMenuOpen(false)}
         />
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-30 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-sm flex flex-col transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+      <aside className={`fixed md:static inset-y-0 left-0 z-[70] w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
         <div className="p-6 border-b border-gray-200 flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-black bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent tracking-tight">
@@ -138,7 +140,7 @@ const MainLayout: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 md:px-8 shadow-sm z-10 shrink-0 transition-colors duration-200">
+        <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 md:px-8 shadow-sm z-40 shrink-0 transition-colors duration-200">
           <div className="flex items-center">
             <button
               className="mr-4 md:hidden text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 focus:outline-none"
@@ -149,21 +151,31 @@ const MainLayout: React.FC = () => {
             <h2 className="text-lg md:text-xl font-semibold text-gray-800 dark:text-white truncate">{currentMenu}</h2>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <NotificationPopover />
+            <button
+              onClick={() => setIsHelpOpen(true)}
+              className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
+              title={t('helpWidget.title')}
+            >
+              <HelpCircle size={18} />
+            </button>
             <button
               onClick={cycleTheme}
-              className="flex items-center justify-center w-8 h-8 rounded-md bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+              className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
               title={`Theme: ${theme}`}
             >
               {renderThemeIcon()}
             </button>
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 hover:text-gray-900 dark:hover:text-white transition-colors"
+              className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
               title="Toggle Language"
             >
-              <Globe size={18} className="text-primary dark:text-blue-400" />
-              <span className="hidden sm:inline">{i18n.language.startsWith('en') ? 'EN' : 'VI'}</span>
+              <Globe size={18} />
+              <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center min-w-[14px] h-3.5 px-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-[7px] font-black text-primary dark:text-blue-400 shadow-sm leading-none uppercase tracking-tighter">
+                {i18n.language.startsWith('en') ? 'EN' : 'VI'}
+              </span>
             </button>
           </div>
         </header>
@@ -171,7 +183,7 @@ const MainLayout: React.FC = () => {
         <div className="flex-1 p-4 md:p-8 overflow-auto bg-gray-50/50 dark:bg-gray-900/50">
           <Outlet />
         </div>
-        <HelpWidget />
+        <HelpWidget isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       </main>
     </div>
   );

@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import api from '../api';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Globe, Eye, EyeOff } from 'lucide-react';
 import { handleApiError } from '../utils/errorHelper';
 import { GoogleLogin } from '@react-oauth/google';
+import { ERROR_CODES } from '../utils/constants';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -50,7 +51,7 @@ const Login: React.FC = () => {
       toast.success(t('auth.loginSuccess'));
       navigate('/schedule');
     } catch (error: any) {
-      if (error.response?.data?.code === 'EMAIL_NOT_VERIFIED') {
+      if (error.response?.data?.code === ERROR_CODES.EMAIL_NOT_VERIFIED) {
         setEmailNotVerified(true);
       } else {
         handleApiError(error, t, 'auth.loginError');
@@ -134,7 +135,7 @@ const Login: React.FC = () => {
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={() => toast.error('Google Login Failed')}
-                useOneTap
+                useOneTap={false}
                 theme={document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline'}
                 width="100%"
               />

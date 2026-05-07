@@ -62,6 +62,55 @@ export const createClass = async (req: AuthRequest, res: Response, next: NextFun
     const insertParams = [tenantId, branch_id, actualSubjectId, teacher_id || null, name, max_capacity || 30, start_date || new Date().toISOString().split('T')[0], end_date || new Date().toISOString().split('T')[0]];
 
     const newClass = await pool.query(insertSql, insertParams);
+    const classId = newClass.rows[0].id;
+
+    // Handle Recurring Schedules
+    const { recurring_schedules } = req.body; // Array of { day_of_week, start_time, end_time, room_id, notes }
+    if (recurring_schedules && Array.isArray(recurring_schedules) && recurring_schedules.length > 0) {
+      for (const schedule of recurring_schedules) {
+        await pool.query(
+          `INSERT INTO class_recurring_schedules (class_id, day_of_week, start_time, end_time, room_id, notes)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [classId, schedule.day_of_week, schedule.start_time, schedule.end_time, schedule.room_id || null, schedule.notes || null]
+        );
+      }
+
+      // AUTO GENERATE SESSIONS
+      const startDate = new Date(start_date);
+      const endDate = new Date(end_date);
+      const sessions = [];
+
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dayOfWeek = d.getDay(); // 0 is Sunday, 1 is Monday...
+        const matchingSchedules = recurring_schedules.filter(s => parseInt(s.day_of_week) === dayOfWeek);
+
+        for (const s of matchingSchedules) {
+          sessions.push({
+            tenant_id: tenantId,
+            class_id: classId,
+            room_id: s.room_id || null,
+            teacher_id: teacher_id || null,
+            session_date: d.toISOString().split('T')[0],
+            start_time: s.start_time,
+            end_time: s.end_time,
+            status: 'scheduled',
+            notes: s.notes || null
+          });
+        }
+      }
+
+      // Batch insert sessions if room_id and teacher_id are available
+      // Note: room_id is required in schedule_sessions based on schema, but we'll try to insert what we have
+      for (const session of sessions) {
+        if (session.room_id && session.teacher_id) {
+          await pool.query(
+            `INSERT INTO schedule_sessions (tenant_id, class_id, room_id, teacher_id, session_date, start_time, end_time, status, notes)
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+            [session.tenant_id, session.class_id, session.room_id, session.teacher_id, session.session_date, session.start_time, session.end_time, session.status, session.notes || null]
+          );
+        }
+      }
+    }
 
     res.status(201).json(newClass.rows[0]);
   } catch (error: any) {
@@ -70,11 +119,24 @@ export const createClass = async (req: AuthRequest, res: Response, next: NextFun
   }
 };
 
+export const getRecurringSchedules = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const result = await pool.query(
+      `SELECT * FROM class_recurring_schedules WHERE class_id = $1 ORDER BY day_of_week, start_time`,
+      [id]
+    );
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const updateClass = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
-    const { branch_id, subject_id, teacher_id, name, max_capacity, start_date, end_date, status } = req.body;
+    const { branch_id, subject_id, teacher_id, name, max_capacity, start_date, end_date, status, recurring_schedules } = req.body;
 
     const result = await pool.query(
       `UPDATE classes 
@@ -93,6 +155,60 @@ export const updateClass = async (req: AuthRequest, res: Response, next: NextFun
 
     if (result.rows.length === 0) {
       throw new NotFoundError('Không tìm thấy lớp học', 'CLASS_NOT_FOUND');
+    }
+
+    // Update Recurring Schedules if provided
+    if (recurring_schedules && Array.isArray(recurring_schedules)) {
+      // 1. Delete old rules
+      await pool.query(`DELETE FROM class_recurring_schedules WHERE class_id = $1`, [id]);
+      
+      // 2. Insert new rules
+      for (const schedule of recurring_schedules) {
+        await pool.query(
+          `INSERT INTO class_recurring_schedules (class_id, day_of_week, start_time, end_time, room_id, notes)
+           VALUES ($1, $2, $3, $4, $5, $6)`,
+          [id, schedule.day_of_week, schedule.start_time, schedule.end_time, schedule.room_id || null, schedule.notes || null]
+        );
+      }
+
+      // 3. SYNC SESSIONS (Regenerate future sessions)
+      const today = new Date().toISOString().split('T')[0];
+      const classStart = start_date || result.rows[0].start_date;
+      const classEnd = end_date || result.rows[0].end_date;
+      
+      // We only regenerate from MAX(today, classStart)
+      const syncFrom = new Date(today) > new Date(classStart) ? today : classStart;
+      
+      // Delete future sessions that haven't been completed/cancelled by staff manually if needed 
+      // but for simplicity, we delete all 'scheduled' sessions from syncFrom
+      await pool.query(
+        `DELETE FROM schedule_sessions 
+         WHERE class_id = $1 AND session_date >= $2 AND status = 'scheduled'`,
+        [id, syncFrom]
+      );
+
+      // Generate new sessions
+      const startDate = new Date(syncFrom);
+      const endDate = new Date(classEnd);
+      
+      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+        const dayOfWeek = d.getDay();
+        const matchingSchedules = recurring_schedules.filter(s => parseInt(s.day_of_week) === dayOfWeek);
+
+        for (const s of matchingSchedules) {
+          // Only insert if teacher_id and room_id are available (or use defaults from class)
+          const finalTeacherId = teacher_id || result.rows[0].teacher_id;
+          const finalRoomId = s.room_id || null;
+
+          if (finalRoomId && finalTeacherId) {
+            await pool.query(
+              `INSERT INTO schedule_sessions (tenant_id, class_id, room_id, teacher_id, session_date, start_time, end_time, status, notes)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+              [tenantId, id, finalRoomId, finalTeacherId, d.toISOString().split('T')[0], s.start_time, s.end_time, 'scheduled', s.notes || null]
+            );
+          }
+        }
+      }
     }
 
     res.json(result.rows[0]);
@@ -120,3 +236,96 @@ export const deleteClass = async (req: AuthRequest, res: Response, next: NextFun
     next(error);
   }
 };
+
+export const getEnrollments = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const { id } = req.params;
+    
+    const result = await pool.query(
+      `SELECT s.*, cs.enrolled_at, cs.status as enrollment_status
+       FROM students s
+       JOIN class_students cs ON s.id = cs.student_id
+       WHERE cs.class_id = $1 AND s.tenant_id = $2 AND s.is_deleted = false
+       ORDER BY s.full_name`,
+      [id, tenantId]
+    );
+    
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const enrollStudent = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const { id } = req.params;
+    const { student_id, student_ids } = req.body;
+
+    // 1. Get class capacity
+    const classRes = await pool.query(
+      `SELECT max_capacity FROM classes WHERE id = $1 AND tenant_id = $2`,
+      [id, tenantId]
+    );
+    
+    if (classRes.rows.length === 0) {
+      throw new NotFoundError('Không tìm thấy lớp học', 'CLASS_NOT_FOUND');
+    }
+    
+    const maxCapacity = classRes.rows[0].max_capacity;
+
+    // 2. Get current student count
+    const countRes = await pool.query(
+      `SELECT COUNT(*) FROM class_students WHERE class_id = $1`,
+      [id]
+    );
+    const currentCount = parseInt(countRes.rows[0].count);
+
+    // 3. Handle single or bulk enrollment
+    const idsToAdd = student_ids || (student_id ? [student_id] : []);
+    
+    if (idsToAdd.length === 0) {
+      throw new ValidationError('Vui lòng chọn ít nhất một học sinh', 'MISSING_REQUIRED_FIELDS');
+    }
+
+    if (currentCount + idsToAdd.length > maxCapacity) {
+      throw new ValidationError(`Lớp đã đạt giới hạn sức chứa (${maxCapacity} học sinh). Chỉ còn trống ${maxCapacity - currentCount} chỗ.`, 'CAPACITY_EXCEEDED');
+    }
+
+    const results = [];
+    for (const sid of idsToAdd) {
+      const res = await pool.query(
+        `INSERT INTO class_students (tenant_id, class_id, student_id)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (class_id, student_id) DO NOTHING
+         RETURNING *`,
+        [tenantId, id, sid]
+      );
+      if (res.rows[0]) results.push(res.rows[0]);
+    }
+
+    res.status(201).json({ success: true, count: results.length });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+export const unenrollStudent = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const { id, studentId } = req.params;
+
+    await pool.query(
+      `DELETE FROM class_students 
+       WHERE class_id = $1 AND student_id = $2 AND tenant_id = $3`,
+      [id, studentId, tenantId]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    next(error);
+  }
+};
+

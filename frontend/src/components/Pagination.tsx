@@ -23,95 +23,49 @@ const Pagination: React.FC<PaginationProps> = ({
   const startIndex = (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
 
-  // Mảng các trang cần hiển thị
-  const getPageNumbers = () => {
-    const pages = [];
-    if (totalPages <= 5) {
-      for (let i = 1; i <= totalPages; i++) pages.push(i);
-    } else {
-      if (currentPage <= 3) {
-        pages.push(1, 2, 3, 4, '...', totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-      } else {
-        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
-      }
-    }
-    return pages;
-  };
+  if (totalItems <= 5) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-3 sm:px-6 mt-4 transition-colors">
-      <div className="flex items-center w-full sm:w-auto mb-4 sm:mb-0 justify-between sm:justify-start">
-        <span className="text-sm text-gray-700 dark:text-gray-300 mr-3 hidden sm:inline">
-          {t('pagination.rowsPerPage')}
-        </span>
-        <select
-          value={itemsPerPage}
-          onChange={(e) => {
-            onItemsPerPageChange(Number(e.target.value));
-          }}
-          className="bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white text-sm rounded-lg focus:ring-primary focus:border-primary block p-2"
-        >
-          <option value={10}>10</option>
-          <option value={20}>20</option>
-          <option value={50}>50</option>
-          <option value={100}>100</option>
-        </select>
-        <span className="text-sm text-gray-700 dark:text-gray-300 sm:ml-4">
-          {totalItems === 0 ? (
-            t('pagination.noData')
-          ) : (
-            t('pagination.showing', { start: startIndex, end: endIndex, total: totalItems })
-          )}
-        </span>
+    <div className="flex flex-row items-center justify-center sm:justify-between px-2 py-2 mt-2 border-t border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800/50 gap-4 sm:gap-0">
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1">
+          <select
+            value={itemsPerPage}
+            onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+            className="bg-transparent border-none text-[10px] font-black text-primary focus:ring-0 p-0 cursor-pointer appearance-none pr-4 bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236366f1%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%223%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:10px] bg-[right_center] bg-no-repeat"
+          >
+            {[5, 10, 20, 50, 100].map(v => <option key={v} value={v}>{v}</option>)}
+          </select>
+          <span className="hidden sm:inline text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tighter">
+            / {t('pagination.rowsPerPage')}
+          </span>
+        </div>
+        
+        <div className="hidden xs:block text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-tighter">
+          {totalItems > 0 && t('pagination.showing', { start: startIndex, end: endIndex, total: totalItems })}
+        </div>
       </div>
       
-      <div className="flex flex-1 justify-between sm:justify-end items-center w-full sm:w-auto">
-        <nav className="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-          <button
-            onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span className="sr-only">{t('pagination.previous')}</span>
-            <ChevronLeft className="h-5 w-5" aria-hidden="true" />
-          </button>
-          
-          <div className="hidden sm:flex">
-            {getPageNumbers().map((page, index) => {
-              if (page === '...') {
-                return (
-                  <span key={index} className="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 dark:text-gray-300 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 focus:outline-offset-0">
-                    ...
-                  </span>
-                );
-              }
-              return (
-                <button
-                  key={index}
-                  onClick={() => onPageChange(page as number)}
-                  className={`relative inline-flex items-center px-4 py-2 text-sm font-semibold focus:z-20 focus:outline-offset-0 ${
-                    currentPage === page
-                      ? 'z-10 bg-primary text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary'
-                      : 'text-gray-900 dark:text-gray-300 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }`}
-                >
-                  {page}
-                </button>
-              );
-            })}
-          </div>
+      <div className="flex items-center gap-1">
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-20 transition-colors"
+        >
+          <ChevronLeft size={16} />
+        </button>
+        
+        <div className="flex items-center px-4 py-1.5 rounded-xl bg-primary/5 dark:bg-primary/10 text-[10px] sm:text-[11px] font-black text-primary border border-primary/10">
+          {currentPage} <span className="mx-1.5 opacity-30">/</span> {totalPages}
+        </div>
 
-          <button
-            onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages || totalItems === 0}
-            className="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 dark:ring-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 focus:z-20 focus:outline-offset-0 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <span className="sr-only">{t('pagination.next')}</span>
-            <ChevronRight className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </nav>
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages || totalItems === 0}
+          className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-20 transition-colors"
+        >
+          <ChevronRight size={16} />
+        </button>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import { handleApiError } from '../utils/errorHelper';
 import { Shield, Building, Users, Calendar, CheckCircle, XCircle, Zap } from 'lucide-react';
 import Modal from '../components/Modal';
+import { TENANT_STATUS, PLAN_CODES, TENANT_ACTIONS } from '../utils/constants';
 
 interface Tenant {
   id: string;
@@ -15,7 +16,7 @@ interface Tenant {
   plan_name: string;
   plan_code: string;
   is_active: boolean;
-  status: 'pending' | 'active' | 'suspended';
+  status: typeof TENANT_STATUS[keyof typeof TENANT_STATUS];
   user_count: string;
   branch_count: string;
   created_at: string;
@@ -41,8 +42,8 @@ const AdminTenants: React.FC = () => {
   const [confirmModal, setConfirmModal] = useState<{ 
     isOpen: boolean; 
     tenant: Tenant | null; 
-    action: 'approve' | 'suspend' | 'activate' 
-  }>({ isOpen: false, tenant: null, action: 'approve' });
+    action: typeof TENANT_ACTIONS[keyof typeof TENANT_ACTIONS] 
+  }>({ isOpen: false, tenant: null, action: TENANT_ACTIONS.APPROVE });
 
   const fetchData = async () => {
     try {
@@ -67,7 +68,7 @@ const AdminTenants: React.FC = () => {
 
   const handleConfirmAction = async () => {
     if (!confirmModal.tenant) return;
-    const newStatus = confirmModal.action === 'suspend' ? 'suspended' : 'active';
+    const newStatus = confirmModal.action === TENANT_ACTIONS.SUSPEND ? TENANT_STATUS.SUSPENDED : TENANT_STATUS.ACTIVE;
     try {
       await api.patch(`/admin/tenants/${confirmModal.tenant.id}`, { status: newStatus });
       toast.success(t('common.success'));
@@ -109,24 +110,24 @@ const AdminTenants: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-gray-900/40 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white dark:bg-gray-800 p-10 rounded-[2.5rem] shadow-2xl border border-white/20 dark:border-gray-700 max-w-sm w-full text-center animate-in zoom-in-95 duration-300">
             <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 ${
-              confirmModal.action === 'suspend' ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+              confirmModal.action === TENANT_ACTIONS.SUSPEND ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
             }`}>
-              {confirmModal.action === 'suspend' ? <XCircle size={40} /> : <CheckCircle size={40} />}
+              {confirmModal.action === TENANT_ACTIONS.SUSPEND ? <XCircle size={40} /> : <CheckCircle size={40} />}
             </div>
             <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
-              {confirmModal.action === 'approve' ? t('admin.approveConfirmTitle', 'Xác nhận Phê duyệt') : 
-               confirmModal.action === 'suspend' ? t('admin.suspendConfirmTitle', 'Xác nhận Tạm dừng') : 
-               t('admin.activateConfirmTitle', 'Xác nhận Kích hoạt')}
+              {confirmModal.action === TENANT_ACTIONS.APPROVE ? t('admin.approveConfirmTitle') : 
+               confirmModal.action === TENANT_ACTIONS.SUSPEND ? t('admin.suspendConfirmTitle') : 
+               t('admin.activateConfirmTitle')}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
-              {confirmModal.action === 'suspend' ? t('admin.suspendConfirm', 'Cơ sở này sẽ không thể truy cập hệ thống cho đến khi được kích hoạt lại.') : 
-               t('admin.approveConfirm', 'Phê duyệt cơ sở này tham gia hệ thống?')}
+              {confirmModal.action === TENANT_ACTIONS.SUSPEND ? t('admin.suspendConfirm') : 
+               t('admin.approveConfirm')}
             </p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleConfirmAction}
                 className={`w-full py-4 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg transition-all active:scale-95 ${
-                  confirmModal.action === 'suspend' ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/30' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30'
+                  confirmModal.action === TENANT_ACTIONS.SUSPEND ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/30' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30'
                 }`}
               >
                 {confirmModal.action === 'suspend' ? t('admin.deactivate') : t('admin.confirm')}
@@ -190,9 +191,9 @@ const AdminTenants: React.FC = () => {
                     <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{tenant.contact_email}</div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${tenant.plan_code === 'FREE' ? 'bg-gray-100 text-gray-600' :
-                        tenant.plan_code === 'PRO' ? 'bg-blue-100 text-blue-600' :
-                          tenant.plan_code === 'BUSINESS' ? 'bg-purple-100 text-purple-600' :
+                    <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${tenant.plan_code === PLAN_CODES.FREE ? 'bg-gray-100 text-gray-600' :
+                        tenant.plan_code === PLAN_CODES.PRO ? 'bg-blue-100 text-blue-600' :
+                          tenant.plan_code === PLAN_CODES.BUSINESS ? 'bg-purple-100 text-purple-600' :
                             'bg-orange-100 text-orange-600'
                       }`}>
                       {t(`admin.planNames.${tenant.plan_code.toUpperCase()}`, tenant.plan_name)}
@@ -202,51 +203,46 @@ const AdminTenants: React.FC = () => {
                     <span className="text-primary">{tenant.user_count}</span> {t('admin.userCount')} / <span className="text-primary">{tenant.branch_count}</span> {t('admin.branchCount')}
                   </td>
                   <td className="px-8 py-6">
-                    {tenant.status === 'active' ? (
+                    {tenant.status === TENANT_STATUS.ACTIVE ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100">
                         <CheckCircle size={12} /> {t('admin.statusActive')}
                       </span>
-                    ) : tenant.status === 'pending' ? (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100">
-                        <Calendar size={12} /> {t('admin.statusPending')}
-                      </span>
                     ) : (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-100">
-                        <XCircle size={12} /> {t('admin.statusSuspended')}
+                        <XCircle size={12} /> {t('admin.statusDisabled')}
                       </span>
                     )}
                   </td>
                   <td className="px-8 py-6 text-right">
                     <div className="flex justify-end gap-3">
-                      {tenant.status === 'pending' ? (
+                      {tenant.status === TENANT_STATUS.PENDING && (
                         <button
-                          onClick={() => setConfirmModal({ isOpen: true, tenant, action: 'approve' })}
+                          onClick={() => setConfirmModal({ isOpen: true, tenant, action: TENANT_ACTIONS.APPROVE })}
                           className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
                         >
                           {t('admin.approve')}
                         </button>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => handleOpenPlanModal(tenant)}
-                            className="p-2 text-primary hover:bg-primary/10 rounded-xl transition-all"
-                            title={t('admin.changePlan')}
-                          >
-                            <Zap size={18} />
-                          </button>
-                          <button
-                            onClick={() => setConfirmModal({ 
-                              isOpen: true, 
-                              tenant, 
-                              action: tenant.status === 'active' ? 'suspend' : 'activate' 
-                            })}
-                            className={`p-2 rounded-xl transition-all ${tenant.status === 'active' ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
-                            title={tenant.status === 'active' ? t('admin.deactivate') : t('admin.activate')}
-                          >
-                            {tenant.status === 'active' ? <XCircle size={18} /> : <CheckCircle size={18} />}
-                          </button>
-                        </>
                       )}
+                      {tenant.status !== TENANT_STATUS.PENDING && (
+                        <button
+                          onClick={() => handleOpenPlanModal(tenant)}
+                          className="p-2 text-primary hover:bg-primary/10 rounded-xl transition-all"
+                          title={t('admin.changePlan')}
+                        >
+                          <Zap size={18} />
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setConfirmModal({ 
+                          isOpen: true, 
+                          tenant, 
+                          action: (tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? TENANT_ACTIONS.SUSPEND : TENANT_ACTIONS.ACTIVATE 
+                        })}
+                        className={`p-2 rounded-xl transition-all ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
+                        title={(tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? t('admin.deactivate') : t('admin.activate')}
+                      >
+                        {(tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? <XCircle size={18} /> : <CheckCircle size={18} />}
+                      </button>
                     </div>
                   </td>
                 </tr>

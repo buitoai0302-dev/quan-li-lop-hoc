@@ -3,12 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Check, X, Clock, Building, Zap, Crown, Shield } from 'lucide-react';
 import api from '../api';
 import toast from 'react-hot-toast';
+import { PLAN_REQUEST_STATUS, PLAN_REQUEST_ACTIONS } from '../utils/constants';
 
 interface PlanRequest {
   id: string;
   tenant_name: string;
   plan_name: string;
-  status: 'pending' | 'approved' | 'rejected';
+  status: typeof PLAN_REQUEST_STATUS[keyof typeof PLAN_REQUEST_STATUS];
   notes: string;
   created_at: string;
 }
@@ -17,7 +18,7 @@ const AdminPlanRequests: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [requests, setRequests] = useState<PlanRequest[]>([]);
   const [loading, setLoading] = useState(true);
-  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; id: string | null; action: 'approve' | 'reject' }>({ isOpen: false, id: null, action: 'approve' });
+  const [confirmModal, setConfirmModal] = useState<{ isOpen: boolean; id: string | null; action: typeof PLAN_REQUEST_ACTIONS[keyof typeof PLAN_REQUEST_ACTIONS] }>({ isOpen: false, id: null, action: PLAN_REQUEST_ACTIONS.APPROVE });
 
   const fetchRequests = async () => {
     try {
@@ -37,13 +38,13 @@ const AdminPlanRequests: React.FC = () => {
   const handleApprove = async () => {
     if (!confirmModal.id) return;
     try {
-      if (confirmModal.action === 'approve') {
+      if (confirmModal.action === PLAN_REQUEST_ACTIONS.APPROVE) {
         await api.post(`/plans/requests/${confirmModal.id}/approve`);
       } else {
         await api.post(`/plans/requests/${confirmModal.id}/reject`);
       }
       toast.success(t('common.success'));
-      setConfirmModal({ isOpen: false, id: null, action: 'approve' });
+      setConfirmModal({ isOpen: false, id: null, action: PLAN_REQUEST_ACTIONS.APPROVE });
       fetchRequests();
     } catch (err) {
       toast.error(t('common.error'));
@@ -52,9 +53,9 @@ const AdminPlanRequests: React.FC = () => {
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'pending': return t('common.pending');
-      case 'approved': return t('common.active');
-      case 'rejected': return t('common.inactive');
+      case PLAN_REQUEST_STATUS.PENDING: return t('common.pending');
+      case PLAN_REQUEST_STATUS.APPROVED: return t('common.active');
+      case PLAN_REQUEST_STATUS.REJECTED: return t('common.inactive');
       default: return status;
     }
   };
@@ -72,41 +73,41 @@ const AdminPlanRequests: React.FC = () => {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-gray-900/40 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-white dark:bg-gray-800 p-10 rounded-[2.5rem] shadow-2xl border border-white/20 dark:border-gray-700 max-w-sm w-full text-center animate-in zoom-in-95 duration-300">
           <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg"
-               style={{ background: confirmModal.action === 'approve' ? '' : '' }}
+               style={{ background: confirmModal.action === PLAN_REQUEST_ACTIONS.APPROVE ? '' : '' }}
           >
-            {confirmModal.action === 'approve'
+            {confirmModal.action === PLAN_REQUEST_ACTIONS.APPROVE
               ? <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 rounded-3xl flex items-center justify-center text-emerald-600 dark:text-emerald-400"><Shield size={40} strokeWidth={2.5} /></div>
               : <div className="w-20 h-20 bg-rose-100 dark:bg-rose-900/30 rounded-3xl flex items-center justify-center text-rose-600 dark:text-rose-400"><X size={40} strokeWidth={2.5} /></div>
             }
           </div>
-            <h3 className="text-2xl font-black text-gray-900 dark:text-white mb-2 tracking-tight">
-              {confirmModal.action === 'approve'
-                ? t('admin.approveConfirmTitle', 'Xác nhận Phê duyệt')
-                : t('admin.rejectConfirmTitle', 'Xác nhận Từ chối')}
-            </h3>
+          <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2">
+            {confirmModal.action === PLAN_REQUEST_ACTIONS.APPROVE
+              ? t('admin.approveConfirmTitle')
+              : t('admin.rejectConfirmTitle')}
+          </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 leading-relaxed">
-              {confirmModal.action === 'approve'
-                ? t('admin.approveConfirm', 'Bạn có chắc chắn muốn phê duyệt yêu cầu nâng cấp này?')
-                : t('admin.rejectConfirm', 'Bạn có chắc chắn muốn từ chối yêu cầu này? Hành động không thể hoàn tác.')}
+              {confirmModal.action === PLAN_REQUEST_ACTIONS.APPROVE
+                ? t('admin.approveConfirm')
+                : t('admin.rejectConfirm')}
             </p>
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleApprove}
                 className={`w-full py-4 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg transition-all active:scale-95 ${
-                  confirmModal.action === 'approve'
+                  confirmModal.action === PLAN_REQUEST_ACTIONS.APPROVE
                     ? 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30'
                     : 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/30'
                 }`}
               >
                 {confirmModal.action === 'approve'
-                  ? t('admin.approve', 'Phê duyệt Ngay')
-                  : t('admin.reject', 'Từ chối')}
+                  ? t('admin.approve')
+                  : t('admin.reject')}
               </button>
               <button
-                onClick={() => setConfirmModal({ isOpen: false, id: null, action: 'approve' })}
+                onClick={() => setConfirmModal({ isOpen: false, id: null, action: PLAN_REQUEST_ACTIONS.APPROVE })}
                 className="w-full py-4 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all"
               >
-                {t('common.cancel', 'Hủy bỏ')}
+                {t('common.cancel')}
               </button>
             </div>
           </div>
@@ -124,7 +125,7 @@ const AdminPlanRequests: React.FC = () => {
         </div>
         <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-2xl border border-amber-100 dark:border-amber-800/50 text-sm font-bold">
           <Clock size={18} />
-          {requests.filter(r => r.status === 'pending').length} {t('admin.pendingRequests')}
+          {requests.filter(r => r.status === PLAN_REQUEST_STATUS.PENDING).length} {t('admin.pendingRequests')}
         </div>
       </div>
 
@@ -180,13 +181,13 @@ const AdminPlanRequests: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-8 py-6">
-                      <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${req.status === 'pending' ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' :
-                        req.status === 'approved' ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white' :
+                      <span className={`inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-wider shadow-sm ${req.status === PLAN_REQUEST_STATUS.PENDING ? 'bg-gradient-to-r from-amber-400 to-orange-500 text-white' :
+                        req.status === PLAN_REQUEST_STATUS.APPROVED ? 'bg-gradient-to-r from-emerald-400 to-teal-500 text-white' :
                           'bg-gradient-to-r from-rose-400 to-red-500 text-white'
                         }`}>
-                        {req.status === 'pending' && <Clock size={12} />}
-                        {req.status === 'approved' && <Check size={12} />}
-                        {req.status === 'rejected' && <X size={12} />}
+                        {req.status === PLAN_REQUEST_STATUS.PENDING && <Clock size={12} />}
+                        {req.status === PLAN_REQUEST_STATUS.APPROVED && <Check size={12} />}
+                        {req.status === PLAN_REQUEST_STATUS.REJECTED && <X size={12} />}
                         {getStatusLabel(req.status)}
                       </span>
                     </td>
@@ -201,19 +202,19 @@ const AdminPlanRequests: React.FC = () => {
                       </div>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      {req.status === 'pending' && (
+                      {req.status === PLAN_REQUEST_STATUS.PENDING && (
                         <div className="flex justify-end gap-2">
                           <button
-                            onClick={() => setConfirmModal({ isOpen: true, id: req.id, action: 'approve' })}
+                            onClick={() => setConfirmModal({ isOpen: true, id: req.id, action: PLAN_REQUEST_ACTIONS.APPROVE })}
                             className="flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/30"
                           >
                             <Check size={14} strokeWidth={3} /> {t('admin.approve')}
                           </button>
                           <button
-                            onClick={() => setConfirmModal({ isOpen: true, id: req.id, action: 'reject' })}
+                            onClick={() => setConfirmModal({ isOpen: true, id: req.id, action: PLAN_REQUEST_ACTIONS.REJECT })}
                             className="flex items-center gap-2 px-4 py-2 bg-rose-500 hover:bg-rose-600 text-white rounded-xl font-bold text-xs transition-all hover:scale-105 active:scale-95 shadow-lg shadow-rose-500/30"
                           >
-                            <X size={14} strokeWidth={3} /> {t('admin.reject', 'Từ chối')}
+                            <X size={14} strokeWidth={3} /> {t('admin.reject')}
                           </button>
                         </div>
                       )}

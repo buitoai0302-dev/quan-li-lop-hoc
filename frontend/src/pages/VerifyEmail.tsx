@@ -29,7 +29,7 @@ const VerifyEmail: React.FC = () => {
         setStatus('error');
         const msg = error.response?.data?.error || t('common.error');
         setMessage(msg);
-        if (msg.includes('hết hạn') || msg.includes('expired') || msg.includes('không tồn tại') || msg.includes('does not exist')) {
+        if (msg.includes('expired') || msg.includes('limit') || msg.includes('exist')) {
           setIsExpired(true);
         }
       }

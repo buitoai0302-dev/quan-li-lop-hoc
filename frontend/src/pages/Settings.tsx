@@ -19,6 +19,7 @@ const Settings: React.FC = () => {
   const [hasApiAccess, setHasApiAccess] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generatingKey, setGeneratingKey] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{ open: boolean; message: string; onConfirm: () => void }>({ open: false, message: '', onConfirm: () => { } });
 
   useEffect(() => {
@@ -110,6 +111,18 @@ const Settings: React.FC = () => {
       }
     });
   };
+  const handleSyncAll = async () => {
+    if (syncing) return;
+    setSyncing(true);
+    try {
+      const res = await api.post('/google/sync-all');
+      toast.success(res.data.message);
+    } catch (error) {
+      toast.error(t('common.error'));
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   const handleGenerateApiKey = () => {
     if (apiKey) {
@@ -148,7 +161,7 @@ const Settings: React.FC = () => {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(t('common.copied', 'Đã sao chép!'));
+    toast.success(t('settings.copied'));
   };
 
 
@@ -156,7 +169,7 @@ const Settings: React.FC = () => {
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 max-w-3xl mx-auto space-y-10">
       <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">{t('settings.title')}</h2>
 
-      {/* Cấu hình Trung tâm */}
+      {/* {t('settings.centerConfig')} */}
       <section className="space-y-6">
         <div>
           <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">{t('settings.basicInfo')}</h3>
@@ -193,7 +206,7 @@ const Settings: React.FC = () => {
         </div>
       </section>
 
-      {/* Cấu hình Cá nhân */}
+      {/* {t('settings.personalConfig')} */}
       <section className="pt-6 border-t border-gray-200 dark:border-gray-700 space-y-6">
         <div>
           <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">{t('settings.personalSettings')}</h3>
@@ -230,7 +243,7 @@ const Settings: React.FC = () => {
         </div>
       </section>
 
-      {/* Kết nối Ứng dụng */}
+      {/* {t('settings.appConnect')} */}
       <section className="pt-6 border-t border-gray-200 dark:border-gray-700 space-y-6">
         <div>
           <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">{t('settings.appConnection')}</h3>
@@ -254,34 +267,36 @@ const Settings: React.FC = () => {
             {isGoogleConnected ? t('settings.disconnect') : t('settings.connect')}
           </button>
         </div>
-
-        <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-white dark:bg-gray-800 rounded-md shadow-sm">
-              <img src="https://img.icons8.com/color/48/zalo.png" alt="Zalo" className="h-6 w-6" />
+        {isGoogleConnected && (
+          <div className="p-4 bg-primary/5 rounded-xl border border-dashed border-primary/20 flex items-center justify-between">
+            <div className="flex items-center gap-3 text-primary">
+              <RefreshCw size={20} className={syncing ? 'animate-spin' : ''} />
+              <div>
+                <p className="text-sm font-bold">{t('settings.syncAll')}</p>
+                <p className="text-xs opacity-70">{t('settings.syncAllDesc')}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm font-medium text-gray-900 dark:text-white">Zalo Official Account</p>
-              <p className="text-xs text-gray-500">{t('settings.zaloNotConnected', 'Chưa kết nối Zalo OA')}</p>
-            </div>
+            <button 
+              onClick={handleSyncAll}
+              disabled={syncing}
+              className="px-4 py-2 bg-primary text-white text-xs font-black uppercase tracking-widest rounded-lg shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+            >
+              {syncing ? t('common.loading') : t('settings.syncNow')}
+            </button>
           </div>
-          <button 
-            onClick={() => toast.success(t('settings.zaloComingSoon', 'Tính năng kết nối Zalo OA đang được phê duyệt bởi Zalo. Vui lòng thử lại sau.'))}
-            className="px-4 py-2 rounded-md text-sm font-medium text-primary bg-primary/10 hover:bg-primary/20 transition-colors"
-          >
-            {t('settings.connect')}
-          </button>
-        </div>
+        )}
+
+
       </section>
 
-      {/* Quản lý API */}
+      {/* {t('settings.apiConfig')} */}
       <section className="pt-6 border-t border-gray-200 dark:border-gray-700 space-y-6">
         <div>
           <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100 flex items-center gap-2">
-            <Key size={20} className="text-primary" /> {t('settings.apiTitle', 'Quản lý API Access')}
+            <Key size={20} className="text-primary" /> {t('settings.apiTitle')}
           </h3>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {t('settings.apiDesc', 'Sử dụng API để kết nối EduSchedule với các ứng dụng của riêng bạn.')}
+            {t('settings.apiDesc')}
           </p>
         </div>
 
@@ -316,9 +331,9 @@ const Settings: React.FC = () => {
                     readOnly 
                     value={apiKey || ''} 
                     className="w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none"
-                    placeholder="Chưa có API Key"
+                    placeholder={t('settings.apiKeyPlaceholder')}
                   />
-                  {!apiKey && <div className="absolute inset-0 bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-[1px] flex items-center justify-center rounded-xl text-xs text-gray-400 font-bold italic">Chưa được tạo</div>}
+                  {!apiKey && <div className="absolute inset-0 bg-gray-50/50 dark:bg-gray-900/50 backdrop-blur-[1px] flex items-center justify-center rounded-xl text-xs text-gray-400 font-bold italic">{t('settings.apiKeyNotCreated')}</div>}
                 </div>
                 {apiKey && (
                   <button 
@@ -333,18 +348,18 @@ const Settings: React.FC = () => {
                   onClick={handleGenerateApiKey}
                   disabled={generatingKey}
                   className="p-3 bg-primary hover:bg-primary-dark text-white rounded-xl transition-all shadow-lg shadow-primary/20 disabled:opacity-50"
-                  title="Tạo mới"
+                  title={t('settings.generate')}
                 >
                   <RefreshCw size={20} className={generatingKey ? 'animate-spin' : ''} />
                 </button>
               </div>
               <p className="mt-4 text-[10px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-                <ShieldCheck size={12} /> Cảnh báo: Tuyệt đối không chia sẻ API Key này. Bất kỳ ai có mã này đều có quyền truy cập dữ liệu của bạn.
+                <ShieldCheck size={12} /> {t('settings.apiWarning')}
               </p>
             </div>
             
             <div className="bg-gray-50 dark:bg-gray-900/30 p-4 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
-              <h5 className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 italic">Hướng dẫn nhanh:</h5>
+              <h5 className="text-xs font-bold text-gray-700 dark:text-gray-300 mb-2 italic">{t('settings.quickGuide')}:</h5>
               <code className="text-[11px] text-gray-500 block leading-relaxed">
                 curl -X GET https://eduschedule.api/v1/sessions \<br/>
                 &nbsp;&nbsp;-H "x-api-key: YOUR_API_KEY"
@@ -353,7 +368,7 @@ const Settings: React.FC = () => {
           </div>
         )}
       </section>
-      {/* Giao diện */}
+      {/* {t('settings.interfaceConfig')} */}
       <section className="pt-6 border-t border-gray-200 dark:border-gray-700">
         <div>
           <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">{t('settings.appearance')}</h3>
@@ -376,7 +391,7 @@ const Settings: React.FC = () => {
 
       <ConfirmModal
         isOpen={confirmModal.open}
-        title={t('common.confirm', 'Xác nhận')}
+        title={t('common.confirm')}
         message={confirmModal.message}
         onConfirm={() => { confirmModal.onConfirm(); setConfirmModal(m => ({ ...m, open: false })); }}
         onClose={() => setConfirmModal(m => ({ ...m, open: false }))}

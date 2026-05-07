@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getClasses, createClass, updateClass, deleteClass } from '../controllers/class.controller';
+import { getClasses, createClass, updateClass, deleteClass, getRecurringSchedules, getEnrollments, enrollStudent, unenrollStudent } from '../controllers/class.controller';
 import { enforceLimit } from '../middlewares/feature.middleware';
 import { requireRole } from '../middlewares/auth.middleware';
 import { validateUUID } from '../middlewares/validate.middleware';
@@ -7,6 +7,8 @@ import { validateUUID } from '../middlewares/validate.middleware';
 const router = Router();
 
 router.get('/', requireRole(['admin', 'staff', 'teacher', 'student']), getClasses);
+router.get('/:id/recurring', requireRole(['admin', 'staff', 'teacher']), validateUUID(['id']), getRecurringSchedules);
+router.get('/:id/students', requireRole(['admin', 'staff', 'teacher']), validateUUID(['id']), getEnrollments);
 
 // Apply the enforceLimit middleware to check if 'max_classes' has been reached
 router.post(
@@ -16,7 +18,9 @@ router.post(
   createClass
 );
 
+router.post('/:id/students', requireRole(['admin', 'staff']), validateUUID(['id']), enrollStudent);
 router.put('/:id', requireRole(['admin', 'staff']), validateUUID(['id']), updateClass);
 router.delete('/:id', requireRole(['admin', 'staff']), validateUUID(['id']), deleteClass);
+router.delete('/:id/students/:studentId', requireRole(['admin', 'staff']), validateUUID(['id', 'studentId']), unenrollStudent);
 
 export default router;

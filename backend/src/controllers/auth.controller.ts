@@ -11,6 +11,7 @@ import { checkRateLimit, recordFailedAttempt, clearAttempts, checkEmailRateLimit
 import { ValidationError, AuthenticationError, ForbiddenError, NotFoundError } from '../utils/errors';
 
 import { config } from '../utils/config';
+import { PLAN_CODES, TENANT_STATUS, DEFAULT_FREE_PLAN_ID } from '../utils/constants';
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -123,20 +124,60 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     }
 
     const email = payload.email;
+    const fullName = payload.name || email.split('@')[0];
 
     const result = await pool.query(
       `SELECT u.*, t.name as tenant_name, t.plan_id, t.is_active as tenant_active
        FROM users u 
        JOIN tenants t ON u.tenant_id = t.id 
-       WHERE u.email = $1 AND u.is_active = true`,
+       WHERE u.email = $1`,
       [email]
     );
 
-    if (result.rows.length === 0) {
-      return next(new AuthenticationError('Account not found. Please register first.', 'USER_NOT_FOUND'));
-    }
+    let user;
 
-    const user = result.rows[0];
+    if (result.rows.length === 0) {
+      // Auto-register via Google
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        
+        // Default plan
+        const planResult = await client.query(`SELECT id FROM plan_definitions WHERE code = $1`, [PLAN_CODES.FREE]);
+        const planId = planResult.rows[0]?.id || DEFAULT_FREE_PLAN_ID;
+
+        // Create ACTIVE tenant for Google login
+        const tenantResult = await client.query(
+          "INSERT INTO tenants (plan_id, name, status, is_active) VALUES ($1, $2, $3, true) RETURNING id, name as tenant_name, plan_id, is_active as tenant_active",
+          [planId, `Center of ${fullName}`, TENANT_STATUS.ACTIVE]
+        );
+        const newTenant = tenantResult.rows[0];
+
+        // Create verified user
+        const dummyPassword = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
+        const userResult = await client.query(
+          `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_email_verified) 
+           VALUES ($1, $2, $3, $4, 'admin', true) RETURNING *`,
+          [newTenant.id, email, dummyPassword, fullName]
+        );
+        user = { ...userResult.rows[0], ...newTenant };
+
+        // Create default branch
+        await client.query(
+          `INSERT INTO branches (tenant_id, name) VALUES ($1, $2)`,
+          [newTenant.id, 'Chi nhánh chính']
+        );
+
+        await client.query('COMMIT');
+      } catch (err) {
+        await client.query('ROLLBACK');
+        throw err;
+      } finally {
+        client.release();
+      }
+    } else {
+      user = result.rows[0];
+    }
 
     // Check Tenant Status
     if (user.role !== 'super_admin' && !user.tenant_active) {
@@ -180,12 +221,12 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       return next(new ValidationError('Email already registered', 'EMAIL_ALREADY_EXISTS'));
     }
 
-    const planResult = await client.query(`SELECT id FROM plan_definitions WHERE code = 'FREE'`);
-    const planId = planResult.rows[0]?.id || 'ffffffff-0000-0000-0000-000000000001';
+    const planResult = await client.query(`SELECT id FROM plan_definitions WHERE code = $1`, [PLAN_CODES.FREE]);
+    const planId = planResult.rows[0]?.id || DEFAULT_FREE_PLAN_ID;
 
     const tenantResult = await client.query(
-      "INSERT INTO tenants (plan_id, name, status, is_active) VALUES ($1, $2, 'pending', false) RETURNING id",
-      [planId, tenantName || `Center of ${fullName}`]
+      "INSERT INTO tenants (plan_id, name, status, is_active) VALUES ($1, $2, $3, false) RETURNING id",
+      [planId, tenantName || `Center of ${fullName}`, TENANT_STATUS.PENDING]
     );
     const tenantId = tenantResult.rows[0].id;
 
@@ -234,13 +275,21 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
        SET is_email_verified = true, verification_token = NULL, verification_token_expires = NULL 
        WHERE verification_token = $1 
          AND (verification_token_expires IS NULL OR verification_token_expires > NOW())
-       RETURNING id`,
+       RETURNING id, tenant_id`,
       [token]
     );
 
     if (result.rowCount === 0) {
       return next(new ValidationError('Token expired or invalid', 'VERIFY_EMAIL_EXPIRED'));
     }
+
+    const { tenant_id } = result.rows[0];
+
+    // Tự động kích hoạt Tenant khi người dùng đầu tiên (admin) xác thực email
+    await pool.query(
+      "UPDATE tenants SET is_active = true, status = 'active' WHERE id = $1 AND status = 'pending'",
+      [tenant_id]
+    );
 
     res.json({ message: 'Success', code: 'VERIFY_EMAIL_SUCCESS' });
   } catch (error) {

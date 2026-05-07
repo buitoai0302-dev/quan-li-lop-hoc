@@ -6,9 +6,9 @@ import { query } from '../db';
  * Middleware to check if a tenant has a specific feature enabled.
  */
 export const requireFeature = (featureKey: string) => {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (req: any, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const tenantId = req.tenant?.id;
+      const tenantId = req.tenantId || req.tenant?.id || req.user?.tenantId;
       if (!tenantId) {
         res.status(401).json({ success: false, message: 'Unauthorized' });
         return;
@@ -38,9 +38,9 @@ export const requireFeature = (featureKey: string) => {
  * example: enforceLimit('max_classes', 'SELECT COUNT(*) FROM classes WHERE tenant_id = $1')
  */
 export const enforceLimit = (limitKey: string, countQuery: string) => {
-  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  return async (req: any, res: Response, next: NextFunction): Promise<void> => {
     try {
-      const tenantId = req.tenant?.id;
+      const tenantId = req.tenantId || req.tenant?.id || req.user?.tenantId;
       if (!tenantId) {
         res.status(401).json({ success: false, message: 'Unauthorized' });
         return;

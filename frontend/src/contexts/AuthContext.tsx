@@ -5,6 +5,7 @@ interface User {
   id: string;
   tenant_id: string;
   branch_id: string | null;
+  branch_name?: string;
   email: string;
   full_name: string;
   role: string;
