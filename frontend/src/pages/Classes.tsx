@@ -331,12 +331,12 @@ const Classes: React.FC = () => {
             <table className="w-full min-w-full divide-y divide-gray-200 dark:divide-gray-700 border-separate border-spacing-0">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50 dark:bg-gray-900/90 backdrop-blur-md">
-                  <th className="w-auto px-2 sm:px-6 py-3 text-left text-[10px] sm:text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('classes.name')}</th>
-                  <th className="hidden lg:table-cell w-[20%] px-6 py-3 text-left text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('classes.branch')}</th>
-                  <th className="hidden md:table-cell w-[20%] px-6 py-3 text-left text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('classes.teacher')}</th>
-                  <th className="hidden sm:table-cell w-28 px-6 py-3 text-left text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('classes.capacity')}</th>
-                  <th className="hidden sm:table-cell w-28 px-2 sm:px-6 py-3 text-left text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('common.status')}</th>
-                  <th className="w-20 sm:w-28 px-2 sm:px-6 py-3 text-right text-[10px] sm:text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('common.actions')}</th>
+                  <th className="w-auto px-2 sm:px-6 py-3 text-left text-[10px] sm:text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('classes.name')}</th>
+                  <th className="hidden lg:table-cell w-[20%] px-6 py-3 text-left text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('classes.branch')}</th>
+                  <th className="hidden md:table-cell w-[20%] px-6 py-3 text-left text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('classes.teacher')}</th>
+                  <th className="hidden sm:table-cell w-28 px-6 py-3 text-left text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('classes.capacity')}</th>
+                  <th className="hidden sm:table-cell w-28 px-2 sm:px-6 py-3 text-left text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('common.status')}</th>
+                  <th className="w-20 sm:w-28 px-2 sm:px-6 py-3 text-right text-[10px] sm:text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
@@ -448,13 +448,13 @@ const Classes: React.FC = () => {
                 <div className="relative">
                   <select
                     required
-                    className="block w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl py-2.5 px-4 pr-10 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none transition-all text-sm font-medium dark:text-white cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
+                    className="block w-full bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-700 rounded-xl py-2.5 px-4 pr-10 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none transition-all text-sm font-medium dark:text-white cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
                     value={formData.branch_id}
                     onChange={(e) => setFormData({ ...formData, branch_id: e.target.value })}
                   >
-                    <option value="" disabled>---</option>
+                    <option value="" disabled className="dark:bg-gray-900">---</option>
                     {branches.map(branch => (
-                      <option key={branch.id} value={branch.id}>{branch.name}</option>
+                      <option key={branch.id} value={branch.id} className="dark:bg-gray-900">{branch.name}</option>
                     ))}
                   </select>
                 </div>

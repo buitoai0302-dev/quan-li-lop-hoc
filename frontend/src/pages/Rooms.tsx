@@ -214,12 +214,12 @@ const Rooms: React.FC = () => {
             <table className="w-full min-w-full divide-y divide-gray-200 dark:divide-gray-700 border-separate border-spacing-0">
               <thead className="sticky top-0 z-10">
                 <tr className="bg-gray-50 dark:bg-gray-900/90 backdrop-blur-md">
-                  <th className="w-auto px-2 sm:px-6 py-3 text-left text-[10px] sm:text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('rooms.name')}</th>
-                  <th className="hidden md:table-cell w-[25%] px-6 py-3 text-left text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('classes.branch')}</th>
-                  <th className="hidden sm:table-cell w-24 px-6 py-3 text-left text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('rooms.capacity')}</th>
-                  <th className="hidden sm:table-cell w-32 px-6 py-3 text-left text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('rooms.type')}</th>
-                  <th className="hidden sm:table-cell w-28 px-2 sm:px-6 py-3 text-left text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('common.status')}</th>
-                  <th className="w-20 sm:w-28 px-2 sm:px-6 py-3 text-right text-[10px] sm:text-xs font-black text-gray-500 dark:text-gray-400 uppercase tracking-widest border-b border-gray-200 dark:border-gray-700">{t('common.actions')}</th>
+                  <th className="w-auto px-2 sm:px-6 py-3 text-left text-[10px] sm:text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('rooms.name')}</th>
+                  <th className="hidden md:table-cell w-[25%] px-6 py-3 text-left text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('classes.branch')}</th>
+                  <th className="hidden sm:table-cell w-24 px-6 py-3 text-left text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('rooms.capacity')}</th>
+                  <th className="hidden sm:table-cell w-32 px-6 py-3 text-left text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('rooms.type')}</th>
+                  <th className="hidden sm:table-cell w-28 px-2 sm:px-6 py-3 text-left text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('common.status')}</th>
+                  <th className="w-20 sm:w-28 px-2 sm:px-6 py-3 text-right text-[10px] sm:text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('common.actions')}</th>
                 </tr>
               </thead>
               <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">

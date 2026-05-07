@@ -82,10 +82,8 @@ const Login: React.FC = () => {
       </div>
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
-        <div className="flex justify-center mb-2">
-          <div className="w-10 h-10 bg-primary rounded-[0.8rem] shadow-2xl shadow-primary/20 flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-500">
-             <span className="text-white font-black text-lg">E</span>
-          </div>
+        <div className="flex justify-center mb-4">
+          <img src="/logo.png" alt="EduSchedule Logo" className="w-16 h-16 rounded-2xl shadow-2xl shadow-primary/20 transition-all duration-500 object-cover" />
         </div>
         <h2 className="text-center text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
           {t('auth.loginTitle')}

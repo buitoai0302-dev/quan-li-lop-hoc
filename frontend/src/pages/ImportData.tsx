@@ -253,17 +253,17 @@ const ImportData: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-3">
           <div className="md:col-span-4 relative group">
             <select
-              className="block w-full bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 rounded-xl py-2 px-4 text-[11px] font-bold dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+              className="block w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl py-2 px-4 text-[11px] font-bold dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
               value={importType}
               onChange={(e) => {
                 setImportType(e.target.value as ImportType);
                 handleClearFile();
               }}
             >
-              <option value="students">{t('import.students')}</option>
-              <option value="teachers">{t('import.teachers')}</option>
-              <option value="rooms">{t('import.rooms')}</option>
-              <option value="classes">{t('import.classes')}</option>
+              <option value="students" className="dark:bg-gray-900">{t('import.students')}</option>
+              <option value="teachers" className="dark:bg-gray-900">{t('import.teachers')}</option>
+              <option value="rooms" className="dark:bg-gray-900">{t('import.rooms')}</option>
+              <option value="classes" className="dark:bg-gray-900">{t('import.classes')}</option>
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300 group-hover:text-primary transition-colors">
               <Upload size={14} />
@@ -272,13 +272,13 @@ const ImportData: React.FC = () => {
 
           <div className="md:col-span-5 relative group">
             <select
-              className="block w-full bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 rounded-xl py-2 px-4 text-[11px] font-bold dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+              className="block w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl py-2 px-4 text-[11px] font-bold dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
               value={selectedBranch}
               onChange={(e) => setSelectedBranch(e.target.value)}
             >
-              <option value="" disabled>{t('import.selectBranch')}</option>
+              <option value="" disabled className="dark:bg-gray-900">{t('import.selectBranch')}</option>
               {branches.map(b => (
-                <option key={b.id} value={b.id}>{b.name}</option>
+                <option key={b.id} value={b.id} className="dark:bg-gray-900">{b.name}</option>
               ))}
             </select>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300 group-hover:text-primary transition-colors">
@@ -455,9 +455,9 @@ const ImportData: React.FC = () => {
                 <table className="min-w-full divide-y divide-gray-100 dark:divide-gray-800">
                   <thead className="bg-gray-50/50 dark:bg-gray-900/50 sticky top-0 z-10 backdrop-blur-md">
                     <tr>
-                      <th className="px-5 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest w-12 italic border-b border-gray-100 dark:border-gray-800">Row</th>
+                      <th className="px-5 py-3 text-left text-[9px] font-extrabold text-gray-400 uppercase tracking-wider w-12 italic border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">Row</th>
                       {headers.map((h, i) => (
-                        <th key={i} className="px-5 py-3 text-left text-[9px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-gray-800">
+                        <th key={i} className="px-5 py-3 text-left text-[9px] font-extrabold text-gray-400 uppercase tracking-wider border-b border-gray-100 dark:border-gray-800 whitespace-nowrap">
                           {h}
                         </th>
                       ))}

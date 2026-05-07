@@ -186,11 +186,11 @@ const AdminTenants: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-gray-50/50 dark:bg-gray-900/30 border-b border-gray-100 dark:border-gray-700">
-                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('admin.tenantName')}</th>
-                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('admin.plan')}</th>
-                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('admin.userCount')} / {t('admin.branchCount')}</th>
-                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('admin.status')}</th>
-                <th className="px-8 py-5 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">{t('common.actions')}</th>
+                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">{t('admin.organization')}</th>
+                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">{t('admin.plan')}</th>
+                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">{t('admin.userCount')} / {t('admin.branchCount')}</th>
+                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">{t('admin.status')}</th>
+                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider text-right whitespace-nowrap">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
