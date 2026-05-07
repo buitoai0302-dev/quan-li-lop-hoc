@@ -268,18 +268,20 @@ const Settings: React.FC = () => {
           </button>
         </div>
         {isGoogleConnected && (
-          <div className="p-4 bg-primary/5 rounded-xl border border-dashed border-primary/20 flex items-center justify-between">
-            <div className="flex items-center gap-3 text-primary">
-              <RefreshCw size={20} className={syncing ? 'animate-spin' : ''} />
-              <div>
-                <p className="text-sm font-bold">{t('settings.syncAll')}</p>
-                <p className="text-xs opacity-70">{t('settings.syncAllDesc')}</p>
+          <div className="p-5 sm:p-4 bg-primary/[0.03] dark:bg-primary/[0.05] rounded-2xl border border-dashed border-primary/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 transition-all hover:bg-primary/[0.05]">
+            <div className="flex items-start sm:items-center gap-4 text-primary min-w-0">
+              <div className={`p-3 rounded-xl bg-white dark:bg-gray-800 shadow-sm border border-primary/10 shrink-0 ${syncing ? 'animate-pulse' : ''}`}>
+                <RefreshCw size={20} className={syncing ? 'animate-spin' : ''} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-black tracking-tight leading-none mb-1">{t('settings.syncAll')}</p>
+                <p className="text-[11px] opacity-70 leading-relaxed max-w-sm line-clamp-2 sm:line-clamp-none">{t('settings.syncAllDesc')}</p>
               </div>
             </div>
             <button 
               onClick={handleSyncAll}
               disabled={syncing}
-              className="px-4 py-2 bg-primary text-white text-xs font-black uppercase tracking-widest rounded-lg shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all disabled:opacity-50"
+              className="w-full sm:w-auto px-6 py-3 sm:py-2 bg-primary text-white text-[10px] font-black uppercase tracking-[0.2em] rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 whitespace-nowrap"
             >
               {syncing ? t('common.loading') : t('settings.syncNow')}
             </button>

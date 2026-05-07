@@ -9,8 +9,8 @@ const router = Router();
 router.get('/', requireRole(['admin', 'staff', 'teacher']), getBranches);
 router.put('/first', requireRole(['admin']), updateFirstBranch);
 
-// Only tenants with the 'multi_branch' feature can create new branches
-router.post('/', requireFeature('multi_branch'), requireRole(['admin']), createBranch);
+// Create new branch (checked by max_branches limit in controller)
+router.post('/', requireRole(['admin']), createBranch);
 
 router.put('/:id', requireRole(['admin']), validateUUID(['id']), updateBranch);
 router.delete('/:id', requireRole(['admin']), validateUUID(['id']), deleteBranch);

@@ -148,8 +148,8 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
 
         // Create ACTIVE tenant for Google login
         const tenantResult = await client.query(
-          "INSERT INTO tenants (plan_id, name, status, is_active) VALUES ($1, $2, $3, true) RETURNING id, name as tenant_name, plan_id, is_active as tenant_active",
-          [planId, `Center of ${fullName}`, TENANT_STATUS.ACTIVE]
+          "INSERT INTO tenants (plan_id, name, status, is_active, contact_email) VALUES ($1, $2, $3, true, $4) RETURNING id, name as tenant_name, plan_id, is_active as tenant_active",
+          [planId, `Center of ${fullName}`, TENANT_STATUS.ACTIVE, email]
         );
         const newTenant = tenantResult.rows[0];
 
@@ -225,8 +225,8 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const planId = planResult.rows[0]?.id || DEFAULT_FREE_PLAN_ID;
 
     const tenantResult = await client.query(
-      "INSERT INTO tenants (plan_id, name, status, is_active) VALUES ($1, $2, $3, false) RETURNING id",
-      [planId, tenantName || `Center of ${fullName}`, TENANT_STATUS.PENDING]
+      "INSERT INTO tenants (plan_id, name, status, is_active, contact_email) VALUES ($1, $2, $3, false, $4) RETURNING id",
+      [planId, tenantName || `Center of ${fullName}`, TENANT_STATUS.PENDING, email]
     );
     const tenantId = tenantResult.rows[0].id;
 

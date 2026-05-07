@@ -50,7 +50,9 @@
     "noData": "Không có dữ liệu",
     "info": "Thông tin",
     "settings": "Cài đặt",
-    "contact": "Liên hệ"
+    "contact": "Liên hệ",
+    "preview": "Xem trước",
+    "viewDetail": "Xem chi tiết"
   },
   "menu": {
     "dashboard": "Tổng quan",
@@ -150,6 +152,8 @@
     "confirm": "Bắt đầu nhập",
     "processing": "Đang xử lý...",
     "noData": "Chưa có dữ liệu nào để hiển thị",
+    "confirmTitle": "Xác nhận nhập dữ liệu",
+    "confirmMessage": "Bạn có chắc chắn muốn nhập {{count}} {{type}} vào hệ thống? Hành động này sẽ tạo mới các bản ghi và các thực thể liên quan.",
     "errors": {
       "noBranch": "Vui lòng chọn chi nhánh",
       "noData": "Không có dữ liệu hợp lệ",
@@ -260,7 +264,7 @@
   },
   "admin": {
     "planRequestsTitle": "Yêu cầu Nâng cấp Gói",
-    "planRequestsSubtitle": "Danh sách các yêu cầu nâng cấp dịch vụ từ các cơ sở thành viên.",
+    "planRequestsSubtitle": "Phê duyệt các yêu cầu nâng cấp dịch vụ từ các đối tác",
     "pendingRequests": "yêu cầu đang chờ",
     "approveConfirmTitle": "Xác nhận Phê duyệt",
     "rejectConfirmTitle": "Xác nhận Từ chối",
@@ -275,6 +279,7 @@
     "deactivate": "Vô hiệu hóa",
     "activate": "Kích hoạt",
     "tenantsTitle": "Quản lý Cơ sở (Tenants)",
+    "tenantsSubtitle": "Quản lý và phê duyệt các tổ chức tham gia hệ thống",
     "tenantName": "Tên Cơ sở / Tenant",
     "plan": "Gói dịch vụ",
     "userCount": "Người dùng",

@@ -31,7 +31,10 @@ export const getClasses = async (req: AuthRequest, res: Response, next: NextFunc
 };
 
 export const createClass = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  let client;
   try {
+    client = await pool.connect();
+    await client.query('BEGIN');
     const tenantId = req.tenantId || req.user?.tenantId;
     const { branch_id, subject_id, teacher_id, name, max_capacity, start_date, end_date } = req.body;
 
@@ -44,11 +47,11 @@ export const createClass = async (req: AuthRequest, res: Response, next: NextFun
 
     let actualSubjectId = subject_id;
     if (!actualSubjectId) {
-      const subjectRes = await pool.query(`SELECT id FROM subjects WHERE tenant_id = $1 LIMIT 1`, [tenantId]);
+      const subjectRes = await client.query(`SELECT id FROM subjects WHERE tenant_id = $1 LIMIT 1`, [tenantId]);
       if (subjectRes.rows.length > 0) {
         actualSubjectId = subjectRes.rows[0].id;
       } else {
-        const newSub = await pool.query(`INSERT INTO subjects (tenant_id, name, code) VALUES ($1, 'General', 'GEN') RETURNING id`, [tenantId]);
+        const newSub = await client.query(`INSERT INTO subjects (tenant_id, name, code) VALUES ($1, 'General', 'GEN') RETURNING id`, [tenantId]);
         actualSubjectId = newSub.rows[0].id;
       }
     }
@@ -61,14 +64,14 @@ export const createClass = async (req: AuthRequest, res: Response, next: NextFun
     `;
     const insertParams = [tenantId, branch_id, actualSubjectId, teacher_id || null, name, max_capacity || 30, start_date || new Date().toISOString().split('T')[0], end_date || new Date().toISOString().split('T')[0]];
 
-    const newClass = await pool.query(insertSql, insertParams);
+    const newClass = await client.query(insertSql, insertParams);
     const classId = newClass.rows[0].id;
 
     // Handle Recurring Schedules
     const { recurring_schedules } = req.body; // Array of { day_of_week, start_time, end_time, room_id, notes }
     if (recurring_schedules && Array.isArray(recurring_schedules) && recurring_schedules.length > 0) {
       for (const schedule of recurring_schedules) {
-        await pool.query(
+        await client.query(
           `INSERT INTO class_recurring_schedules (class_id, day_of_week, start_time, end_time, room_id, notes)
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [classId, schedule.day_of_week, schedule.start_time, schedule.end_time, schedule.room_id || null, schedule.notes || null]
@@ -76,11 +79,11 @@ export const createClass = async (req: AuthRequest, res: Response, next: NextFun
       }
 
       // AUTO GENERATE SESSIONS
-      const startDate = new Date(start_date);
-      const endDate = new Date(end_date);
+      const startDateObj = new Date(start_date);
+      const endDateObj = new Date(end_date);
       const sessions = [];
 
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      for (let d = new Date(startDateObj); d <= endDateObj; d.setDate(d.getDate() + 1)) {
         const dayOfWeek = d.getDay(); // 0 is Sunday, 1 is Monday...
         const matchingSchedules = recurring_schedules.filter(s => parseInt(s.day_of_week) === dayOfWeek);
 
@@ -99,23 +102,40 @@ export const createClass = async (req: AuthRequest, res: Response, next: NextFun
         }
       }
 
-      // Batch insert sessions if room_id and teacher_id are available
-      // Note: room_id is required in schedule_sessions based on schema, but we'll try to insert what we have
+      // Batch insert sessions with conflict check
+      let skippedCount = 0;
+      let successCount = 0;
+
       for (const session of sessions) {
-        if (session.room_id && session.teacher_id) {
-          await pool.query(
+        // Even if teacher_id is null, we check for room/class conflicts. 
+        // But the user specifically mentioned teacher conflicts.
+        const conflictRes = await client.query(
+          `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)`,
+          [session.tenant_id, session.teacher_id, session.room_id, session.class_id, session.session_date, session.start_time, session.end_time]
+        );
+
+        if (conflictRes.rows.length === 0) {
+          await client.query(
             `INSERT INTO schedule_sessions (tenant_id, class_id, room_id, teacher_id, session_date, start_time, end_time, status, notes)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
             [session.tenant_id, session.class_id, session.room_id, session.teacher_id, session.session_date, session.start_time, session.end_time, session.status, session.notes || null]
           );
+          successCount++;
+        } else {
+          skippedCount++;
         }
       }
+      console.log(`Auto-generated sessions: ${successCount} success, ${skippedCount} skipped due to conflicts.`);
     }
 
+    await client.query('COMMIT');
     res.status(201).json(newClass.rows[0]);
   } catch (error: any) {
+    if (client) await client.query('ROLLBACK');
     console.error('CREATE CLASS ERROR:', error);
     res.status(500).json({ error: error.message, stack: error.stack });
+  } finally {
+    if (client) client.release();
   }
 };
 
@@ -133,12 +153,15 @@ export const getRecurringSchedules = async (req: AuthRequest, res: Response, nex
 };
 
 export const updateClass = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  let client;
   try {
+    client = await pool.connect();
+    await client.query('BEGIN');
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
     const { branch_id, subject_id, teacher_id, name, max_capacity, start_date, end_date, status, recurring_schedules } = req.body;
 
-    const result = await pool.query(
+    const result = await client.query(
       `UPDATE classes 
        SET branch_id = COALESCE($1, branch_id),
            subject_id = COALESCE($2, subject_id),
@@ -160,11 +183,11 @@ export const updateClass = async (req: AuthRequest, res: Response, next: NextFun
     // Update Recurring Schedules if provided
     if (recurring_schedules && Array.isArray(recurring_schedules)) {
       // 1. Delete old rules
-      await pool.query(`DELETE FROM class_recurring_schedules WHERE class_id = $1`, [id]);
+      await client.query(`DELETE FROM class_recurring_schedules WHERE class_id = $1`, [id]);
       
       // 2. Insert new rules
       for (const schedule of recurring_schedules) {
-        await pool.query(
+        await client.query(
           `INSERT INTO class_recurring_schedules (class_id, day_of_week, start_time, end_time, room_id, notes)
            VALUES ($1, $2, $3, $4, $5, $6)`,
           [id, schedule.day_of_week, schedule.start_time, schedule.end_time, schedule.room_id || null, schedule.notes || null]
@@ -181,17 +204,17 @@ export const updateClass = async (req: AuthRequest, res: Response, next: NextFun
       
       // Delete future sessions that haven't been completed/cancelled by staff manually if needed 
       // but for simplicity, we delete all 'scheduled' sessions from syncFrom
-      await pool.query(
+      await client.query(
         `DELETE FROM schedule_sessions 
          WHERE class_id = $1 AND session_date >= $2 AND status = 'scheduled'`,
         [id, syncFrom]
       );
 
       // Generate new sessions
-      const startDate = new Date(syncFrom);
-      const endDate = new Date(classEnd);
+      const startDateObj = new Date(syncFrom);
+      const endDateObj = new Date(classEnd);
       
-      for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+      for (let d = new Date(startDateObj); d <= endDateObj; d.setDate(d.getDate() + 1)) {
         const dayOfWeek = d.getDay();
         const matchingSchedules = recurring_schedules.filter(s => parseInt(s.day_of_week) === dayOfWeek);
 
@@ -200,8 +223,14 @@ export const updateClass = async (req: AuthRequest, res: Response, next: NextFun
           const finalTeacherId = teacher_id || result.rows[0].teacher_id;
           const finalRoomId = s.room_id || null;
 
-          if (finalRoomId && finalTeacherId) {
-            await pool.query(
+          // Check for conflicts even if teacher is null to be safe
+          const conflictRes = await client.query(
+            `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)`,
+            [tenantId, finalTeacherId, finalRoomId, id, d.toISOString().split('T')[0], s.start_time, s.end_time]
+          );
+
+          if (conflictRes.rows.length === 0) {
+            await client.query(
               `INSERT INTO schedule_sessions (tenant_id, class_id, room_id, teacher_id, session_date, start_time, end_time, status, notes)
                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
               [tenantId, id, finalRoomId, finalTeacherId, d.toISOString().split('T')[0], s.start_time, s.end_time, 'scheduled', s.notes || null]
@@ -211,9 +240,13 @@ export const updateClass = async (req: AuthRequest, res: Response, next: NextFun
       }
     }
 
+    await client.query('COMMIT');
     res.json(result.rows[0]);
   } catch (error) {
+    if (client) await client.query('ROLLBACK');
     next(error);
+  } finally {
+    if (client) client.release();
   }
 };
 

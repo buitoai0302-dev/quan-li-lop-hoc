@@ -141,14 +141,14 @@ const MainLayout: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 md:px-8 shadow-sm z-40 shrink-0 transition-colors duration-200">
-          <div className="flex items-center">
+          <div className="flex items-center min-w-0 mr-4">
             <button
-              className="mr-4 md:hidden text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 focus:outline-none"
+              className="mr-3 md:hidden text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 focus:outline-none shrink-0"
               onClick={() => setIsMobileMenuOpen(true)}
             >
               <Menu size={24} />
             </button>
-            <h2 className="text-lg md:text-xl font-semibold text-gray-800 dark:text-white truncate">{currentMenu}</h2>
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 dark:text-white truncate tracking-tight">{currentMenu}</h2>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">
@@ -180,7 +180,7 @@ const MainLayout: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 p-4 md:p-8 overflow-auto bg-gray-50/50 dark:bg-gray-900/50">
+        <div className="flex-1 p-3 md:p-8 overflow-auto bg-gray-50/50 dark:bg-gray-900/50">
           <Outlet />
         </div>
         <HelpWidget isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />

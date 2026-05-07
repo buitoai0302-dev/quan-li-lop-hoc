@@ -8,6 +8,7 @@ import { Globe, Eye, EyeOff } from 'lucide-react';
 import { handleApiError } from '../utils/errorHelper';
 import { GoogleLogin } from '@react-oauth/google';
 import { ERROR_CODES } from '../utils/constants';
+import { useTheme } from '../contexts/ThemeContext';
 
 const Login: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -18,6 +19,7 @@ const Login: React.FC = () => {
   const { login, user, loading } = useAuth();
   const navigate = useNavigate();
   const { t, i18n } = useTranslation();
+  const { theme: currentTheme } = useTheme();
 
   if (loading) return null;
   if (user) return <Navigate to="/schedule" replace />;
@@ -62,93 +64,162 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col justify-center py-12 sm:px-6 lg:px-8 font-sans relative transition-colors duration-200">
-      <div className="absolute top-4 right-4">
-        <button onClick={toggleLanguage} className="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-gray-600 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm">
-          <Globe size={18} className="text-primary" />
-          <span>{i18n.language.startsWith('en') ? 'EN' : 'VI'}</span>
+    <div className="min-h-screen bg-slate-50 dark:bg-[#0F172A] flex flex-col justify-center py-2 sm:py-4 px-4 sm:px-6 lg:px-8 font-sans relative transition-colors duration-500 overflow-x-hidden">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-primary/5 dark:bg-primary/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-1/2 -right-24 w-72 h-72 bg-blue-400/5 dark:bg-blue-400/10 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
+        <button 
+          onClick={toggleLanguage} 
+          className="group flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 bg-white/60 dark:bg-gray-800/80 backdrop-blur-md border border-slate-200/50 dark:border-gray-700 rounded-xl sm:rounded-2xl hover:bg-white dark:hover:bg-gray-700 transition-all shadow-sm active:scale-95"
+        >
+          <Globe size={12} className="text-primary group-hover:rotate-12 transition-transform sm:w-[14px] sm:h-[14px]" />
+          <span>{i18n.language.startsWith('en') ? 'English' : 'Tiếng Việt'}</span>
         </button>
       </div>
 
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-white">{t('auth.loginTitle')}</h2>
-        <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">EduSchedule — Premium Edition</p>
+      <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
+        <div className="flex justify-center mb-2">
+          <div className="w-10 h-10 bg-primary rounded-[0.8rem] shadow-2xl shadow-primary/20 flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-500">
+             <span className="text-white font-black text-lg">E</span>
+          </div>
+        </div>
+        <h2 className="text-center text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
+          {t('auth.loginTitle')}
+        </h2>
+        <p className="mt-1 text-center text-[8px] sm:text-[10px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-slate-500">
+          EduSchedule — Premium Experience
+        </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white dark:bg-gray-800 py-8 px-4 shadow sm:rounded-lg sm:px-10 border border-gray-100 dark:border-gray-700">
+      <div className="mt-3 sm:mx-auto sm:w-full sm:max-w-[420px] relative z-10">
+        <div className="bg-white/40 dark:bg-gray-800/50 backdrop-blur-xl py-4 px-6 sm:px-10 shadow-xl shadow-slate-200/50 dark:shadow-none rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200/50 dark:border-gray-700/50">
 
           {emailNotVerified && (
-            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <p className="text-sm text-yellow-800 dark:text-yellow-300 font-medium">⚠️ {t('auth.emailNotVerifiedTitle')}</p>
-              <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
+            <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/30 rounded-xl animate-in fade-in slide-in-from-top-2 duration-500">
+              <p className="text-[11px] text-amber-800 dark:text-amber-300 font-bold flex items-center gap-2">
+                <span className="text-sm">⚠️</span> {t('auth.emailNotVerifiedTitle')}
+              </p>
+              <p className="text-[9px] text-amber-700/80 dark:text-amber-400/80 mt-0.5 leading-tight">
                 {t('auth.emailNotVerifiedDesc')}{' '}
-                <Link to="/resend-verification" className="underline font-medium">{t('auth.emailNotVerifiedLink')}</Link>.
+                <Link to="/resend-verification" className="text-primary underline font-black decoration-2 underline-offset-2">{t('auth.emailNotVerifiedLink')}</Link>.
               </p>
             </div>
           )}
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('auth.email')}</label>
-              <input id="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)}
-                className="mt-1 appearance-none block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
+          <form className="space-y-3" onSubmit={handleSubmit}>
+            <div className="space-y-1">
+              <label htmlFor="email" className="block text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest ml-1">
+                {t('auth.email')}
+              </label>
+              <input 
+                id="email" type="email" autoComplete="email" required 
+                value={email} onChange={e => setEmail(e.target.value)}
+                placeholder="name@example.com"
+                className="block w-full px-5 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-800 dark:text-white rounded-xl sm:rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600" 
+              />
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('auth.password')}</label>
-              <div className="mt-1 relative">
-                <input id="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)}
-                  className="appearance-none block w-full pr-10 px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white rounded-md shadow-sm focus:outline-none focus:ring-primary focus:border-primary sm:text-sm" />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} title={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between ml-1">
+                <label htmlFor="password" className="block text-[9px] font-black text-slate-400 dark:text-gray-500 uppercase tracking-widest">
+                  {t('auth.password')}
+                </label>
+                <Link to="/forgot-password" className="text-[9px] font-black text-primary hover:text-primary-dark uppercase tracking-wider transition-colors">
+                  {t('auth.forgotPassword')}
+                </Link>
+              </div>
+              <div className="relative group">
+                <input 
+                  id="password" type={showPassword ? 'text' : 'password'} autoComplete="current-password" required 
+                  value={password} onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  className="block w-full px-5 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-800 dark:text-white rounded-xl sm:rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600" 
+                />
+                <button 
+                  type="button" onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors"
+                >
+                  {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                 </button>
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 text-sm text-gray-900 dark:text-gray-300">
-                <input type="checkbox" className="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded dark:bg-gray-700" />
-                {t('auth.rememberMe')}
+            <div className="flex items-center ml-1">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <div className="relative flex items-center justify-center">
+                  <input type="checkbox" className="peer sr-only" />
+                  <div className="w-4 h-4 bg-gray-100 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-md peer-checked:bg-primary peer-checked:border-primary transition-all"></div>
+                  <div className="absolute text-white opacity-0 peer-checked:opacity-100 transition-opacity">
+                    <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
+                      <path d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                </div>
+                <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
+                  {t('auth.rememberMe')}
+                </span>
               </label>
-              <Link to="/forgot-password" className="text-sm font-medium text-primary hover:text-primary-dark">{t('auth.forgotPassword')}</Link>
             </div>
 
-            <button type="submit" disabled={isLoading}
-              className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}>
-              {isLoading ? t('auth.loggingIn') : t('auth.loginButton')}
+            <button 
+              type="submit" disabled={isLoading}
+              className={`w-full py-3 px-6 bg-primary hover:bg-primary-dark text-white rounded-xl sm:rounded-2xl shadow-xl shadow-primary/20 text-[11px] font-black uppercase tracking-[0.2em] transition-all active:scale-[0.98] flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                  <span>{t('auth.loggingIn')}</span>
+                </>
+              ) : (
+                <span>{t('auth.loginButton')}</span>
+              )}
             </button>
           </form>
 
-          <div className="mt-6">
+          <div className="mt-4">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300 dark:border-gray-600"></div>
+                <div className="w-full border-t border-slate-100 dark:border-gray-700"></div>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white dark:bg-gray-800 text-gray-500">{t('auth.orContinueWith')}</span>
+              <div className="relative flex justify-center text-[7px] font-black uppercase tracking-[0.2em]">
+                <span className="px-4 bg-surface dark:bg-gray-800 text-slate-400 dark:text-gray-500">{t('auth.orContinueWith')}</span>
               </div>
             </div>
 
-            <div className="mt-6 flex justify-center">
+            <div className="mt-3 flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
                 onError={() => toast.error('Google Login Failed')}
                 useOneTap={false}
-                theme={document.documentElement.classList.contains('dark') ? 'filled_black' : 'outline'}
+                theme={currentTheme === 'dark' ? 'filled_black' : 'outline'}
+                shape="pill"
+                size="large"
+                text="continue_with"
                 width="100%"
               />
             </div>
           </div>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+          <div className="mt-4 text-center pt-3 border-t border-slate-100 dark:border-gray-700/50">
+            <p className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
               {t('auth.noAccount')}{' '}
-              <Link to="/register" className="font-medium text-primary hover:text-primary-dark">{t('auth.registerLink')}</Link>
+              <Link to="/register" className="text-primary hover:text-primary-dark font-black underline decoration-2 underline-offset-4 transition-all">
+                {t('auth.registerLink')}
+              </Link>
             </p>
           </div>
         </div>
+      </div>
+      
+      {/* Footer Branding */}
+      <div className="mt-4 text-center opacity-30 select-none">
+        <p className="text-[8px] font-black uppercase tracking-[0.5em] text-gray-400">
+          Powered by EduSchedule Cloud
+        </p>
       </div>
     </div>
   );

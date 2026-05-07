@@ -34,7 +34,7 @@ const port = process.env.PORT || 5000;
 app.use(cors({
   origin: true, // Cho phép tất cả các origin gửi yêu cầu (phù hợp khi deploy đa nền tảng)
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'x-api-key']
 }));
 app.use(express.json({ limit: '2mb' }));

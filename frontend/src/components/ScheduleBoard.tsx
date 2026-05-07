@@ -10,7 +10,7 @@ import DraggableSessionCard from './DraggableSessionCard';
 import DroppableDaySlot from './DroppableDaySlot';
 import Modal from './Modal';
 import ConfirmModal from './ConfirmModal';
-import { Plus, ChevronLeft, ChevronRight, Clock, User, MapPin, FileText, Info, SlidersHorizontal } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, Clock, User, MapPin, FileText, Info, SlidersHorizontal, Calendar } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { handleApiError } from '../utils/errorHelper';
@@ -165,6 +165,8 @@ const ScheduleBoard: React.FC = () => {
     }
   };
 
+  const modalDateInputRef = React.useRef<HTMLInputElement>(null);
+
   const handleOpenModal = (session?: Session) => {
     if (session) {
       setEditingSession(session);
@@ -245,6 +247,8 @@ const ScheduleBoard: React.FC = () => {
     }
   };
 
+  const dateInputRef = React.useRef<HTMLInputElement>(null);
+
   const handlePrev = () => {
     if (viewMode === 'day') setSelectedDate(addDays(selectedDate, -1));
     else if (viewMode === 'week') setSelectedDate(addDays(selectedDate, -7));
@@ -259,10 +263,10 @@ const ScheduleBoard: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-surface dark:bg-gray-800 rounded-xl shadow-lg border border-border dark:border-gray-700 overflow-hidden transition-colors duration-200">
-      <div className="flex flex-col border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 transition-all sticky top-0 z-30 shadow-sm">
+      <div className="flex flex-col border-b border-gray-200 dark:border-gray-700 bg-surface dark:bg-gray-900 transition-all sticky top-0 z-30 shadow-sm">
         {/* Main Header Row */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between px-3 sm:px-6 py-3 sm:py-4 gap-3 sm:gap-4">
-          
+
           {/* Left Side: Title & Date Navigation */}
           <div className="flex items-center justify-between lg:justify-start gap-2 sm:gap-4 min-w-0">
             <div className="flex flex-col min-w-0">
@@ -282,20 +286,31 @@ const ScheduleBoard: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg sm:rounded-xl p-0.5 sm:p-1 shadow-inner shrink-0">
-              <button className="p-1 sm:p-1.5 text-gray-500 hover:bg-white dark:hover:bg-gray-700 rounded-md sm:rounded-lg transition-all" onClick={handlePrev}>
-                <ChevronLeft size={14} className="sm:w-4 sm:h-4" />
+            <div className="flex items-center bg-gray-100 dark:bg-gray-800 rounded-lg sm:rounded-xl p-1 shadow-inner shrink-0">
+              <button className="p-1.5 text-gray-500 hover:bg-white dark:hover:bg-gray-700 rounded-md sm:rounded-lg transition-all" onClick={handlePrev}>
+                <ChevronLeft size={16} className="sm:w-4 sm:h-4" />
               </button>
-              <div className="relative">
+              <div 
+                className="relative flex items-center bg-white/50 dark:bg-gray-700/50 px-2 py-0.5 rounded-md mx-1 border border-gray-200/50 dark:border-gray-600/50 cursor-pointer hover:bg-white dark:hover:bg-gray-700 transition-colors"
+                onClick={() => {
+                  const input = dateInputRef.current as any;
+                  if (input) {
+                    if ('showPicker' in input) input.showPicker();
+                    else input.click();
+                  }
+                }}
+              >
                 <input
+                  ref={dateInputRef}
                   type="date"
                   value={format(selectedDate, 'yyyy-MM-dd')}
                   onChange={(e) => e.target.value && setSelectedDate(new Date(e.target.value))}
-                  className="bg-transparent border-none p-0 text-[9px] sm:text-[10px] font-black text-gray-700 dark:text-gray-300 focus:ring-0 w-16 sm:w-20 text-center cursor-pointer"
+                  className="bg-transparent border-none p-0 text-[10px] sm:text-[10px] font-black text-gray-700 dark:text-gray-300 focus:ring-0 w-24 sm:w-24 text-center cursor-pointer"
                 />
+                <Calendar size={14} className="text-primary dark:text-blue-400 shrink-0 ml-1" />
               </div>
-              <button className="p-1 sm:p-1.5 text-gray-500 hover:bg-white dark:hover:bg-gray-700 rounded-md sm:rounded-lg transition-all" onClick={handleNext}>
-                <ChevronRight size={14} className="sm:w-4 sm:h-4" />
+              <button className="p-1.5 text-gray-500 hover:bg-white dark:hover:bg-gray-700 rounded-md sm:rounded-lg transition-all" onClick={handleNext}>
+                <ChevronRight size={16} className="sm:w-4 sm:h-4" />
               </button>
             </div>
           </div>
@@ -468,14 +483,24 @@ const ScheduleBoard: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-blue-600 dark:text-indigo-300 uppercase ml-1">{t('schedule.date')} *</label>
-                <div className="relative group">
+                <div 
+                  className="relative group cursor-pointer"
+                  onClick={() => {
+                    const input = modalDateInputRef.current as any;
+                    if (input) {
+                      if ('showPicker' in input) input.showPicker();
+                      else input.click();
+                    }
+                  }}
+                >
                   <input
+                    ref={modalDateInputRef}
                     required type="date"
                     value={formData.sessionDate}
                     onChange={(e) => setFormData({ ...formData, sessionDate: e.target.value })}
-                    className="w-full pl-8 pr-2 py-1.5 bg-white dark:bg-slate-800 border border-blue-100 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none transition-all"
+                    className="w-full pl-8 pr-2 py-1.5 bg-white dark:bg-slate-800 border border-blue-100 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none transition-all cursor-pointer"
                   />
-                  <Clock size={14} className="absolute left-2.5 top-2 text-blue-500 dark:text-indigo-400" />
+                  <Calendar size={14} className="absolute left-2.5 top-2 text-blue-500 dark:text-indigo-400 group-hover:scale-110 transition-transform" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">

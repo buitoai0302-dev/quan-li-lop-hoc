@@ -29,7 +29,7 @@ export const getSystemStats = async (req: AuthRequest, res: Response, next: Next
 export const getAllTenants = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const result = await pool.query(
-      `SELECT t.id, t.name, t.domain, t.contact_email, t.plan_id, t.is_active, t.created_at,
+      `SELECT t.id, t.name, t.domain, t.contact_email, t.plan_id, t.is_active, t.status, t.created_at,
               p.name as plan_name, p.code as plan_code,
               (SELECT COUNT(*) FROM users WHERE tenant_id = t.id) as user_count,
               (SELECT COUNT(*) FROM branches WHERE tenant_id = t.id) as branch_count

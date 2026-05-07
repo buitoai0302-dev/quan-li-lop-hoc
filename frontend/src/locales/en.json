@@ -48,7 +48,9 @@
     "noData": "No data available",
     "info": "Information",
     "settings": "Settings",
-    "contact": "Contact"
+    "contact": "Contact",
+    "preview": "Preview",
+    "viewDetail": "View detail"
   },
   "menu": {
     "dashboard": "Dashboard",
@@ -148,6 +150,8 @@
     "confirm": "Start Import",
     "processing": "Processing...",
     "noData": "No data to display",
+    "confirmTitle": "Confirm Import",
+    "confirmMessage": "Are you sure you want to import {{count}} {{type}} into the system? This action will add new records and potentially create related entities.",
     "errors": {
       "noBranch": "Please select a branch",
       "noData": "No valid data found",
@@ -259,7 +263,7 @@
   },
   "admin": {
     "planRequestsTitle": "Plan Upgrade Requests",
-    "planRequestsSubtitle": "List of service upgrade requests from member centers.",
+    "planRequestsSubtitle": "Approve service upgrade requests from partners",
     "pendingRequests": "pending requests",
     "approveConfirmTitle": "Confirm Approval",
     "rejectConfirmTitle": "Confirm Rejection",
@@ -274,6 +278,7 @@
     "deactivate": "Deactivate",
     "activate": "Activate",
     "tenantsTitle": "Tenant Management",
+    "tenantsSubtitle": "Manage and approve organizations participating in the system",
     "tenantName": "Center Name / Tenant",
     "plan": "Service Plan",
     "userCount": "Users",

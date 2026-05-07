@@ -51,7 +51,7 @@ export const createPlanRequest = async (req: Request, res: Response) => {
 export const getPlanRequests = async (req: Request, res: Response) => {
   try {
     const result = await pool.query(`
-      SELECT pr.*, t.name as tenant_name, pd.name as plan_name 
+      SELECT pr.*, t.name as tenant_name, t.contact_email, pd.name as plan_name 
       FROM plan_requests pr
       JOIN tenants t ON pr.tenant_id = t.id
       JOIN plan_definitions pd ON pr.plan_id = pd.id
