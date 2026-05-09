@@ -83,7 +83,8 @@
     "adminTenants": "Quản lý đối tác",
     "adminPlans": "Cấu hình gói",
     "planRequests": "Yêu cầu nâng cấp",
-    "adminStats": "Thống kê hệ thống"
+    "adminStats": "Thống kê hệ thống",
+    "activities": "Nhật ký hoạt động"
   },
   "dashboard": {
     "title": "Tổng quan hệ thống",

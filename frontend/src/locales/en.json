@@ -81,7 +81,8 @@
     "adminTenants": "Tenant Management",
     "adminPlans": "Plan Config",
     "planRequests": "Upgrade Requests",
-    "adminStats": "System Stats"
+    "adminStats": "System Stats",
+    "activities": "Activity Log"
   },
   "dashboard": {
     "title": "System Overview",
