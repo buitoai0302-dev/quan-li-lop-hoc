@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Calendar, Users, LayoutDashboard, Settings, Menu, X, LogOut, Building, BookOpen, DoorOpen, Globe, Moon, Sun, Monitor, Import, Shield, List, HelpCircle, CreditCard, Clock, Zap } from 'lucide-react';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Menu, Globe, Moon, Sun, Monitor, HelpCircle } from 'lucide-react';
+import { getMenuItems } from '../routes';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
 import HelpWidget from './HelpWidget';
-
 import NotificationPopover from './NotificationPopover';
+import Sidebar from './Sidebar';
 
 const MainLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -16,6 +17,7 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -38,112 +40,23 @@ const MainLayout: React.FC = () => {
     return <Monitor size={18} className="text-gray-500 dark:text-gray-400" />;
   };
 
-  const menuItems = [
-    { path: '/dashboard', icon: <LayoutDashboard size={20} />, label: t('menu.dashboard'), roles: ['admin', 'staff', 'teacher', 'student', 'super_admin'] },
-    { path: '/schedule', icon: <Calendar size={20} />, label: user?.role === 'teacher' ? t('menu.teachingSchedule') : (user?.role === 'student' ? t('menu.learningSchedule') : t('menu.schedule')), roles: ['admin', 'staff', 'teacher', 'student', 'super_admin'] },
-    { path: '/classes', icon: <BookOpen size={20} />, label: t('menu.classes'), roles: ['admin', 'staff', 'teacher', 'super_admin'] },
-    { path: '/students', icon: <Users size={20} />, label: t('menu.students'), roles: ['admin', 'staff', 'super_admin'] },
-    { path: '/teachers', icon: <Users size={20} />, label: t('menu.teachers'), roles: ['admin', 'staff', 'super_admin'] },
-    { path: '/rooms', icon: <DoorOpen size={20} />, label: t('menu.rooms'), roles: ['admin', 'staff', 'super_admin'] },
-    { path: '/branches', icon: <Building size={20} />, label: t('menu.branches'), roles: ['admin', 'staff', 'super_admin'], isPremium: true },
-    { path: '/import', icon: <Import size={20} />, label: t('menu.import'), roles: ['admin', 'staff', 'super_admin'] },
-    { path: '/help', icon: <HelpCircle size={20} />, label: t('menu.help'), roles: ['admin', 'staff', 'teacher', 'student', 'super_admin'] },
-    { path: '/subscription', icon: <CreditCard size={20} />, label: t('menu.subscription'), roles: ['admin', 'super_admin'] },
-    { path: '/settings', icon: <Settings size={20} />, label: t('menu.settings'), roles: ['admin', 'super_admin'] },
-    { path: '/admin/tenants', icon: <Shield size={20} />, label: t('menu.adminTenants'), roles: ['super_admin'] },
-    { path: '/admin/requests', icon: <Clock size={20} />, label: t('menu.planRequests'), roles: ['super_admin'] },
-    { path: '/admin/plans', icon: <List size={20} />, label: t('menu.adminPlans'), roles: ['super_admin'] },
-  ];
+  // Centralized Menu Items
+  const menuItems = getMenuItems(t, user?.role);
 
-  const visibleMenuItems = menuItems.filter(item => user?.role && item.roles.includes(user.role));
-
-  const currentMenu = visibleMenuItems.find(m => location.pathname.startsWith(m.path))?.label || 'EduSchedule';
+  const currentMenu = menuItems.find((m: any) => location.pathname.startsWith(m.path))?.label || 'EduSchedule';
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans overflow-hidden transition-colors duration-200">
-      {/* Mobile Sidebar Overlay */}
-      {isMobileMenuOpen && (
-        <div
-          className="fixed inset-0 bg-gray-900/60 z-[60] md:hidden backdrop-blur-sm transition-opacity duration-300"
-          onClick={() => setIsMobileMenuOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-[70] w-60 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-        <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-700/50 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <img src="/logo.png" alt="Logo" className="w-9 h-9 rounded-xl shadow-lg shadow-primary/20 object-cover shrink-0" />
-            <div className="min-w-0">
-              <h1 className="text-xl font-black bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent tracking-tight leading-tight truncate">
-                EduSchedule
-              </h1>
-              <div className="text-[8px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] truncate">{user?.tenant_name || 'Premium Edition'}</div>
-            </div>
-          </div>
-          <button
-            className="md:hidden p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-all shrink-0"
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <X size={20} />
-          </button>
-        </div>
-
-        <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-          {visibleMenuItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={() => setIsMobileMenuOpen(false)}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors ${isActive
-                  ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <div className={isActive ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'}>
-                    {item.icon}
-                  </div>
-                  <span className="flex-1">{item.label}</span>
-                  {item.isPremium && (
-                    <div className="flex items-center justify-center w-5 h-5 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-lg shadow-lg shadow-orange-500/20">
-                      <Zap size={10} className="text-white" fill="currentColor" />
-                    </div>
-                  )}
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-inner shrink-0">
-                {user?.full_name ? user.full_name.substring(0, 2).toUpperCase() : 'AD'}
-              </div>
-              <div className="truncate">
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{user?.full_name || 'User'}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email || ''}</p>
-              </div>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="text-gray-400 hover:text-red-500 transition-colors p-2 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30 shrink-0"
-              title="Logout"
-            >
-              <LogOut size={18} />
-            </button>
-          </div>
-        </div>
-      </aside>
+      <Sidebar
+        isOpen={isMobileMenuOpen}
+        onClose={() => setIsMobileMenuOpen(false)}
+        user={user}
+        onLogout={handleLogout}
+      />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        <header className="h-16 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 md:px-8 shadow-sm z-40 shrink-0 transition-colors duration-200">
+      <main className="flex-1 overflow-auto relative custom-scrollbar bg-gray-50/50 dark:bg-gray-900/50">
+        <header className="sticky top-0 z-40 h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 md:px-8 shadow-sm transition-colors duration-200 shrink-0 will-change-transform">
           <div className="flex items-center min-w-0 mr-4">
             <button
               className="mr-3 md:hidden text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 focus:outline-none shrink-0"
@@ -183,7 +96,7 @@ const MainLayout: React.FC = () => {
           </div>
         </header>
 
-        <div className="flex-1 p-3 md:p-8 overflow-auto bg-gray-50/50 dark:bg-gray-900/50">
+        <div className="p-3 md:p-8">
           <Outlet />
         </div>
         <HelpWidget isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />

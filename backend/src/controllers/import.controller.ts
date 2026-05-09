@@ -1,5 +1,8 @@
 import { Response, NextFunction } from 'express';
 import pool from '../db';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import { sendTeacherWelcomeEmail } from '../services/email.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ValidationError } from '../utils/errors';
 
@@ -48,6 +51,7 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
       }
     } else if (type === 'teachers') {
       for (const row of data) {
+        const client = await pool.connect();
         try {
           const { full_name, email, phone, specialization, branch_id } = row;
           if (!full_name || !email || !branch_id) {
@@ -55,7 +59,9 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
             continue;
           }
 
-          const result = await pool.query(
+          await client.query('BEGIN');
+
+          const result = await client.query(
             `INSERT INTO teachers (tenant_id, branch_id, full_name, email, phone, specialization) 
              VALUES ($1, $2, $3, $4, $5, $6) 
              ON CONFLICT (tenant_id, email) DO NOTHING 
@@ -64,12 +70,38 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
           );
 
           if (result.rowCount && result.rowCount > 0) {
+            // Teacher created, now create user
+            const defaultPassword = email.split('@')[0];
+            const salt = await bcrypt.genSalt(10);
+            const passwordHash = await bcrypt.hash(defaultPassword, salt);
+            const verificationToken = crypto.randomUUID();
+            const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+            const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
+            
+            if (existingUser.rows.length === 0) {
+              await client.query(
+                `INSERT INTO users (tenant_id, branch_id, email, password_hash, full_name, role, is_email_verified, verification_token, verification_token_expires, onboarding_completed) 
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                [tenantId, branch_id, email, passwordHash, full_name, 'teacher', false, verificationToken, tokenExpires, true]
+              );
+              
+              await client.query('COMMIT');
+              // Send welcome email outside transaction
+              await sendTeacherWelcomeEmail(email, verificationToken, full_name).catch(err => console.error(`Error sending email to ${email}:`, err));
+            } else {
+              await client.query('COMMIT');
+            }
             successCount++;
           } else {
+            await client.query('ROLLBACK');
             skipCount++;
           }
         } catch (err) {
+          await client.query('ROLLBACK');
           skipCount++;
+        } finally {
+          client.release();
         }
       }
     } else if (type === 'rooms') {

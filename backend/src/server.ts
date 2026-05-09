@@ -19,6 +19,7 @@ import importRoutes from './routes/import.routes';
 import googleRoutes from './routes/google.routes';
 import adminRoutes from './routes/admin.routes';
 import planRoutes from './routes/plan.routes';
+import attendanceRoutes from './routes/attendance.routes';
 import { initCronJobs } from './cron/notification.cron';
 
 import { errorMiddleware } from './middlewares/error.middleware';
@@ -66,6 +67,7 @@ protectedRoutes.use('/dashboard', dashboardRoutes);
 protectedRoutes.use('/import', importRoutes);
 protectedRoutes.use('/admin', adminRoutes);
 protectedRoutes.use('/plans', planRoutes);
+protectedRoutes.use('/attendance', attendanceRoutes);
 
 app.use('/api', protectedRoutes);
 

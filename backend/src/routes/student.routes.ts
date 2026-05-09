@@ -6,7 +6,7 @@ import { enforceLimit } from '../middlewares/feature.middleware';
 
 const router = Router();
 
-router.get('/', requireRole(['admin', 'staff']), getStudents);
+router.get('/', requireRole(['admin', 'staff', 'teacher']), getStudents);
 router.post(
   '/', 
   requireRole(['admin', 'staff']), 

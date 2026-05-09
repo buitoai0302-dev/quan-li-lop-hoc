@@ -8,16 +8,34 @@ import { FeatureFlagService } from '../services/feature-flag.service';
 export const getClasses = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
+    const userRole = req.user?.role;
+    const userEmail = req.user?.email;
+
+    let query = `
+      SELECT c.*, b.name as branch_name, t.full_name as teacher_name 
+      FROM classes c
+      LEFT JOIN branches b ON c.branch_id = b.id
+      LEFT JOIN teachers t ON c.teacher_id = t.id
+      WHERE c.tenant_id = $1 AND c.is_deleted = false
+    `;
+    const params: any[] = [tenantId];
+
+    // If teacher, only show their classes
+    if (userRole === 'teacher') {
+      // Find teacher_id by email
+      const teacherRes = await pool.query('SELECT id FROM teachers WHERE email = $1 AND tenant_id = $2', [userEmail, tenantId]);
+      if (teacherRes.rows.length > 0) {
+        query += ` AND c.teacher_id = $2`;
+        params.push(teacherRes.rows[0].id);
+      } else {
+        // Teacher record not found, return empty
+        return res.json([]);
+      }
+    }
+
+    query += ` ORDER BY c.created_at DESC`;
     
-    const result = await pool.query(
-      `SELECT c.*, b.name as branch_name, t.full_name as teacher_name 
-       FROM classes c
-       LEFT JOIN branches b ON c.branch_id = b.id
-       LEFT JOIN teachers t ON c.teacher_id = t.id
-       WHERE c.tenant_id = $1 AND c.is_deleted = false
-       ORDER BY c.created_at DESC`,
-      [tenantId]
-    );
+    const result = await pool.query(query, params);
 
     const limit = await FeatureFlagService.checkLimit(tenantId as string, 'max_classes');
     if (limit > 0) {
@@ -25,6 +43,30 @@ export const getClasses = async (req: AuthRequest, res: Response, next: NextFunc
     }
 
     res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getClassById = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const { id } = req.params;
+
+    const result = await pool.query(
+      `SELECT c.*, b.name as branch_name, t.full_name as teacher_name 
+       FROM classes c
+       LEFT JOIN branches b ON c.branch_id = b.id
+       LEFT JOIN teachers t ON c.teacher_id = t.id
+       WHERE c.id = $1 AND c.tenant_id = $2 AND c.is_deleted = false`,
+      [id, tenantId]
+    );
+
+    if (result.rows.length === 0) {
+      throw new NotFoundError('Không tìm thấy lớp học', 'CLASS_NOT_FOUND');
+    }
+
+    res.json(result.rows[0]);
   } catch (error) {
     next(error);
   }
@@ -182,69 +224,79 @@ export const updateClass = async (req: AuthRequest, res: Response, next: NextFun
 
     // Update Recurring Schedules if provided
     if (recurring_schedules && Array.isArray(recurring_schedules)) {
-      // 1. Delete old rules
-      await client.query(`DELETE FROM class_recurring_schedules WHERE class_id = $1`, [id]);
-      
-      // 2. Insert new rules
-      for (const schedule of recurring_schedules) {
-        await client.query(
-          `INSERT INTO class_recurring_schedules (class_id, day_of_week, start_time, end_time, room_id, notes)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [id, schedule.day_of_week, schedule.start_time, schedule.end_time, schedule.room_id || null, schedule.notes || null]
-        );
-      }
+      try {
+        // 1. Delete old rules
+        await client.query(`DELETE FROM class_recurring_schedules WHERE class_id = $1`, [id]);
+        
+        // 2. Insert new rules
+        for (const schedule of recurring_schedules) {
+          await client.query(
+            `INSERT INTO class_recurring_schedules (class_id, day_of_week, start_time, end_time, room_id, notes)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [id, schedule.day_of_week, schedule.start_time, schedule.end_time, schedule.room_id || null, schedule.notes || null]
+          );
+        }
 
-      // 3. SYNC SESSIONS (Regenerate future sessions)
-      const today = new Date().toISOString().split('T')[0];
-      const classStart = start_date || result.rows[0].start_date;
-      const classEnd = end_date || result.rows[0].end_date;
-      
-      // We only regenerate from MAX(today, classStart)
-      const syncFrom = new Date(today) > new Date(classStart) ? today : classStart;
-      
-      // Delete future sessions that haven't been completed/cancelled by staff manually if needed 
-      // but for simplicity, we delete all 'scheduled' sessions from syncFrom
-      await client.query(
-        `DELETE FROM schedule_sessions 
-         WHERE class_id = $1 AND session_date >= $2 AND status = 'scheduled'`,
-        [id, syncFrom]
-      );
-
-      // Generate new sessions
-      const startDateObj = new Date(syncFrom);
-      const endDateObj = new Date(classEnd);
-      
-      for (let d = new Date(startDateObj); d <= endDateObj; d.setDate(d.getDate() + 1)) {
-        const dayOfWeek = d.getDay();
-        const matchingSchedules = recurring_schedules.filter(s => parseInt(s.day_of_week) === dayOfWeek);
-
-        for (const s of matchingSchedules) {
-          // Only insert if teacher_id and room_id are available (or use defaults from class)
-          const finalTeacherId = teacher_id || result.rows[0].teacher_id;
-          const finalRoomId = s.room_id || null;
-
-          // Check for conflicts even if teacher is null to be safe
-          const conflictRes = await client.query(
-            `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)`,
-            [tenantId, finalTeacherId, finalRoomId, id, d.toISOString().split('T')[0], s.start_time, s.end_time]
+        // 3. SYNC SESSIONS (Regenerate future sessions)
+        const today = new Date().toISOString().split('T')[0];
+        const classStart = start_date || result.rows[0].start_date;
+        const classEnd = end_date || result.rows[0].end_date;
+        
+        if (classEnd) {
+          // We only regenerate from MAX(today, classStart)
+          const syncFrom = new Date(today) > new Date(classStart) ? today : classStart;
+          const startDateObj = new Date(syncFrom);
+          const endDateObj = new Date(classEnd);
+          
+          await client.query(
+            `DELETE FROM schedule_sessions 
+             WHERE class_id = $1 
+               AND session_date >= $2 
+               AND status = 'scheduled'
+               AND id NOT IN (SELECT session_id FROM attendance)`,
+            [id, syncFrom]
           );
 
-          if (conflictRes.rows.length === 0) {
-            await client.query(
-              `INSERT INTO schedule_sessions (tenant_id, class_id, room_id, teacher_id, session_date, start_time, end_time, status, notes)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
-              [tenantId, id, finalRoomId, finalTeacherId, d.toISOString().split('T')[0], s.start_time, s.end_time, 'scheduled', s.notes || null]
-            );
+          for (let d = new Date(startDateObj); d <= endDateObj; d.setDate(d.getDate() + 1)) {
+            const dayOfWeek = d.getDay();
+            const matchingSchedules = recurring_schedules.filter(s => parseInt(s.day_of_week) === dayOfWeek);
+
+            for (const s of matchingSchedules) {
+              const finalTeacherId = teacher_id || result.rows[0].teacher_id;
+              const finalRoomId = s.room_id || null;
+              const sessionDate = d.toISOString().split('T')[0];
+
+              const conflictRes = await client.query(
+                `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)`,
+                [tenantId, finalTeacherId, finalRoomId, id, sessionDate, s.start_time, s.end_time]
+              );
+
+              if (conflictRes.rows.length === 0) {
+                await client.query(
+                  `INSERT INTO schedule_sessions (tenant_id, class_id, room_id, teacher_id, session_date, start_time, end_time, status, notes)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+                  [tenantId, id, finalRoomId, finalTeacherId, sessionDate, s.start_time, s.end_time, 'scheduled', s.notes || null]
+                );
+              }
+            }
           }
         }
+      } catch (syncError: any) {
+        console.error('SYNC SESSIONS ERROR:', syncError);
+        throw syncError; 
       }
     }
 
     await client.query('COMMIT');
     res.json(result.rows[0]);
-  } catch (error) {
+  } catch (error: any) {
     if (client) await client.query('ROLLBACK');
-    next(error);
+    console.error('UPDATE CLASS ERROR:', error);
+    res.status(500).json({ 
+      error: 'INTERNAL_ERROR', 
+      message: error.message,
+      detail: error.detail || error.hint || null
+    });
   } finally {
     if (client) client.release();
   }

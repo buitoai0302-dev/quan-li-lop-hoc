@@ -108,9 +108,9 @@ const AdminPlans: React.FC = () => {
                 <span className={`text-[8px] font-black uppercase ${plan.is_active ? 'text-emerald-500' : 'text-gray-400'}`}>{plan.is_active ? t('common.active') : t('common.inactive')}</span>
                 <button
                   onClick={() => setPlans(prev => prev.map(p => p.id === plan.id ? { ...p, is_active: !p.is_active } : p))}
-                  className={`relative inline-flex h-4 w-8 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${plan.is_active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                  className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${plan.is_active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
                 >
-                  <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${plan.is_active ? 'translate-x-4' : 'translate-x-0'}`} />
+                  <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all duration-200 ease-in-out ${plan.is_active ? 'left-4.5' : 'left-0.5'}`} />
                 </button>
               </div>
             </div>
@@ -176,9 +176,9 @@ const AdminPlans: React.FC = () => {
                       </span>
                       <button
                         onClick={() => handleUpdateField(plan.id, 'features', key, !value)}
-                        className={`relative inline-flex h-4 w-8 shrink-0 cursor-pointer rounded-full border border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${value ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-gray-300 dark:bg-gray-700'}`}
+                        className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${value ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-gray-300 dark:bg-gray-700'}`}
                       >
-                        <span className={`pointer-events-none inline-block h-3 w-3 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${value ? 'translate-x-4' : 'translate-x-0'}`} />
+                        <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all duration-200 ease-in-out ${value ? 'left-4.5' : 'left-0.5'}`} />
                       </button>
                     </div>
                   ))}

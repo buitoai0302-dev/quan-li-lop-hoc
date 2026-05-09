@@ -233,42 +233,84 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
 export const getActivities = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
+    const userRole = req.user?.role;
+    const userEmail = req.user?.email;
     const page = parseInt(req.query.page as string) || 1;
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = (page - 1) * limit;
 
-    const sql = `
-      SELECT * FROM (
-        (SELECT 'student' as type, full_name as user, 'vừa đăng ký học' as action, '' as target, created_at FROM students WHERE tenant_id = $1 AND is_deleted = false)
-        UNION ALL
-        (SELECT 'class' as type, name as user, 'vừa được khởi tạo' as action, '' as target, created_at FROM classes WHERE tenant_id = $1 AND is_deleted = false)
-        UNION ALL
-        (SELECT 'teacher' as type, full_name as user, 'vừa tham gia đội ngũ' as action, '' as target, created_at FROM teachers WHERE tenant_id = $1 AND is_deleted = false)
-      ) combined
-      ORDER BY created_at DESC
-      LIMIT $2 OFFSET $3
-    `;
+    let sql = '';
+    let countSql = '';
+    const params: any[] = [tenantId];
 
-    const countSql = `
-      SELECT COUNT(*) FROM (
-        (SELECT id FROM students WHERE tenant_id = $1 AND is_deleted = false)
-        UNION ALL
-        (SELECT id FROM classes WHERE tenant_id = $1 AND is_deleted = false)
-        UNION ALL
-        (SELECT id FROM teachers WHERE tenant_id = $1 AND is_deleted = false)
-      ) combined
-    `;
+    if (userRole === 'teacher') {
+      // Find teacher_id
+      const teacherRes = await pool.query('SELECT id FROM teachers WHERE email = $1 AND tenant_id = $2', [userEmail, tenantId]);
+      if (teacherRes.rows.length === 0) return res.json({ activities: [], pagination: { total: 0, page, limit, totalPages: 0 } });
+      const teacherId = teacherRes.rows[0].id;
+
+      // Teachers only see students enrolled in their classes and their own class creation (if any)
+      sql = `
+        SELECT * FROM (
+          (SELECT 'student' as type, s.full_name as user, 'vừa gia nhập lớp của bạn' as action, c.name as target, cs.enrolled_at as created_at 
+           FROM class_students cs 
+           JOIN students s ON cs.student_id = s.id 
+           JOIN classes c ON cs.class_id = c.id 
+           WHERE c.teacher_id = $1 AND c.tenant_id = $2 AND s.is_deleted = false)
+          UNION ALL
+          (SELECT 'class' as type, name as user, 'vừa được gán cho bạn' as action, '' as target, created_at 
+           FROM classes WHERE teacher_id = $1 AND tenant_id = $2 AND is_deleted = false)
+        ) combined
+        ORDER BY created_at DESC
+        LIMIT $3 OFFSET $4
+      `;
+      countSql = `
+        SELECT COUNT(*) FROM (
+          (SELECT cs.id FROM class_students cs JOIN classes c ON cs.class_id = c.id WHERE c.teacher_id = $1 AND c.tenant_id = $2)
+          UNION ALL
+          (SELECT id FROM classes WHERE teacher_id = $1 AND tenant_id = $2)
+        ) combined
+      `;
+      params.unshift(teacherId); // Add teacherId to front [teacherId, tenantId]
+      params.push(limit, offset); // [teacherId, tenantId, limit, offset]
+    } else {
+      // Admin/Staff see everything
+      sql = `
+        SELECT * FROM (
+          (SELECT 'student' as type, full_name as user, 'vừa đăng ký học' as action, '' as target, created_at FROM students WHERE tenant_id = $1 AND is_deleted = false)
+          UNION ALL
+          (SELECT 'class' as type, name as user, 'vừa được khởi tạo' as action, '' as target, created_at FROM classes WHERE tenant_id = $1 AND is_deleted = false)
+          UNION ALL
+          (SELECT 'teacher' as type, full_name as user, 'vừa tham gia đội ngũ' as action, '' as target, created_at FROM teachers WHERE tenant_id = $1 AND is_deleted = false)
+        ) combined
+        ORDER BY created_at DESC
+        LIMIT $2 OFFSET $3
+      `;
+      countSql = `
+        SELECT COUNT(*) FROM (
+          (SELECT id FROM students WHERE tenant_id = $1 AND is_deleted = false)
+          UNION ALL
+          (SELECT id FROM classes WHERE tenant_id = $1 AND is_deleted = false)
+          UNION ALL
+          (SELECT id FROM teachers WHERE tenant_id = $1 AND is_deleted = false)
+        ) combined
+      `;
+      params.push(limit, offset); // [tenantId, limit, offset]
+    }
 
     const [activitiesRes, countRes] = await Promise.all([
-      pool.query(sql, [tenantId, limit, offset]),
-      pool.query(countSql, [tenantId])
+      pool.query(sql, params),
+      pool.query(countSql, [userRole === 'teacher' ? params[0] : params[0], tenantId].slice(0, userRole === 'teacher' ? 2 : 1))
     ]);
 
-    const total = parseInt(countRes.rows[0].count, 10);
+    // Wait, the countSql params are tricky. Let's simplify.
+    const countParams = userRole === 'teacher' ? [params[0], params[1]] : [params[0]];
+    const countResult = await pool.query(countSql, countParams);
+    const total = parseInt(countResult.rows[0].count, 10);
 
     res.json({
       activities: activitiesRes.rows.map(r => ({ 
-        id: r.created_at + r.user, 
+        id: r.created_at + r.user + r.action, 
         user: r.user, 
         action: r.action, 
         target: r.target, 

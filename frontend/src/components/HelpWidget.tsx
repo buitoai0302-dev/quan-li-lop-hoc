@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { HelpCircle, X, BookOpen, UserPlus, Calendar, Layout } from 'lucide-react';
+import React from 'react';
+import { X, BookOpen, UserPlus, Calendar, Layout } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 interface HelpWidgetProps {
   isOpen: boolean;
@@ -12,7 +13,32 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  const steps = [
+  const { user } = useAuth();
+  const isTeacher = user?.role === 'teacher';
+  const isAttendanceEnabled = user?.tenant_settings?.menu?.attendance !== false;
+
+  const steps = isTeacher ? [
+    {
+      icon: <Layout className="text-blue-500" size={20} />,
+      title: t('helpWidget.teacher.step1.title'),
+      desc: t('helpWidget.teacher.step1.desc')
+    },
+    {
+      icon: <Calendar className="text-green-500" size={20} />,
+      title: t('helpWidget.teacher.step2.title'),
+      desc: t('helpWidget.teacher.step2.desc')
+    },
+    {
+      icon: <BookOpen className="text-purple-500" size={20} />,
+      title: t('helpWidget.teacher.step3.title'),
+      desc: t('helpWidget.teacher.step3.desc')
+    },
+    isAttendanceEnabled && {
+      icon: <UserPlus className="text-orange-500" size={20} />,
+      title: t('helpWidget.teacher.step4.title'),
+      desc: t('helpWidget.teacher.step4.desc')
+    }
+  ].filter(Boolean) : [
     {
       icon: <Layout className="text-blue-500" size={20} />,
       title: t('helpWidget.step1.title'),
@@ -28,12 +54,12 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
       title: t('helpWidget.step3.title'),
       desc: t('helpWidget.step3.desc')
     },
-    {
+    isAttendanceEnabled && {
       icon: <BookOpen className="text-orange-500" size={20} />,
       title: t('helpWidget.step4.title'),
       desc: t('helpWidget.step4.desc')
     }
-  ];
+  ].filter(Boolean);
 
   if (!isOpen) return null;
 
@@ -46,7 +72,7 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
             <BookOpen size={24} />
             <h2 className="text-xl font-bold">{t('helpWidget.title')}</h2>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="hover:bg-white/20 p-1 rounded-full transition-colors"
           >
@@ -59,7 +85,7 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
           <p className="text-gray-600 dark:text-gray-400 text-sm">
             {t('helpWidget.subtitle')}
           </p>
-          
+
           <div className="space-y-4">
             {steps.map((step, index) => (
               <div key={index} className="flex items-start space-x-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">

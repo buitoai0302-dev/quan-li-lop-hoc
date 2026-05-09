@@ -7,7 +7,10 @@
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "seed": "ts-node src/seed.ts"
+    "seed": "ts-node src/seed.ts",
+    "db:init": "ts-node scripts/init_db.ts",
+    "db:extract": "ts-node scripts/extract_schema.ts",
+    "db:dump": "ts-node scripts/dump_db.ts"
   },
   "keywords": [],
   "author": "",

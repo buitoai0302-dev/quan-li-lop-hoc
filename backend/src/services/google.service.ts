@@ -63,15 +63,25 @@ export const syncEventToGoogle = async (userId: string, sessionData: any) => {
     const endDateTime = new Date(`${date}T${endTime}`);
 
     const description = [
-      `🎓 Lớp học: ${className}`,
-      `👨‍🏫 Giáo viên: ${teacherName || 'Chưa chỉ định'}`,
-      `🏫 Phòng: ${roomName}`,
-      notes ? `📝 Ghi chú: ${notes}` : '',
+      `🎓 Lớp học (Class): ${className}`,
+      `👨‍🏫 Giáo viên (Teacher): ${teacherName || 'Chưa chỉ định (Unassigned)'}`,
+      `🏫 Phòng (Room): ${roomName}`,
+      notes ? `📝 Ghi chú (Notes): ${notes}` : '',
       '------------------',
-      '📅 Được đồng bộ tự động từ hệ thống quản lý EduSchedule'
+      '📅 Được đồng bộ tự động từ hệ thống quản lý EduSchedule',
+      '📅 Automatically synced from EduSchedule Management System'
     ].filter(Boolean).join('\n');
 
-    const event = {
+    // Fetch teacher email for attendees
+    let attendees = [];
+    if (sessionData.teacherId) {
+      const teacherRes = await pool.query('SELECT email FROM teachers WHERE id = $1', [sessionData.teacherId]);
+      if (teacherRes.rows[0]?.email) {
+        attendees.push({ email: teacherRes.rows[0].email });
+      }
+    }
+
+    const event: any = {
       summary: `📚 [${className}] - Lịch học`,
       location: roomName,
       description: description,
@@ -83,6 +93,7 @@ export const syncEventToGoogle = async (userId: string, sessionData: any) => {
         dateTime: endDateTime.toISOString(),
         timeZone: 'Asia/Ho_Chi_Minh',
       },
+      attendees: attendees,
       colorId: '5',
       reminders: {
         useDefault: false,
@@ -148,9 +159,13 @@ export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) 
   const calendar = await getClientForUser(userId);
   if (!calendar) throw new Error('Google Calendar not connected');
 
-  // Lấy tất cả các buổi học chưa bị hủy của tenant này
-  console.log(`[GoogleSync] Executing query for userId: ${userId}`);
-  const result = await pool.query(`
+  // Get user role first
+  const userRoleRes = await pool.query('SELECT role, email FROM users WHERE id = $1', [userId]);
+  const { role, email: userEmail } = userRoleRes.rows[0];
+
+  // Lấy các buổi học chưa bị hủy
+  // Nếu là giáo viên, chỉ lấy buổi học của chính họ
+  let query = `
     SELECT s.id, 
            s.session_date::text as session_date,
            s.start_time,
@@ -158,14 +173,23 @@ export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) 
            s.notes,
            COALESCE(c.name, 'Lớp học') as class_name, 
            COALESCE(r.name, 'Phòng học') as room_name,
-           COALESCE(t.full_name, 'Chưa chỉ định') as teacher_name
+           COALESCE(t.full_name, 'Chưa chỉ định') as teacher_name,
+           t.email as teacher_email
     FROM schedule_sessions s
     JOIN users u ON s.tenant_id = u.tenant_id
     LEFT JOIN classes c ON s.class_id = c.id
     LEFT JOIN rooms r ON s.room_id = r.id
     LEFT JOIN teachers t ON s.teacher_id = t.id
     WHERE u.id = $1 AND s.status != 'cancelled'
-  `, [userId]);
+  `;
+
+  if (role === 'teacher') {
+    // Tìm teacher_id tương ứng với user này (giả định liên kết qua email hoặc một trường định danh)
+    // Trong hệ thống này, teachers và users thường là 1 hoặc có liên kết email
+    query += ` AND (t.email = $2 OR s.teacher_id = (SELECT id FROM teachers WHERE email = $2 LIMIT 1))`;
+  }
+
+  const result = await pool.query(query, role === 'teacher' ? [userId, userEmail] : [userId]);
 
   const sessions = result.rows;
   console.log(`[GoogleSync] Found ${sessions.length} sessions in DB. Raw rows:`, JSON.stringify(sessions));
@@ -178,12 +202,13 @@ export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) 
       const endDateTime = new Date(`${session_date}T${end_time}`);
 
       const description = [
-        `🎓 Lớp học: ${class_name}`,
-        `👨‍🏫 Giáo viên: ${teacher_name}`,
-        `🏫 Phòng: ${room_name}`,
-        notes ? `📝 Ghi chú: ${notes}` : '',
+        `🎓 Lớp học (Class): ${class_name}`,
+        `👨‍🏫 Giáo viên (Teacher): ${teacher_name}`,
+        `🏫 Phòng (Room): ${room_name}`,
+        notes ? `📝 Ghi chú (Notes): ${notes}` : '',
         '------------------',
-        '📅 Được đồng bộ tự động từ hệ thống quản lý EduSchedule'
+        '📅 Được đồng bộ tự động từ hệ thống quản lý EduSchedule',
+        '📅 Automatically synced from EduSchedule Management System'
       ].filter(Boolean).join('\n');
 
       const response = await calendar.events.insert({

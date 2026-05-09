@@ -1,5 +1,7 @@
 -- ============================================================
--- Teaching Schedule Management System - PostgreSQL Schema (Multi-Tenant SaaS + Plan Registry)
+-- Teaching Schedule Management System - PostgreSQL Schema
+-- Copyright (c) 2026 EduSchedule. All Rights Reserved.
+-- Developed by: Team EduSchedule
 -- ============================================================
 
 DROP SCHEMA public CASCADE;
@@ -9,6 +11,9 @@ CREATE SCHEMA public;
 -- Extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pg_trgm"; -- for fuzzy search
+
+-- Custom Types
+CREATE TYPE tenant_status AS ENUM ('pending', 'active', 'suspended');
 
 -- ============================================================
 -- PLAN REGISTRY (Feature Flag Engine Support)
@@ -49,7 +54,21 @@ CREATE TABLE tenants (
     name            VARCHAR(150) NOT NULL,
     domain          VARCHAR(100) UNIQUE, -- optional custom domain/subdomain
     contact_email   VARCHAR(150),
-    status          VARCHAR(30) NOT NULL DEFAULT 'active', -- 'active', 'pending', 'suspended'
+    status          tenant_status DEFAULT 'pending', 
+    settings        JSONB DEFAULT '{
+      "menu": {
+        "dashboard": true,
+        "schedule": true,
+        "classes": true,
+        "attendance": true,
+        "students": true,
+        "teachers": true,
+        "rooms": true,
+        "branches": true,
+        "import": true,
+        "subscription": true
+      }
+    }'::jsonb,
     api_key         VARCHAR(255), -- for external API access
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -105,6 +124,9 @@ CREATE TABLE users (
     -- Notification Preferences
     notify_upcoming_sessions BOOLEAN NOT NULL DEFAULT TRUE,
 
+    -- Onboarding
+    onboarding_completed BOOLEAN DEFAULT FALSE,
+
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (tenant_id, email)
@@ -147,7 +169,8 @@ CREATE TABLE students (
     branch_id   UUID NOT NULL REFERENCES branches(id) ON DELETE RESTRICT,
     full_name   VARCHAR(200) NOT NULL,
     email       VARCHAR(150) NOT NULL,
-    phone       VARCHAR(30),
+    phone         VARCHAR(30),
+    parent_phone  VARCHAR(30),
     date_of_birth DATE,
     is_active   BOOLEAN NOT NULL DEFAULT TRUE,
     is_deleted  BOOLEAN NOT NULL DEFAULT FALSE,
@@ -192,6 +215,18 @@ CREATE TABLE class_students (
     PRIMARY KEY (class_id, student_id)
 );
 
+CREATE TABLE class_recurring_schedules (
+    id              UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    class_id        UUID NOT NULL REFERENCES classes(id) ON DELETE CASCADE,
+    day_of_week     INT NOT NULL, -- 0-6 (Sunday-Saturday)
+    start_time      TIME NOT NULL,
+    end_time        TIME NOT NULL,
+    room_id         UUID REFERENCES rooms(id) ON DELETE SET NULL,
+    notes           TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ============================================================
 -- SCHEDULING TABLES
 -- ============================================================
@@ -209,6 +244,7 @@ CREATE TABLE schedule_sessions (
     notes           TEXT,
     status          VARCHAR(30) NOT NULL DEFAULT 'scheduled',
     is_notified     BOOLEAN NOT NULL DEFAULT FALSE, -- for cron email reminders
+    google_event_id VARCHAR(255),
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CHECK (end_time > start_time)
@@ -225,6 +261,7 @@ CREATE TABLE attendance (
     student_id  UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
     status      VARCHAR(20) NOT NULL DEFAULT 'absent', -- 'present', 'absent', 'late', 'excused'
     created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     UNIQUE (session_id, student_id)
 );
 
@@ -322,6 +359,8 @@ CREATE TRIGGER trg_students_updated_at   BEFORE UPDATE ON students   FOR EACH RO
 CREATE TRIGGER trg_classes_updated_at    BEFORE UPDATE ON classes    FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER trg_sessions_updated_at   BEFORE UPDATE ON schedule_sessions FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 CREATE TRIGGER trg_users_updated_at      BEFORE UPDATE ON users      FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_attendance_updated_at BEFORE UPDATE ON attendance FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+CREATE TRIGGER trg_recurring_schedules_updated_at BEFORE UPDATE ON class_recurring_schedules FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
 -- ============================================================
 -- SEED DATA

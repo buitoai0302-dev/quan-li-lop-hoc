@@ -50,13 +50,22 @@
     "settings": "Settings",
     "contact": "Contact",
     "preview": "Preview",
-    "viewDetail": "View detail"
+    "viewDetail": "View detail",
+    "general": "General",
+    "profile": "Profile",
+    "features": "Features",
+    "app": "App",
+    "api": "API",
+    "today": "Today",
+    "stay": "Stay Here",
+    "leave": "Leave"
   },
   "menu": {
     "dashboard": "Dashboard",
     "schedule": "Schedule",
     "teachingSchedule": "Teaching Schedule",
     "learningSchedule": "My Learning Schedule",
+    "attendance": "Attendance",
     "classes": "Classes",
     "rooms": "Rooms",
     "branches": "Branches",
@@ -109,7 +118,9 @@
     "usageQuota": "Usage Quota",
     "studentsLimit": "Students",
     "classesLimit": "Classes",
-    "branchesLimit": "Branches"
+    "branchesLimit": "Branches",
+    "readyToTeach": "Ready for a new work day!",
+    "teacherWelcomeDesc": "Check your teaching schedule today and prepare for great lessons."
   },
   "import": {
     "title": "System Data Import",
@@ -220,7 +231,23 @@
     "stepsToFollow": "Steps to Follow:",
     "supportSubject": "EduSchedule Support Request",
     "supportBody": "Hi Support Team,\n\nI am having an issue with: \n\nAccount Info: \n- Email: \n- Center: ",
-    "contactSupport": "Submit Support Ticket"
+    "contactSupport": "Submit Support Ticket",
+    "teacher": {
+      "gettingStarted": {
+        "step1": "Login and verify personal information",
+        "step2": "View assigned classes list",
+        "step3": "Check schedule on Google Calendar",
+        "details": "Welcome teacher to the system. You can start by checking your **Profile** and **Classes** list."
+      },
+      "scheduling": {
+        "desc": "Guide to view and manage personal teaching schedule",
+        "step1": "Access Teaching Schedule from the main menu",
+        "step2": "Use filters to view by day or week",
+        "step3": "Click on a session to view student list and mark attendance",
+        "step3_no_attendance": "Click on a session to view student list",
+        "details": "Your teaching schedule is **automatically synced** from the center's management system."
+      }
+    }
   },
   "helpWidget": {
     "title": "Quick Setup Guide",
@@ -321,6 +348,29 @@
       "BUSINESS": "Business Plan",
       "ENTERPRISE": "Enterprise Plan"
     }
+  },
+  "attendance": {
+    "title": "Attendance System",
+    "subtitle": "Manage student attendance for each session",
+    "selectSession": "Select Session",
+    "selectSessionDesc": "Please select a session from the schedule to start marking attendance.",
+    "studentName": "Student Name",
+    "status": "Status",
+    "markedAt": "Marked at",
+    "present": "Present",
+    "absent": "Absent",
+    "late": "Late",
+    "excused": "Excused",
+    "saveSuccess": "Attendance saved successfully",
+    "totalPresent": "Total Present",
+    "totalAbsent": "Absent",
+    "totalLate": "Late",
+    "quickMarkAll": "Mark all as Present",
+    "history": "Attendance History",
+    "save": "Save Attendance",
+    "noSessionsDesc": "No classes scheduled for this day. Try another date or check the schedule.",
+    "unsavedTitle": "Unsaved Changes!",
+    "unsavedDesc": "You have unsaved attendance data. If you leave now, your changes will be lost."
   },
   "schedule": {
     "title": "Schedule Management",
@@ -427,6 +477,8 @@
     "loginSuccess": "Login successful!",
     "orContinueWith": "Or continue with",
     "logoutSuccess": "Logged out successfully!",
+    "logoutConfirmTitle": "Confirm Logout",
+    "logoutConfirmMessage": "Are you sure you want to log out? Any unsaved changes may be lost.",
     "loggingIn": "Logging in...",
     "noAccount": "Don't have an account?",
     "registerLink": "Register now",
@@ -541,6 +593,8 @@
     "apiKeyPlaceholder": "No API Key",
     "apiKeyNotCreated": "Not Created",
     "apiWarning": "Never share this API key. Anyone with it can access your data.",
+    "menuConfig": "Menu & Features Configuration",
+    "menuConfigDesc": "Enable or disable menu items to customize the interface for your center's needs.",
     "quickGuide": "Quick Guide"
   },
   "onboarding": {

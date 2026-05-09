@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../api';
 
-interface User {
+export interface User {
   id: string;
   tenant_id: string;
   branch_id: string | null;
@@ -11,6 +11,9 @@ interface User {
   role: string;
   tenant_name: string;
   onboarding_completed: boolean;
+  tenant_settings?: {
+    menu: Record<string, boolean>;
+  };
 }
 
 interface AuthContextType {
@@ -56,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const refreshToken = localStorage.getItem('refreshToken');
     // Thu hồi refresh token phía server (non-blocking)
     if (refreshToken) {
-      api.post('/auth/logout', { refreshToken }).catch(() => {});
+      api.post('/auth/logout', { refreshToken }).catch(() => { });
     }
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');

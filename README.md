@@ -1,68 +1,99 @@
-# Quản Lý Lớp Học (Class Management System)
+# 🎓 Hệ Thống Quản Lý Lớp Học (EduSchedule SaaS)
 
-A comprehensive SaaS platform for scheduling and managing classes, students, and teaching sessions. The system features a multi-role dashboard (Admin, Teacher, Student) and is designed to handle multiple branches and scalable tenant resource limits.
+Một nền tảng SaaS toàn diện giúp quản lý lịch học, điểm danh, giáo viên và học sinh. Hệ thống được thiết kế theo kiến trúc đa người dùng (Multi-tenant) với khả năng phân quyền mạnh mẽ (Admin, Staff, Teacher, Student) và hỗ trợ đa chi nhánh.
 
-## 🛠 Tech Stack
+---
+
+## 🛠 Công Nghệ Sử Dụng
 
 ### Frontend
 - **Framework**: React 19 + TypeScript
 - **Build Tool**: Vite
-- **Styling**: TailwindCSS v4
-- **Routing**: React Router DOM v7
-- **State Management / Utilities**: Axios, Date-fns
-- **Internationalization**: i18next
-- **Advanced UI**: `@dnd-kit` (drag & drop), `lucide-react` (icons)
-- **Data Export/Import**: `papaparse` (CSV), `xlsx` (Excel)
+- **Styling**: Vanilla CSS (Premium Aesthetics) & TailwindCSS (Utility)
+- **Routing**: React Router DOM v7 (Data Router)
+- **UI/UX**: `@dnd-kit` (Kéo thả lịch học), `lucide-react` (Icons), `framer-motion` (Animations)
+- **Quốc tế hóa**: i18next (Tiếng Việt & Tiếng Anh)
 
 ### Backend
-- **Runtime**: Node.js
+- **Runtime**: Node.js + TypeScript
 - **Framework**: Express.js
-- **Language**: TypeScript
-- **Database**: PostgreSQL (using `pg`)
-- **Authentication**: JWT (`jsonwebtoken`) & `bcrypt` for password hashing
-- **Other**: `node-cache` for caching, `cors`, `dotenv`
+- **Database**: PostgreSQL
+- **Bảo mật**: JWT, Bcrypt, Role-based Access Control (RBAC)
+- **Tính năng**: Google Calendar API Integration, Zalo Notification Service, Automated Email Reminders
 
-## 🚀 Getting Started
+---
 
-### Prerequisites
-- Node.js (v18 or higher recommended)
-- PostgreSQL database
+## 🚀 Hướng Dẫn Cài Đặt
 
-### 1. Database Setup
-Create a PostgreSQL database and run the schema file located in the root directory:
-```bash
-psql -U your_postgres_user -d your_db_name -f schema.sql
-```
+### 1. Yêu Cầu Hệ Thống
+- **Node.js**: v18.0.0 trở lên
+- **PostgreSQL**: v14.0 trở lên
 
-### 2. Backend Setup
-Navigate to the `backend` directory, install dependencies, and configure your environment:
+### 2. Cài Đặt Backend
 ```bash
 cd backend
 npm install
 ```
-Create a `.env` file in the `backend` directory with your database connection strings and JWT secrets.
+- Tạo file `.env` dựa trên cấu hình mẫu (tham khảo `DATABASE_URL`, `JWT_SECRET`, `SMTP_...`).
 
-Start the backend server in development mode:
-```bash
-npm run dev
-```
+### 3. Khởi Tạo Database (Quan Trọng)
+Chúng tôi cung cấp bộ công cụ mạnh mẽ để quản lý Database trong thư mục `backend/scripts`:
 
-### 3. Frontend Setup
-Navigate to the `frontend` directory and install dependencies:
+- **Khởi tạo mới**: Xóa sạch và tạo lại toàn bộ cấu trúc DB từ `schema.sql`.
+  ```bash
+  npm run db:init
+  ```
+- **Trích xuất báo cáo**: Tạo file `db_report.md` mô tả chi tiết các bảng hiện có.
+  ```bash
+  npm run db:extract
+  ```
+- **Sao lưu (Backup)**: Tạo file `.sql` sao lưu toàn bộ dữ liệu.
+  ```bash
+  npm run db:dump
+  ```
+
+### 4. Cài Đặt Frontend
 ```bash
 cd frontend
 npm install
-```
-
-Start the frontend development server:
-```bash
 npm run dev
 ```
 
-## 📋 Features
-- Multi-role access control (Admin, Teacher, Student)
-- Dynamic dashboards tailored to user roles
-- Mobile-responsive scheduling UI
-- Drag and drop class scheduling
-- CSV/Excel data import and export
-- Multi-language support
+---
+
+## 📁 Cấu Trúc Thư Mục
+
+- `/backend`: Mã nguồn server, API, và logic xử lý nghiệp vụ.
+  - `/src/controllers`: Xử lý logic API.
+  - `/src/routes`: Định nghĩa các endpoints.
+  - `/scripts`: Các công cụ quản lý Database.
+- `/frontend`: Mã nguồn giao diện người dùng.
+  - `/src/components`: Các thành phần UI dùng chung.
+  - `/src/pages`: Các trang chức năng chính (Dashboard, Schedule, Classes...).
+  - `/src/locales`: File ngôn ngữ i18n.
+- `schema.sql`: File định nghĩa cấu trúc Database chuẩn.
+
+---
+
+## ✨ Chức Năng Chính
+
+- **Giao diện Lịch học**: Quản lý buổi học bằng thao tác kéo thả mượt mà.
+- **Điểm danh thông minh**: Tự động nhận diện xung đột và bảo vệ dữ liệu điểm danh khi thay đổi lịch.
+- **Quản lý đa chi nhánh**: Tách biệt dữ liệu giữa các cơ sở của cùng một trung tâm.
+- **Giới hạn gói cước (Plan Limits)**: Kiểm soát số lượng lớp học, học sinh dựa trên gói đăng ký của Tenant.
+- **Import/Export**: Hỗ trợ nhập liệu hàng loạt từ Excel/CSV cho học sinh và lớp học.
+
+---
+
+## 🛡 Bảo Trì & Phát Triển
+Mọi thay đổi về cấu trúc Database phải được cập nhật đồng thời vào file `schema.sql` ở thư mục gốc và chạy lệnh `npm run db:extract` để cập nhật tài liệu hướng dẫn.
+
+---
+
+## 📄 Bản Quyền & Giấy Phép
+Dự án này thuộc bản quyền của **EduSchedule**. Mọi hành vi sao chép hoặc phân phối trái phép mã nguồn này đều bị nghiêm cấm.
+
+© 2026 EduSchedule. All Rights Reserved.
+
+---
+*Phát triển bởi Đội ngũ EduSchedule.*

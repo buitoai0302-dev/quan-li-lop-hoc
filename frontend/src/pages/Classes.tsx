@@ -291,7 +291,7 @@ const Classes: React.FC = () => {
               )}
             </div>
             <select
-              className="w-full sm:w-auto border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:bg-gray-800 transition-all shadow-sm appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10"
+              className="w-full sm:w-auto border border-gray-200 dark:border-gray-700 rounded-xl px-3 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary dark:bg-gray-800 transition-all shadow-sm appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10"
               value={branchFilter}
               onChange={(e) => setBranchFilter(e.target.value)}
             >
@@ -546,20 +546,34 @@ const Classes: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setRecurringSchedules([...recurringSchedules, { day_of_week: 1, start_time: '08:00', end_time: '10:00', room_id: '', notes: '' }])}
-                className="text-[10px] bg-primary/10 text-primary px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-all font-black uppercase tracking-wider"
+                className="text-[10px] bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-400 px-4 py-2 rounded-xl hover:bg-primary/20 dark:hover:bg-primary/30 transition-all font-black uppercase tracking-widest flex items-center gap-2 shadow-sm active:scale-95"
               >
-                + {t('common.add')}
+                <Plus size={14} />
+                {t('common.add')}
               </button>
             </div>
 
             <div className="space-y-3">
               {recurringSchedules.map((schedule, index) => (
-                <div key={index} className="space-y-3 bg-gray-50 dark:bg-gray-900/40 p-4 rounded-2xl border border-gray-100 dark:border-gray-700/50 shadow-sm transition-all hover:border-primary/20 group">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-black text-gray-400 uppercase mb-1 ml-1">{t('common.day')}</label>
+                <div key={index} className="relative group bg-white dark:bg-gray-800 p-4 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md transition-all hover:border-primary/30">
+                  {/* Delete Button - Top Right */}
+                  <button
+                    type="button"
+                    onClick={() => setRecurringSchedules(recurringSchedules.filter((_, i) => i !== index))}
+                    className="absolute -top-2 -right-2 w-8 h-8 bg-white dark:bg-gray-700 text-red-500 rounded-full shadow-lg border border-gray-100 dark:border-gray-600 flex items-center justify-center transition-all hover:bg-red-50 dark:hover:bg-red-900/30 hover:scale-110 active:scale-90 z-10"
+                    title={t('common.delete')}
+                  >
+                    <X size={16} />
+                  </button>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+                    {/* Day Selection */}
+                    <div className="sm:col-span-1">
+                      <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 ml-1">
+                        {t('common.day')}
+                      </label>
                       <select
-                        className="w-full text-xs border-gray-200 dark:border-gray-700 rounded-xl dark:bg-gray-800 dark:text-white py-2 shadow-sm focus:ring-primary focus:border-primary outline-none transition-all"
+                        className="w-full text-xs font-bold border-gray-200 dark:border-gray-700 rounded-xl dark:bg-gray-900 dark:text-white py-2.5 px-3 pr-10 shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none transition-all bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:14px] bg-[right_10px_center] bg-no-repeat"
                         value={schedule.day_of_week}
                         onChange={(e) => {
                           const newSchedules = [...recurringSchedules];
@@ -574,47 +588,52 @@ const Classes: React.FC = () => {
                         ))}
                       </select>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 col-span-2 sm:col-span-2">
+
+                    {/* Start & End Time */}
+                    <div className="sm:col-span-2 grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-1 ml-1">{t('common.start')}</label>
-                        <input
-                          type="time"
-                          className="w-full text-xs border-gray-200 dark:border-gray-700 rounded-xl dark:bg-gray-800 dark:text-white py-2 shadow-sm focus:ring-primary focus:border-primary outline-none transition-all"
-                          value={schedule.start_time}
-                          onChange={(e) => {
-                            const newSchedules = [...recurringSchedules];
-                            newSchedules[index].start_time = e.target.value;
-                            setRecurringSchedules(newSchedules);
-                          }}
-                        />
+                        <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 ml-1">
+                          {t('common.start')}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="time"
+                            className="w-full text-xs font-bold border-gray-200 dark:border-gray-700 rounded-xl dark:bg-gray-900 dark:text-white py-2.5 px-3 shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                            value={schedule.start_time}
+                            onChange={(e) => {
+                              const newSchedules = [...recurringSchedules];
+                              newSchedules[index].start_time = e.target.value;
+                              setRecurringSchedules(newSchedules);
+                            }}
+                          />
+                        </div>
                       </div>
                       <div>
-                        <label className="block text-[10px] font-black text-gray-400 uppercase mb-1 ml-1">{t('common.end')}</label>
-                        <input
-                          type="time"
-                          className="w-full text-xs border-gray-200 dark:border-gray-700 rounded-xl dark:bg-gray-800 dark:text-white py-2 shadow-sm focus:ring-primary focus:border-primary outline-none transition-all"
-                          value={schedule.end_time}
-                          onChange={(e) => {
-                            const newSchedules = [...recurringSchedules];
-                            newSchedules[index].end_time = e.target.value;
-                            setRecurringSchedules(newSchedules);
-                          }}
-                        />
+                        <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 ml-1">
+                          {t('common.end')}
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="time"
+                            className="w-full text-xs font-bold border-gray-200 dark:border-gray-700 rounded-xl dark:bg-gray-900 dark:text-white py-2.5 px-3 shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                            value={schedule.end_time}
+                            onChange={(e) => {
+                              const newSchedules = [...recurringSchedules];
+                              newSchedules[index].end_time = e.target.value;
+                              setRecurringSchedules(newSchedules);
+                            }}
+                          />
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <div className="flex items-center justify-between mb-1 ml-1">
-                        <label className="text-[10px] font-black text-gray-400 uppercase">{t('rooms.classroom')}</label>
-                        <button
-                          type="button"
-                          onClick={() => setRecurringSchedules(recurringSchedules.filter((_, i) => i !== index))}
-                          className="text-red-400 hover:text-red-600 transition-colors"
-                        >
-                          <X size={14} />
-                        </button>
-                      </div>
+
+                    {/* Classroom Selection */}
+                    <div className="sm:col-span-1">
+                      <label className="block text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-1.5 ml-1">
+                        {t('rooms.classroom')}
+                      </label>
                       <select
-                        className="w-full text-xs border-gray-200 dark:border-gray-700 rounded-xl dark:bg-gray-800 dark:text-white py-2 shadow-sm focus:ring-primary focus:border-primary outline-none transition-all"
+                        className="w-full text-xs font-bold border-gray-200 dark:border-gray-700 rounded-xl dark:bg-gray-900 dark:text-white py-2.5 px-3 pr-10 shadow-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none transition-all bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:14px] bg-[right_10px_center] bg-no-repeat"
                         value={schedule.room_id}
                         onChange={(e) => {
                           const newSchedules = [...recurringSchedules];
@@ -652,62 +671,90 @@ const Classes: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsBulkEnrollOpen(true)}
-                  className="text-[10px] bg-primary/10 text-primary px-3 py-1.5 rounded-lg hover:bg-primary/20 transition-all font-black uppercase tracking-wider"
+                  className="text-[10px] bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-400 px-4 py-2 rounded-xl hover:bg-primary/20 dark:hover:bg-primary/30 transition-all font-black uppercase tracking-widest flex items-center gap-2 shadow-sm active:scale-95"
                 >
+                  <Users size={14} />
                   {t('common.bulkAdd')}
                 </button>
               </div>
 
-              <div className="flex gap-2 mb-4">
-                <select
-                  className="flex-1 text-sm border-gray-200 dark:border-gray-700 rounded-xl dark:bg-gray-800 dark:text-white py-2.5 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all font-medium"
-                  value={selectedStudentId}
-                  onChange={(e) => setSelectedStudentId(e.target.value)}
-                >
-                  <option value="">-- {t('students.addClass')} --</option>
-                  {allStudents
-                    .filter(s => !enrollments.find(e => e.id === s.id))
-                    .map(student => (
-                      <option key={student.id} value={student.id}>{student.full_name} ({student.email})</option>
-                    ))}
-                </select>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 mb-4">
+                <div className="relative flex-1 group">
+                  <select
+                    className="w-full text-xs sm:text-sm border-gray-200 dark:border-gray-700 rounded-xl dark:bg-gray-900 dark:text-white py-2.5 px-4 pr-10 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none transition-all font-medium bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
+                    value={selectedStudentId}
+                    onChange={(e) => setSelectedStudentId(e.target.value)}
+                  >
+                    <option value="">-- {t('students.addClass')} --</option>
+                    {allStudents
+                      .filter(s => !enrollments.find(e => e.id === s.id))
+                      .map(student => (
+                        <option key={student.id} value={student.id}>{student.full_name} ({student.email})</option>
+                      ))}
+                  </select>
+                </div>
                 <button
                   type="button"
                   onClick={handleEnrollStudent}
                   disabled={!selectedStudentId}
-                  className="bg-primary hover:bg-primary-dark text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all disabled:opacity-50 shadow-lg shadow-primary/20"
+                  className="h-11 sm:h-[42px] px-6 bg-primary hover:bg-primary-dark text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 shadow-lg shadow-primary/25 active:scale-95 flex items-center justify-center gap-2 whitespace-nowrap"
                 >
+                  <Plus size={16} />
                   {t('common.add')}
                 </button>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[200px] overflow-y-auto pr-1 custom-scrollbar">
+              {enrollments.length > 5 && (
+                <div className="relative mb-3 group">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search size={12} className="text-gray-400 group-focus-within:text-primary transition-colors" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder={t('common.search')}
+                    className="w-full pl-9 pr-4 py-1.5 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg text-[10px] font-bold focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                    onChange={(e) => {
+                      const query = e.target.value.toLowerCase();
+                      const items = document.querySelectorAll('.enrolled-student-card');
+                      items.forEach((item: any) => {
+                        const text = item.textContent?.toLowerCase() || '';
+                        item.style.display = text.includes(query) ? 'flex' : 'none';
+                      });
+                    }}
+                  />
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-[280px] overflow-y-auto pr-1.5 custom-scrollbar">
                 {enrollments.map((student) => (
-                  <div key={student.id} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/40 rounded-xl border border-gray-100 dark:border-gray-700/50 group hover:border-primary/20 transition-all">
+                  <div key={student.id} className="enrolled-student-card flex items-center justify-between p-2.5 bg-gray-50/50 dark:bg-gray-900/40 rounded-xl border border-gray-100 dark:border-gray-700/50 group hover:border-primary/30 transition-all">
                     <div className="flex items-center min-w-0">
-                      <div className="h-8 w-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-xs font-black flex-shrink-0">
+                      <div className="h-7 w-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center text-[10px] font-black flex-shrink-0">
                         {student.full_name.charAt(0)}
                       </div>
-                      <div className="ml-3 truncate">
-                        <p className="text-xs font-bold text-gray-900 dark:text-gray-100 truncate leading-tight">{student.full_name}</p>
-                        <p className="text-[10px] text-gray-500 dark:text-gray-400 truncate mt-0.5">{student.email}</p>
+                      <div className="ml-2.5 truncate">
+                        <p className="text-[11px] font-bold text-gray-900 dark:text-gray-100 truncate leading-tight">{student.full_name}</p>
+                        <p className="text-[9px] text-gray-500 dark:text-gray-400 truncate mt-0.5">{student.email}</p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={() => handleUnenrollStudent(student.id)}
-                      className="text-gray-400 hover:text-red-500 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all"
+                      className="text-gray-400 hover:text-red-500 p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
                       <X size={14} />
                     </button>
                   </div>
                 ))}
+                {enrollments.length === 0 && (
+                  <div className="col-span-full text-center py-8 bg-gray-50/50 dark:bg-gray-900/30 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-400 mb-2">
+                      <Users size={18} />
+                    </div>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{t('students.noEnrollments')}</p>
+                  </div>
+                )}
               </div>
-              {enrollments.length === 0 && (
-                <div className="text-center py-6 bg-gray-50 dark:bg-gray-900/30 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
-                  <p className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{t('students.noEnrollments')}</p>
-                </div>
-              )}
             </div>
           )}
 

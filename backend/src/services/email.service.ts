@@ -78,11 +78,11 @@ const button = (url: string, viLabel: string, enLabel: string, color = '#3b82f6'
   </a>
 </div>
 <p style="text-align:center;font-size:12px;color:#94a3b8;margin:0;">
-  Nếu nút không hoạt động, copy link sau · If the button doesn't work, copy this link:<br/>
+  Nếu nút không hoạt động, hãy copy link sau vào trình duyệt · If the button doesn't work, copy this link:<br/>
   <a href="${url}" style="color:#3b82f6;word-break:break-all;">${url}</a>
 </p>`;
 
-// ─── Send Verification Email ─────────────────────────────────────────────────
+// ─── Send Verification Email (Generic) ─────────────────────────────────────────
 
 export const sendVerificationEmail = async (to: string, token: string) => {
   const verifyLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
@@ -105,11 +105,6 @@ export const sendVerificationEmail = async (to: string, token: string) => {
     <p style="color:#f59e0b;font-size:13px;margin:0 0 20px;">⚠️ This link will expire in <strong>24 hours</strong>.</p>
 
     ${button(verifyLink, 'Xác Thực Email', 'Verify Email')}
-
-    <p style="color:#94a3b8;font-size:12px;text-align:center;margin:20px 0 0;">
-      Nếu bạn không tạo tài khoản này, hãy bỏ qua email này.<br/>
-      If you didn't create this account, please ignore this email.
-    </p>
   `;
 
   try {
@@ -119,10 +114,64 @@ export const sendVerificationEmail = async (to: string, token: string) => {
       subject: '[EduSchedule] Xác thực email · Verify your email',
       html: emailWrapper(body),
     });
-    console.log('Verification email sent:', info.messageId);
     logPreviewUrl(info);
   } catch (error) {
     console.error('Error sending verification email:', error);
+    throw error;
+  }
+};
+
+// ─── Send Teacher Welcome Email ───────────────────────────────────────────────
+
+export const sendTeacherWelcomeEmail = async (to: string, token: string, fullName: string) => {
+  const verifyLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
+  const defaultPassword = to.split('@')[0];
+
+  const body = `
+    <!-- VI -->
+    <h2 style="margin:0 0 8px;color:#1e293b;font-size:20px;">🎉 Chào mừng Giáo viên ${escapeHtml(fullName)}</h2>
+    <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 12px;">
+      Bạn vừa được thêm vào hệ thống quản lý giáo dục <strong>EduSchedule</strong>. Dưới đây là thông tin đăng nhập tạm thời của bạn:
+    </p>
+    
+    <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
+      <p style="margin:0 0 8px;font-size:14px;"><strong>📧 Email:</strong> ${to}</p>
+      <p style="margin:0;font-size:14px;"><strong>🔑 Mật khẩu mặc định:</strong> <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;">${defaultPassword}</code></p>
+    </div>
+
+    <p style="color:#ef4444;font-size:13px;margin:0 0 20px;">
+      <strong>Lưu ý:</strong> Vui lòng nhấn nút bên dưới để xác thực email trước khi đăng nhập. Bạn nên đổi mật khẩu ngay sau khi đăng nhập thành công.
+    </p>
+
+    ${divider}
+
+    <!-- EN -->
+    <h2 style="margin:0 0 8px;color:#1e293b;font-size:20px;">🎉 Welcome Teacher ${escapeHtml(fullName)}</h2>
+    <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 12px;">
+      You have been added to <strong>EduSchedule</strong> management system. Here are your temporary login credentials:
+    </p>
+    <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
+      <p style="margin:0 0 8px;font-size:14px;"><strong>📧 Email:</strong> ${to}</p>
+      <p style="margin:0;font-size:14px;"><strong>🔑 Default Password:</strong> <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;">${defaultPassword}</code></p>
+    </div>
+    
+    <p style="color:#ef4444;font-size:13px;margin:0 0 20px;">
+      <strong>Note:</strong> Please click the button below to verify your email before logging in. You should change your password immediately after successful login.
+    </p>
+
+    ${button(verifyLink, 'Kích Hoạt Tài Khoản', 'Activate Account')}
+  `;
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"EduSchedule" <${process.env.SMTP_USER || 'no-reply@eduschedule.com'}>`,
+      to,
+      subject: '[EduSchedule] Chào mừng giáo viên mới · Welcome to the team',
+      html: emailWrapper(body),
+    });
+    logPreviewUrl(info);
+  } catch (error) {
+    console.error('Error sending teacher welcome email:', error);
     throw error;
   }
 };
@@ -150,11 +199,6 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
     <p style="color:#ef4444;font-size:13px;margin:0 0 20px;">⚠️ This link will expire in <strong>1 hour</strong>.</p>
 
     ${button(resetLink, 'Đặt Lại Mật Khẩu', 'Reset Password', '#f59e0b')}
-
-    <p style="color:#94a3b8;font-size:12px;text-align:center;margin:20px 0 0;">
-      Nếu bạn không yêu cầu điều này, hãy bỏ qua email này. Mật khẩu sẽ không thay đổi.<br/>
-      If you didn't request this, please ignore this email. Your password will remain unchanged.
-    </p>
   `;
 
   try {
@@ -164,7 +208,6 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
       subject: '[EduSchedule] Đặt lại mật khẩu · Reset your password',
       html: emailWrapper(body),
     });
-    console.log('Password reset email sent:', info.messageId);
     logPreviewUrl(info);
   } catch (error) {
     console.error('Error sending password reset email:', error);
@@ -176,14 +219,11 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
 
 export const sendReminderEmail = async (to: string, sessionDetails: any) => {
   const { className, date, startTime, endTime, roomName } = sessionDetails;
-
-  // Escape user-controlled strings to prevent HTML injection
   const safeClassName = escapeHtml(className || '');
   const safeRoomName = escapeHtml(roomName || '');
   const safeStartTime = escapeHtml(startTime || '');
   const safeEndTime = endTime ? escapeHtml(endTime) : '';
 
-  // Format date thân thiện
   const dateObj = new Date(date);
   const viDate = dateObj.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
   const enDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -234,4 +274,3 @@ export const sendReminderEmail = async (to: string, sessionDetails: any) => {
     return false;
   }
 };
-

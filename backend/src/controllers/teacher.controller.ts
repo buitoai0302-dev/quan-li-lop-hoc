@@ -1,5 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import pool from '../db';
+import bcrypt from 'bcrypt';
+import crypto from 'crypto';
+import { sendTeacherWelcomeEmail } from '../services/email.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { checkPlanLimit } from '../utils/limitChecker';
 import { NotFoundError, ValidationError } from '../utils/errors';
@@ -30,6 +33,7 @@ export const getTeachers = async (req: AuthRequest, res: Response, next: NextFun
 };
 
 export const createTeacher = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  const client = await pool.connect();
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { full_name, email, phone, specialization, branch_id } = req.body;
@@ -41,18 +45,50 @@ export const createTeacher = async (req: AuthRequest, res: Response, next: NextF
     // Check Plan Limit
     await checkPlanLimit(tenantId as string, 'max_teachers', 'teachers', 'Bạn đã đạt giới hạn tối đa số lượng nhân sự/giáo viên.');
 
-    const result = await pool.query(
+    await client.query('BEGIN');
+
+    // 1. Create Teacher record
+    const teacherResult = await client.query(
       `INSERT INTO teachers (tenant_id, branch_id, full_name, email, phone, specialization) 
        VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
       [tenantId, branch_id, full_name, email, phone, specialization]
     );
+    const teacher = teacherResult.rows[0];
 
-    res.status(201).json(result.rows[0]);
+    // 2. Create User account for the teacher
+    const defaultPassword = email.split('@')[0];
+    const salt = await bcrypt.genSalt(10);
+    const passwordHash = await bcrypt.hash(defaultPassword, salt);
+    const verificationToken = crypto.randomUUID();
+    const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+
+    // Check if user already exists
+    const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
+    
+    if (existingUser.rows.length === 0) {
+      await client.query(
+        `INSERT INTO users (tenant_id, branch_id, email, password_hash, full_name, role, is_email_verified, verification_token, verification_token_expires, onboarding_completed) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+        [tenantId, branch_id, email, passwordHash, full_name, 'teacher', false, verificationToken, tokenExpires, true]
+      );
+    }
+
+    await client.query('COMMIT');
+
+    // Send welcome email (outside transaction)
+    if (existingUser.rows.length === 0) {
+      await sendTeacherWelcomeEmail(email, verificationToken, full_name);
+    }
+
+    res.status(201).json(teacher);
   } catch (error: any) {
+    await client.query('ROLLBACK');
     if (error.code === '23505') {
       return next(new ValidationError('Email này đã tồn tại trong hệ thống', 'EMAIL_ALREADY_EXISTS'));
     }
     next(error);
+  } finally {
+    client.release();
   }
 };
 

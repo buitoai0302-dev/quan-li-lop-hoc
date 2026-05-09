@@ -14,34 +14,47 @@ import {
   MessageSquare
 } from 'lucide-react';
 
+import { useAuth } from '../contexts/AuthContext';
+
 const Help: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
 
-  const categories = [
+  const allCategories = [
     {
       id: 'getting-started',
       icon: <Rocket className="text-orange-500" size={24} />,
       title: t('help.categories.gettingStarted.title'),
       description: t('help.categories.gettingStarted.desc'),
-      steps: [
+      steps: user?.role === 'teacher' ? [
+        t('help.teacher.gettingStarted.step1'),
+        t('help.teacher.gettingStarted.step2'),
+        t('help.teacher.gettingStarted.step3'),
+      ] : [
         t('help.categories.gettingStarted.step1'),
         t('help.categories.gettingStarted.step2'),
         t('help.categories.gettingStarted.step3'),
       ],
-      details: t('help.categories.gettingStarted.details')
+      details: user?.role === 'teacher' ? t('help.teacher.gettingStarted.details') : t('help.categories.gettingStarted.details')
     },
     {
       id: 'scheduling',
       icon: <Calendar className="text-blue-500" size={24} />,
-      title: t('help.categories.scheduling.title'),
-      description: t('help.categories.scheduling.desc'),
-      steps: [
+      title: user?.role === 'teacher' ? t('menu.teachingSchedule') : t('help.categories.scheduling.title'),
+      description: user?.role === 'teacher' ? t('help.teacher.scheduling.desc') : t('help.categories.scheduling.desc'),
+      steps: user?.role === 'teacher' ? [
+        t('help.teacher.scheduling.step1'),
+        t('help.teacher.scheduling.step2'),
+        user?.tenant_settings?.menu?.attendance !== false 
+          ? t('help.teacher.scheduling.step3')
+          : t('help.teacher.scheduling.step3_no_attendance', 'Click vào buổi học để xem danh sách học sinh'),
+      ] : [
         t('help.categories.scheduling.step1'),
         t('help.categories.scheduling.step2'),
         t('help.categories.scheduling.step3'),
       ],
-      details: t('help.categories.scheduling.details')
+      details: user?.role === 'teacher' ? t('help.teacher.scheduling.details') : t('help.categories.scheduling.details')
     },
     {
       id: 'data-management',
@@ -67,6 +80,14 @@ const Help: React.FC = () => {
       isPremium: true
     }
   ];
+
+  // Filter categories based on role
+  const categories = allCategories.filter(cat => {
+    if (user?.role === 'teacher') {
+      return ['getting-started', 'scheduling'].includes(cat.id);
+    }
+    return true; // Admin/Staff see all
+  });
 
   const handleContactSupport = () => {
     const subject = encodeURIComponent(t('help.supportSubject'));
@@ -236,8 +257,12 @@ const Help: React.FC = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400">{t('help.quickTips.tip2.a')}</p>
           </div>
           <div className="space-y-2">
-            <h4 className="font-bold text-gray-800 dark:text-gray-200">{t('help.quickTips.tip3.q')}</h4>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{t('help.quickTips.tip3.a')}</p>
+            <h4 className="font-bold text-gray-800 dark:text-gray-200">
+              {user?.role === 'teacher' ? t('help.quickTips.teacher.tip3.q') : t('help.quickTips.tip3.q')}
+            </h4>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              {user?.role === 'teacher' ? t('help.quickTips.teacher.tip3.a') : t('help.quickTips.tip3.a')}
+            </p>
           </div>
         </div>
       </div>

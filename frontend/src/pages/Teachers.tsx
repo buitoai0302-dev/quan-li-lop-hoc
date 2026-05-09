@@ -9,6 +9,7 @@ import { useTranslation } from 'react-i18next';
 import { handleApiError } from '../utils/errorHelper';
 import { UserCheck, Briefcase, Plus, Upload, Search, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 interface Teacher {
   id: string;
@@ -28,6 +29,7 @@ interface Branch {
 
 const Teachers: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
@@ -63,9 +65,10 @@ const Teachers: React.FC = () => {
       setTeachers(teachersRes.data);
       setBranches(branchesRes.data);
 
-      // Select first branch by default if available
+      // Select user's branch or first branch by default if available
       if (branchesRes.data.length > 0 && !formData.branch_id) {
-        setFormData(prev => ({ ...prev, branch_id: branchesRes.data[0].id }));
+        const defaultBranchId = user?.branch_id || branchesRes.data[0].id;
+        setFormData(prev => ({ ...prev, branch_id: defaultBranchId }));
       }
     } catch (error) {
       handleApiError(error, t);
@@ -98,7 +101,7 @@ const Teachers: React.FC = () => {
         email: teacher.email,
         phone: teacher.phone || '',
         specialization: teacher.specialization || '',
-        branch_id: teacher.branch_id || (branches.length > 0 ? branches[0].id : ''),
+        branch_id: teacher.branch_id || (user?.branch_id || (branches.length > 0 ? branches[0].id : '')),
         is_active: teacher.is_active,
       });
     } else {
@@ -108,7 +111,7 @@ const Teachers: React.FC = () => {
         email: '',
         phone: '',
         specialization: '',
-        branch_id: branches.length > 0 ? branches[0].id : '',
+        branch_id: user?.branch_id || (branches.length > 0 ? branches[0].id : ''),
         is_active: true,
       });
     }
@@ -387,7 +390,7 @@ const Teachers: React.FC = () => {
               <div className="sm:col-span-1">
                 <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1 ml-1">{t('common.status')}</label>
                 <select
-                  className="block w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none transition-all text-sm font-medium dark:text-white cursor-pointer"
+                  className="block w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none transition-all text-sm font-medium dark:text-white cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10"
                   value={formData.is_active ? 'true' : 'false'}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.value === 'true' })}
                 >

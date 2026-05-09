@@ -1,7 +1,6 @@
 -- ============================================================
 -- MIGRATION: Fix missing columns and schema inconsistencies
--- Run this against your existing database if you already ran schema.sql
--- Safe to run multiple times (uses IF NOT EXISTS / ON CONFLICT DO NOTHING)
+-- Copyright (c) 2026 EduSchedule. All Rights Reserved.
 -- ============================================================
 
 -- 1. Add missing columns to users table
@@ -86,6 +85,22 @@ ON CONFLICT (plan_id, limit_key) DO NOTHING;
 INSERT INTO plan_limits (plan_id, limit_key, limit_value)
 SELECT id, 'max_students', -1 FROM plan_definitions WHERE code = 'ENTERPRISE'
 ON CONFLICT (plan_id, limit_key) DO NOTHING;
+
+-- 10. Add parent_phone to students
+ALTER TABLE students ADD COLUMN IF NOT EXISTS parent_phone VARCHAR(30);
+
+-- 11. Add google_event_id to schedule_sessions
+ALTER TABLE schedule_sessions ADD COLUMN IF NOT EXISTS google_event_id VARCHAR(255);
+
+-- 12. Add updated_at to attendance and class_recurring_schedules
+ALTER TABLE attendance ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE class_recurring_schedules ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+-- 13. Add onboarding_completed to users
+ALTER TABLE users ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT FALSE;
+
+-- 14. Add settings to tenants
+ALTER TABLE tenants ADD COLUMN IF NOT EXISTS settings JSONB DEFAULT '{"menu": {"dashboard": true, "schedule": true, "classes": true, "attendance": true, "students": true, "teachers": true, "rooms": true, "branches": true, "import": true, "subscription": true}}'::jsonb;
 
 -- Done
 SELECT 'Migration completed successfully' as result;

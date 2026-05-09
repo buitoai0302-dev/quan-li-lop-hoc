@@ -28,6 +28,9 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response, next: N
     let queryEndDate = endDate as string;
     if (!queryEndDate) {
       const tempDate = new Date(queryStartDate);
+      if (isNaN(tempDate.getTime())) {
+        throw new ValidationError('Invalid startDate or weekStart format', 'INVALID_DATE_FORMAT');
+      }
       tempDate.setDate(tempDate.getDate() + 6);
       queryEndDate = tempDate.toISOString().split('T')[0];
     }
@@ -55,6 +58,14 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response, next: N
       if (teacherRes.rows.length > 0) {
         params.push(teacherRes.rows[0].id);
         sql += ` AND s.teacher_id = $${params.length}`;
+        if (classId) {
+          params.push(classId);
+          sql += ` AND s.class_id = $${params.length}`;
+        }
+        if (branchId) {
+          params.push(branchId);
+          sql += ` AND r.branch_id = $${params.length}`;
+        }
       } else {
         res.json({ success: true, data: { startDate: queryStartDate, endDate: queryEndDate, sessions: [] } });
         return;
@@ -64,6 +75,10 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response, next: N
       if (studentRes.rows.length > 0) {
         params.push(studentRes.rows[0].id);
         sql += ` AND s.class_id IN (SELECT class_id FROM class_students WHERE student_id = $${params.length})`;
+        if (classId) {
+          params.push(classId);
+          sql += ` AND s.class_id = $${params.length}`;
+        }
       } else {
         res.json({ success: true, data: { startDate: queryStartDate, endDate: queryEndDate, sessions: [] } });
         return;
@@ -147,6 +162,7 @@ export const createSession = async (req: AuthRequest, res: Response, next: NextF
         className: classRes.rows[0]?.name || 'Class',
         roomName: roomRes.rows[0]?.name || 'Room',
         teacherName: teacherRes.rows[0]?.full_name,
+        teacherId: teacherId,
         notes: sessionData.notes,
         date: sessionData.session_date,
         startTime: sessionData.start_time,
@@ -221,6 +237,7 @@ export const updateSession = async (req: AuthRequest, res: Response, next: NextF
         className: classRes.rows[0]?.name || 'Class',
         roomName: roomRes.rows[0]?.name || 'Room',
         teacherName: teacherRes.rows[0]?.full_name,
+        teacherId: newTeacherId,
         notes: sessionData.notes,
         date: sessionData.session_date,
         startTime: sessionData.start_time,

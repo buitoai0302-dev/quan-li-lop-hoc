@@ -180,7 +180,7 @@ const AdminTenants: React.FC = () => {
       </div>
 
       {/* Main Content: Table on Desktop, Cards on Mobile */}
-      <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-[1.5rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden">
         {/* Desktop View */}
         <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left border-collapse">
@@ -354,14 +354,14 @@ const AdminTenants: React.FC = () => {
                     key={p.id}
                     onClick={() => setNewPlanId(p.id)}
                     className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${isSelected
-                        ? 'border-primary bg-primary/5 dark:bg-primary/10'
-                        : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
+                      ? 'border-primary bg-primary/5 dark:bg-primary/10'
+                      : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
                       }`}
                   >
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${p.code === PLAN_CODES.FREE ? 'bg-gray-100 text-gray-400' :
-                        p.code === PLAN_CODES.PRO ? 'bg-blue-500 text-white shadow-blue-500/20' :
-                          p.code === PLAN_CODES.BUSINESS ? 'bg-purple-600 text-white shadow-purple-600/20' :
-                            'bg-amber-500 text-white shadow-amber-500/20'
+                      p.code === PLAN_CODES.PRO ? 'bg-blue-500 text-white shadow-blue-500/20' :
+                        p.code === PLAN_CODES.BUSINESS ? 'bg-purple-600 text-white shadow-purple-600/20' :
+                          'bg-amber-500 text-white shadow-amber-500/20'
                       }`}>
                       {p.code === PLAN_CODES.FREE && <Building size={20} />}
                       {p.code === PLAN_CODES.PRO && <Zap size={20} fill="currentColor" />}

@@ -64,7 +64,7 @@ export const getTenant = async (req: AuthRequest, res: Response): Promise<void> 
     }
 
     const result = await pool.query(
-      'SELECT id, name, domain, contact_email, plan_id FROM tenants WHERE id = $1 AND is_active = true',
+      'SELECT id, name, domain, contact_email, plan_id, settings FROM tenants WHERE id = $1 AND is_active = true',
       [tenantId]
     );
 
@@ -88,7 +88,7 @@ export const updateTenant = async (req: AuthRequest, res: Response): Promise<voi
       return;
     }
 
-    const { name, contact_email } = req.body;
+    const { name, contact_email, settings } = req.body;
 
     if (!name || name.trim() === '') {
       res.status(400).json({ error: 'Tenant name is required' });
@@ -97,10 +97,10 @@ export const updateTenant = async (req: AuthRequest, res: Response): Promise<voi
 
     const result = await pool.query(
       `UPDATE tenants 
-       SET name = $1, contact_email = $2, updated_at = NOW() 
-       WHERE id = $3 AND is_active = true 
-       RETURNING id, name, domain, contact_email`,
-      [name, contact_email, tenantId]
+       SET name = $1, contact_email = $2, settings = COALESCE($3, settings), updated_at = NOW() 
+       WHERE id = $4 AND is_active = true 
+       RETURNING id, name, domain, contact_email, settings`,
+      [name, contact_email, settings ? JSON.stringify(settings) : null, tenantId]
     );
 
     if (result.rows.length === 0) {

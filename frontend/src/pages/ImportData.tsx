@@ -253,7 +253,7 @@ const ImportData: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-2 sm:gap-3">
           <div className="md:col-span-4 relative group">
             <select
-              className="block w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl py-2 px-4 text-[11px] font-bold dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+              className="block w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl py-2 px-4 pr-10 text-[11px] font-bold dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
               value={importType}
               onChange={(e) => {
                 setImportType(e.target.value as ImportType);
@@ -265,14 +265,11 @@ const ImportData: React.FC = () => {
               <option value="rooms" className="dark:bg-gray-900">{t('import.rooms')}</option>
               <option value="classes" className="dark:bg-gray-900">{t('import.classes')}</option>
             </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300 group-hover:text-primary transition-colors">
-              <Upload size={14} />
-            </div>
           </div>
 
           <div className="md:col-span-5 relative group">
             <select
-              className="block w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl py-2 px-4 text-[11px] font-bold dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer"
+              className="block w-full bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl py-2 px-4 pr-10 text-[11px] font-bold dark:text-white focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
               value={selectedBranch}
               onChange={(e) => setSelectedBranch(e.target.value)}
             >
@@ -281,9 +278,6 @@ const ImportData: React.FC = () => {
                 <option key={b.id} value={b.id} className="dark:bg-gray-900">{b.name}</option>
               ))}
             </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-300 group-hover:text-primary transition-colors">
-              <AlertCircle size={14} />
-            </div>
           </div>
 
           <div className="md:col-span-3">
