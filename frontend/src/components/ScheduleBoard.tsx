@@ -263,7 +263,7 @@ const ScheduleBoard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-surface dark:bg-gray-800 rounded-xl shadow-lg border border-border dark:border-gray-700 overflow-hidden transition-colors duration-200">
+    <div className="flex flex-col h-full bg-surface dark:bg-gray-800 rounded-lg shadow-lg border border-border dark:border-gray-700 overflow-hidden transition-colors duration-200">
       <div className="flex flex-col border-b border-gray-200 dark:border-gray-700 bg-surface dark:bg-gray-900 transition-all sticky top-0 z-30 shadow-sm">
         {/* Main Header Row */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between px-4 sm:px-6 py-4 sm:py-5 gap-5">
@@ -271,7 +271,7 @@ const ScheduleBoard: React.FC = () => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <div className="flex flex-col">
               <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
-                <div className="p-2 bg-primary/10 rounded-xl">
+                <div className="p-2 bg-primary/10 rounded-lg">
                   <Calendar size={20} className="text-primary" />
                 </div>
                 <span>
@@ -288,12 +288,12 @@ const ScheduleBoard: React.FC = () => {
               </h1>
             </div>
 
-            <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800/50 rounded-xl p-1 shadow-inner border border-gray-200/20 dark:border-gray-700/30">
-              <button className="p-2 text-gray-500 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all active:scale-90" onClick={handlePrev}>
+            <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800/50 rounded-lg p-1 shadow-inner border border-gray-200/20 dark:border-gray-700/30">
+              <button className="p-2 text-gray-500 hover:bg-white dark:hover:bg-gray-700 rounded-md transition-all active:scale-90" onClick={handlePrev}>
                 <ChevronLeft size={16} />
               </button>
               <div
-                className="relative flex items-center bg-white dark:bg-gray-700 px-3 py-1.5 rounded-lg mx-1 border border-gray-200/50 dark:border-gray-600/50 cursor-pointer shadow-sm hover:ring-1 hover:ring-primary/30 transition-all"
+                className="relative flex items-center bg-white dark:bg-gray-700 px-3 py-1.5 rounded-md mx-1 border border-gray-200/50 dark:border-gray-600/50 cursor-pointer shadow-sm hover:ring-1 hover:ring-primary/30 transition-all"
                 onClick={() => {
                   const input = dateInputRef.current as any;
                   if (input) {
@@ -314,7 +314,7 @@ const ScheduleBoard: React.FC = () => {
                 />
                 <Calendar size={14} className="text-primary ml-1" />
               </div>
-              <button className="p-2 text-gray-500 hover:bg-white dark:hover:bg-gray-700 rounded-lg transition-all active:scale-90" onClick={handleNext}>
+              <button className="p-2 text-gray-500 hover:bg-white dark:hover:bg-gray-700 rounded-md transition-all active:scale-90" onClick={handleNext}>
                 <ChevronRight size={16} />
               </button>
             </div>
@@ -323,12 +323,12 @@ const ScheduleBoard: React.FC = () => {
           {/* Right Side: Switcher + Actions */}
           <div className="flex items-center gap-4 w-full lg:w-auto">
             {/* View Mode Switcher - Improved Symmetry */}
-            <div className="flex flex-1 sm:flex-none p-1 bg-gray-100 dark:bg-gray-800/50 rounded-xl shadow-inner border border-gray-200/20 dark:border-gray-700/30">
+            <div className="flex flex-1 sm:flex-none p-1 bg-gray-100 dark:bg-gray-800/50 rounded-lg shadow-inner border border-gray-200/20 dark:border-gray-700/30">
               {['day', 'week', 'month'].map((mode) => (
                 <button
                   key={mode}
                   onClick={() => setViewMode(mode as ViewMode)}
-                  className={`flex-1 sm:px-6 py-2 rounded-lg text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-widest flex items-center justify-center min-w-[70px] ${viewMode === mode
+                  className={`flex-1 sm:px-6 py-2 rounded-md text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-widest flex items-center justify-center min-w-[70px] ${viewMode === mode
                     ? 'bg-white dark:bg-gray-700 text-primary shadow-sm ring-1 ring-black/5 dark:ring-white/10'
                     : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:bg-white/50 dark:hover:bg-white/5'
                     }`}
@@ -342,7 +342,7 @@ const ScheduleBoard: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setIsFilterVisible(!isFilterVisible)}
-                className={`w-10 h-10 flex items-center justify-center rounded-xl transition-all border active:scale-95 ${isFilterVisible
+                className={`w-10 h-10 flex items-center justify-center rounded-lg transition-all border active:scale-95 ${isFilterVisible
                   ? 'bg-primary/10 border-primary/30 text-primary'
                   : 'bg-white dark:bg-gray-800 text-gray-500 border-gray-200/50 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'
                   }`}
@@ -353,7 +353,7 @@ const ScheduleBoard: React.FC = () => {
               {canEdit && (
                 <button
                   onClick={() => handleOpenModal()}
-                  className="w-10 h-10 bg-primary hover:bg-primary-dark text-white rounded-xl transition-all shadow-lg shadow-primary/25 flex items-center justify-center group active:scale-95"
+                  className="w-10 h-10 bg-primary hover:bg-primary-dark text-white rounded-lg transition-all shadow-lg shadow-primary/25 flex items-center justify-center group active:scale-95"
                 >
                   <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
                 </button>
@@ -376,7 +376,7 @@ const ScheduleBoard: React.FC = () => {
                   <select
                     value={selectedBranch}
                     onChange={(e) => setSelectedBranch(e.target.value)}
-                    className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer shadow-sm transition-all bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
+                    className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer shadow-sm transition-all bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
                   >
                     <option value="">{t('common.allBranches')}</option>
                     {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
@@ -395,7 +395,7 @@ const ScheduleBoard: React.FC = () => {
                     <select
                       value={selectedTeacher}
                       onChange={(e) => setSelectedTeacher(e.target.value)}
-                      className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer shadow-sm transition-all bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
+                      className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer shadow-sm transition-all bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
                     >
                       <option value="">{t('common.all') || 'Tất cả'}</option>
                       {teachers
@@ -418,7 +418,7 @@ const ScheduleBoard: React.FC = () => {
                   <select
                     value={selectedClass}
                     onChange={(e) => setSelectedClass(e.target.value)}
-                    className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer shadow-sm transition-all bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
+                    className="w-full pl-4 pr-10 py-2.5 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none cursor-pointer shadow-sm transition-all bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
                   >
                     <option value="">{t('common.all') || 'Tất cả'}</option>
                     {classes
@@ -437,7 +437,7 @@ const ScheduleBoard: React.FC = () => {
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-auto bg-white dark:bg-gray-800 flex flex-col">
           {viewMode === 'month' && (
-            <div className="grid grid-cols-7 border-b border-border dark:border-gray-600 bg-gray-50 dark:bg-gray-900 sticky top-0 z-20 min-w-[800px] sm:min-w-[1200px]">
+            <div className="grid grid-cols-7 border-b border-border dark:border-gray-600 bg-gray-50 dark:bg-gray-900 sticky top-0 z-20 min-w-[800px] sm:min-w-[1000px] xl:min-w-full">
               {[
                 t('schedule.days.mon'),
                 t('schedule.days.tue'),
@@ -453,7 +453,7 @@ const ScheduleBoard: React.FC = () => {
               ))}
             </div>
           )}
-          <div className={`grid ${viewMode === 'day' ? 'grid-cols-1' : 'grid-cols-7 min-w-[700px] sm:min-w-[1000px] lg:min-w-0'} divide-x divide-y divide-border dark:divide-gray-700 flex-1`}>
+          <div className={`grid ${viewMode === 'day' ? 'grid-cols-1' : 'grid-cols-7 min-w-[800px] sm:min-w-[1000px] xl:min-w-full'} divide-x divide-y divide-border dark:divide-gray-700 flex-1`}>
             {daysToShow.map((day, idx) => {
               const dateStr = format(day, 'yyyy-MM-dd');
               const isToday = isSameDay(day, new Date());
@@ -509,7 +509,7 @@ const ScheduleBoard: React.FC = () => {
       >
         <form onSubmit={handleSubmit} className="space-y-3 py-0.5">
           {/* Time & Date Section - Ultra Compact */}
-          <div className="bg-blue-50/50 dark:bg-indigo-900/10 p-3 rounded-xl border border-blue-100/50 dark:border-indigo-500/10">
+          <div className="bg-blue-50/50 dark:bg-indigo-900/10 p-3 rounded-lg border border-blue-100/50 dark:border-indigo-500/10">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-[10px] font-black text-blue-600 dark:text-indigo-300 uppercase ml-1">{t('schedule.date')} *</label>
@@ -528,7 +528,7 @@ const ScheduleBoard: React.FC = () => {
                     required type="date"
                     value={formData.sessionDate}
                     onChange={(e) => setFormData({ ...formData, sessionDate: e.target.value })}
-                    className="w-full pl-8 pr-2 py-1.5 bg-white dark:bg-slate-800 border border-blue-100 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none transition-all cursor-pointer"
+                    className="w-full pl-8 pr-2 py-1.5 bg-white dark:bg-slate-800 border border-blue-100 dark:border-slate-700 rounded-md text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none transition-all cursor-pointer"
                   />
                   <Calendar size={14} className="absolute left-2.5 top-2 text-blue-500 dark:text-indigo-400 group-hover:scale-110 transition-transform" />
                 </div>
@@ -540,7 +540,7 @@ const ScheduleBoard: React.FC = () => {
                     required type="time"
                     value={formData.startTime}
                     onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
-                    className="w-full px-2 py-1.5 bg-white dark:bg-slate-800 border border-blue-100 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none"
+                    className="w-full px-2 py-1.5 bg-white dark:bg-slate-800 border border-blue-100 dark:border-slate-700 rounded-md text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -549,7 +549,7 @@ const ScheduleBoard: React.FC = () => {
                     required type="time"
                     value={formData.endTime}
                     onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
-                    className="w-full px-2 py-1.5 bg-white dark:bg-slate-800 border border-blue-100 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none"
+                    className="w-full px-2 py-1.5 bg-white dark:bg-slate-800 border border-blue-100 dark:border-slate-700 rounded-md text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none"
                   />
                 </div>
               </div>
@@ -572,7 +572,7 @@ const ScheduleBoard: React.FC = () => {
                           required
                           value={formData.classId}
                           onChange={handleClassChange}
-                          className="w-full pl-8 pr-10 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:14px] bg-[right_8px_center] bg-no-repeat"
+                          className="w-full pl-8 pr-10 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:14px] bg-[right_8px_center] bg-no-repeat"
                         >
                           <option value="" disabled>---</option>
                           {classes.filter(c => c.status !== 'cancelled').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -588,7 +588,7 @@ const ScheduleBoard: React.FC = () => {
                           required
                           value={formData.teacherId}
                           onChange={(e) => setFormData({ ...formData, teacherId: e.target.value })}
-                          className="w-full pl-8 pr-10 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:14px] bg-[right_8px_center] bg-no-repeat"
+                          className="w-full pl-8 pr-10 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:14px] bg-[right_8px_center] bg-no-repeat"
                         >
                           <option value="" disabled>---</option>
                           {teachers
@@ -609,7 +609,7 @@ const ScheduleBoard: React.FC = () => {
                           required
                           value={formData.roomId}
                           onChange={(e) => setFormData({ ...formData, roomId: e.target.value })}
-                          className="w-full pl-8 pr-10 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:14px] bg-[right_8px_center] bg-no-repeat"
+                          className="w-full pl-8 pr-10 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md text-xs font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/30 outline-none appearance-none cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:14px] bg-[right_8px_center] bg-no-repeat"
                         >
                           <option value="" disabled>---</option>
                           {rooms
@@ -628,7 +628,7 @@ const ScheduleBoard: React.FC = () => {
                           type="text"
                           value={formData.notes}
                           onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                          className="w-full pl-8 pr-2 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-medium text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary/30 outline-none transition-all"
+                          className="w-full pl-8 pr-2 py-2 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-md text-xs font-medium text-gray-800 dark:text-gray-200 focus:ring-2 focus:ring-primary/30 outline-none transition-all"
                           placeholder={t('schedule.notesPlaceholder')}
                         />
                         <FileText size={14} className="absolute left-2.5 top-2.5 text-gray-400 dark:text-gray-500" />
@@ -644,7 +644,7 @@ const ScheduleBoard: React.FC = () => {
           <div className="flex gap-2 pt-3 border-t border-gray-100 dark:border-slate-800">
             <button
               type="submit"
-              className="flex-1 py-2.5 bg-primary text-white font-black rounded-xl hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all text-xs uppercase tracking-widest active:scale-[0.98]"
+              className="flex-1 py-2.5 bg-primary text-white font-black rounded-lg hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all text-xs uppercase tracking-widest active:scale-[0.98]"
             >
               {editingSession ? t('common.update') : t('common.save')}
             </button>
@@ -652,7 +652,7 @@ const ScheduleBoard: React.FC = () => {
               <button
                 type="button"
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="px-4 py-2.5 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-bold rounded-xl hover:bg-red-100 transition-all text-[10px] uppercase tracking-widest border border-red-100 dark:border-red-500/10"
+                className="px-4 py-2.5 bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 font-bold rounded-lg hover:bg-red-100 transition-all text-[10px] uppercase tracking-widest border border-red-100 dark:border-red-500/10"
               >
                 {t('common.delete')}
               </button>
@@ -660,7 +660,7 @@ const ScheduleBoard: React.FC = () => {
               <button
                 type="button"
                 onClick={handleCloseModal}
-                className="px-4 py-2.5 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 font-bold rounded-xl hover:bg-gray-100 transition-all text-[10px] uppercase tracking-widest"
+                className="px-4 py-2.5 bg-gray-50 dark:bg-slate-800 text-gray-500 dark:text-gray-400 font-bold rounded-lg hover:bg-gray-100 transition-all text-[10px] uppercase tracking-widest"
               >
                 {t('common.cancel')}
               </button>
@@ -678,8 +678,8 @@ const ScheduleBoard: React.FC = () => {
       >
         {viewingSession && (
           <div className="space-y-6 py-2">
-            <div className="flex items-center gap-4 p-4 bg-primary/5 rounded-2xl border border-primary/10">
-              <div className="w-12 h-12 bg-primary text-white rounded-xl flex items-center justify-center font-black text-xl shadow-lg shadow-primary/20">
+            <div className="flex items-center gap-4 p-4 bg-primary/5 rounded-xl border border-primary/10">
+              <div className="w-12 h-12 bg-primary text-white rounded-lg flex items-center justify-center font-black text-xl shadow-lg shadow-primary/20">
                 {viewingSession.class_name?.substring(0, 1).toUpperCase()}
               </div>
               <div>
@@ -690,7 +690,7 @@ const ScheduleBoard: React.FC = () => {
 
             <div className="grid grid-cols-1 gap-4">
               <div className="flex items-start gap-3">
-                <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500">
+                <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-500">
                   <Clock size={18} />
                 </div>
                 <div>
@@ -704,7 +704,7 @@ const ScheduleBoard: React.FC = () => {
 
               {viewingSession.teacher_name && user?.id !== viewingSession.teacher_id && (
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500">
+                  <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-500">
                     <User size={18} />
                   </div>
                   <div>
@@ -715,7 +715,7 @@ const ScheduleBoard: React.FC = () => {
               )}
 
               <div className="flex items-start gap-3">
-                <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded-lg text-gray-500">
+                <div className="mt-1 p-2 bg-gray-100 dark:bg-gray-800 rounded-md text-gray-500">
                   <MapPin size={18} />
                 </div>
                 <div>
@@ -726,7 +726,7 @@ const ScheduleBoard: React.FC = () => {
 
               {viewingSession.notes && (
                 <div className="flex items-start gap-3">
-                  <div className="mt-1 p-2 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg text-yellow-600">
+                  <div className="mt-1 p-2 bg-yellow-50 dark:bg-yellow-900/30 rounded-md text-yellow-600">
                     <FileText size={18} />
                   </div>
                   <div>
@@ -740,7 +740,7 @@ const ScheduleBoard: React.FC = () => {
             <div className="pt-4 border-t border-gray-100 dark:border-gray-800 flex gap-3">
               <button
                 onClick={() => setViewingSession(null)}
-                className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-200 transition-all text-sm"
+                className="flex-1 py-3 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-lg hover:bg-gray-200 transition-all text-sm"
               >
                 {t('common.close')}
               </button>
@@ -751,7 +751,7 @@ const ScheduleBoard: React.FC = () => {
                     setViewingSession(null);
                     handleOpenModal(session);
                   }}
-                  className="flex-1 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all text-sm"
+                  className="flex-1 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary-dark shadow-lg shadow-primary/20 transition-all text-sm"
                 >
                   {t('common.edit')}
                 </button>

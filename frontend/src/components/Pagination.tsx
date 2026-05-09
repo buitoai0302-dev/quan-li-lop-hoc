@@ -50,19 +50,19 @@ const Pagination: React.FC<PaginationProps> = ({
         <button
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
-          className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-20 transition-colors"
+          className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-20 transition-colors"
         >
           <ChevronLeft size={16} />
         </button>
         
-        <div className="flex items-center px-4 py-1.5 rounded-xl bg-primary/5 dark:bg-primary/10 text-[10px] sm:text-[11px] font-black text-primary border border-primary/10">
+        <div className="flex items-center px-4 py-1.5 rounded-lg bg-primary/5 dark:bg-primary/10 text-[10px] sm:text-[11px] font-black text-primary border border-primary/10">
           {currentPage} <span className="mx-1.5 opacity-30">/</span> {totalPages}
         </div>
 
         <button
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages || totalItems === 0}
-          className="p-1.5 rounded-lg text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-20 transition-colors"
+          className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-20 transition-colors"
         >
           <ChevronRight size={16} />
         </button>

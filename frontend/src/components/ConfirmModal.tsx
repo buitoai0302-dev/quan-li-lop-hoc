@@ -34,19 +34,19 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         return {
           icon: <Info className="h-8 w-8 text-blue-600 dark:text-blue-400" />,
           iconBg: 'bg-blue-100 dark:bg-blue-900/30',
-          confirmBtn: 'bg-blue-600 hover:bg-blue-700 shadow-blue-200',
+          confirmBtn: 'bg-blue-600 hover:bg-blue-700 shadow-blue-500/20 dark:shadow-blue-900/40',
         };
       case 'warning':
         return {
           icon: <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />,
           iconBg: 'bg-amber-100 dark:bg-amber-900/30',
-          confirmBtn: 'bg-amber-600 hover:bg-amber-700 shadow-amber-200',
+          confirmBtn: 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/20 dark:shadow-amber-900/40',
         };
       default:
         return {
           icon: <AlertTriangle className="h-8 w-8 text-red-600 dark:text-red-400" />,
           iconBg: 'bg-red-100 dark:bg-red-900/30',
-          confirmBtn: 'bg-red-600 hover:bg-red-700 shadow-red-200',
+          confirmBtn: 'bg-red-600 hover:bg-red-700 shadow-red-500/20 dark:shadow-red-900/40',
         };
     }
   };
@@ -67,7 +67,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <button
             type="button"
             disabled={isLoading}
-            className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-bold text-xs uppercase tracking-widest disabled:opacity-50"
+            className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-bold text-xs uppercase tracking-widest disabled:opacity-50"
             onClick={onClose}
           >
             {cancelText || t('common.cancel')}
@@ -75,7 +75,7 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <button
             type="button"
             disabled={isLoading}
-            className={`flex-1 px-4 py-2.5 text-white rounded-xl transition-all font-bold text-xs uppercase tracking-widest shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 ${theme.confirmBtn}`}
+            className={`flex-1 px-4 py-2.5 text-white rounded-lg transition-all font-bold text-xs uppercase tracking-widest shadow-md disabled:opacity-50 flex items-center justify-center gap-2 ${theme.confirmBtn}`}
             onClick={() => {
               onConfirm();
               if (!isLoading) onClose();

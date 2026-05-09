@@ -78,7 +78,7 @@ const Register: React.FC = () => {
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-50">
         <button 
           onClick={toggleLanguage} 
-          className="group flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 bg-white/60 dark:bg-gray-800/80 backdrop-blur-md border border-slate-200/50 dark:border-gray-700 rounded-xl sm:rounded-2xl hover:bg-white dark:hover:bg-gray-700 transition-all shadow-sm active:scale-95"
+          className="group flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest text-gray-600 dark:text-gray-300 bg-white/60 dark:bg-gray-800/80 backdrop-blur-md border border-slate-200/50 dark:border-gray-700 rounded-lg sm:rounded-xl hover:bg-white dark:hover:bg-gray-700 transition-all shadow-sm active:scale-95"
         >
           <Globe size={12} className="text-primary group-hover:rotate-12 transition-transform sm:w-[14px] sm:h-[14px]" />
           <span>{i18n.language.startsWith('en') ? 'English' : 'Tiếng Việt'}</span>
@@ -87,7 +87,7 @@ const Register: React.FC = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <div className="flex justify-center mb-4">
-          <img src="/logo.png" alt="EduSchedule Logo" className="w-16 h-16 rounded-2xl shadow-2xl shadow-primary/20 transition-all duration-500 object-cover" />
+          <img src="/logo.png" alt="EduSchedule Logo" className="w-16 h-16 rounded-xl shadow-2xl shadow-primary/20 transition-all duration-500 object-cover" />
         </div>
         <h2 className="text-center text-xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
           {t('auth.registerTitle')}
@@ -113,7 +113,7 @@ const Register: React.FC = () => {
                 <input 
                   id="fullName" type="text" required value={fullName} onChange={e => setFullName(e.target.value)} 
                   placeholder={t('auth.fullNamePlaceholder')}
-                  className="block w-full pl-11 pr-5 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-800 dark:text-white rounded-xl sm:rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600" 
+                  className="block w-full pl-11 pr-5 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-800 dark:text-white rounded-lg sm:rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600" 
                 />
               </div>
             </div>
@@ -130,7 +130,7 @@ const Register: React.FC = () => {
                 <input 
                   id="email" type="email" autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} 
                   placeholder={t('auth.emailPlaceholder')}
-                  className="block w-full pl-11 pr-5 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-800 dark:text-white rounded-xl sm:rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600" 
+                  className="block w-full pl-11 pr-5 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-800 dark:text-white rounded-lg sm:rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600" 
                 />
               </div>
             </div>
@@ -147,7 +147,7 @@ const Register: React.FC = () => {
                 <input 
                   id="password" type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} 
                   placeholder={t('auth.passwordPlaceholder')}
-                  className="block w-full pl-11 pr-12 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 dark:text-white rounded-xl sm:rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" 
+                  className="block w-full pl-11 pr-12 py-2.5 bg-gray-50 dark:bg-gray-900/50 border border-gray-100 dark:border-gray-800 dark:text-white rounded-lg sm:rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-gray-300 dark:placeholder:text-gray-600" 
                 />
                 <button 
                   type="button" onClick={() => setShowPassword(!showPassword)}
@@ -174,7 +174,7 @@ const Register: React.FC = () => {
 
             <button 
               type="submit" disabled={isLoading}
-              className={`w-full py-3 px-6 bg-primary hover:bg-primary-dark text-white rounded-xl sm:rounded-2xl shadow-xl shadow-primary/20 text-[11px] font-black uppercase tracking-[0.2em] transition-all active:scale-[0.98] flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              className={`w-full py-3 px-6 bg-primary hover:bg-primary-dark text-white rounded-lg sm:rounded-xl shadow-xl shadow-primary/20 text-[11px] font-black uppercase tracking-[0.2em] transition-all active:scale-[0.98] flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
               {isLoading ? (
                 <>

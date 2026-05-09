@@ -1,5 +1,8 @@
 {
   "common": {
+    "appName": "EduSchedule",
+    "premiumEdition": "Phiên bản Cao cấp",
+    "premiumSaaS": "Dịch vụ SaaS Cao cấp",
     "search": "Tìm kiếm...",
     "noResults": "Không tìm thấy kết quả phù hợp",
     "noResultsSub": "Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc của bạn",
@@ -498,6 +501,7 @@
     "rememberMe": "Ghi nhớ đăng nhập",
     "forgotPassword": "Quên mật khẩu?",
     "loginButton": "Đăng nhập",
+    "logout": "Đăng xuất",
     "loginError": "Email hoặc mật khẩu không chính xác",
     "googleLoginError": "Đăng nhập Google thất bại. Email có thể chưa được đăng ký.",
     "loginSuccess": "Đăng nhập thành công!",

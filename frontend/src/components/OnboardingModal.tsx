@@ -52,7 +52,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300">
-      <div className="bg-white dark:bg-gray-800 rounded-[3rem] shadow-2xl max-w-2xl w-full overflow-hidden border border-white/20 animate-in zoom-in-95 duration-500">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-white/20 animate-in zoom-in-95 duration-500">
 
         {/* Progress Bar */}
         <div className="h-2 bg-gray-100 dark:bg-gray-700 flex">
@@ -65,7 +65,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
         <div className="p-8 md:p-12">
           {step === 1 && (
             <div className="space-y-6 text-center animate-in slide-in-from-bottom-8 duration-500">
-              <div className="w-20 h-20 bg-primary/10 text-primary rounded-3xl flex items-center justify-center mx-auto mb-8 animate-bounce">
+              <div className="w-20 h-20 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-8 animate-bounce">
                 <Rocket size={40} />
               </div>
               <h2 className="text-3xl md:text-4xl font-black text-gray-900 dark:text-white tracking-tight">
@@ -93,7 +93,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
                     type="text"
                     required
                     placeholder={t('onboarding.branchNamePlace')}
-                    className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-primary transition-all dark:text-white"
+                    className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all dark:text-white"
                     value={branchData.name}
                     onChange={(e) => setBranchData({ ...branchData, name: e.target.value })}
                   />
@@ -103,7 +103,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
                   <input
                     type="text"
                     placeholder={t('onboarding.addressPlace')}
-                    className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-primary transition-all dark:text-white"
+                    className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all dark:text-white"
                     value={branchData.address}
                     onChange={(e) => setBranchData({ ...branchData, address: e.target.value })}
                   />
@@ -113,7 +113,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
                   <input
                     type="text"
                     placeholder="0912 345 678"
-                    className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-2xl focus:ring-2 focus:ring-primary transition-all dark:text-white"
+                    className="w-full px-5 py-4 bg-gray-50 dark:bg-gray-900 border-none rounded-xl focus:ring-2 focus:ring-primary transition-all dark:text-white"
                     value={branchData.phone}
                     onChange={(e) => setBranchData({ ...branchData, phone: e.target.value })}
                   />
@@ -143,7 +143,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
             <button
               onClick={handleNext}
               disabled={(step === 2 && !branchData.name) || isSubmitting}
-              className="flex items-center gap-3 px-10 py-5 bg-primary text-white rounded-2xl font-black text-lg shadow-xl shadow-primary/30 hover:scale-105 transition-all active:scale-95 group disabled:opacity-50 disabled:hover:scale-100"
+              className="flex items-center gap-3 px-10 py-5 bg-primary text-white rounded-xl font-black text-lg shadow-xl shadow-primary/30 hover:scale-105 transition-all active:scale-95 group disabled:opacity-50 disabled:hover:scale-100"
             >
               {isSubmitting ? t('common.loading') : (step === totalSteps ? t('onboarding.startNow') : t('common.continue'))}
               {!isSubmitting && <ArrowRight className="group-hover:translate-x-1 transition-transform" />}

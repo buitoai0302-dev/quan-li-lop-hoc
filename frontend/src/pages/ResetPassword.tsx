@@ -108,7 +108,7 @@ const ResetPassword: React.FC = () => {
                   <input 
                     type={showPassword ? 'text' : 'password'} required value={password} onChange={e => setPassword(e.target.value)} 
                     placeholder={t('auth.passwordPlaceholder')}
-                    className="block w-full pl-11 pr-12 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-800 dark:text-white rounded-xl sm:rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600" 
+                    className="block w-full pl-11 pr-12 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-800 dark:text-white rounded-lg sm:rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600" 
                   />
                   <button 
                     type="button" onClick={() => setShowPassword(!showPassword)}
@@ -142,7 +142,7 @@ const ResetPassword: React.FC = () => {
                   <input 
                     type={showPassword ? 'text' : 'password'} required value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} 
                     placeholder={t('auth.passwordPlaceholder')}
-                    className={`block w-full pl-11 pr-5 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border dark:text-white rounded-xl sm:rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 transition-all ${confirmPassword && password !== confirmPassword ? 'border-rose-400 focus:ring-rose-400/10 focus:border-rose-500' : 'border-slate-100 dark:border-gray-800 focus:ring-primary/10 focus:border-primary'}`} 
+                    className={`block w-full pl-11 pr-5 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border dark:text-white rounded-lg sm:rounded-xl text-sm font-bold focus:outline-none focus:ring-4 transition-all ${confirmPassword && password !== confirmPassword ? 'border-rose-400 focus:ring-rose-400/10 focus:border-rose-500' : 'border-slate-100 dark:border-gray-800 focus:ring-primary/10 focus:border-primary'}`} 
                   />
                 </div>
                 {confirmPassword && password !== confirmPassword && (
@@ -152,7 +152,7 @@ const ResetPassword: React.FC = () => {
 
               <button 
                 type="submit" disabled={isLoading}
-                className={`w-full py-3 px-6 bg-primary hover:bg-primary-dark text-white rounded-xl sm:rounded-2xl shadow-xl shadow-primary/20 text-[11px] font-black uppercase tracking-[0.2em] transition-all active:scale-[0.98] flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full py-3 px-6 bg-primary hover:bg-primary-dark text-white rounded-lg sm:rounded-xl shadow-xl shadow-primary/20 text-[11px] font-black uppercase tracking-[0.2em] transition-all active:scale-[0.98] flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isLoading ? (
                   <>

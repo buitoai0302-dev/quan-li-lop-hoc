@@ -32,13 +32,13 @@ export const handleApiError = (error: any, t: TFunction, defaultMessageKey: stri
                 window.location.href = '/subscription';
                 toast.dismiss(tObj.id);
               }}
-              className="flex-1 bg-primary text-white px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
+              className="flex-1 bg-primary text-white px-3 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/20"
             >
               {t('common.upgradeNow')}
             </button>
             <button 
               onClick={() => toast.dismiss(tObj.id)}
-              className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
+              className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
             >
               {t('common.close')}
             </button>

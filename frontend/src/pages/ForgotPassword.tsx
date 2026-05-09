@@ -77,13 +77,13 @@ const ForgotPassword: React.FC = () => {
                   <input 
                     id="email" type="email" required value={email} onChange={e => setEmail(e.target.value)} 
                     placeholder={t('auth.emailPlaceholder')}
-                    className="block w-full pl-11 pr-5 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-800 dark:text-white rounded-xl sm:rounded-2xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600" 
+                    className="block w-full pl-11 pr-5 py-2.5 bg-slate-50/80 dark:bg-gray-900/50 border border-slate-100 dark:border-gray-800 dark:text-white rounded-lg sm:rounded-xl text-sm font-bold focus:outline-none focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all placeholder:text-slate-300 dark:placeholder:text-gray-600" 
                   />
                 </div>
               </div>
               <button 
                 type="submit" disabled={isLoading}
-                className={`w-full py-3 px-6 bg-primary hover:bg-primary-dark text-white rounded-xl sm:rounded-2xl shadow-xl shadow-primary/20 text-[11px] font-black uppercase tracking-[0.2em] transition-all active:scale-[0.98] flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+                className={`w-full py-3 px-6 bg-primary hover:bg-primary-dark text-white rounded-lg sm:rounded-xl shadow-xl shadow-primary/20 text-[11px] font-black uppercase tracking-[0.2em] transition-all active:scale-[0.98] flex items-center justify-center gap-3 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
               >
                 {isLoading ? (
                   <>

@@ -76,7 +76,7 @@ const VerifyEmail: React.FC = () => {
                 <p className="text-[11px] font-black uppercase tracking-widest text-primary animate-pulse">{t('auth.verifyEmailRedirect')}</p>
                 <Link 
                   to="/login" 
-                  className="mt-6 inline-flex items-center justify-center px-8 py-3 bg-primary hover:bg-primary-dark text-white rounded-xl shadow-xl shadow-primary/20 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                  className="mt-6 inline-flex items-center justify-center px-8 py-3 bg-primary hover:bg-primary-dark text-white rounded-lg shadow-xl shadow-primary/20 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
                 >
                   {t('auth.loginNow')}
                 </Link>
@@ -97,7 +97,7 @@ const VerifyEmail: React.FC = () => {
                 {isExpired && (
                   <Link 
                     to="/resend-verification"
-                    className="block w-full py-4 px-6 bg-primary hover:bg-primary-dark text-white rounded-2xl shadow-xl shadow-primary/20 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
+                    className="block w-full py-4 px-6 bg-primary hover:bg-primary-dark text-white rounded-xl shadow-xl shadow-primary/20 text-[10px] font-black uppercase tracking-widest transition-all active:scale-95"
                   >
                     {t('auth.resendButton')}
                   </Link>

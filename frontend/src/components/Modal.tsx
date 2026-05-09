@@ -39,7 +39,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidt
       
       <div 
         ref={modalRef}
-        className={`relative bg-white dark:bg-gray-800 rounded-2xl sm:rounded-2xl shadow-2xl w-full max-w-[calc(100%-2rem)] ${maxWidth} max-h-[90vh] sm:max-h-[calc(100vh-100px)] overflow-hidden transform transition-all border sm:border-0 dark:border-gray-700 flex flex-col mx-auto mb-4 sm:mb-0`}
+        className={`relative bg-white dark:bg-gray-800 rounded-xl sm:rounded-xl shadow-2xl w-full max-w-[calc(100%-2rem)] ${maxWidth} max-h-[90vh] sm:max-h-[calc(100vh-100px)] overflow-hidden transform transition-all border sm:border-0 dark:border-gray-700 flex flex-col mx-auto mb-4 sm:mb-0`}
         role="dialog"
         aria-modal="true"
       >
@@ -47,7 +47,7 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, maxWidt
           <h3 className="text-lg font-bold text-gray-900 dark:text-white truncate pr-4">{title}</h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none bg-gray-100 dark:bg-gray-700 p-1.5 rounded-lg transition-colors"
+            className="text-gray-400 hover:text-gray-500 dark:hover:text-gray-300 focus:outline-none bg-gray-100 dark:bg-gray-700 p-1.5 rounded-md transition-colors"
           >
             <X size={18} />
           </button>

@@ -121,7 +121,7 @@ const Branches: React.FC = () => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 p-3 sm:p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 h-full flex flex-col transition-colors">
+    <div className="bg-white dark:bg-gray-800 p-3 sm:p-6 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 h-full flex flex-col transition-colors">
       <div className="flex flex-col gap-3 mb-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="relative w-full sm:max-w-xs order-2 sm:order-1">
@@ -130,7 +130,7 @@ const Branches: React.FC = () => {
             </div>
             <input
               type="text"
-              className="block w-full pl-10 pr-10 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
+              className="block w-full pl-10 pr-10 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
               placeholder={t('common.search')}
               value={searchQuery}
               onChange={(e) => {
@@ -147,11 +147,11 @@ const Branches: React.FC = () => {
               </button>
             )}
           </div>
-          
+
           <div className="flex items-center justify-end gap-2 order-1 sm:order-2">
-            <button 
+            <button
               onClick={() => handleOpenModal()}
-              className="flex-1 sm:flex-none h-9 px-4 bg-primary hover:bg-primary-dark text-white rounded-xl text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/25 whitespace-nowrap flex items-center justify-center gap-2 group active:scale-95"
+              className="flex-1 sm:flex-none h-9 px-4 bg-primary hover:bg-primary-dark text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/25 whitespace-nowrap flex items-center justify-center gap-2 group active:scale-95"
               title={t('branches.addBranch')}
             >
               <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
@@ -160,17 +160,16 @@ const Branches: React.FC = () => {
           </div>
         </div>
       </div>
-      
-      <div className="flex-1 overflow-auto -mx-3 sm:-mx-6 px-3 sm:px-6 relative">
+
+      <div className="flex-1 overflow-auto -mx-3 sm:-mx-6 px-3 sm:px-6 relative custom-scrollbar">
         {loading ? (
           <div className="flex justify-center items-center h-32">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div>
         ) : (
-          <React.Fragment>
           <table className="w-full min-w-full divide-y divide-gray-200 dark:divide-gray-700 border-separate border-spacing-0">
             <thead className="sticky top-0 z-10">
-              <tr className="bg-gray-50 dark:bg-gray-900/90 backdrop-blur-md">
+              <tr className="bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur-md">
                 <th className="w-auto px-2 sm:px-6 py-3 text-left text-[10px] sm:text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('branches.name')}</th>
                 <th className="hidden md:table-cell w-[30%] px-6 py-3 text-left text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('branches.address')}</th>
                 <th className="hidden sm:table-cell w-28 px-6 py-3 text-left text-xs font-extrabold text-gray-500 dark:text-gray-400 uppercase tracking-wider border-b border-gray-200 dark:border-gray-700 whitespace-nowrap">{t('branches.phone')}</th>
@@ -184,7 +183,7 @@ const Branches: React.FC = () => {
                   <td className="px-2 sm:px-6 py-3">
                     <div className="flex items-center min-w-0">
                       <div className="relative flex-shrink-0">
-                        <div className="h-9 w-9 bg-primary/10 dark:bg-primary/20 rounded-xl flex items-center justify-center text-primary font-bold text-xs">
+                        <div className="h-9 w-9 bg-primary/10 dark:bg-primary/20 rounded-lg flex items-center justify-center text-primary font-bold text-xs">
                           B
                         </div>
                         <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-gray-800 ${branch.is_active ? 'bg-green-500' : 'bg-gray-400'}`}></div>
@@ -231,14 +230,19 @@ const Branches: React.FC = () => {
                 </tr>
               ))}
               {filteredBranches.length === 0 && (
-                <NoResults 
+                <NoResults
                   title={searchQuery ? t('common.noResults') : t('branches.noData')}
-                  colSpan={5} 
+                  colSpan={5}
                 />
               )}
             </tbody>
           </table>
-          <Pagination 
+        )}
+      </div>
+
+      {!loading && (
+        <div className="border-gray-100 dark:border-gray-700">
+          <Pagination
             currentPage={currentPage}
             totalItems={filteredBranches.length}
             itemsPerPage={itemsPerPage}
@@ -248,39 +252,38 @@ const Branches: React.FC = () => {
               setCurrentPage(1);
             }}
           />
-        </React.Fragment>
-        )}
-      </div>
+        </div>
+      )}
 
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={handleCloseModal} 
+      <Modal
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
         title={editingId ? t('branches.editBranch') : t('branches.addBranch')}
         maxWidth="max-w-xl"
       >
         <form onSubmit={handleSubmit} className="space-y-4 py-1">
           {/* Branch Info Section */}
-          <div className="bg-cyan-50/50 dark:bg-cyan-900/10 p-4 rounded-2xl border border-cyan-100/50 dark:border-cyan-500/10 space-y-4">
+          <div className="bg-cyan-50/50 dark:bg-cyan-900/10 p-4 rounded-xl border border-cyan-100/50 dark:border-cyan-500/10 space-y-4">
             <div className="flex items-center gap-2 mb-1">
               <Building size={16} className="text-cyan-600 dark:text-cyan-400" />
               <span className="text-[10px] font-black text-cyan-600/50 dark:text-cyan-400/50 uppercase tracking-widest">{t('common.info')}</span>
             </div>
-            
+
             <div>
               <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1 ml-1">{t('branches.name')} *</label>
-              <input 
+              <input
                 required
-                type="text" 
+                type="text"
                 placeholder={t('branches.namePlaceholder')}
-                className="block w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm font-medium dark:text-white"
+                className="block w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg py-2.5 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm font-medium dark:text-white"
                 value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
             </div>
           </div>
 
           {/* Location Section */}
-          <div className="bg-indigo-50/50 dark:bg-indigo-900/10 p-4 rounded-2xl border border-indigo-100/50 dark:border-indigo-500/10 space-y-4">
+          <div className="bg-indigo-50/50 dark:bg-indigo-900/10 p-4 rounded-xl border border-indigo-100/50 dark:border-indigo-500/10 space-y-4">
             <div className="flex items-center gap-2 mb-1">
               <MapPin size={16} className="text-indigo-600 dark:text-indigo-400" />
               <span className="text-[10px] font-black text-indigo-600/50 dark:text-indigo-400/50 uppercase tracking-widest">{t('branches.location')}</span>
@@ -288,12 +291,12 @@ const Branches: React.FC = () => {
 
             <div>
               <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1 ml-1">{t('branches.address')}</label>
-              <input 
-                type="text" 
+              <input
+                type="text"
                 placeholder={t('branches.addressPlaceholder')}
-                className="block w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl py-2.5 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm font-medium dark:text-white"
+                className="block w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg py-2.5 px-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm font-medium dark:text-white"
                 value={formData.address}
-                onChange={(e) => setFormData({...formData, address: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
               />
             </div>
 
@@ -304,19 +307,19 @@ const Branches: React.FC = () => {
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Phone size={14} className="text-gray-400" />
                   </div>
-                  <input 
-                    type="text" 
+                  <input
+                    type="text"
                     placeholder="024xxx..."
-                    className="block w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm font-medium dark:text-white"
+                    className="block w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-sm font-medium dark:text-white"
                     value={formData.phone}
-                    onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   />
                 </div>
               </div>
               <div>
                 <label className="block text-[11px] font-bold text-gray-700 dark:text-gray-300 mb-1 ml-1">{t('common.status')}</label>
                 <select
-                  className="block w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-xl py-2.5 px-4 pr-10 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none transition-all text-sm font-medium dark:text-white cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
+                  className="block w-full bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 rounded-lg py-2.5 px-4 pr-10 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none appearance-none transition-all text-sm font-medium dark:text-white cursor-pointer bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat"
                   value={formData.is_active ? 'true' : 'false'}
                   onChange={(e) => setFormData({ ...formData, is_active: e.target.value === 'true' })}
                 >
@@ -326,20 +329,20 @@ const Branches: React.FC = () => {
               </div>
             </div>
           </div>
-          
+
           {/* Action Buttons */}
           <div className="flex flex-col-reverse sm:flex-row gap-3 pt-6 border-t border-gray-100 dark:border-gray-700">
             <button
               type="button"
               onClick={handleCloseModal}
-              className="flex-1 py-3 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-xl text-sm font-black uppercase tracking-widest hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95"
+              className="flex-1 py-3 px-4 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-black uppercase tracking-widest hover:bg-gray-200 dark:hover:bg-gray-600 transition-all active:scale-95"
             >
               {t('common.cancel')}
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="flex-[2] py-3 px-4 bg-primary text-white rounded-xl text-sm font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 active:scale-95 disabled:opacity-50"
+              className="flex-[2] py-3 px-4 bg-primary text-white rounded-lg text-sm font-black uppercase tracking-widest hover:bg-primary-dark transition-all shadow-lg shadow-primary/25 active:scale-95 disabled:opacity-50"
             >
               {isSubmitting ? t('common.saving') : t('common.save')}
             </button>

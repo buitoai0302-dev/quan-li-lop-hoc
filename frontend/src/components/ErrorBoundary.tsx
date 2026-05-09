@@ -28,7 +28,7 @@ class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen flex items-center justify-center p-6 bg-gray-50 dark:bg-gray-900">
           <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-[2.5rem] shadow-2xl border border-gray-100 dark:border-gray-700 p-10 text-center animate-in zoom-in-95 duration-300">
-            <div className="w-20 h-20 bg-rose-100 dark:bg-rose-900/30 rounded-3xl flex items-center justify-center mx-auto mb-6 text-rose-600 dark:text-rose-400">
+            <div className="w-20 h-20 bg-rose-100 dark:bg-rose-900/30 rounded-2xl flex items-center justify-center mx-auto mb-6 text-rose-600 dark:text-rose-400">
               <AlertTriangle size={40} strokeWidth={2.5} />
             </div>
             
@@ -43,21 +43,21 @@ class ErrorBoundary extends Component<Props, State> {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => window.location.reload()}
-                className="w-full py-4 bg-primary hover:bg-primary-dark text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary/30 transition-all active:scale-95 flex items-center justify-center gap-2"
+                className="w-full py-4 bg-primary hover:bg-primary-dark text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-lg shadow-primary/30 transition-all active:scale-95 flex items-center justify-center gap-2"
               >
                 <RefreshCw size={14} /> Refresh Page
               </button>
               
               <button
                 onClick={() => window.location.href = '/'}
-                className="w-full py-4 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2"
+                className="w-full py-4 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all flex items-center justify-center gap-2"
               >
                 <Home size={14} /> Back to Home
               </button>
             </div>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <div className="mt-8 p-4 bg-rose-50 dark:bg-rose-900/10 rounded-2xl text-left overflow-auto max-h-40 border border-rose-100 dark:border-rose-900/20">
+              <div className="mt-8 p-4 bg-rose-50 dark:bg-rose-900/10 rounded-xl text-left overflow-auto max-h-40 border border-rose-100 dark:border-rose-900/20">
                 <p className="text-[10px] font-mono text-rose-600 dark:text-rose-400 break-words">
                   {this.state.error.toString()}
                 </p>

@@ -16,7 +16,7 @@ const NoResults: React.FC<NoResultsProps> = ({ title, subtitle, colSpan = 5, isT
     <div className="flex flex-col items-center justify-center space-y-4 py-12 animate-in fade-in zoom-in duration-500">
       <div className="relative">
         <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full animate-pulse"></div>
-        <div className="relative bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700">
+        <div className="relative bg-white dark:bg-gray-800 p-4 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700">
           <SearchX size={40} className="text-gray-300 dark:text-gray-600" />
         </div>
       </div>

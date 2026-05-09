@@ -1,5 +1,8 @@
 {
   "common": {
+    "appName": "EduSchedule",
+    "premiumEdition": "Premium Edition",
+    "premiumSaaS": "Premium SaaS",
     "search": "Search...",
     "noResults": "No matching results found",
     "noResultsSub": "Try adjusting your search terms or filters",
@@ -472,6 +475,7 @@
     "rememberMe": "Remember me",
     "forgotPassword": "Forgot password?",
     "loginButton": "Login",
+    "logout": "Logout",
     "loginError": "Invalid email or password",
     "googleLoginError": "Google Login failed. Email may not be registered.",
     "loginSuccess": "Login successful!",

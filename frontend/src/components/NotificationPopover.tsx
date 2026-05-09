@@ -75,7 +75,7 @@ const NotificationPopover: React.FC = () => {
     <div className="relative" ref={popoverRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all active:scale-95 shadow-sm group"
+        className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all active:scale-95 shadow-sm group"
         title="Notifications"
       >
         <Bell size={18} className={`transition-colors ${isOpen ? 'text-primary' : 'text-gray-600 dark:text-gray-400 group-hover:text-primary'}`} />
@@ -83,7 +83,7 @@ const NotificationPopover: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="fixed sm:absolute inset-x-4 sm:inset-x-auto sm:right-0 mt-3 sm:w-80 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="fixed sm:absolute inset-x-4 sm:inset-x-auto sm:right-0 mt-3 sm:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">
           <div className="p-4 bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
             <h3 className="text-xs font-black text-gray-900 dark:text-white uppercase tracking-widest flex items-center gap-2">
               <Activity size={14} className="text-primary" />
@@ -103,7 +103,7 @@ const NotificationPopover: React.FC = () => {
               <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
                 {activities.map((act) => (
                   <div key={act.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors flex gap-3 group cursor-pointer" onClick={() => { setIsOpen(false); navigate('/activities'); }}>
-                    <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-900 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <div className="w-8 h-8 rounded-md bg-gray-50 dark:bg-gray-900 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                       {getActivityIcon(act.type)}
                     </div>
                     <div className="min-w-0 flex-1">

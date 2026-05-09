@@ -148,9 +148,10 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-700 pb-12">
+    <div className="h-full overflow-auto custom-scrollbar px-4 sm:px-6 py-4">
+      <div className="space-y-6 animate-in fade-in duration-700 pb-12 max-w-7xl mx-auto">
       {/* Dynamic Header */}
-      <div className="relative bg-gradient-to-br from-gray-900 to-indigo-950 rounded-[2.5rem] p-8 md:p-10 overflow-hidden shadow-2xl">
+      <div className="relative bg-gradient-to-br from-gray-900 to-indigo-950 rounded-2xl p-8 md:p-10 overflow-hidden shadow-2xl">
         <div className="absolute top-0 right-0 w-80 h-80 bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 text-white">
           <div className="max-w-2xl">
@@ -311,7 +312,7 @@ const Dashboard: React.FC = () => {
             {/* Left Content (Charts) */}
             <div className="lg:col-span-3 space-y-6">
               {/* Large Area Chart */}
-              <div className="bg-white dark:bg-gray-800 p-8 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/20 dark:shadow-none overflow-hidden relative">
+              <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/20 dark:shadow-none overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                   <div>
                     <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
@@ -320,11 +321,11 @@ const Dashboard: React.FC = () => {
                     </h3>
                     <p className="text-xs text-gray-400 mt-1">{t('dashboard.forecastNote')}</p>
                   </div>
-                  <div className="flex bg-gray-50 dark:bg-gray-900/50 p-1 rounded-xl">
+                  <div className="flex bg-gray-50 dark:bg-gray-900/50 p-1 rounded-lg">
                     <button
                       onClick={() => canViewYearly && setChartPeriod('yearly')}
                       disabled={!canViewYearly}
-                      className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${!canViewYearly
+                      className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${!canViewYearly
                         ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
                         : chartPeriod === 'yearly'
                           ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600'
@@ -337,7 +338,7 @@ const Dashboard: React.FC = () => {
                     </button>
                     <button
                       onClick={() => setChartPeriod('6months')}
-                      className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all ${chartPeriod === '6months'
+                      className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${chartPeriod === '6months'
                         ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600'
                         : 'text-gray-400 hover:text-gray-600'
                         }`}
@@ -374,7 +375,7 @@ const Dashboard: React.FC = () => {
               {/* Bottom Row Charts */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {user?.tenant_settings?.menu?.attendance !== false && (
-                  <div className="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-lg shadow-gray-200/20 dark:shadow-none relative overflow-hidden">
+                  <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg shadow-gray-200/20 dark:shadow-none relative overflow-hidden">
                     <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2 mb-6">
                       <Activity className="text-emerald-500" size={18} />
                       {t('dashboard.attendanceHeatmap')}
@@ -395,7 +396,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 )}
 
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-lg shadow-gray-200/20 dark:shadow-none relative overflow-hidden">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg shadow-gray-200/20 dark:shadow-none relative overflow-hidden">
                   <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2 mb-6">
                     <PieChartIcon className="text-amber-500" size={18} />
                     {t('dashboard.classDistribution')}
@@ -434,7 +435,7 @@ const Dashboard: React.FC = () => {
             {/* Right Sidebar */}
             <div className="space-y-6">
               {['admin', 'staff', 'super_admin'].includes(user?.role || '') && (
-                <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl p-7 rounded-[2rem] border border-white/20 dark:border-gray-700/50 shadow-xl shadow-gray-200/20 dark:shadow-none relative overflow-hidden group">
+                <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl p-7 rounded-2xl border border-white/20 dark:border-gray-700/50 shadow-xl shadow-gray-200/20 dark:shadow-none relative overflow-hidden group">
                   <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
                   <h3 className="text-sm font-black text-gray-900 dark:text-white mb-6 flex items-center gap-2">
                     <Zap size={16} className="text-primary" />
@@ -460,7 +461,7 @@ const Dashboard: React.FC = () => {
                 </div>
               )}
 
-              <div className="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/20 dark:shadow-none relative overflow-hidden flex flex-col h-[500px]">
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/20 dark:shadow-none relative overflow-hidden flex flex-col h-[500px]">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-base font-black text-gray-900 dark:text-white flex items-center gap-2">
                     <Activity className="text-primary animate-pulse" size={18} />
@@ -472,7 +473,7 @@ const Dashboard: React.FC = () => {
                   {stats?.recentActivities && stats.recentActivities.length > 0 ? (
                     stats.recentActivities.map((act, i) => (
                       <div key={i} className="flex gap-3 group">
-                        <div className="w-8 h-8 rounded-xl bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-primary/60 group-hover:bg-primary group-hover:text-white transition-all shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-primary/60 group-hover:bg-primary group-hover:text-white transition-all shrink-0">
                           {getActivityIcon(act.type)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -495,7 +496,7 @@ const Dashboard: React.FC = () => {
                 {!isFree && (stats?.recentActivities?.length || 0) > 0 && (
                   <button
                     onClick={() => navigate('/activities')}
-                    className="w-full mt-4 py-3 bg-gray-50 dark:bg-gray-900/50 text-[10px] font-black text-gray-400 uppercase tracking-widest rounded-xl hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
+                    className="w-full mt-4 py-3 bg-gray-50 dark:bg-gray-900/50 text-[10px] font-black text-gray-400 uppercase tracking-widest rounded-lg hover:bg-gray-100 transition-all flex items-center justify-center gap-2"
                   >
                     {t('dashboard.viewAllEvents')} <ChevronRight size={14} />
                   </button>
@@ -507,8 +508,8 @@ const Dashboard: React.FC = () => {
           {/* Single Global Upgrade Overlay */}
           {isFree && (
             <div className="absolute inset-0 z-30 flex items-center justify-center p-6 bg-white/5 dark:bg-gray-900/5 backdrop-blur-[12px]">
-              <div className="bg-white/95 dark:bg-gray-800/95 p-12 rounded-[3rem] shadow-2xl border border-white/20 max-w-md text-center animate-in zoom-in-95 duration-500 shadow-primary/20">
-                <div className="w-20 h-20 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-3xl flex items-center justify-center mx-auto mb-8 text-white shadow-xl shadow-amber-500/30">
+              <div className="bg-white/95 dark:bg-gray-800/95 p-12 rounded-2xl shadow-2xl border border-white/20 max-w-md text-center animate-in zoom-in-95 duration-500 shadow-primary/20">
+                <div className="w-20 h-20 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-8 text-white shadow-xl shadow-amber-500/30">
                   <Crown size={40} fill="currentColor" />
                 </div>
                 <h4 className="text-2xl font-black text-gray-900 dark:text-white mb-4 italic tracking-tight">
@@ -519,7 +520,7 @@ const Dashboard: React.FC = () => {
                 </p>
                 <button
                   onClick={() => navigate('/subscription')}
-                  className="w-full py-5 bg-gradient-to-r from-indigo-600 to-primary hover:from-indigo-700 hover:to-primary-dark text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-indigo-500/30 transition-all active:scale-95"
+                  className="w-full py-5 bg-gradient-to-r from-indigo-600 to-primary hover:from-indigo-700 hover:to-primary-dark text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-2xl shadow-indigo-500/30 transition-all active:scale-95"
                 >
                   {t('dashboard.unlockNow')}
                 </button>
@@ -529,7 +530,7 @@ const Dashboard: React.FC = () => {
         </div>
       ) : (
         /* Teacher/Student Minimal View */
-        <div className="text-center py-20 px-4 bg-white dark:bg-gray-800 rounded-[3rem] border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
+        <div className="text-center py-20 px-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
           <div className="w-20 h-20 bg-primary/10 text-primary rounded-[2rem] flex items-center justify-center mx-auto mb-8 animate-bounce">
             <Calendar size={40} />
           </div>
@@ -541,7 +542,7 @@ const Dashboard: React.FC = () => {
           </p>
           <button
             onClick={() => navigate('/schedule')}
-            className="px-10 py-4 bg-primary text-white rounded-2xl font-black shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+            className="px-10 py-4 bg-primary text-white rounded-xl font-black shadow-lg shadow-primary/20 hover:scale-105 transition-all"
           >
             {user?.role === 'teacher' ? t('menu.teachingSchedule') : t('menu.learningSchedule')}
           </button>
@@ -554,6 +555,7 @@ const Dashboard: React.FC = () => {
         userName={user?.full_name || ''}
       />
     </div>
+  </div>
   );
 };
 
@@ -568,7 +570,7 @@ const ShortcutButton: React.FC<{ icon: React.ReactNode; label: string; onClick: 
   return (
     <button
       onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-3 p-4 ${bgLight[color]} rounded-3xl border border-transparent hover:border-current transition-all hover:scale-105 active:scale-95 group shadow-sm`}
+      className={`flex flex-col items-center justify-center gap-3 p-4 ${bgLight[color]} rounded-2xl border border-transparent hover:border-current transition-all hover:scale-105 active:scale-95 group shadow-sm`}
     >
       <div className="group-hover:scale-125 transition-transform">{icon}</div>
       <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
@@ -593,9 +595,9 @@ const QuickStat: React.FC<{ icon: React.ReactNode; label: string; value: number 
     amber: 'text-amber-600'
   };
   return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-[2rem] border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/20 dark:shadow-none hover:shadow-2xl transition-all group">
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/20 dark:shadow-none hover:shadow-2xl transition-all group">
       <div className="flex items-center justify-between mb-3">
-        <div className={`p-2.5 rounded-xl text-white ${colors[color]} shadow-md group-hover:scale-110 transition-transform`}>
+        <div className={`p-2.5 rounded-lg text-white ${colors[color]} shadow-md group-hover:scale-110 transition-transform`}>
           {icon}
         </div>
         <div className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${bgLight[color]} ${textCol[color]}`}>

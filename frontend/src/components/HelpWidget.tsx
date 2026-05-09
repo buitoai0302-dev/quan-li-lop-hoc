@@ -65,7 +65,7 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
         <div className="p-6 bg-primary text-white flex justify-between items-center">
           <div className="flex items-center space-x-2">
@@ -88,8 +88,8 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
 
           <div className="space-y-4">
             {steps.map((step, index) => (
-              <div key={index} className="flex items-start space-x-4 p-3 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                <div className="mt-1 p-2 bg-white dark:bg-gray-700 rounded-lg shadow-sm border border-gray-100 dark:border-gray-600">
+              <div key={index} className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+                <div className="mt-1 p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-gray-100 dark:border-gray-600">
                   {step.icon}
                 </div>
                 <div className="flex-1">
@@ -111,7 +111,7 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
           </button>
           <button
             onClick={onClose}
-            className="w-full sm:w-auto px-8 py-2.5 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20 order-1 sm:order-2"
+            className="w-full sm:w-auto px-8 py-2.5 bg-primary text-white rounded-lg font-bold hover:bg-primary-dark transition-colors shadow-lg shadow-primary/20 order-1 sm:order-2"
           >
             {t('helpWidget.understand')}
           </button>

@@ -55,7 +55,7 @@ const MainLayout: React.FC = () => {
       />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto relative custom-scrollbar bg-gray-50/50 dark:bg-gray-900/50">
+      <main className="flex-1 overflow-hidden flex flex-col relative custom-scrollbar bg-gray-50/50 dark:bg-gray-900/50">
         <header className="sticky top-0 z-40 h-16 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 md:px-8 shadow-sm transition-colors duration-200 shrink-0 will-change-transform">
           <div className="flex items-center min-w-0 mr-4">
             <button
@@ -71,21 +71,21 @@ const MainLayout: React.FC = () => {
             <NotificationPopover />
             <button
               onClick={() => setIsHelpOpen(true)}
-              className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
+              className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
               title={t('helpWidget.title')}
             >
               <HelpCircle size={18} />
             </button>
             <button
               onClick={cycleTheme}
-              className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
+              className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
               title={`Theme: ${theme}`}
             >
               {renderThemeIcon()}
             </button>
             <button
               onClick={toggleLanguage}
-              className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
+              className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
               title="Toggle Language"
             >
               <Globe size={18} />
@@ -96,7 +96,7 @@ const MainLayout: React.FC = () => {
           </div>
         </header>
 
-        <div className="p-3 md:p-8">
+        <div className="flex-1 overflow-hidden p-3 md:p-5 flex flex-col">
           <Outlet />
         </div>
         <HelpWidget isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />

@@ -104,12 +104,12 @@ const AdminTenants: React.FC = () => {
   );
 
   return (
-    <div className="space-y-8 max-w-7xl mx-auto pb-12">
+    <div className="h-full flex flex-col space-y-6 max-w-7xl mx-auto pb-4 overflow-hidden">
       {/* Custom Confirmation Modal */}
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300">
           <div className="bg-white dark:bg-gray-800 p-8 sm:p-10 rounded-[2.5rem] shadow-2xl border border-white/20 dark:border-gray-700 max-w-sm w-full text-center animate-in zoom-in-95 duration-300">
-            <div className={`w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg ${confirmModal.action === TENANT_ACTIONS.SUSPEND ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
+            <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg ${confirmModal.action === TENANT_ACTIONS.SUSPEND ? 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400' : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400'
               }`}>
               {confirmModal.action === TENANT_ACTIONS.SUSPEND ? <XCircle size={40} strokeWidth={2.5} /> : <CheckCircle size={40} strokeWidth={2.5} />}
             </div>
@@ -125,14 +125,14 @@ const AdminTenants: React.FC = () => {
             <div className="flex flex-col gap-3">
               <button
                 onClick={handleConfirmAction}
-                className={`w-full py-4 text-white rounded-2xl font-black text-xs uppercase tracking-[0.2em] shadow-lg transition-all active:scale-95 ${confirmModal.action === TENANT_ACTIONS.SUSPEND ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/30' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30'
+                className={`w-full py-4 text-white rounded-xl font-black text-xs uppercase tracking-[0.2em] shadow-lg transition-all active:scale-95 ${confirmModal.action === TENANT_ACTIONS.SUSPEND ? 'bg-rose-500 hover:bg-rose-600 shadow-rose-500/30' : 'bg-emerald-500 hover:bg-emerald-600 shadow-emerald-500/30'
                   }`}
               >
                 {confirmModal.action === 'suspend' ? t('admin.deactivate') : t('admin.confirm')}
               </button>
               <button
                 onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })}
-                className="w-full py-4 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-2xl font-black text-xs uppercase tracking-[0.2em] transition-all"
+                className="w-full py-4 bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-xl font-black text-xs uppercase tracking-[0.2em] transition-all"
               >
                 {t('common.cancel')}
               </button>
@@ -142,10 +142,10 @@ const AdminTenants: React.FC = () => {
       )}
 
       {/* Header & Stats */}
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-6 shrink-0">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <div className="bg-primary/10 px-3 py-1 rounded-lg border border-primary/20">
+            <div className="bg-primary/10 px-3 py-1 rounded-md border border-primary/20">
               <span className="text-[10px] font-black uppercase text-primary flex items-center gap-1">
                 <Shield size={12} /> Super Admin
               </span>
@@ -180,17 +180,17 @@ const AdminTenants: React.FC = () => {
       </div>
 
       {/* Main Content: Table on Desktop, Cards on Mobile */}
-      <div className="bg-white dark:bg-gray-800 rounded-[1.5rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden">
+      <div className="flex-1 min-h-0 flex flex-col bg-white dark:bg-gray-800 rounded-[1.5rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden">
         {/* Desktop View */}
-        <div className="hidden lg:block overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-gray-50/50 dark:bg-gray-900/30 border-b border-gray-100 dark:border-gray-700">
-                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">{t('admin.organization')}</th>
-                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">{t('admin.plan')}</th>
-                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">{t('admin.userCount')} / {t('admin.branchCount')}</th>
-                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap">{t('admin.status')}</th>
-                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider text-right whitespace-nowrap">{t('common.actions')}</th>
+        <div className="hidden lg:block flex-1 overflow-auto custom-scrollbar">
+          <table className="w-full text-left border-collapse border-separate border-spacing-0">
+            <thead className="sticky top-0 z-10">
+              <tr className="bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-700">
+                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap border-b border-gray-100 dark:border-gray-700">{t('admin.organization')}</th>
+                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap border-b border-gray-100 dark:border-gray-700">{t('admin.plan')}</th>
+                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap border-b border-gray-100 dark:border-gray-700">{t('admin.userCount')} / {t('admin.branchCount')}</th>
+                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap border-b border-gray-100 dark:border-gray-700">{t('admin.status')}</th>
+                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider text-right whitespace-nowrap border-b border-gray-100 dark:border-gray-700">{t('common.actions')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
@@ -198,7 +198,7 @@ const AdminTenants: React.FC = () => {
                 <tr key={tenant.id} className="hover:bg-gray-50/80 dark:hover:bg-gray-700/20 transition-all group">
                   <td className="px-8 py-6">
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-300">
+                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-300">
                         <Building size={20} />
                       </div>
                       <div>
@@ -208,7 +208,7 @@ const AdminTenants: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-8 py-6">
-                    <span className={`inline-flex items-center whitespace-nowrap px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-sm border ${tenant.plan_code === PLAN_CODES.FREE ? 'bg-gray-50 text-gray-600 border-gray-100' :
+                    <span className={`inline-flex items-center whitespace-nowrap px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-sm border ${tenant.plan_code === PLAN_CODES.FREE ? 'bg-gray-50 text-gray-600 border-gray-100' :
                       tenant.plan_code === PLAN_CODES.PRO ? 'bg-blue-50 text-blue-600 border-blue-100' :
                         tenant.plan_code === PLAN_CODES.BUSINESS ? 'bg-purple-50 text-purple-600 border-purple-100' :
                           'bg-amber-50 text-amber-600 border-amber-100'
@@ -231,7 +231,7 @@ const AdminTenants: React.FC = () => {
                       {tenant.status === TENANT_STATUS.PENDING && (
                         <button
                           onClick={() => setConfirmModal({ isOpen: true, tenant, action: TENANT_ACTIONS.APPROVE })}
-                          className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-xs transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
+                          className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold text-xs transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
                         >
                           {t('admin.approve')}
                         </button>
@@ -239,7 +239,7 @@ const AdminTenants: React.FC = () => {
                       {tenant.status !== TENANT_STATUS.PENDING && (
                         <button
                           onClick={() => handleOpenPlanModal(tenant)}
-                          className="w-9 h-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-xl transition-all"
+                          className="w-9 h-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg transition-all"
                           title={t('admin.changePlan')}
                         >
                           <Zap size={18} />
@@ -251,7 +251,7 @@ const AdminTenants: React.FC = () => {
                           tenant,
                           action: (tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? TENANT_ACTIONS.SUSPEND : TENANT_ACTIONS.ACTIVATE
                         })}
-                        className={`w-9 h-9 flex items-center justify-center rounded-xl transition-all ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
+                        className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
                         title={(tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? t('admin.deactivate') : t('admin.activate')}
                       >
                         {(tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? <XCircle size={18} /> : <CheckCircle size={18} />}
@@ -264,12 +264,12 @@ const AdminTenants: React.FC = () => {
           </table>
         </div>
         {/* Mobile View: Compact Card Layout */}
-        <div className="lg:hidden space-y-3 p-3">
+        <div className="lg:hidden flex-1 overflow-auto custom-scrollbar space-y-3 p-3">
           {tenants.map((tenant) => (
-            <div key={tenant.id} className="bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-md border border-gray-100 dark:border-gray-700 space-y-3">
+            <div key={tenant.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 space-y-3">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 shrink-0 rounded-xl bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400">
+                  <div className="w-10 h-10 shrink-0 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400">
                     <Building size={20} />
                   </div>
                   <div className="min-w-0">
@@ -281,11 +281,11 @@ const AdminTenants: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
-                <div className="bg-gray-50 dark:bg-gray-900/40 p-2 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                <div className="bg-gray-50 dark:bg-gray-900/40 p-2 rounded-md border border-gray-100 dark:border-gray-700/50">
                   <p className="text-[8px] text-gray-400 uppercase tracking-widest mb-0.5">{t('admin.plan')}</p>
                   <p className="text-primary truncate uppercase">{t(`admin.planNames.${tenant.plan_code.toUpperCase()}`, tenant.plan_name)}</p>
                 </div>
-                <div className="bg-gray-50 dark:bg-gray-900/40 p-2 rounded-lg border border-gray-100 dark:border-gray-700/50">
+                <div className="bg-gray-50 dark:bg-gray-900/40 p-2 rounded-md border border-gray-100 dark:border-gray-700/50">
                   <p className="text-[8px] text-gray-400 uppercase tracking-widest mb-0.5">Quy mô</p>
                   <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
                     <Users size={10} /> {tenant.user_count}
@@ -299,14 +299,14 @@ const AdminTenants: React.FC = () => {
                 {tenant.status === TENANT_STATUS.PENDING ? (
                   <button
                     onClick={() => setConfirmModal({ isOpen: true, tenant, action: TENANT_ACTIONS.APPROVE })}
-                    className="flex-1 py-2.5 bg-emerald-500 text-white rounded-xl font-black text-[10px] uppercase tracking-widest shadow-sm"
+                    className="flex-1 py-2.5 bg-emerald-500 text-white rounded-lg font-black text-[10px] uppercase tracking-widest shadow-sm"
                   >
                     {t('admin.approve')}
                   </button>
                 ) : (
                   <button
                     onClick={() => handleOpenPlanModal(tenant)}
-                    className="flex-1 py-2.5 bg-primary/5 text-primary rounded-xl font-bold text-[10px] uppercase flex items-center justify-center gap-1.5 border border-primary/10"
+                    className="flex-1 py-2.5 bg-primary/5 text-primary rounded-lg font-bold text-[10px] uppercase flex items-center justify-center gap-1.5 border border-primary/10"
                   >
                     <Zap size={14} /> {t('admin.changePlan')}
                   </button>
@@ -317,7 +317,7 @@ const AdminTenants: React.FC = () => {
                     tenant,
                     action: (tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? TENANT_ACTIONS.SUSPEND : TENANT_ACTIONS.ACTIVATE
                   })}
-                  className={`px-3 py-2.5 rounded-xl transition-all ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}
+                  className={`px-3 py-2.5 rounded-lg transition-all ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}
                 >
                   {(tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? <XCircle size={18} /> : <CheckCircle size={18} />}
                 </button>
@@ -334,8 +334,8 @@ const AdminTenants: React.FC = () => {
         title={t('admin.editPlan')}
       >
         <div className="p-2 space-y-6">
-          <div className="flex items-center gap-4 p-5 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800">
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm">
+          <div className="flex items-center gap-4 p-5 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-800">
+            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shadow-sm">
               <Building size={24} />
             </div>
             <div>
@@ -353,12 +353,12 @@ const AdminTenants: React.FC = () => {
                   <button
                     key={p.id}
                     onClick={() => setNewPlanId(p.id)}
-                    className={`flex items-center gap-4 p-4 rounded-2xl border-2 transition-all ${isSelected
+                    className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${isSelected
                       ? 'border-primary bg-primary/5 dark:bg-primary/10'
                       : 'border-gray-100 dark:border-gray-700 hover:border-gray-200 dark:hover:border-gray-600 bg-white dark:bg-gray-800'
                       }`}
                   >
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${p.code === PLAN_CODES.FREE ? 'bg-gray-100 text-gray-400' :
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center shadow-sm ${p.code === PLAN_CODES.FREE ? 'bg-gray-100 text-gray-400' :
                       p.code === PLAN_CODES.PRO ? 'bg-blue-500 text-white shadow-blue-500/20' :
                         p.code === PLAN_CODES.BUSINESS ? 'bg-purple-600 text-white shadow-purple-600/20' :
                           'bg-amber-500 text-white shadow-amber-500/20'
@@ -388,13 +388,13 @@ const AdminTenants: React.FC = () => {
           <div className="flex gap-3 pt-4">
             <button
               onClick={() => setIsPlanModalOpen(false)}
-              className="flex-1 py-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all"
+              className="flex-1 py-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-xl font-black text-xs uppercase tracking-widest hover:bg-gray-200 transition-all"
             >
               {t('common.cancel')}
             </button>
             <button
               onClick={handleUpdatePlan}
-              className="flex-1 py-4 bg-primary text-white rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all active:scale-95"
+              className="flex-1 py-4 bg-primary text-white rounded-xl font-black text-xs uppercase tracking-widest shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all active:scale-95"
             >
               {t('common.save')}
             </button>
@@ -413,13 +413,13 @@ const StatCard: React.FC<{ label: string; value: any; icon: React.ReactNode; col
   };
 
   return (
-    <div className={`bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl sm:rounded-[2.5rem] shadow-lg shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 transition-all hover:scale-[1.02] duration-300 ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl sm:rounded-[2.5rem] shadow-lg shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 transition-all hover:scale-[1.02] duration-300 ${className}`}>
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 truncate">{label}</p>
           <h3 className="text-xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tighter truncate">{value || 0}</h3>
         </div>
-        <div className={`p-2 sm:p-4 rounded-xl sm:rounded-3xl border shrink-0 ${colors[color] || colors.blue}`}>
+        <div className={`p-2 sm:p-4 rounded-lg sm:rounded-2xl border shrink-0 ${colors[color] || colors.blue}`}>
           {icon}
         </div>
       </div>
@@ -430,20 +430,20 @@ const StatCard: React.FC<{ label: string; value: any; icon: React.ReactNode; col
 const StatusBadge: React.FC<{ status: string; t: any }> = ({ status, t }) => {
   if (status === TENANT_STATUS.ACTIVE) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800">
         <CheckCircle size={12} /> {t('admin.statusActive')}
       </span>
     );
   }
   if (status === TENANT_STATUS.PENDING) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-900/20 dark:border-amber-800">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-900/20 dark:border-amber-800">
         <Clock size={12} /> {t('common.pending')}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-900/20 dark:border-rose-800">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-900/20 dark:border-rose-800">
       <XCircle size={12} /> {t('admin.statusDisabled')}
     </span>
   );

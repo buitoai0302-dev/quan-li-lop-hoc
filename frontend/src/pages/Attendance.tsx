@@ -60,14 +60,14 @@ const Attendance: React.FC = () => {
         <div className="flex flex-col sm:flex-row gap-3">
           <button
             onClick={() => window.history.back()}
-            className="px-8 py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+            className="px-8 py-3 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-200 rounded-lg font-bold hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
           >
             {t('common.goBack', 'Quay lại')}
           </button>
           {(user?.role === 'admin' || user?.role === 'super_admin') && (
             <button
               onClick={() => window.location.href = '/settings'}
-              className="px-8 py-3 bg-primary text-white rounded-xl font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all"
+              className="px-8 py-3 bg-primary text-white rounded-lg font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-all"
             >
               {t('settings.title', 'Cài đặt')}
             </button>
@@ -246,7 +246,7 @@ const Attendance: React.FC = () => {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto p-1 md:p-1 lg:h-[calc(100vh-128px)] flex flex-col gap-4 lg:gap-6 lg:overflow-hidden transition-all duration-300">
+    <div className="max-w-[1400px] mx-auto p-1 md:p-1 h-full overflow-auto lg:overflow-hidden flex flex-col gap-4 lg:gap-6 transition-all duration-300 custom-scrollbar">
       {/* Confirmation Modal */}
       {(blocker.state === "blocked" || pendingAction) && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300">
@@ -264,13 +264,13 @@ const Attendance: React.FC = () => {
               <div className="grid grid-cols-2 gap-4 w-full">
                 <button
                   onClick={cancelLeave}
-                  className="px-6 py-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-black rounded-2xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+                  className="px-6 py-4 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 font-black rounded-xl hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
                 >
                   {t('common.stay', 'Stay Here')}
                 </button>
                 <button
                   onClick={confirmLeave}
-                  className="px-6 py-4 bg-red-500 text-white font-black rounded-2xl hover:bg-red-600 shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 transition-all"
+                  className="px-6 py-4 bg-red-500 text-white font-black rounded-xl hover:bg-red-600 shadow-lg shadow-red-500/20 flex items-center justify-center gap-2 transition-all"
                 >
                   <LogOut size={18} />
                   {t('common.leave', 'Leave')}
@@ -282,10 +282,10 @@ const Attendance: React.FC = () => {
       )}
 
       {/* Header Section */}
-      <div className="bg-white dark:bg-gray-800 rounded-2xl lg:rounded-3xl p-4 lg:p-5 shadow-sm border border-gray-100 dark:border-gray-700/50">
+      <div className="bg-white dark:bg-gray-800 rounded-xl lg:rounded-2xl p-4 lg:p-5 shadow-sm border border-gray-100 dark:border-gray-700/50">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+            <div className="p-2 bg-primary/10 rounded-md shrink-0">
               <ClipboardCheck className="text-primary" size={20} />
             </div>
             <div className="min-w-0">
@@ -302,7 +302,7 @@ const Attendance: React.FC = () => {
 
           <div className="flex flex-wrap gap-2 sm:gap-3">
             {!selectedSession ? (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-xl text-xs font-bold border border-blue-100 dark:border-blue-800/50">
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold border border-blue-100 dark:border-blue-800/50">
                 <CalendarIcon size={14} />
                 {t('attendance.selectSession')}
               </div>
@@ -310,7 +310,7 @@ const Attendance: React.FC = () => {
               <>
                 <button
                   onClick={handleMarkAllAsPresent}
-                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-xl font-bold text-xs shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all active:scale-95"
+                  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg font-bold text-xs shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all active:scale-95"
                 >
                   <CheckCircle size={14} />
                   {t('attendance.quickMarkAll')}
@@ -318,7 +318,7 @@ const Attendance: React.FC = () => {
                 <button
                   onClick={handleSave}
                   disabled={saving || attendance.length === 0}
-                  className="flex-1 sm:flex-none px-4 py-2 bg-primary text-white rounded-xl font-black text-xs shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
+                  className="flex-1 sm:flex-none px-4 py-2 bg-primary text-white rounded-lg font-black text-xs shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-50 disabled:active:scale-100 flex items-center justify-center gap-2"
                 >
                   {saving ? t('common.saving') : t('attendance.save')}
                   <Save size={14} />
@@ -331,19 +331,19 @@ const Attendance: React.FC = () => {
         {/* Stats Summary (Show only when session is selected) */}
         {selectedSession && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mt-4 pt-4 border-t border-gray-100 dark:border-gray-700/50">
-            <div className="bg-green-50/50 dark:bg-green-900/10 p-2 lg:p-3 rounded-xl border border-green-100 dark:border-green-800/30">
+            <div className="bg-green-50/50 dark:bg-green-900/10 p-2 lg:p-3 rounded-lg border border-green-100 dark:border-green-800/30">
               <div className="text-[8px] lg:text-[10px] font-black text-green-600/60 uppercase tracking-widest mb-0.5">{t('attendance.present')}</div>
               <div className="text-base lg:text-xl font-black text-green-600">{stats.present} <span className="text-[10px] font-medium text-green-400">/ {stats.total}</span></div>
             </div>
-            <div className="bg-red-50/50 dark:bg-red-900/10 p-2 lg:p-3 rounded-xl border border-red-100 dark:border-red-800/30">
+            <div className="bg-red-50/50 dark:bg-red-900/10 p-2 lg:p-3 rounded-lg border border-red-100 dark:border-red-800/30">
               <div className="text-[8px] lg:text-[10px] font-black text-red-600/60 uppercase tracking-widest mb-0.5">{t('attendance.absent')}</div>
               <div className="text-base lg:text-xl font-black text-red-600">{stats.absent}</div>
             </div>
-            <div className="bg-amber-50/50 dark:bg-amber-900/10 p-2 lg:p-3 rounded-xl border border-amber-100 dark:border-amber-800/30">
+            <div className="bg-amber-50/50 dark:bg-amber-900/10 p-2 lg:p-3 rounded-lg border border-amber-100 dark:border-amber-800/30">
               <div className="text-[8px] lg:text-[10px] font-black text-amber-600/60 uppercase tracking-widest mb-0.5">{t('attendance.late')}</div>
               <div className="text-base lg:text-xl font-black text-amber-600">{stats.late}</div>
             </div>
-            <div className="bg-blue-50/50 dark:bg-blue-900/10 p-2 lg:p-3 rounded-xl border border-blue-100 dark:border-blue-800/30">
+            <div className="bg-blue-50/50 dark:bg-blue-900/10 p-2 lg:p-3 rounded-lg border border-blue-100 dark:border-blue-800/30">
               <div className="text-[8px] lg:text-[10px] font-black text-blue-600/60 uppercase tracking-widest mb-0.5">{t('attendance.excused')}</div>
               <div className="text-base lg:text-xl font-black text-blue-600">{stats.excused}</div>
             </div>
@@ -355,7 +355,7 @@ const Attendance: React.FC = () => {
       <div className="flex flex-col lg:grid lg:grid-cols-4 gap-4 lg:gap-6 flex-1 lg:min-h-0">
         {/* Sidebar: Lịch học (Order: 1 on mobile, 1 on desktop) */}
         <div className="lg:col-span-1 order-1 lg:order-1 h-auto lg:h-full lg:min-h-0 overflow-hidden">
-          <div className="bg-white dark:bg-gray-800 rounded-3xl p-4 lg:p-5 shadow-sm border border-gray-100 dark:border-gray-700/50 flex flex-col h-full overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl p-4 lg:p-5 shadow-sm border border-gray-100 dark:border-gray-700/50 flex flex-col h-full overflow-hidden">
             <div className="flex flex-col gap-3 mb-5 shrink-0">
               <h3 className="text-sm font-black text-gray-900 dark:text-white flex items-center gap-2">
                 <CalendarIcon size={16} className="text-primary" />
@@ -365,7 +365,7 @@ const Attendance: React.FC = () => {
               <div className="grid grid-cols-[36px_1fr_36px] items-center gap-1.5 w-full">
                 <button
                   onClick={handlePrevDay}
-                  className="w-9 h-9 flex items-center justify-center bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-primary/10 hover:text-primary transition-all shadow-sm shrink-0"
+                  className="w-9 h-9 flex items-center justify-center bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-700 rounded-lg hover:bg-primary/10 hover:text-primary transition-all shadow-sm shrink-0"
                 >
                   <ChevronLeft size={16} />
                 </button>
@@ -386,12 +386,12 @@ const Attendance: React.FC = () => {
                     value={selectedDate}
                     onChange={(e) => handleDateChange(e.target.value)}
                     onClick={(e) => e.stopPropagation()}
-                    className="w-full pl-2 sm:pl-8 pr-2 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-700 rounded-xl text-[10px] sm:text-xs font-bold text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
+                    className="w-full pl-2 sm:pl-8 pr-2 py-2.5 bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-700 rounded-lg text-[10px] sm:text-xs font-bold text-gray-700 dark:text-gray-200 outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer"
                   />
                 </div>
                 <button
                   onClick={handleNextDay}
-                  className="w-9 h-9 flex items-center justify-center bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-primary/10 hover:text-primary transition-all shadow-sm shrink-0"
+                  className="w-9 h-9 flex items-center justify-center bg-gray-50 dark:bg-gray-700 border border-gray-100 dark:border-gray-700 rounded-lg hover:bg-primary/10 hover:text-primary transition-all shadow-sm shrink-0"
                 >
                   <ChevronRight size={16} />
                 </button>
@@ -399,7 +399,7 @@ const Attendance: React.FC = () => {
 
               <button
                 onClick={handleToday}
-                className="w-full py-2 bg-primary/5 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 rounded-lg transition-all border border-primary/10"
+                className="w-full py-2 bg-primary/5 text-[9px] font-black uppercase tracking-widest text-primary hover:bg-primary/10 rounded-md transition-all border border-primary/10"
               >
                 {t('common.today')}
               </button>
@@ -408,10 +408,10 @@ const Attendance: React.FC = () => {
             <div className="space-y-2 lg:flex-1 max-h-[300px] lg:max-h-none overflow-y-auto no-scrollbar relative">
               {sessionsLoading && sessions.length === 0 ? (
                 Array(3).fill(0).map((_, i) => (
-                  <div key={i} className="h-16 bg-gray-100 dark:bg-gray-700 rounded-xl animate-pulse" />
+                  <div key={i} className="h-16 bg-gray-100 dark:bg-gray-700 rounded-lg animate-pulse" />
                 ))
               ) : sessions.length === 0 ? (
-                <div className="text-center py-8 px-4 bg-gray-50/50 dark:bg-gray-900/20 rounded-2xl border border-dashed border-gray-200 dark:border-gray-700">
+                <div className="text-center py-8 px-4 bg-gray-50/50 dark:bg-gray-900/20 rounded-xl border border-dashed border-gray-200 dark:border-gray-700">
                   <CalendarIcon size={20} className="text-gray-300 mx-auto mb-2" />
                   <p className="text-xs font-bold text-gray-400">{t('common.noData')}</p>
                 </div>
@@ -421,7 +421,7 @@ const Attendance: React.FC = () => {
                     <button
                       key={session.id}
                       onClick={() => fetchAttendance(session.id)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all duration-200 group ${selectedSession?.id === session.id
+                      className={`w-full text-left p-3 rounded-lg border transition-all duration-200 group ${selectedSession?.id === session.id
                         ? 'bg-primary text-white border-primary shadow-md'
                         : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700/50 hover:border-primary/30'
                         }`}
@@ -442,7 +442,7 @@ const Attendance: React.FC = () => {
 
         {/* Main Content: Danh sách học sinh (Order: 2 on mobile, 2 on desktop) */}
         <div className="lg:col-span-3 order-2 lg:order-2 flex flex-col min-h-[400px] lg:min-h-0">
-          <div className="bg-white dark:bg-gray-800 rounded-3xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden flex flex-col h-full relative">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700/50 overflow-hidden flex flex-col h-full relative">
             {attendanceLoading && (
               <div className="absolute inset-0 bg-white/50 dark:bg-gray-800/50 backdrop-blur-[1px] z-50 flex items-center justify-center animate-in fade-in duration-300">
                 <div className="flex flex-col items-center gap-2">
@@ -471,7 +471,7 @@ const Attendance: React.FC = () => {
                       placeholder={t('common.search')}
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      className="w-full pl-11 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border-none rounded-xl focus:ring-2 focus:ring-primary/20 transition-all font-medium text-xs lg:text-sm"
+                      className="w-full pl-11 pr-4 py-2.5 bg-gray-50 dark:bg-gray-700/50 border-none rounded-lg focus:ring-2 focus:ring-primary/20 transition-all font-medium text-xs lg:text-sm"
                     />
                   </div>
                 </div>
@@ -504,28 +504,28 @@ const Attendance: React.FC = () => {
                               <button
                                 onClick={() => handleStatusChange(record.student_id, 'present')}
                                 title={t('attendance.present')}
-                                className={`p-2 rounded-xl transition-all ${record.status === 'present' ? 'bg-green-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-green-500/10 hover:text-green-500'}`}
+                                className={`p-2 rounded-lg transition-all ${record.status === 'present' ? 'bg-green-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-green-500/10 hover:text-green-500'}`}
                               >
                                 <CheckCircle size={18} />
                               </button>
                               <button
                                 onClick={() => handleStatusChange(record.student_id, 'absent')}
                                 title={t('attendance.absent')}
-                                className={`p-2 rounded-xl transition-all ${record.status === 'absent' ? 'bg-red-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-red-500/10 hover:text-red-500'}`}
+                                className={`p-2 rounded-lg transition-all ${record.status === 'absent' ? 'bg-red-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-red-500/10 hover:text-red-500'}`}
                               >
                                 <XCircle size={18} />
                               </button>
                               <button
                                 onClick={() => handleStatusChange(record.student_id, 'late')}
                                 title={t('attendance.late')}
-                                className={`p-2 rounded-xl transition-all ${record.status === 'late' ? 'bg-amber-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-amber-500/10 hover:text-amber-500'}`}
+                                className={`p-2 rounded-lg transition-all ${record.status === 'late' ? 'bg-amber-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-amber-500/10 hover:text-amber-500'}`}
                               >
                                 <Clock size={18} />
                               </button>
                               <button
                                 onClick={() => handleStatusChange(record.student_id, 'excused')}
                                 title={t('attendance.excused')}
-                                className={`p-2 rounded-xl transition-all ${record.status === 'excused' ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-blue-500/10 hover:text-blue-500'}`}
+                                className={`p-2 rounded-lg transition-all ${record.status === 'excused' ? 'bg-blue-500 text-white shadow-md' : 'bg-gray-100 dark:bg-gray-700 text-gray-400 hover:bg-blue-500/10 hover:text-blue-500'}`}
                               >
                                 <AlertCircle size={18} />
                               </button>
@@ -539,9 +539,9 @@ const Attendance: React.FC = () => {
                   {/* Mobile Card View */}
                   <div className="md:hidden space-y-4 pb-4">
                     {filteredAttendance.map(record => (
-                      <div key={record.student_id} className="bg-gray-50 dark:bg-gray-900/40 rounded-2xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm">
+                      <div key={record.student_id} className="bg-gray-50 dark:bg-gray-900/40 rounded-xl p-4 border border-gray-100 dark:border-gray-800 shadow-sm">
                         <div className="flex items-center gap-3 mb-4">
-                          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-black text-xs border border-primary/10">
+                          <div className="w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-black text-xs border border-primary/10">
                             {record.full_name.substring(0, 2).toUpperCase()}
                           </div>
                           <div className="min-w-0">
@@ -552,28 +552,28 @@ const Attendance: React.FC = () => {
                         <div className="grid grid-cols-4 gap-2">
                           <button
                             onClick={() => handleStatusChange(record.student_id, 'present')}
-                            className={`flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border transition-all ${record.status === 'present' ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400'}`}
+                            className={`flex flex-col items-center justify-center gap-1.5 p-2 rounded-lg border transition-all ${record.status === 'present' ? 'bg-green-500 border-green-500 text-white shadow-lg shadow-green-500/20' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400'}`}
                           >
                             <CheckCircle size={18} />
                             <span className="text-[8px] font-black uppercase tracking-tighter">{t('attendance.present')}</span>
                           </button>
                           <button
                             onClick={() => handleStatusChange(record.student_id, 'absent')}
-                            className={`flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border transition-all ${record.status === 'absent' ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400'}`}
+                            className={`flex flex-col items-center justify-center gap-1.5 p-2 rounded-lg border transition-all ${record.status === 'absent' ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/20' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400'}`}
                           >
                             <XCircle size={18} />
                             <span className="text-[8px] font-black uppercase tracking-tighter">{t('attendance.absent')}</span>
                           </button>
                           <button
                             onClick={() => handleStatusChange(record.student_id, 'late')}
-                            className={`flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border transition-all ${record.status === 'late' ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400'}`}
+                            className={`flex flex-col items-center justify-center gap-1.5 p-2 rounded-lg border transition-all ${record.status === 'late' ? 'bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400'}`}
                           >
                             <Clock size={18} />
                             <span className="text-[8px] font-black uppercase tracking-tighter">{t('attendance.late')}</span>
                           </button>
                           <button
                             onClick={() => handleStatusChange(record.student_id, 'excused')}
-                            className={`flex flex-col items-center justify-center gap-1.5 p-2 rounded-xl border transition-all ${record.status === 'excused' ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400'}`}
+                            className={`flex flex-col items-center justify-center gap-1.5 p-2 rounded-lg border transition-all ${record.status === 'excused' ? 'bg-blue-500 border-blue-500 text-white shadow-lg shadow-blue-500/20' : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400'}`}
                           >
                             <AlertCircle size={18} />
                             <span className="text-[8px] font-black uppercase tracking-tighter">{t('attendance.excused')}</span>

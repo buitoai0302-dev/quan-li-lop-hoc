@@ -36,7 +36,7 @@ const DraggableSessionCard: React.FC<DraggableSessionCardProps> = ({ session, on
     <div
       ref={setNodeRef}
       style={style}
-      className={`relative p-3 ${color.bg} border ${color.border} rounded-lg shadow-sm hover:shadow-md transition-shadow cursor-grab group ${
+      className={`relative p-3 ${color.bg} border ${color.border} rounded-md shadow-sm hover:shadow-md transition-shadow cursor-grab group ${
         isDragging ? 'drag-overlay opacity-50' : ''
       }`}
     >
