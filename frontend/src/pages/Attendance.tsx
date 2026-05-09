@@ -246,7 +246,7 @@ const Attendance: React.FC = () => {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto p-1 md:p-1 h-full overflow-auto lg:overflow-hidden flex flex-col gap-4 lg:gap-6 transition-all duration-300 custom-scrollbar">
+    <div className="p-1 md:p-1 h-full overflow-auto lg:overflow-hidden flex flex-col gap-4 lg:gap-6 transition-all duration-300 custom-scrollbar">
       {/* Confirmation Modal */}
       {(blocker.state === "blocked" || pendingAction) && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300">
