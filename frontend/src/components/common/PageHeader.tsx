@@ -36,7 +36,7 @@ const PageHeader: React.FC<PageHeaderProps> = ({ icon: Icon, actions, children }
 
         {/* Mobile Filters - Shown below title on mobile and tablet only if children exist */}
         {children && (
-          <div className="lg:hidden">
+          <div className="lg:hidden pt-2">
             {children}
           </div>
         )}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
-import Modal from '../../../components/Modal';
+import Modal from '../../../components/common/Modal';
 import type { BulkEnrollModalProps } from '../../../types';
 
 const BulkEnrollModal: React.FC<BulkEnrollModalProps> = ({

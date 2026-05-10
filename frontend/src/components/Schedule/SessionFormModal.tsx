@@ -1,6 +1,6 @@
 import React from 'react';
 import { Calendar, Info, User, MapPin, FileText } from 'lucide-react';
-import Modal from '../Modal';
+import Modal from '../common/Modal';
 import type { ClassData, Room, Teacher, Session } from '../../types';
 
 interface SessionFormModalProps {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { Clock, User, MapPin, FileText } from 'lucide-react';
-import Modal from '../Modal';
+import Modal from '../common/Modal';
 import type { Session } from '../../types';
 
 interface SessionDetailsModalProps {

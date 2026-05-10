@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom';
 import { X, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
-import ConfirmModal from './ConfirmModal';
+import ConfirmModal from './common/ConfirmModal';
 import type { User } from '../contexts/AuthContext';
 import { getMenuItems } from '../routes';
 import type { MenuGroup, MenuItem } from '../routes';
