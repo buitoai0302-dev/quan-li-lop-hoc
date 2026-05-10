@@ -20,27 +20,12 @@ import Card from '../components/common/Card';
 import PageLoading from '../components/common/PageLoading';
 import EmptyState from '../components/common/EmptyState';
 import ConfirmModal from '../components/ConfirmModal';
+import type { Session, AttendanceRecord } from '../types';
 
 import { USER_ROLES, ATTENDANCE_STATUS } from '../utils/constants';
 import React from 'react';
 
-interface Session {
-  id: string;
-  class_id: string;
-  class_name: string;
-  session_date: string;
-  start_time: string;
-  end_time: string;
-}
 
-interface AttendanceRecord {
-  student_id: string;
-  full_name: string;
-  email: string;
-  attendance_id: string | null;
-  status: typeof ATTENDANCE_STATUS[keyof typeof ATTENDANCE_STATUS];
-  marked_at: string | null;
-}
 
 const Attendance: React.FC = () => {
   const { t } = useTranslation();

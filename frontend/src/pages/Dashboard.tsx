@@ -22,7 +22,7 @@ import {
   Building,
   Plus
 } from 'lucide-react';
-import { TENANT_STATUS, PLAN_CODES, USER_ROLES } from '../utils/constants';
+import { TENANT_STATUS, PLAN_CODES, USER_ROLES, ACTIVITY_TYPES } from '../utils/constants';
 import {
   XAxis,
   YAxis,
@@ -37,36 +37,13 @@ import {
   BarChart,
   Bar
 } from 'recharts';
+import type { DashboardStats } from '../types';
 
-interface DashboardStats {
-  activeClasses?: number;
-  teachers?: number;
-  students?: number;
-  upcomingSessions?: number;
-  enrolledClasses?: number;
-  studentTrend?: string;
-  classTrend?: string;
-  studentTrends?: { month: string; count: number }[];
-  classDistribution?: { status: string; count: number }[];
-  recentActivities?: {
-    id: string;
-    user: string;
-    action: string;
-    target: string;
-    time: string;
-    type: 'student' | 'class' | 'teacher' | 'session';
-  }[];
-  attendanceTrends?: { day: string; rate: number }[];
-  overallAttendance?: number;
-  plan?: string;
-  isGlobal?: boolean;
-  tenants?: number;
-  usage?: {
-    students: { used: number; limit: number };
-    classes: { used: number; limit: number };
-    branches: { used: number; limit: number };
-  };
-}
+
+
+import ShortcutButton from './Dashboard/components/ShortcutButton';
+import QuickStat from './Dashboard/components/QuickStat';
+import UsageBar from './Dashboard/components/UsageBar';
 
 const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
@@ -91,9 +68,9 @@ const Dashboard: React.FC = () => {
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'student': return <Users size={14} />;
-      case 'class': return <BookOpen size={14} />;
-      case 'session': return <Calendar size={14} />;
+      case ACTIVITY_TYPES.STUDENT: return <Users size={14} />;
+      case ACTIVITY_TYPES.CLASS: return <BookOpen size={14} />;
+      case ACTIVITY_TYPES.SESSION: return <Calendar size={14} />;
       default: return <Activity size={14} />;
     }
   };
@@ -150,7 +127,6 @@ const Dashboard: React.FC = () => {
   return (
     <div className="h-full overflow-auto custom-scrollbar px-3 sm:px-4 py-3">
       <div className="space-y-4 animate-in fade-in duration-700 pb-6 max-w-7xl mx-auto">
-      {/* Dynamic Header */}
       <div className="relative bg-gradient-to-br from-gray-900 to-indigo-950 rounded-2xl p-6 md:p-8 overflow-hidden shadow-2xl">
         <div className="absolute top-0 right-0 w-80 h-80 bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 text-white">
@@ -169,9 +145,7 @@ const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Quick Actions - Professional Shortcuts */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-        {/* All roles can see Schedule */}
         <ShortcutButton 
           icon={<Calendar size={18} />} 
           label={user?.role === USER_ROLES.TEACHER ? t('menu.teachingSchedule') : (user?.role === USER_ROLES.STUDENT ? t('menu.learningSchedule') : t('schedule.title'))} 
@@ -179,7 +153,6 @@ const Dashboard: React.FC = () => {
           color="amber" 
         />
 
-        {/* Admin, Staff, Teacher can see Classes */}
         {[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
           <ShortcutButton 
             icon={<BookOpen size={18} />} 
@@ -189,7 +162,6 @@ const Dashboard: React.FC = () => {
           />
         )}
 
-        {/* Admin and Staff see management buttons */}
         {[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
           <>
             <ShortcutButton 
@@ -207,7 +179,6 @@ const Dashboard: React.FC = () => {
           </>
         )}
 
-        {/* Only Admin sees Branch addition */}
         {[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
           <ShortcutButton 
             icon={<Building size={18} />} 
@@ -227,7 +198,6 @@ const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Quick Stats - Balanced Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {user?.role === USER_ROLES.STUDENT ? (
           <>
@@ -304,13 +274,10 @@ const Dashboard: React.FC = () => {
         )}
       </div>
 
-      {/* Main Content Area - Only for Admin/Staff */}
       {[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') ? (
         <div className="relative min-h-[600px]">
           <div className={`grid grid-cols-1 lg:grid-cols-4 gap-6 transition-all duration-700 ${isFree ? 'blur-[12px] grayscale opacity-40 pointer-events-none select-none' : ''}`}>
-            {/* Left Content (Charts) */}
             <div className="lg:col-span-3 space-y-6">
-              {/* Large Area Chart */}
               <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/20 dark:shadow-none overflow-hidden relative">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                   <div>
@@ -371,7 +338,6 @@ const Dashboard: React.FC = () => {
                 </div>
               </div>
 
-              {/* Bottom Row Charts */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {user?.tenant_settings?.menu?.attendance !== false && (
                   <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg shadow-gray-200/20 dark:shadow-none relative overflow-hidden">
@@ -431,7 +397,6 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* Right Sidebar */}
             <div className="space-y-6">
               {[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
                 <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl p-7 rounded-2xl border border-white/20 dark:border-gray-700/50 shadow-xl shadow-gray-200/20 dark:shadow-none relative overflow-hidden group">
@@ -504,7 +469,6 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Single Global Upgrade Overlay */}
           {isFree && (
             <div className="absolute inset-0 z-30 flex items-center justify-center p-6 bg-white/5 dark:bg-gray-900/5 backdrop-blur-[12px]">
               <div className="bg-white/95 dark:bg-gray-800/95 p-12 rounded-2xl shadow-2xl border border-white/20 max-w-md text-center animate-in zoom-in-95 duration-500 shadow-primary/20">
@@ -528,7 +492,6 @@ const Dashboard: React.FC = () => {
           )}
         </div>
       ) : (
-        /* Teacher/Student Minimal View */
         <div className="text-center py-20 px-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/50 dark:shadow-none">
           <div className="w-20 h-20 bg-primary/10 text-primary rounded-[2rem] flex items-center justify-center mx-auto mb-8 animate-bounce">
             <Calendar size={40} />
@@ -555,77 +518,6 @@ const Dashboard: React.FC = () => {
       />
     </div>
   </div>
-  );
-};
-
-const ShortcutButton: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; color: string }> = ({ icon, label, onClick, color }) => {
-  const bgLight: Record<string, string> = {
-    indigo: 'bg-indigo-50 dark:bg-indigo-900/10 text-indigo-600',
-    emerald: 'bg-emerald-50 dark:bg-emerald-900/10 text-emerald-600',
-    amber: 'bg-amber-50 dark:bg-amber-900/10 text-amber-600',
-    rose: 'bg-rose-50 dark:bg-rose-900/10 text-rose-600',
-    gray: 'bg-gray-50 dark:bg-gray-900 text-gray-600'
-  };
-  return (
-    <button
-      onClick={onClick}
-      className={`flex flex-col items-center justify-center gap-3 p-4 ${bgLight[color]} rounded-2xl border border-transparent hover:border-current transition-all hover:scale-105 active:scale-95 group shadow-sm`}
-    >
-      <div className="group-hover:scale-125 transition-transform">{icon}</div>
-      <span className="text-[10px] font-black uppercase tracking-wider">{label}</span>
-    </button>
-  );
-};
-
-const QuickStat: React.FC<{ icon: React.ReactNode; label: string; value: number | string; trend: string; color: string }> = ({ icon, label, value, trend, color }) => {
-  const colors: Record<string, string> = {
-    indigo: 'bg-indigo-500',
-    emerald: 'bg-emerald-500',
-    amber: 'bg-amber-500'
-  };
-  const bgLight: Record<string, string> = {
-    indigo: 'bg-indigo-50 dark:bg-indigo-900/10',
-    emerald: 'bg-emerald-50 dark:bg-emerald-900/10',
-    amber: 'bg-amber-50 dark:bg-amber-900/10'
-  };
-  const textCol: Record<string, string> = {
-    indigo: 'text-indigo-600',
-    emerald: 'text-emerald-600',
-    amber: 'text-amber-600'
-  };
-  return (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/20 dark:shadow-none hover:shadow-2xl transition-all group">
-      <div className="flex items-center justify-between mb-3">
-        <div className={`p-2.5 rounded-lg text-white ${colors[color]} shadow-md group-hover:scale-110 transition-transform`}>
-          {icon}
-        </div>
-        <div className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest ${bgLight[color]} ${textCol[color]}`}>
-          {trend}
-        </div>
-      </div>
-      <div className="text-2xl font-black text-gray-900 dark:text-white tracking-tighter">{value}</div>
-      <div className="text-[9px] font-black text-gray-400 uppercase tracking-[0.1em]">{label}</div>
-    </div>
-  );
-};
-
-const UsageBar: React.FC<{ label: string; used: number; limit: number }> = ({ label, used, limit }) => {
-  const percent = limit === -1 ? 0 : Math.min(Math.round((used / limit) * 100), 100);
-  const displayLimit = limit === -1 ? '∞' : limit;
-
-  return (
-    <div className="space-y-1.5">
-      <div className="flex justify-between text-[10px] font-black uppercase tracking-widest">
-        <span className="text-gray-400 dark:text-gray-500">{label}</span>
-        <span className="text-gray-900 dark:text-white">{used} / {displayLimit}</span>
-      </div>
-      <div className="h-1.5 bg-gray-100 dark:bg-gray-700/50 rounded-full overflow-hidden">
-        <div
-          className="h-full bg-primary rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(99,102,241,0.4)]"
-          style={{ width: `${limit === -1 ? 100 : percent}%` }}
-        ></div>
-      </div>
-    </div>
   );
 };
 

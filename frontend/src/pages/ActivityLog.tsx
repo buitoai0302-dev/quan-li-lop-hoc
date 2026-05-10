@@ -15,15 +15,9 @@ import {
 } from 'lucide-react';
 import PageHeader from '../components/common/PageHeader';
 import EmptyState from '../components/common/EmptyState';
+import type { ActivityItem } from '../types';
 
-interface ActivityItem {
-  id: string;
-  user: string;
-  action: string;
-  target: string;
-  time: string;
-  type: 'student' | 'class' | 'teacher' | 'session';
-}
+
 
 const ActivityLog: React.FC = () => {
   const { t, i18n } = useTranslation();

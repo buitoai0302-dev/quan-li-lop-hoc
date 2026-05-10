@@ -11,11 +11,8 @@ import ConfirmModal from '../components/ConfirmModal';
 import PageHeader from '../components/common/PageHeader';
 import Card from '../components/common/Card';
 import PageLoading from '../components/common/PageLoading';
+import type { Branch } from '../types';
 
-interface Branch {
-  id: string;
-  name: string;
-}
 
 type ImportType = 'students' | 'teachers' | 'rooms' | 'classes';
 
@@ -28,7 +25,7 @@ const ImportData: React.FC = () => {
   const [isGuideOpen, setIsGuideOpen] = useState(false);
 
   const [file, setFile] = useState<File | null>(null);
-  const [parsedData, setParsedData] = useState<any[]>([]);
+  const [parsedData, setParsedData] = useState<Record<string, any>[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
 
   const [isProcessing, setIsProcessing] = useState(false);

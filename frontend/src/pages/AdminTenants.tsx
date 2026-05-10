@@ -9,33 +9,14 @@ import { TENANT_STATUS, PLAN_CODES, TENANT_ACTIONS, SYSTEM_DOMAIN } from '../uti
 import PageHeader from '../components/common/PageHeader';
 import Card from '../components/common/Card';
 import PageLoading from '../components/common/PageLoading';
+import type { Tenant, AdminStats, Plan } from '../types';
 
-interface Tenant {
-  id: string;
-  name: string;
-  domain: string;
-  contact_email: string;
-  plan_id: string;
-  plan_name: string;
-  plan_code: string;
-  is_active: boolean;
-  status: typeof TENANT_STATUS[keyof typeof TENANT_STATUS];
-  user_count: string;
-  branch_count: string;
-  created_at: string;
-}
-
-interface Plan {
-  id: string;
-  name: string;
-  code: string;
-}
 
 const AdminTenants: React.FC = () => {
   const { t } = useTranslation();
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<AdminStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);

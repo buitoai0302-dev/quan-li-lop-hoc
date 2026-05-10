@@ -7,17 +7,10 @@ import { PLAN_REQUEST_STATUS, PLAN_REQUEST_ACTIONS } from '../utils/constants';
 import PageHeader from '../components/common/PageHeader';
 import Card from '../components/common/Card';
 import PageLoading from '../components/common/PageLoading';
+import type { PlanRequest } from '../types';
 import EmptyState from '../components/common/EmptyState';
 
-interface PlanRequest {
-  id: string;
-  tenant_name: string;
-  contact_email: string;
-  plan_name: string;
-  status: typeof PLAN_REQUEST_STATUS[keyof typeof PLAN_REQUEST_STATUS];
-  notes: string;
-  created_at: string;
-}
+
 
 const AdminPlanRequests: React.FC = () => {
   const { t, i18n } = useTranslation();

@@ -1,8 +1,9 @@
 import toast from 'react-hot-toast';
 import type { TFunction } from 'i18next';
+import { AxiosError } from 'axios';
 import { ERROR_CODES } from './constants';
 
-export const handleApiError = (error: any, t: TFunction, defaultMessageKey: string = 'common.error') => {
+export const handleApiError = (error: AxiosError<any>, t: TFunction, defaultMessageKey: string = 'common.error') => {
   const data = error.response?.data;
   const errorCode = data?.code || data?.errorCode;
   const errorMessage = data?.message || data?.error || '';

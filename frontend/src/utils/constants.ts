@@ -88,3 +88,31 @@ export const USER_ROLES = {
   STUDENT: 'student',
 };
 
+export const VIEW_MODES = {
+  DAY: 'day',
+  WEEK: 'week',
+  MONTH: 'month',
+} as const;
+
+export const ROOM_TYPES = {
+  CLASSROOM: 'classroom',
+  LAB: 'lab',
+  HALL: 'hall',
+  MEETING: 'meeting',
+} as const;
+
+export const CLASS_STATUS = {
+  ACTIVE: 'active',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+} as const;
+
+export const ACTIVITY_TYPES = {
+  STUDENT: 'student',
+  CLASS: 'class',
+  SESSION: 'session',
+  TEACHER: 'teacher',
+  BRANCH: 'branch',
+  ROOM: 'room',
+} as const;
+

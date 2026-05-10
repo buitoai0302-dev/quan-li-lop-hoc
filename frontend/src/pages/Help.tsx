@@ -16,11 +16,14 @@ import {
 
 import { useAuth } from '../contexts/AuthContext';
 import { USER_ROLES } from '../utils/constants';
+import type { HelpCategory } from '../types';
+
+
 
 const Help: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [selectedCategory, setSelectedCategory] = useState<any | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<HelpCategory | null>(null);
 
   const allCategories = [
     {

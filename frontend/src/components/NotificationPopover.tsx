@@ -5,15 +5,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api';
 import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
+import type { ActivityItem } from '../types';
 
-interface ActivityItem {
-  id: string;
-  user: string;
-  action: string;
-  target: string;
-  time: string;
-  type: 'student' | 'class' | 'teacher' | 'session';
-}
+
 
 const NotificationPopover: React.FC = () => {
   const { t, i18n } = useTranslation();

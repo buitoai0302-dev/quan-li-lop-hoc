@@ -1,5 +1,7 @@
 import { Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
+import type { LucideIcon } from 'lucide-react';
+import type { TFunction } from 'i18next';
 import MainLayout from './components/MainLayout';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -46,7 +48,7 @@ import {
 export interface MenuItem {
   path: string;
   label: string;
-  icon: any;
+  icon: LucideIcon;
   roles: string[];
   isPremium?: boolean;
 }
@@ -164,7 +166,7 @@ export const appRoutes = [
 ];
 
 // Centralized Menu Items Configuration for Sidebar/Header
-export const getMenuItems = (t: any, userRole?: string): MenuGroup[] => [
+export const getMenuItems = (t: TFunction, userRole?: string): MenuGroup[] => [
   {
     group: t('menu.groups.main'),
     items: [

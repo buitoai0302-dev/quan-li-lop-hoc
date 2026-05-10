@@ -450,6 +450,7 @@
     "timeline": "Timeline",
     "namePlaceholder": "Class name...",
     "scheduleNote": "Session notes...",
+    "selectRoom": "Select Room",
     "selectStudent": "Select student to add..."
   },
   "rooms": {
@@ -647,7 +648,8 @@
     "dob": "Date of Birth",
     "noData": "No students found. Add one!",
     "noEnrollments": "No students enrolled in this class",
-    "namePlaceholder": "Full name..."
+    "namePlaceholder": "Full name...",
+    "selectStudent": "Select student..."
   },
   "errors": {
     "INTERNAL_ERROR": "Internal server error. Please try again later.",

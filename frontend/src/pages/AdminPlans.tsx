@@ -8,17 +8,9 @@ import { PLAN_CODES } from '../utils/constants';
 import PageHeader from '../components/common/PageHeader';
 import PageLoading from '../components/common/PageLoading';
 import Card from '../components/common/Card';
+import type { Plan } from '../types';
 
-interface Plan {
-  id: string;
-  name: string;
-  code: string;
-  price_vnd: string;
-  price_usd: string;
-  is_active: boolean;
-  limits: Record<string, number>;
-  features: Record<string, boolean>;
-}
+
 
 const AdminPlans: React.FC = () => {
   const { t } = useTranslation();
@@ -161,7 +153,7 @@ const AdminPlans: React.FC = () => {
                         <Info size={14} className="text-primary" /> {t('admin.limits')}
                       </h4>
                       <div className="grid grid-cols-2 gap-4">
-                        {Object.entries(plan.limits).map(([key, value]) => (
+                        {!Array.isArray(plan.limits) && Object.entries(plan.limits).map(([key, value]) => (
                           <div key={key} className="space-y-1.5">
                             <label className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight block truncate ml-1">
                               {t(`admin.limitLabels.${key}`, key)}
@@ -186,7 +178,7 @@ const AdminPlans: React.FC = () => {
                         <Zap size={14} className="text-amber-500" /> {t('admin.features')}
                       </h4>
                       <div className="space-y-2">
-                        {Object.entries(plan.features).map(([key, value]) => (
+                        {!Array.isArray(plan.features) && Object.entries(plan.features).map(([key, value]) => (
                           <div key={key} className="flex items-center justify-between p-3 bg-gray-50/50 dark:bg-gray-900/30 rounded-xl border border-transparent hover:border-gray-100 dark:hover:border-gray-700 transition-all">
                             <span className="text-[11px] font-bold text-gray-700 dark:text-gray-300">
                               {t(`admin.featureLabels.${key}`, key)}

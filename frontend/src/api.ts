@@ -18,9 +18,9 @@ api.interceptors.request.use((config) => {
 
 // Response interceptor: nếu 401, thử refresh token tự động
 let isRefreshing = false;
-let failedQueue: Array<{ resolve: (v: any) => void; reject: (e: any) => void }> = [];
+let failedQueue: Array<{ resolve: (v: string | null) => void; reject: (e: unknown) => void }> = [];
 
-const processQueue = (error: any, token: string | null = null) => {
+const processQueue = (error: unknown, token: string | null = null) => {
   failedQueue.forEach(({ resolve, reject }) => {
     if (error) reject(error);
     else resolve(token);
