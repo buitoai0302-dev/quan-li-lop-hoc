@@ -58,8 +58,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-[70] w-60 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
-        <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-gray-700/50 flex items-center justify-between gap-2">
+      <aside className={`fixed md:static inset-y-0 left-0 z-[70] w-60 bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800 shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+        <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-slate-800/50 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <img src="/logo.png" alt="Logo" className="w-9 h-9 rounded-lg shadow-md shadow-primary/10 object-cover shrink-0" />
             <div className="min-w-0">
@@ -127,8 +127,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
           ))}
         </nav>
 
-        <div className="p-1 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-gray-900/50 p-2 rounded-xl border border-gray-100 dark:border-gray-800 mb-2">
+        <div className="p-1 border-t border-gray-200 dark:border-slate-800">
+          <div className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-slate-900/50 p-2 rounded-xl border border-gray-100 dark:border-slate-800 mb-2">
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-indigo-600 flex items-center justify-center text-white font-bold shadow-inner shrink-0 border-2 border-white dark:border-gray-800">
                 {user?.full_name ? user.full_name.substring(0, 2).toUpperCase() : 'AD'}
@@ -150,7 +150,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
             </button>
           </div>
 
-          <div className="mt-1 pt-1 border-t border-gray-100/50 dark:border-gray-700/30">
+          <div className="mt-1 pt-1 border-t border-gray-100/50 dark:border-slate-800/30">
             <div className="flex flex-col items-center opacity-50 hover:opacity-100 transition-opacity duration-500 cursor-default">
               <p className="text-[7px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.15em] leading-none">
                 © {new Date().getFullYear()} {t('common.appName')} • {t('common.premiumSaaS')}

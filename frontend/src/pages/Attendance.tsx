@@ -11,7 +11,10 @@ import {
   Save,
   Search,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  ChevronUp,
+  ChevronDown,
+  LayoutGrid
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useEffect, useState } from 'react';
@@ -43,6 +46,8 @@ const Attendance: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isDirty, setIsDirty] = useState(false);
   const [pendingAction, setPendingAction] = useState<{ type: 'session' | 'date', id?: string, date?: string } | null>(null);
+  const [isControlsExpanded, setIsControlsExpanded] = useState(true);
+  const [isSessionsExpanded, setIsSessionsExpanded] = useState(true);
 
   const blocker = useNavigationPrompt(isDirty);
 
@@ -95,6 +100,11 @@ const Attendance: React.FC = () => {
       const res = await api.get(`/attendance/session/${sessionId}`);
       setAttendance(res.data.attendance);
       setSelectedSession(res.data.session);
+      // Auto-collapse sessions list on mobile after selection
+      if (window.innerWidth < 1024) {
+        setIsSessionsExpanded(false);
+        setIsControlsExpanded(false);
+      }
     } catch (error) {
       console.error('Fetch attendance error:', error);
       toast.error(t('errors.INTERNAL_ERROR'));
@@ -260,7 +270,23 @@ const Attendance: React.FC = () => {
       />
 
       {/* Control Bar & Stats */}
-      <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 shadow-sm border border-gray-100 dark:border-gray-700/50 shrink-0">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800/50 shrink-0 overflow-hidden transition-all duration-300">
+        <div 
+          className="flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/10 transition-colors"
+          onClick={() => setIsControlsExpanded(!isControlsExpanded)}
+        >
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-primary/10 text-primary rounded-lg">
+              <ClipboardCheck size={14} />
+            </div>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{t('attendance.stats')} & {t('common.filter')}</h3>
+          </div>
+          <button className="p-1.5 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-lg transition-all active:scale-95">
+            {isControlsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
+
+        <div className={`transition-all duration-300 ease-in-out ${isControlsExpanded ? 'max-h-[500px] opacity-100 border-t border-gray-50 dark:border-slate-800/50 p-3 sm:p-4' : 'max-h-0 opacity-0 overflow-hidden'}`}>
         {selectedSession && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-700/50">
             <div className="bg-green-50/50 dark:bg-green-900/10 p-2 lg:p-3 rounded-lg border border-green-100 dark:border-green-800/30">
@@ -282,56 +308,90 @@ const Attendance: React.FC = () => {
           </div>
         )}
 
-        <div className="flex flex-col sm:flex-row gap-3 items-center">
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <button onClick={handlePrevDay} className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-600"><ChevronLeft size={16} /></button>
-            <div 
-              className="relative flex-1 sm:w-40 group cursor-pointer"
-              onClick={() => {
-                const input = dateInputRef.current as any;
-                if (input) {
-                  if ('showPicker' in input) input.showPicker();
-                  else input.click();
-                }
-              }}
-            >
-              <input 
-                ref={dateInputRef}
-                type="date" 
-                value={selectedDate} 
-                onChange={(e) => handleDateChange(e.target.value)} 
-                className="w-full pl-9 pr-3 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 dark:text-white cursor-pointer" 
-              />
-              <CalendarIcon size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-hover:text-primary transition-colors" />
+        <div className="flex flex-col md:flex-row gap-3 items-center">
+          <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
+            <div className="flex items-center gap-1.5 flex-1 md:flex-none md:w-64 min-w-0">
+              <button onClick={handlePrevDay} className="p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700 shadow-sm transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 shrink-0 text-slate-600 dark:text-slate-300"><ChevronLeft size={16} /></button>
+              <div 
+                className="relative flex-1 group cursor-pointer min-w-0"
+                onClick={() => {
+                  const input = dateInputRef.current as any;
+                  if (input) {
+                    if ('showPicker' in input) input.showPicker();
+                    else input.click();
+                  }
+                }}
+              >
+                <input 
+                  ref={dateInputRef}
+                  type="date" 
+                  value={selectedDate} 
+                  onChange={(e) => handleDateChange(e.target.value)} 
+                  className="w-full pl-8 sm:pl-9 pr-2 sm:pr-3 py-2 bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-slate-800 rounded-lg text-[10px] sm:text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 dark:text-white cursor-pointer truncate" 
+                />
+                <CalendarIcon size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors" />
+              </div>
+              <button onClick={handleNextDay} className="p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700 shadow-sm transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 shrink-0 text-slate-600 dark:text-slate-300"><ChevronRight size={16} /></button>
             </div>
-            <button onClick={handleNextDay} className="p-2 bg-gray-50 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm transition-colors hover:bg-gray-100 dark:hover:bg-gray-600"><ChevronRight size={16} /></button>
+            <button 
+              onClick={handleToday} 
+              className="px-3 sm:px-4 py-2 bg-primary/5 dark:bg-primary/10 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-primary rounded-lg border border-primary/10 hover:bg-primary/10 transition-all active:scale-95 shrink-0"
+            >
+              {t('common.today')}
+            </button>
           </div>
-          <button onClick={handleToday} className="px-4 py-2 bg-primary/5 text-[10px] font-black uppercase tracking-widest text-primary rounded-lg border border-primary/10 hover:bg-primary/10 transition-colors shrink-0">{t('common.today')}</button>
+
           {selectedSession && (
-            <div className="relative flex-1 w-full sm:w-auto">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
-              <input type="text" placeholder={t('common.search')} value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-primary/20 outline-none" />
+            <div className="relative flex-1 w-full min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400" size={14} />
+              <input 
+                type="text" 
+                placeholder={t('common.search')} 
+                value={searchTerm} 
+                onChange={(e) => setSearchTerm(e.target.value)} 
+                className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-slate-800 rounded-lg text-xs font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-primary/20 outline-none" 
+              />
             </div>
           )}
         </div>
       </div>
+    </div>
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-4 sm:gap-6 overflow-hidden min-h-0">
+    <div className="flex-1 flex flex-col lg:flex-row gap-3 sm:gap-4 overflow-hidden min-h-0">
         {/* Session List */}
-        <Card className="w-full lg:w-72 lg:flex-1 lg:h-full shrink-0 h-[200px] sm:h-[240px]" header={<h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">{t('attendance.sessions')}</h3>} scrollable>
-          <div className="p-2 space-y-1">
+        <div className={`w-full lg:w-72 lg:h-full shrink-0 flex flex-col transition-all duration-300 ${isSessionsExpanded ? 'h-[200px] sm:h-[240px] lg:h-full' : 'h-12 lg:h-full'}`}>
+          <Card 
+            className="flex-1 flex flex-col overflow-hidden" 
+            header={
+              <div 
+                className="flex items-center justify-between w-full cursor-pointer lg:cursor-default"
+                onClick={() => window.innerWidth < 1024 && setIsSessionsExpanded(!isSessionsExpanded)}
+              >
+                <div className="flex items-center gap-2">
+                  <LayoutGrid size={14} className="text-gray-400" />
+                  <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">{t('attendance.sessions')}</h3>
+                </div>
+                <button className="p-1.5 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-lg transition-all active:scale-95 lg:hidden">
+                  {isSessionsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </button>
+              </div>
+            } 
+            scrollable={isSessionsExpanded || window.innerWidth >= 1024}
+          >
+            <div className={`${!isSessionsExpanded && 'hidden lg:block'} p-3 space-y-2`}>
             {sessionsLoading ? <PageLoading /> : sessions.length === 0 ? (
               <div className="py-8 px-4 text-center">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{t('common.noData')}</p>
               </div>
             ) : sessions.map(s => (
-              <button key={s.id} onClick={() => fetchAttendance(s.id)} className={`w-full text-left p-3 rounded-xl transition-all duration-200 ${selectedSession?.id === s.id ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]' : 'hover:bg-gray-50 dark:hover:bg-gray-900/50 text-gray-600 dark:text-gray-400'}`}>
+              <button key={s.id} onClick={() => fetchAttendance(s.id)} className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 ${selectedSession?.id === s.id ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]' : 'hover:bg-gray-50 dark:hover:bg-slate-800/50 text-gray-600 dark:text-gray-400'}`}>
                 <div className="font-bold text-sm truncate">{s.class_name}</div>
                 <div className="text-[10px] opacity-70 font-medium">{s.start_time.substring(0, 5)} - {s.end_time.substring(0, 5)}</div>
               </button>
             ))}
-          </div>
-        </Card>
+            </div>
+          </Card>
+        </div>
 
         {/* Student List */}
         <Card className="flex-1 min-h-0" scrollable>
@@ -363,7 +423,7 @@ const Attendance: React.FC = () => {
                                status === ATTENDANCE_STATUS.ABSENT ? 'bg-red-500 border-red-500 text-white shadow-md' : 
                                status === ATTENDANCE_STATUS.LATE ? 'bg-amber-500 border-amber-500 text-white shadow-md' : 
                                'bg-blue-500 border-blue-500 text-white shadow-md') 
-                            : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700 text-gray-400 hover:border-primary/30 dark:hover:border-primary/50'
+                            : 'bg-white dark:bg-slate-800 border-gray-100 dark:border-slate-700 text-gray-400 hover:border-primary/30 dark:hover:border-primary/50'
                         }`}
                       >
                         {t(`attendance.${status}`)}
