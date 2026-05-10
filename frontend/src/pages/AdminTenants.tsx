@@ -5,7 +5,10 @@ import toast from 'react-hot-toast';
 import { handleApiError } from '../utils/errorHelper';
 import { Shield, Building, Users, Calendar, CheckCircle, XCircle, Zap, Clock, Crown } from 'lucide-react';
 import Modal from '../components/Modal';
-import { TENANT_STATUS, PLAN_CODES, TENANT_ACTIONS } from '../utils/constants';
+import { TENANT_STATUS, PLAN_CODES, TENANT_ACTIONS, SYSTEM_DOMAIN } from '../utils/constants';
+import PageHeader from '../components/common/PageHeader';
+import Card from '../components/common/Card';
+import PageLoading from '../components/common/PageLoading';
 
 interface Tenant {
   id: string;
@@ -97,14 +100,145 @@ const AdminTenants: React.FC = () => {
     }
   };
 
-  if (loading) return (
-    <div className="flex justify-center p-12">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-    </div>
-  );
+  if (loading) return <PageLoading />;
 
   return (
-    <div className="h-full flex flex-col space-y-6 max-w-7xl mx-auto pb-4 overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden">
+      <PageHeader 
+        icon={Shield}
+        actions={
+          <div className="flex items-center gap-2">
+            <div className="bg-primary/10 px-3 py-1 rounded-md border border-primary/20">
+              <span className="text-[10px] font-black uppercase text-primary flex items-center gap-1">
+                <Shield size={12} /> {t('common.roles.super_admin')}
+              </span>
+            </div>
+          </div>
+        }
+      />
+
+      <div className="flex-1 overflow-hidden flex flex-col px-1">
+        <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col space-y-6 min-h-0 py-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 shrink-0">
+            <StatCard
+              label={t('admin.stats.totalTenants')}
+              value={stats?.totalTenants}
+              icon={<Building size={18} />}
+              color="blue"
+            />
+            <StatCard
+              label={t('admin.stats.totalUsers')}
+              value={stats?.totalUsers}
+              icon={<Users size={18} />}
+              color="indigo"
+            />
+            <StatCard
+              label={t('admin.stats.totalSessions')}
+              value={stats?.totalSessions}
+              icon={<Calendar size={18} />}
+              color="emerald"
+              className="sm:col-span-2 lg:col-span-1"
+            />
+          </div>
+
+          <Card className="flex-1 min-h-0 overflow-hidden" scrollable={true}>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('admin.organization')}</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('admin.plan')}</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('admin.userCount')} / {t('admin.branchCount')}</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">{t('admin.status')}</th>
+                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">{t('common.actions')}</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
+                  {tenants.map((tenant) => (
+                    <tr key={tenant.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group">
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 border border-gray-100 dark:border-gray-700 group-hover:scale-105 transition-transform">
+                            <Building size={20} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <div className="text-sm font-bold text-gray-900 dark:text-white">{tenant.name}</div>
+                              {tenant.domain === SYSTEM_DOMAIN && (
+                                <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] font-black uppercase rounded tracking-widest border border-primary/20">System</span>
+                              )}
+                            </div>
+                            <div className="text-[10px] text-gray-400 font-medium mt-0.5">{tenant.contact_email}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className={`inline-flex items-center px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-sm border ${tenant.plan_code === PLAN_CODES.FREE ? 'bg-gray-50 text-gray-600 border-gray-100' :
+                          tenant.plan_code === PLAN_CODES.PRO ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                            tenant.plan_code === PLAN_CODES.BUSINESS ? 'bg-purple-50 text-purple-600 border-purple-100' :
+                              'bg-amber-50 text-amber-600 border-amber-100'
+                          }`}>
+                          {t(`admin.planNames.${tenant.plan_code.toUpperCase()}`, tenant.plan_name)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 whitespace-nowrap text-xs font-bold text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center gap-4">
+                          <span className="flex items-center gap-1.5"><Users size={14} className="text-primary" /> {tenant.user_count}</span>
+                          <span className="flex items-center gap-1.5"><Building size={14} className="text-primary" /> {tenant.branch_count}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <StatusBadge status={tenant.status} t={t} />
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <div className="flex justify-end gap-1.5">
+                          {tenant.domain === SYSTEM_DOMAIN ? (
+                            <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-gray-200 dark:border-gray-700">
+                              <Shield size={14} /> {t('common.roles.super_admin')}
+                            </div>
+                          ) : (
+                            <>
+                              {tenant.status === TENANT_STATUS.PENDING && (
+                                <button
+                                  onClick={() => setConfirmModal({ isOpen: true, tenant, action: TENANT_ACTIONS.APPROVE })}
+                                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
+                                >
+                                  {t('admin.approve')}
+                                </button>
+                              )}
+                              {tenant.status !== TENANT_STATUS.PENDING && (
+                                <button
+                                  onClick={() => handleOpenPlanModal(tenant)}
+                                  className="w-9 h-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                  title={t('admin.changePlan')}
+                                >
+                                  <Zap size={18} />
+                                </button>
+                              )}
+                              <button
+                                onClick={() => setConfirmModal({
+                                  isOpen: true,
+                                  tenant,
+                                  action: (tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? TENANT_ACTIONS.SUSPEND : TENANT_ACTIONS.ACTIVATE
+                                })}
+                                className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
+                                title={(tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? t('admin.deactivate') : t('admin.activate')}
+                              >
+                                {(tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? <XCircle size={18} /> : <CheckCircle size={18} />}
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </Card>
+        </div>
+      </div>
+
       {/* Custom Confirmation Modal */}
       {confirmModal.isOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-gray-900/60 backdrop-blur-sm animate-in fade-in duration-300">
@@ -141,192 +275,6 @@ const AdminTenants: React.FC = () => {
         </div>
       )}
 
-      {/* Header & Stats */}
-      <div className="flex flex-col gap-6 shrink-0">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="bg-primary/10 px-3 py-1 rounded-md border border-primary/20">
-              <span className="text-[10px] font-black uppercase text-primary flex items-center gap-1">
-                <Shield size={12} /> Super Admin
-              </span>
-            </div>
-          </div>
-          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 max-w-lg">
-            {t('admin.tenantsSubtitle') || 'Quản lý và phê duyệt các tổ chức tham gia hệ thống'}
-          </p>
-        </div>
-
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
-          <StatCard
-            label={t('admin.stats.totalTenants')}
-            value={stats?.totalTenants}
-            icon={<Building size={18} />}
-            color="blue"
-          />
-          <StatCard
-            label={t('admin.stats.totalUsers')}
-            value={stats?.totalUsers}
-            icon={<Users size={18} />}
-            color="indigo"
-          />
-          <StatCard
-            label={t('admin.stats.totalSessions')}
-            value={stats?.totalSessions}
-            icon={<Calendar size={18} />}
-            color="emerald"
-            className="col-span-2 lg:col-span-1"
-          />
-        </div>
-      </div>
-
-      {/* Main Content: Table on Desktop, Cards on Mobile */}
-      <div className="flex-1 min-h-0 flex flex-col bg-white dark:bg-gray-800 rounded-[1.5rem] shadow-xl shadow-gray-200/50 dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden">
-        {/* Desktop View */}
-        <div className="hidden lg:block flex-1 overflow-auto custom-scrollbar">
-          <table className="w-full text-left border-collapse border-separate border-spacing-0">
-            <thead className="sticky top-0 z-10">
-              <tr className="bg-gray-50/90 dark:bg-gray-900/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-700">
-                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap border-b border-gray-100 dark:border-gray-700">{t('admin.organization')}</th>
-                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap border-b border-gray-100 dark:border-gray-700">{t('admin.plan')}</th>
-                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap border-b border-gray-100 dark:border-gray-700">{t('admin.userCount')} / {t('admin.branchCount')}</th>
-                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider whitespace-nowrap border-b border-gray-100 dark:border-gray-700">{t('admin.status')}</th>
-                <th className="px-8 py-5 text-[10px] font-extrabold text-gray-400 uppercase tracking-wider text-right whitespace-nowrap border-b border-gray-100 dark:border-gray-700">{t('common.actions')}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50 dark:divide-gray-700/50">
-              {tenants.map((tenant) => (
-                <tr key={tenant.id} className="hover:bg-gray-50/80 dark:hover:bg-gray-700/20 transition-all group">
-                  <td className="px-8 py-6">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center text-gray-500 dark:text-gray-300">
-                        <Building size={20} />
-                      </div>
-                      <div>
-                        <div className="text-sm font-bold text-gray-900 dark:text-white">{tenant.name}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{tenant.contact_email}</div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <span className={`inline-flex items-center whitespace-nowrap px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider shadow-sm border ${tenant.plan_code === PLAN_CODES.FREE ? 'bg-gray-50 text-gray-600 border-gray-100' :
-                      tenant.plan_code === PLAN_CODES.PRO ? 'bg-blue-50 text-blue-600 border-blue-100' :
-                        tenant.plan_code === PLAN_CODES.BUSINESS ? 'bg-purple-50 text-purple-600 border-purple-100' :
-                          'bg-amber-50 text-amber-600 border-amber-100'
-                      }`}>
-                      {t(`admin.planNames.${tenant.plan_code.toUpperCase()}`, tenant.plan_name)}
-                    </span>
-                  </td>
-                  <td className="px-8 py-6 whitespace-nowrap text-xs font-bold text-gray-600 dark:text-gray-400">
-                    <div className="flex items-center gap-3">
-                      <span className="flex items-center gap-1"><Users size={14} className="text-primary" /> {tenant.user_count}</span>
-                      <span className="text-gray-300">|</span>
-                      <span className="flex items-center gap-1"><Building size={14} className="text-primary" /> {tenant.branch_count}</span>
-                    </div>
-                  </td>
-                  <td className="px-8 py-6">
-                    <StatusBadge status={tenant.status} t={t} />
-                  </td>
-                  <td className="px-8 py-6 text-right">
-                    <div className="flex justify-end gap-2">
-                      {tenant.status === TENANT_STATUS.PENDING && (
-                        <button
-                          onClick={() => setConfirmModal({ isOpen: true, tenant, action: TENANT_ACTIONS.APPROVE })}
-                          className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-bold text-xs transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
-                        >
-                          {t('admin.approve')}
-                        </button>
-                      )}
-                      {tenant.status !== TENANT_STATUS.PENDING && (
-                        <button
-                          onClick={() => handleOpenPlanModal(tenant)}
-                          className="w-9 h-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg transition-all"
-                          title={t('admin.changePlan')}
-                        >
-                          <Zap size={18} />
-                        </button>
-                      )}
-                      <button
-                        onClick={() => setConfirmModal({
-                          isOpen: true,
-                          tenant,
-                          action: (tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? TENANT_ACTIONS.SUSPEND : TENANT_ACTIONS.ACTIVATE
-                        })}
-                        className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
-                        title={(tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? t('admin.deactivate') : t('admin.activate')}
-                      >
-                        {(tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? <XCircle size={18} /> : <CheckCircle size={18} />}
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {/* Mobile View: Compact Card Layout */}
-        <div className="lg:hidden flex-1 overflow-auto custom-scrollbar space-y-3 p-3">
-          {tenants.map((tenant) => (
-            <div key={tenant.id} className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-md border border-gray-100 dark:border-gray-700 space-y-3">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 shrink-0 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center text-gray-400">
-                    <Building size={20} />
-                  </div>
-                  <div className="min-w-0">
-                    <h3 className="font-bold text-sm text-gray-900 dark:text-white truncate leading-tight">{tenant.name}</h3>
-                    <p className="text-[10px] text-primary font-medium truncate mt-0.5">{tenant.contact_email}</p>
-                  </div>
-                </div>
-                <StatusBadge status={tenant.status} t={t} />
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 text-[10px] font-bold">
-                <div className="bg-gray-50 dark:bg-gray-900/40 p-2 rounded-md border border-gray-100 dark:border-gray-700/50">
-                  <p className="text-[8px] text-gray-400 uppercase tracking-widest mb-0.5">{t('admin.plan')}</p>
-                  <p className="text-primary truncate uppercase">{t(`admin.planNames.${tenant.plan_code.toUpperCase()}`, tenant.plan_name)}</p>
-                </div>
-                <div className="bg-gray-50 dark:bg-gray-900/40 p-2 rounded-md border border-gray-100 dark:border-gray-700/50">
-                  <p className="text-[8px] text-gray-400 uppercase tracking-widest mb-0.5">Quy mô</p>
-                  <div className="flex items-center gap-1.5 text-gray-600 dark:text-gray-300">
-                    <Users size={10} /> {tenant.user_count}
-                    <span className="opacity-20">|</span>
-                    <Building size={10} /> {tenant.branch_count}
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex gap-2 pt-1">
-                {tenant.status === TENANT_STATUS.PENDING ? (
-                  <button
-                    onClick={() => setConfirmModal({ isOpen: true, tenant, action: TENANT_ACTIONS.APPROVE })}
-                    className="flex-1 py-2.5 bg-emerald-500 text-white rounded-lg font-black text-[10px] uppercase tracking-widest shadow-sm"
-                  >
-                    {t('admin.approve')}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleOpenPlanModal(tenant)}
-                    className="flex-1 py-2.5 bg-primary/5 text-primary rounded-lg font-bold text-[10px] uppercase flex items-center justify-center gap-1.5 border border-primary/10"
-                  >
-                    <Zap size={14} /> {t('admin.changePlan')}
-                  </button>
-                )}
-                <button
-                  onClick={() => setConfirmModal({
-                    isOpen: true,
-                    tenant,
-                    action: (tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? TENANT_ACTIONS.SUSPEND : TENANT_ACTIONS.ACTIVATE
-                  })}
-                  className={`px-3 py-2.5 rounded-lg transition-all ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}
-                >
-                  {(tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING) ? <XCircle size={18} /> : <CheckCircle size={18} />}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Plan Update Modal */}
       <Modal
         isOpen={isPlanModalOpen}
@@ -335,7 +283,7 @@ const AdminTenants: React.FC = () => {
       >
         <div className="p-2 space-y-6">
           <div className="flex items-center gap-4 p-5 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-800">
-            <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-primary shadow-sm">
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm border border-primary/10">
               <Building size={24} />
             </div>
             <div>
@@ -413,13 +361,13 @@ const StatCard: React.FC<{ label: string; value: any; icon: React.ReactNode; col
   };
 
   return (
-    <div className={`bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl sm:rounded-[2.5rem] shadow-lg shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-gray-700 transition-all hover:scale-[1.02] duration-300 ${className}`}>
-      <div className="flex items-center justify-between gap-2">
+    <div className={`bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-lg shadow-gray-200/20 dark:shadow-none border border-gray-100 dark:border-gray-700 transition-all hover:scale-[1.02] duration-300 ${className}`}>
+      <div className="flex items-center justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1 truncate">{label}</p>
-          <h3 className="text-xl sm:text-3xl font-black text-gray-900 dark:text-white tracking-tighter truncate">{value || 0}</h3>
+          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 truncate">{label}</p>
+          <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter truncate">{value || 0}</h3>
         </div>
-        <div className={`p-2 sm:p-4 rounded-lg sm:rounded-2xl border shrink-0 ${colors[color] || colors.blue}`}>
+        <div className={`p-4 rounded-2xl border shrink-0 ${colors[color] || colors.blue}`}>
           {icon}
         </div>
       </div>
@@ -430,20 +378,20 @@ const StatCard: React.FC<{ label: string; value: any; icon: React.ReactNode; col
 const StatusBadge: React.FC<{ status: string; t: any }> = ({ status, t }) => {
   if (status === TENANT_STATUS.ACTIVE) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-emerald-50 text-emerald-600 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800">
         <CheckCircle size={12} /> {t('admin.statusActive')}
       </span>
     );
   }
   if (status === TENANT_STATUS.PENDING) {
     return (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-900/20 dark:border-amber-800">
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-amber-50 text-amber-600 border border-amber-100 dark:bg-amber-900/20 dark:border-amber-800">
         <Clock size={12} /> {t('common.pending')}
       </span>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[10px] font-black uppercase tracking-wider bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-900/20 dark:border-rose-800">
+    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest bg-rose-50 text-rose-600 border border-rose-100 dark:bg-rose-900/20 dark:border-rose-800">
       <XCircle size={12} /> {t('admin.statusDisabled')}
     </span>
   );

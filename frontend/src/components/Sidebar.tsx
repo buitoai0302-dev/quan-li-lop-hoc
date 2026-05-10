@@ -1,10 +1,12 @@
 import { NavLink } from 'react-router-dom';
-import { X, LogOut } from 'lucide-react';
+import { X, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
 import ConfirmModal from './ConfirmModal';
 import type { User } from '../contexts/AuthContext';
 import { getMenuItems } from '../routes';
+import type { MenuGroup, MenuItem } from '../routes';
+import { USER_ROLES } from '../utils/constants';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -16,18 +18,34 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) => {
   const { t } = useTranslation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({
+    0: true, 1: true, 2: true, 3: true, 4: true
+  });
+
+  const toggleGroup = (idx: number) => {
+    setExpandedGroups(prev => ({ ...prev, [idx]: !prev[idx] }));
+  };
 
   const menuItems = getMenuItems(t, user?.role);
 
-  const visibleMenuItems = menuItems.filter((item: any) => {
-    if (!user?.role || !item.roles.includes(user.role)) return false;
+  const visibleGroups: MenuGroup[] = menuItems
+    .map(group => ({
+      ...group,
+      items: group.items.filter((item: MenuItem) => {
+        // 1. Check Roles
+        const hasRole = (!group.roles || group.roles.includes(user?.role || '')) &&
+                      (!item.roles || item.roles.includes(user?.role || ''));
+        if (!hasRole) return false;
 
-    const menuKey = item.path.substring(1).split('/')[0] || 'dashboard';
-    if (['settings', 'admin', 'subscription', 'help'].includes(menuKey)) return true;
-
-    const isVisible = user.tenant_settings?.menu?.[menuKey] ?? true;
-    return isVisible;
-  });
+        // 2. Check Tenant Menu Settings (for non-system routes)
+        const menuKey = item.path.substring(1).split('/')[0] || 'dashboard';
+        if (['settings', 'admin', 'subscription', 'help', 'activities'].includes(menuKey)) return true;
+        
+        const isEnabled = user?.tenant_settings?.menu?.[menuKey] ?? true;
+        return isEnabled;
+      })
+    }))
+    .filter(group => group.items.length > 0);
 
   return (
     <>
@@ -59,33 +77,53 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
           </button>
         </div>
 
-        <nav className="flex-1 p-3 space-y-1.5 overflow-y-auto custom-scrollbar">
-          {visibleMenuItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              onClick={onClose}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive
-                  ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-400'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <div className={isActive ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}>
-                    <item.icon size={20} />
+        <nav className="flex-1 p-3 space-y-3 overflow-y-auto custom-scrollbar">
+          {visibleGroups.map((group, groupIdx) => (
+            <div key={groupIdx} className="space-y-1">
+              {group.group && (
+                <button 
+                  onClick={() => toggleGroup(groupIdx)}
+                  className="w-full flex items-center justify-between px-3 py-1.5 group/header"
+                >
+                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 group-hover/header:text-primary transition-colors">
+                    {group.group}
+                  </p>
+                  <div className="text-gray-300 dark:text-gray-600 group-hover/header:text-primary transition-colors">
+                    {expandedGroups[groupIdx] ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
                   </div>
-                  <span className="flex-1">{item.label}</span>
-                  {item.isPremium && ['admin', 'staff', 'super_admin'].includes(user?.role || '') && (
-                    <div className="flex items-center justify-center px-1.5 py-0.5 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-md shadow-md shadow-orange-500/20 animate-pulse">
-                      <span className="text-[7px] font-black text-white uppercase tracking-tighter">PRO</span>
-                    </div>
-                  )}
-                </>
+                </button>
               )}
-            </NavLink>
+              
+              <div className={`space-y-1 transition-all duration-300 overflow-hidden ${expandedGroups[groupIdx] ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+                {group.items.map((item) => (
+                  <NavLink
+                    key={item.path}
+                    to={item.path}
+                    onClick={onClose}
+                    className={({ isActive }) =>
+                      `flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive
+                        ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-400'
+                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
+                      }`
+                    }
+                  >
+                    {({ isActive }) => (
+                      <>
+                        <div className={isActive ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}>
+                          <item.icon size={20} />
+                        </div>
+                        <span className="flex-1">{item.label}</span>
+                        {item.isPremium && [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
+                          <div className="flex items-center justify-center px-1.5 py-0.5 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-md shadow-md shadow-orange-500/20 animate-pulse">
+                            <span className="text-[7px] font-black text-white uppercase tracking-tighter">PRO</span>
+                          </div>
+                        )}
+                      </>
+                    )}
+                  </NavLink>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
@@ -101,7 +139,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
               </div>
             </div>
             <button
-              onClick={() => setShowLogoutConfirm(true)}
+              onClick={() => {
+                setShowLogoutConfirm(true);
+                onClose();
+              }}
               className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all active:scale-90"
               title={t('auth.logout')}
             >

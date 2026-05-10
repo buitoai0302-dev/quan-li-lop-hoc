@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '../contexts/AuthContext';
+import { USER_ROLES } from '../utils/constants';
 
 const Help: React.FC = () => {
   const { t } = useTranslation();
@@ -27,7 +28,7 @@ const Help: React.FC = () => {
       icon: <Rocket className="text-orange-500" size={24} />,
       title: t('help.categories.gettingStarted.title'),
       description: t('help.categories.gettingStarted.desc'),
-      steps: user?.role === 'teacher' ? [
+      steps: user?.role === USER_ROLES.TEACHER ? [
         t('help.teacher.gettingStarted.step1'),
         t('help.teacher.gettingStarted.step2'),
         t('help.teacher.gettingStarted.step3'),
@@ -36,25 +37,25 @@ const Help: React.FC = () => {
         t('help.categories.gettingStarted.step2'),
         t('help.categories.gettingStarted.step3'),
       ],
-      details: user?.role === 'teacher' ? t('help.teacher.gettingStarted.details') : t('help.categories.gettingStarted.details')
+      details: user?.role === USER_ROLES.TEACHER ? t('help.teacher.gettingStarted.details') : t('help.categories.gettingStarted.details')
     },
     {
       id: 'scheduling',
       icon: <Calendar className="text-blue-500" size={24} />,
-      title: user?.role === 'teacher' ? t('menu.teachingSchedule') : t('help.categories.scheduling.title'),
-      description: user?.role === 'teacher' ? t('help.teacher.scheduling.desc') : t('help.categories.scheduling.desc'),
-      steps: user?.role === 'teacher' ? [
+      title: user?.role === USER_ROLES.TEACHER ? t('menu.teachingSchedule') : t('help.categories.scheduling.title'),
+      description: user?.role === USER_ROLES.TEACHER ? t('help.teacher.scheduling.desc') : t('help.categories.scheduling.desc'),
+      steps: user?.role === USER_ROLES.TEACHER ? [
         t('help.teacher.scheduling.step1'),
         t('help.teacher.scheduling.step2'),
         user?.tenant_settings?.menu?.attendance !== false
           ? t('help.teacher.scheduling.step3')
-          : t('help.teacher.scheduling.step3_no_attendance', 'Click vào buổi học để xem danh sách học sinh'),
+          : t('help.teacher.scheduling.step3_no_attendance'),
       ] : [
         t('help.categories.scheduling.step1'),
         t('help.categories.scheduling.step2'),
         t('help.categories.scheduling.step3'),
       ],
-      details: user?.role === 'teacher' ? t('help.teacher.scheduling.details') : t('help.categories.scheduling.details')
+      details: user?.role === USER_ROLES.TEACHER ? t('help.teacher.scheduling.details') : t('help.categories.scheduling.details')
     },
     {
       id: 'data-management',
@@ -83,7 +84,7 @@ const Help: React.FC = () => {
 
   // Filter categories based on role
   const categories = allCategories.filter(cat => {
-    if (user?.role === 'teacher') {
+    if (user?.role === USER_ROLES.TEACHER) {
       return ['getting-started', 'scheduling'].includes(cat.id);
     }
     return true; // Admin/Staff see all
@@ -166,7 +167,7 @@ const Help: React.FC = () => {
 
         {/* Detail Modal */}
         {selectedCategory && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-in fade-in duration-200">
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
               {/* Modal Header */}
               <div className="p-6 bg-gray-50 dark:bg-gray-700/50 flex justify-between items-center border-b border-gray-200 dark:border-gray-700">
@@ -259,10 +260,10 @@ const Help: React.FC = () => {
             </div>
             <div className="space-y-2">
               <h4 className="font-bold text-gray-800 dark:text-gray-200">
-                {user?.role === 'teacher' ? t('help.quickTips.teacher.tip3.q') : t('help.quickTips.tip3.q')}
+                {user?.role === USER_ROLES.TEACHER ? t('help.quickTips.teacher.tip3.q') : t('help.quickTips.tip3.q')}
               </h4>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {user?.role === 'teacher' ? t('help.quickTips.teacher.tip3.a') : t('help.quickTips.tip3.a')}
+                {user?.role === USER_ROLES.TEACHER ? t('help.quickTips.teacher.tip3.a') : t('help.quickTips.tip3.a')}
               </p>
             </div>
           </div>

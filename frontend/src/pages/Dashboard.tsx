@@ -22,7 +22,7 @@ import {
   Building,
   Plus
 } from 'lucide-react';
-import { TENANT_STATUS, PLAN_CODES } from '../utils/constants';
+import { TENANT_STATUS, PLAN_CODES, USER_ROLES } from '../utils/constants';
 import {
   XAxis,
   YAxis,
@@ -130,8 +130,8 @@ const Dashboard: React.FC = () => {
   }, [chartPeriod]);
 
   const planCode = stats?.plan?.toUpperCase() || PLAN_CODES.FREE;
-  const isFree = planCode === PLAN_CODES.FREE && user?.role === 'admin';
-  const canViewYearly = [PLAN_CODES.BUSINESS, PLAN_CODES.ENTERPRISE, 'SUPER ADMIN'].includes(planCode) || user?.role === 'super_admin';
+  const isFree = planCode === PLAN_CODES.FREE && user?.role === USER_ROLES.ADMIN;
+  const canViewYearly = [PLAN_CODES.BUSINESS, PLAN_CODES.ENTERPRISE, 'SUPER ADMIN'].includes(planCode) || user?.role === USER_ROLES.SUPER_ADMIN;
   const displayPlan = planCode;
 
   if (loading) {
@@ -148,10 +148,10 @@ const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className="h-full overflow-auto custom-scrollbar px-4 sm:px-6 py-4">
-      <div className="space-y-6 animate-in fade-in duration-700 pb-12 max-w-7xl mx-auto">
+    <div className="h-full overflow-auto custom-scrollbar px-3 sm:px-4 py-3">
+      <div className="space-y-4 animate-in fade-in duration-700 pb-6 max-w-7xl mx-auto">
       {/* Dynamic Header */}
-      <div className="relative bg-gradient-to-br from-gray-900 to-indigo-950 rounded-2xl p-8 md:p-10 overflow-hidden shadow-2xl">
+      <div className="relative bg-gradient-to-br from-gray-900 to-indigo-950 rounded-2xl p-6 md:p-8 overflow-hidden shadow-2xl">
         <div className="absolute top-0 right-0 w-80 h-80 bg-primary/20 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/2"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 text-white">
           <div className="max-w-2xl">
@@ -174,13 +174,13 @@ const Dashboard: React.FC = () => {
         {/* All roles can see Schedule */}
         <ShortcutButton 
           icon={<Calendar size={18} />} 
-          label={user?.role === 'teacher' ? t('menu.teachingSchedule') : (user?.role === 'student' ? t('menu.learningSchedule') : t('schedule.title'))} 
+          label={user?.role === USER_ROLES.TEACHER ? t('menu.teachingSchedule') : (user?.role === USER_ROLES.STUDENT ? t('menu.learningSchedule') : t('schedule.title'))} 
           onClick={() => navigate('/schedule')} 
           color="amber" 
         />
 
         {/* Admin, Staff, Teacher can see Classes */}
-        {['admin', 'staff', 'teacher', 'super_admin'].includes(user?.role || '') && (
+        {[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
           <ShortcutButton 
             icon={<BookOpen size={18} />} 
             label={t('menu.classes')} 
@@ -190,7 +190,7 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* Admin and Staff see management buttons */}
-        {['admin', 'staff', 'super_admin'].includes(user?.role || '') && (
+        {[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
           <>
             <ShortcutButton 
               icon={<Plus size={18} />} 
@@ -208,7 +208,7 @@ const Dashboard: React.FC = () => {
         )}
 
         {/* Only Admin sees Branch addition */}
-        {['admin', 'super_admin'].includes(user?.role || '') && (
+        {[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
           <ShortcutButton 
             icon={<Building size={18} />} 
             label={t('branches.addBranch')} 
@@ -217,8 +217,7 @@ const Dashboard: React.FC = () => {
           />
         )}
 
-        {/* Admin and Staff see Live Feed */}
-        {['admin', 'staff', 'super_admin'].includes(user?.role || '') && (
+        {[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
           <ShortcutButton 
             icon={<Activity size={18} />} 
             label={t('dashboard.liveFeed')} 
@@ -230,7 +229,7 @@ const Dashboard: React.FC = () => {
 
       {/* Quick Stats - Balanced Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {user?.role === 'student' ? (
+        {user?.role === USER_ROLES.STUDENT ? (
           <>
             <QuickStat
               icon={<BookOpen size={18} />}
@@ -247,7 +246,7 @@ const Dashboard: React.FC = () => {
               color="amber"
             />
           </>
-        ) : user?.role === 'teacher' ? (
+        ) : user?.role === USER_ROLES.TEACHER ? (
           <>
             <QuickStat
               icon={<BookOpen size={18} />}
@@ -306,7 +305,7 @@ const Dashboard: React.FC = () => {
       </div>
 
       {/* Main Content Area - Only for Admin/Staff */}
-      {['admin', 'staff', 'super_admin'].includes(user?.role || '') ? (
+      {[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') ? (
         <div className="relative min-h-[600px]">
           <div className={`grid grid-cols-1 lg:grid-cols-4 gap-6 transition-all duration-700 ${isFree ? 'blur-[12px] grayscale opacity-40 pointer-events-none select-none' : ''}`}>
             {/* Left Content (Charts) */}
@@ -434,7 +433,7 @@ const Dashboard: React.FC = () => {
 
             {/* Right Sidebar */}
             <div className="space-y-6">
-              {['admin', 'staff', 'super_admin'].includes(user?.role || '') && (
+              {[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
                 <div className="bg-white/40 dark:bg-gray-800/40 backdrop-blur-xl p-7 rounded-2xl border border-white/20 dark:border-gray-700/50 shadow-xl shadow-gray-200/20 dark:shadow-none relative overflow-hidden group">
                   <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/10 rounded-full blur-2xl"></div>
                   <h3 className="text-sm font-black text-gray-900 dark:text-white mb-6 flex items-center gap-2">
@@ -544,7 +543,7 @@ const Dashboard: React.FC = () => {
             onClick={() => navigate('/schedule')}
             className="px-10 py-4 bg-primary text-white rounded-xl font-black shadow-lg shadow-primary/20 hover:scale-105 transition-all"
           >
-            {user?.role === 'teacher' ? t('menu.teachingSchedule') : t('menu.learningSchedule')}
+            {user?.role === USER_ROLES.TEACHER ? t('menu.teachingSchedule') : t('menu.learningSchedule')}
           </button>
         </div>
       )}

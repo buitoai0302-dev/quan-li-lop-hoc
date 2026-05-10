@@ -63,7 +63,14 @@
     "api": "API",
     "today": "Hôm nay",
     "stay": "Ở lại đây",
-    "leave": "Rời khỏi"
+    "leave": "Rời khỏi",
+    "roles": {
+      "super_admin": "Quản trị viên Hệ thống",
+      "admin": "Quản trị viên",
+      "staff": "Nhân viên",
+      "teacher": "Giáo viên",
+      "student": "Học sinh"
+    }
   },
   "menu": {
     "dashboard": "Tổng quan",
@@ -84,7 +91,14 @@
     "adminPlans": "Cấu hình gói",
     "planRequests": "Yêu cầu nâng cấp",
     "adminStats": "Thống kê hệ thống",
-    "activities": "Nhật ký hoạt động"
+    "activities": "Nhật ký hoạt động",
+    "groups": {
+      "main": "Tổng quan",
+      "management": "Quản lý",
+      "tools": "Công cụ",
+      "system": "Hệ thống",
+      "admin": "Quản trị tối cao"
+    }
   },
   "dashboard": {
     "title": "Tổng quan hệ thống",
@@ -132,14 +146,14 @@
     "title": "Nhập dữ liệu hệ thống",
     "subtitle": "Tải lên tệp CSV hoặc Excel để thêm dữ liệu hàng loạt",
     "downloadTemplate": "Tải tệp mẫu",
-    "dataType": "Loại dữ liệu",
+    "type": "Loại dữ liệu",
     "branch": "Chi nhánh",
     "selectBranch": "Chọn chi nhánh",
     "students": "Học sinh",
     "teachers": "Giáo viên",
     "rooms": "Phòng học",
     "classes": "Lớp học",
-    "guideTitle": "Hướng dẫn nhập liệu",
+    "guideTitle": "Hướng dẫn định dạng file",
     "guideDesc": "Hệ thống tự động nhận diện các cột dựa trên tên tiêu đề. Chúng tôi khuyên bạn nên tải tệp mẫu để đảm bảo chính xác.",
     "required": "Bắt buộc",
     "optional": "Tùy chọn",
@@ -304,6 +318,7 @@
   "subscription": {
     "title": "Nâng tầm trung tâm của bạn",
     "subtitle": "Chọn gói dịch vụ phù hợp với quy mô và nhu cầu tăng trưởng.",
+    "popular": "Phổ biến",
     "currentPlan": "Gói hiện tại",
     "current": "Đang sử dụng",
     "upgrade": "Nâng cấp ngay",
@@ -321,6 +336,7 @@
   "admin": {
     "planRequestsTitle": "Yêu cầu nâng cấp gói",
     "planRequestsSubtitle": "Phê duyệt các yêu cầu nâng cấp dịch vụ từ đối tác",
+    "noPlanRequests": "Hiện chưa có yêu cầu nâng cấp nào cần xử lý.",
     "pendingRequests": "yêu cầu đang chờ",
     "approveConfirmTitle": "Xác nhận phê duyệt",
     "rejectConfirmTitle": "Xác nhận từ chối",
@@ -380,6 +396,10 @@
     }
   },
   "attendance": {
+    "disabledTitle": "Tính năng chưa được kích hoạt",
+    "disabledAdminDesc": "Tính năng Điểm danh hiện đang bị tắt trong cấu hình hệ thống. Bạn có thể bật lại trong mục Cài đặt.",
+    "disabledDesc": "Tính năng Điểm danh hiện chưa khả dụng. Vui lòng liên hệ quản trị viên để biết thêm chi tiết.",
+    "sessions": "Danh sách ca học",
     "title": "Hệ thống điểm danh",
     "subtitle": "Quản lý sự hiện diện của học sinh trong từng ca học",
     "selectSession": "Chọn ca học",
@@ -454,7 +474,9 @@
     "notesPlaceholder": "Ví dụ: Học lý thuyết, Kiểm tra giữa kỳ...",
     "personnel": "Nhân sự",
     "timeline": "Thời gian",
-    "namePlaceholder": "Tên lớp học..."
+    "namePlaceholder": "Tên lớp học...",
+    "scheduleNote": "Ghi chú buổi học...",
+    "selectStudent": "Chọn học sinh để thêm..."
   },
   "rooms": {
     "title": "Quản lý Phòng học",
@@ -651,7 +673,8 @@
     "dob": "Ngày sinh",
     "noData": "Chưa có học sinh nào. Hãy thêm mới!",
     "noEnrollments": "Chưa có học sinh nào trong lớp này",
-    "namePlaceholder": "Họ và tên..."
+    "namePlaceholder": "Họ và tên...",
+    "selectStudent": "Chọn học sinh..."
   },
   "errors": {
     "INTERNAL_ERROR": "Lỗi hệ thống. Vui lòng thử lại sau.",

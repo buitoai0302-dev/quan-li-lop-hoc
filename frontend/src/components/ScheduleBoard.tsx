@@ -14,6 +14,7 @@ import { Plus, ChevronLeft, ChevronRight, Clock, User, MapPin, FileText, Info, S
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { handleApiError } from '../utils/errorHelper';
+import { USER_ROLES } from '../utils/constants';
 
 type ViewMode = 'day' | 'week' | 'month';
 
@@ -22,13 +23,13 @@ const ScheduleBoard: React.FC = () => {
   const { user } = useAuth();
   const currentLocale = i18n.language === 'vi' ? vi : enUS;
 
-  const canEdit = user?.role === 'admin' || user?.role === 'staff' || user?.role === 'super_admin';
+  const canEdit = user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.STAFF || user?.role === USER_ROLES.SUPER_ADMIN;
   const [sessions, setSessions] = useState<Session[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>('week');
   const [branches, setBranches] = useState<any[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<string>(user?.branch_id || '');
-  const [selectedTeacher, setSelectedTeacher] = useState<string>(user?.role === 'teacher' ? user.id : '');
+  const [selectedTeacher, setSelectedTeacher] = useState<string>(user?.role === USER_ROLES.TEACHER ? user.id : '');
   const [selectedClass, setSelectedClass] = useState<string>('');
 
   useEffect(() => {
@@ -107,7 +108,7 @@ const ScheduleBoard: React.FC = () => {
       setTeachers(teachersRes.data);
 
       // Fetch editing/filtering-specific data
-      if (canEdit || user?.role === 'teacher') {
+      if (canEdit || user?.role === USER_ROLES.TEACHER) {
         const [classesRes, roomsRes] = await Promise.all([
           api.get('/classes'),
           api.get('/rooms')
@@ -263,10 +264,10 @@ const ScheduleBoard: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-surface dark:bg-gray-800 rounded-lg shadow-lg border border-border dark:border-gray-700 overflow-hidden transition-colors duration-200">
+    <div className="flex flex-col h-full bg-surface dark:bg-gray-800 rounded-lg shadow-sm border border-border dark:border-gray-700 overflow-hidden transition-colors duration-200">
       <div className="flex flex-col border-b border-gray-200 dark:border-gray-700 bg-surface dark:bg-gray-900 transition-all sticky top-0 z-30 shadow-sm">
         {/* Main Header Row */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between px-4 sm:px-6 py-4 sm:py-5 gap-5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between px-3 sm:px-4 py-3 sm:py-4 gap-4">
           {/* Left Side: Title & Date Navigation */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
             <div className="flex flex-col">
@@ -385,7 +386,7 @@ const ScheduleBoard: React.FC = () => {
               </div>
 
               {/* Teacher Filter - Hide for teachers */}
-              {user?.role !== 'teacher' && (
+              {user?.role !== USER_ROLES.TEACHER && (
                 <div className="flex-1 space-y-1.5">
                   <label className="text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-[0.15em] ml-1 flex items-center gap-1.5">
                     <User size={12} className="text-primary/50" />

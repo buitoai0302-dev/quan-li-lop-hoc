@@ -61,7 +61,14 @@
     "api": "API",
     "today": "Today",
     "stay": "Stay Here",
-    "leave": "Leave"
+    "leave": "Leave",
+    "roles": {
+      "super_admin": "System Administrator",
+      "admin": "Administrator",
+      "staff": "Staff",
+      "teacher": "Teacher",
+      "student": "Student"
+    }
   },
   "menu": {
     "dashboard": "Dashboard",
@@ -82,7 +89,14 @@
     "adminPlans": "Plan Config",
     "planRequests": "Upgrade Requests",
     "adminStats": "System Stats",
-    "activities": "Activity Log"
+    "activities": "Activity Log",
+    "groups": {
+      "main": "Overview",
+      "management": "Management",
+      "tools": "Tools",
+      "system": "System",
+      "admin": "Super Admin"
+    }
   },
   "dashboard": {
     "title": "System Overview",
@@ -130,14 +144,14 @@
     "title": "System Data Import",
     "subtitle": "Upload CSV or Excel files to add data in bulk",
     "downloadTemplate": "Download Template",
-    "dataType": "Data Type",
+    "type": "Data Type",
     "branch": "Branch",
     "selectBranch": "Select a branch",
     "students": "Students",
     "teachers": "Teachers",
     "rooms": "Rooms",
     "classes": "Classes",
-    "guideTitle": "Import Guide",
+    "guideTitle": "File Format Guide",
     "guideDesc": "The system automatically recognizes columns based on header names. We recommend downloading the template for accuracy.",
     "required": "Required",
     "optional": "Optional",
@@ -278,6 +292,7 @@
   "subscription": {
     "title": "Elevate Your Center",
     "subtitle": "Choose a plan that fits your scale and growth needs.",
+    "popular": "Popular",
     "currentPlan": "Current Plan",
     "current": "In Use",
     "upgrade": "Upgrade Now",
@@ -295,6 +310,7 @@
   "admin": {
     "planRequestsTitle": "Plan Upgrade Requests",
     "planRequestsSubtitle": "Approve service upgrade requests from partners",
+    "noPlanRequests": "No pending upgrade requests at the moment.",
     "pendingRequests": "pending requests",
     "approveConfirmTitle": "Confirm Approval",
     "rejectConfirmTitle": "Confirm Rejection",
@@ -354,6 +370,10 @@
     }
   },
   "attendance": {
+    "disabledTitle": "Feature Not Enabled",
+    "disabledAdminDesc": "Attendance feature is currently disabled in system settings. You can enable it in the Settings page.",
+    "disabledDesc": "Attendance feature is currently unavailable. Please contact your administrator for more details.",
+    "sessions": "Session List",
     "title": "Attendance System",
     "subtitle": "Manage student attendance for each session",
     "selectSession": "Select Session",
@@ -428,7 +448,9 @@
     "notesPlaceholder": "Example: Theory, Midterm exam...",
     "personnel": "Personnel",
     "timeline": "Timeline",
-    "namePlaceholder": "Class name..."
+    "namePlaceholder": "Class name...",
+    "scheduleNote": "Session notes...",
+    "selectStudent": "Select student to add..."
   },
   "rooms": {
     "title": "Room Management",

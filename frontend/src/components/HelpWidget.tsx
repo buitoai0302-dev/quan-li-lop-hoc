@@ -3,6 +3,7 @@ import { X, BookOpen, UserPlus, Calendar, Layout } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { USER_ROLES } from '../utils/constants';
 
 interface HelpWidgetProps {
   isOpen: boolean;
@@ -14,7 +15,7 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
   const navigate = useNavigate();
 
   const { user } = useAuth();
-  const isTeacher = user?.role === 'teacher';
+  const isTeacher = user?.role === USER_ROLES.TEACHER;
   const isAttendanceEnabled = user?.tenant_settings?.menu?.attendance !== false;
 
   const steps = isTeacher ? [
@@ -64,7 +65,7 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
       <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
         <div className="p-6 bg-primary text-white flex justify-between items-center">

@@ -43,7 +43,11 @@ const MainLayout: React.FC = () => {
   // Centralized Menu Items
   const menuItems = getMenuItems(t, user?.role);
 
-  const currentMenu = menuItems.find((m: any) => location.pathname.startsWith(m.path))?.label || 'EduSchedule';
+  // Flatten the groups to find the active menu item
+  const allMenuItems = menuItems.flatMap(group => group.items);
+  const currentMenu = allMenuItems.find((m: any) => 
+    m.path === '/' ? location.pathname === '/' : location.pathname.startsWith(m.path)
+  )?.label || 'EduSchedule';
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans overflow-hidden transition-colors duration-200">

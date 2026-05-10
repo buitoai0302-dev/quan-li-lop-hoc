@@ -23,6 +23,7 @@ import AdminTenants from './pages/AdminTenants';
 import AdminPlans from './pages/AdminPlans';
 import AdminPlanRequests from './pages/AdminPlanRequests';
 import ActivityLog from './pages/ActivityLog';
+import { USER_ROLES, ROUTES } from './utils/constants';
 import { 
   LayoutDashboard, 
   Calendar, 
@@ -42,30 +43,44 @@ import {
   ShieldCheck
 } from 'lucide-react';
 
+export interface MenuItem {
+  path: string;
+  label: string;
+  icon: any;
+  roles: string[];
+  isPremium?: boolean;
+}
+
+export interface MenuGroup {
+  group: string;
+  items: MenuItem[];
+  roles?: string[];
+}
+
 // Centralized Route Configuration
 export const appRoutes = [
   {
-    path: "/login",
+    path: ROUTES.LOGIN,
     element: <Login />,
   },
   {
-    path: "/register",
+    path: ROUTES.REGISTER,
     element: <Register />,
   },
   {
-    path: "/verify-email",
+    path: ROUTES.VERIFY_EMAIL,
     element: <VerifyEmail />,
   },
   {
-    path: "/forgot-password",
+    path: ROUTES.FORGOT_PASSWORD,
     element: <ForgotPassword />,
   },
   {
-    path: "/reset-password",
+    path: ROUTES.RESET_PASSWORD,
     element: <ResetPassword />,
   },
   {
-    path: "/resend-verification",
+    path: ROUTES.RESEND_VERIFICATION,
     element: <ResendVerification />,
   },
   {
@@ -74,71 +89,71 @@ export const appRoutes = [
     children: [
       {
         index: true,
-        element: <Navigate to="/schedule" replace />,
+        element: <Navigate to={ROUTES.SCHEDULE} replace />,
       },
       {
-        path: "dashboard",
+        path: ROUTES.DASHBOARD,
         element: <Dashboard />,
       },
       {
-        path: "schedule",
+        path: ROUTES.SCHEDULE,
         element: <Schedule />,
       },
       {
-        path: "classes",
-        element: <ProtectedRoute roles={['admin', 'staff', 'teacher', 'super_admin']}><Classes /></ProtectedRoute>,
+        path: ROUTES.CLASSES,
+        element: <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.SUPER_ADMIN]}><Classes /></ProtectedRoute>,
       },
       {
-        path: "attendance",
-        element: <ProtectedRoute roles={['admin', 'staff', 'teacher', 'super_admin']}><Attendance /></ProtectedRoute>,
+        path: ROUTES.ATTENDANCE,
+        element: <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.SUPER_ADMIN]}><Attendance /></ProtectedRoute>,
       },
       {
-        path: "teachers",
-        element: <ProtectedRoute roles={['admin', 'staff', 'super_admin']}><Teachers /></ProtectedRoute>,
+        path: ROUTES.TEACHERS,
+        element: <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]}><Teachers /></ProtectedRoute>,
       },
       {
-        path: "students",
-        element: <ProtectedRoute roles={['admin', 'staff', 'super_admin']}><Students /></ProtectedRoute>,
+        path: ROUTES.STUDENTS,
+        element: <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]}><Students /></ProtectedRoute>,
       },
       {
-        path: "rooms",
-        element: <ProtectedRoute roles={['admin', 'staff', 'super_admin']}><Rooms /></ProtectedRoute>,
+        path: ROUTES.ROOMS,
+        element: <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]}><Rooms /></ProtectedRoute>,
       },
       {
-        path: "branches",
-        element: <ProtectedRoute roles={['admin', 'super_admin']}><Branches /></ProtectedRoute>,
+        path: ROUTES.BRANCHES,
+        element: <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN]}><Branches /></ProtectedRoute>,
       },
       {
-        path: "import",
-        element: <ProtectedRoute roles={['admin', 'staff', 'super_admin']}><ImportData /></ProtectedRoute>,
+        path: ROUTES.IMPORT,
+        element: <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]}><ImportData /></ProtectedRoute>,
       },
       {
-        path: "help",
-        element: <ProtectedRoute roles={['admin', 'staff', 'teacher', 'student', 'super_admin']}><Help /></ProtectedRoute>,
+        path: ROUTES.HELP,
+        element: <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.STUDENT, USER_ROLES.SUPER_ADMIN]}><Help /></ProtectedRoute>,
       },
       {
-        path: "subscription",
-        element: <ProtectedRoute roles={['admin', 'super_admin']}><Subscription /></ProtectedRoute>,
+        path: ROUTES.SUBSCRIPTION,
+        element: <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN]}><Subscription /></ProtectedRoute>,
       },
       {
-        path: "admin/tenants",
-        element: <ProtectedRoute roles={['super_admin']}><AdminTenants /></ProtectedRoute>,
+        path: ROUTES.ADMIN_TENANTS,
+        element: <ProtectedRoute roles={[USER_ROLES.SUPER_ADMIN]}><AdminTenants /></ProtectedRoute>,
       },
       {
-        path: "admin/requests",
-        element: <ProtectedRoute roles={['super_admin']}><AdminPlanRequests /></ProtectedRoute>,
+        path: ROUTES.ADMIN_REQUESTS,
+        element: <ProtectedRoute roles={[USER_ROLES.SUPER_ADMIN]}><AdminPlanRequests /></ProtectedRoute>,
       },
       {
-        path: "admin/plans",
-        element: <ProtectedRoute roles={['super_admin']}><AdminPlans /></ProtectedRoute>,
+        path: ROUTES.ADMIN_PLANS,
+        element: <ProtectedRoute roles={[USER_ROLES.SUPER_ADMIN]}><AdminPlans /></ProtectedRoute>,
       },
       {
-        path: "activities",
-        element: <ProtectedRoute roles={['admin', 'staff', 'super_admin']}><ActivityLog /></ProtectedRoute>,
+        path: ROUTES.ACTIVITY_LOG,
+        element: <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]}><ActivityLog /></ProtectedRoute>,
       },
       {
-        path: "settings",
-        element: <ProtectedRoute roles={['admin', 'staff', 'super_admin']}><Settings /></ProtectedRoute>,
+        path: ROUTES.SETTINGS,
+        element: <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]}><Settings /></ProtectedRoute>,
       },
     ],
   },
@@ -149,103 +164,129 @@ export const appRoutes = [
 ];
 
 // Centralized Menu Items Configuration for Sidebar/Header
-export const getMenuItems = (t: any, userRole?: string) => [
-  { 
-    path: '/dashboard', 
-    label: t('menu.dashboard'), 
-    icon: LayoutDashboard,
-    roles: ['admin', 'staff', 'teacher', 'student', 'super_admin']
+export const getMenuItems = (t: any, userRole?: string): MenuGroup[] => [
+  {
+    group: t('menu.groups.main'),
+    items: [
+      { 
+        path: ROUTES.DASHBOARD, 
+        label: t('menu.dashboard'), 
+        icon: LayoutDashboard,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.STUDENT, USER_ROLES.SUPER_ADMIN]
+      },
+      { 
+        path: ROUTES.SCHEDULE, 
+        label: userRole === USER_ROLES.TEACHER ? t('menu.teachingSchedule') : (userRole === USER_ROLES.STUDENT ? t('menu.learningSchedule') : t('menu.schedule')), 
+        icon: Calendar,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.STUDENT, USER_ROLES.SUPER_ADMIN]
+      },
+    ]
   },
-  { 
-    path: '/schedule', 
-    label: userRole === 'teacher' ? t('menu.teachingSchedule') : (userRole === 'student' ? t('menu.learningSchedule') : t('menu.schedule')), 
-    icon: Calendar,
-    roles: ['admin', 'staff', 'teacher', 'student', 'super_admin']
+  {
+    group: t('menu.groups.management'),
+    items: [
+      { 
+        path: ROUTES.ATTENDANCE, 
+        label: t('menu.attendance'), 
+        icon: ClipboardCheck,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.SUPER_ADMIN],
+        isPremium: true
+      },
+      { 
+        path: ROUTES.CLASSES, 
+        label: t('menu.classes'), 
+        icon: BookOpen,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.SUPER_ADMIN]
+      },
+      { 
+        path: ROUTES.STUDENTS, 
+        label: t('menu.students'), 
+        icon: Users,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]
+      },
+      { 
+        path: ROUTES.TEACHERS, 
+        label: t('menu.teachers'), 
+        icon: UserSquare2,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]
+      },
+      { 
+        path: ROUTES.ROOMS, 
+        label: t('menu.rooms'), 
+        icon: MapPin,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]
+      },
+      { 
+        path: ROUTES.BRANCHES, 
+        label: t('menu.branches'), 
+        icon: GitBranch,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN],
+        isPremium: true
+      },
+    ]
   },
-  { 
-    path: '/attendance', 
-    label: t('menu.attendance'), 
-    icon: ClipboardCheck,
-    roles: ['admin', 'staff', 'teacher', 'super_admin'],
-    isPremium: true
+  {
+    group: t('menu.groups.tools'),
+    items: [
+      { 
+        path: ROUTES.IMPORT, 
+        label: t('menu.import'), 
+        icon: FileUp,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]
+      },
+      { 
+        path: ROUTES.ACTIVITY_LOG, 
+        label: t('menu.activities'), 
+        icon: History,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]
+      },
+    ]
   },
-  { 
-    path: '/classes', 
-    label: t('menu.classes'), 
-    icon: BookOpen,
-    roles: ['admin', 'staff', 'teacher', 'super_admin']
+  {
+    group: t('menu.groups.system'),
+    items: [
+      { 
+        path: ROUTES.SUBSCRIPTION, 
+        label: t('menu.subscription'), 
+        icon: CreditCard,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN]
+      },
+      { 
+        path: ROUTES.SETTINGS, 
+        label: t('menu.settings'), 
+        icon: SettingsIcon,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]
+      },
+      { 
+        path: ROUTES.HELP, 
+        label: t('menu.help'), 
+        icon: HelpCircle,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.STUDENT, USER_ROLES.SUPER_ADMIN]
+      },
+    ]
   },
-  { 
-    path: '/students', 
-    label: t('menu.students'), 
-    icon: Users,
-    roles: ['admin', 'staff', 'super_admin']
-  },
-  { 
-    path: '/teachers', 
-    label: t('menu.teachers'), 
-    icon: UserSquare2,
-    roles: ['admin', 'staff', 'super_admin']
-  },
-  { 
-    path: '/rooms', 
-    label: t('menu.rooms'), 
-    icon: MapPin,
-    roles: ['admin', 'staff', 'super_admin']
-  },
-  { 
-    path: '/branches', 
-    label: t('menu.branches'), 
-    icon: GitBranch,
-    roles: ['admin', 'super_admin'],
-    isPremium: true
-  },
-  { 
-    path: '/import', 
-    label: t('menu.import'), 
-    icon: FileUp,
-    roles: ['admin', 'staff', 'super_admin']
-  },
-  { 
-    path: '/help', 
-    label: t('menu.help'), 
-    icon: HelpCircle,
-    roles: ['admin', 'staff', 'teacher', 'student', 'super_admin']
-  },
-  { 
-    path: '/subscription', 
-    label: t('menu.subscription'), 
-    icon: CreditCard,
-    roles: ['admin', 'super_admin']
-  },
-  { 
-    path: '/settings', 
-    label: t('menu.settings'), 
-    icon: SettingsIcon,
-    roles: ['admin', 'staff', 'super_admin']
-  },
-  { 
-    path: '/admin/tenants', 
-    label: t('menu.adminTenants'), 
-    icon: Building2,
-    roles: ['super_admin']
-  },
-  { 
-    path: '/admin/requests', 
-    label: t('menu.planRequests'), 
-    icon: MessageSquarePlus,
-    roles: ['super_admin']
-  },
-  { 
-    path: '/admin/plans', 
-    label: t('menu.adminPlans'), 
-    icon: ShieldCheck,
-    roles: ['super_admin']
-  },
-  { 
-    path: '/activities', 
-    label: t('menu.activities', 'Hoạt động'), 
-    icon: History,
-    roles: ['admin', 'staff', 'super_admin']
+  {
+    group: t('menu.groups.admin'),
+    roles: [USER_ROLES.SUPER_ADMIN],
+    items: [
+      { 
+        path: ROUTES.ADMIN_TENANTS, 
+        label: t('menu.adminTenants'), 
+        icon: Building2,
+        roles: [USER_ROLES.SUPER_ADMIN]
+      },
+      { 
+        path: ROUTES.ADMIN_REQUESTS, 
+        label: t('menu.planRequests'), 
+        icon: MessageSquarePlus,
+        roles: [USER_ROLES.SUPER_ADMIN]
+      },
+      { 
+        path: ROUTES.ADMIN_PLANS, 
+        label: t('menu.adminPlans'), 
+        icon: ShieldCheck,
+        roles: [USER_ROLES.SUPER_ADMIN]
+      },
+    ]
   },
 ];

@@ -54,20 +54,20 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   const theme = getThemeClasses();
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title}>
-      <div className="flex flex-col items-center text-center p-2">
-        <div className={`w-16 h-16 rounded-full ${theme.iconBg} flex items-center justify-center mb-5 shadow-inner`}>
+    <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="max-w-sm">
+      <div className="flex flex-col items-center text-center">
+        <div className={`w-14 h-14 rounded-full ${theme.iconBg} flex items-center justify-center mb-4 shadow-sm shrink-0`}>
           {theme.icon}
         </div>
-        <p className="text-gray-700 dark:text-gray-300 mb-8 text-base whitespace-pre-line leading-relaxed font-medium">
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm whitespace-pre-line leading-relaxed font-medium px-2">
           {message}
         </p>
         
-        <div className="flex w-full space-x-3">
+        <div className="flex w-full gap-3">
           <button
             type="button"
             disabled={isLoading}
-            className="flex-1 px-4 py-2.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all font-bold text-xs uppercase tracking-widest disabled:opacity-50"
+            className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all font-bold text-[10px] uppercase tracking-widest disabled:opacity-50"
             onClick={onClose}
           >
             {cancelText || t('common.cancel')}
@@ -75,13 +75,13 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
           <button
             type="button"
             disabled={isLoading}
-            className={`flex-1 px-4 py-2.5 text-white rounded-lg transition-all font-bold text-xs uppercase tracking-widest shadow-md disabled:opacity-50 flex items-center justify-center gap-2 ${theme.confirmBtn}`}
+            className={`flex-1 px-4 py-2 text-white rounded-xl transition-all font-bold text-[10px] uppercase tracking-widest shadow-md disabled:opacity-50 flex items-center justify-center gap-2 ${theme.confirmBtn}`}
             onClick={() => {
               onConfirm();
               if (!isLoading) onClose();
             }}
           >
-            {isLoading && <Loader2 size={14} className="animate-spin" />}
+            {isLoading && <Loader2 size={12} className="animate-spin" />}
             {confirmText || (type === 'danger' ? t('common.delete') : t('common.confirm'))}
           </button>
         </div>

@@ -1,3 +1,30 @@
+export const SYSTEM_DOMAIN = 'system';
+
+export const ROUTES = {
+  LOGIN: '/login',
+  REGISTER: '/register',
+  FORGOT_PASSWORD: '/forgot-password',
+  VERIFY_EMAIL: '/verify-email',
+  RESET_PASSWORD: '/reset-password',
+  DASHBOARD: '/dashboard',
+  CLASSES: '/classes',
+  TEACHERS: '/teachers',
+  STUDENTS: '/students',
+  ROOMS: '/rooms',
+  BRANCHES: '/branches',
+  ATTENDANCE: '/attendance',
+  SCHEDULE: '/schedule',
+  SUBSCRIPTION: '/subscription',
+  SETTINGS: '/settings',
+  IMPORT: '/import',
+  ACTIVITY_LOG: '/activities',
+  HELP: '/help',
+  RESEND_VERIFICATION: '/resend-verification',
+  ADMIN_TENANTS: '/admin/tenants',
+  ADMIN_PLANS: '/admin/plans',
+  ADMIN_REQUESTS: '/admin/requests',
+};
+
 export const ERROR_CODES = {
   LIMIT_EXCEEDED: 'LIMIT_EXCEEDED',
   VALIDATION_ERROR: 'VALIDATION_ERROR',
@@ -43,5 +70,21 @@ export const TENANT_ACTIONS = {
 export const COMMON_STATUS = {
   ACTIVE: true,
   INACTIVE: false,
+};
+
+export const ATTENDANCE_STATUS = {
+  PRESENT: 'present',
+  ABSENT: 'absent',
+  LATE: 'late',
+  EXCUSED: 'excused',
+  NONE: 'none',
+};
+
+export const USER_ROLES = {
+  SUPER_ADMIN: 'super_admin',
+  ADMIN: 'admin',
+  STAFF: 'staff',
+  TEACHER: 'teacher',
+  STUDENT: 'student',
 };
 
