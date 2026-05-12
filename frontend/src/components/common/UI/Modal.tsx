@@ -1,18 +1,20 @@
 import React, { useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 const modalVariants = cva(
-  'relative w-full max-w-[calc(100%-2rem)] max-h-[90vh] sm:max-h-[calc(100vh-100px)] overflow-hidden transform transition-all flex flex-col mx-auto mb-4 sm:mb-0',
+  'relative w-full max-w-[calc(100%-1rem)] sm:max-w-[calc(100%-2rem)] max-h-[90vh] sm:max-h-[calc(100vh-80px)] overflow-hidden transform transition-all flex flex-col mx-auto my-auto animate-in fade-in zoom-in-95 duration-300',
   {
     variants: {
       variant: {
         default:
-          'bg-white dark:bg-gray-800 rounded-xl shadow-2xl border sm:border-0 dark:border-gray-700',
+          'bg-white/70 dark:bg-slate-900/80 backdrop-blur-3xl rounded-xl shadow-2xl border border-white/20 dark:border-white/5',
         glass:
-          'bg-white/40 dark:bg-gray-800/50 backdrop-blur-xl rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200/50 dark:border-gray-700/50 shadow-xl',
-        destructive: 'bg-white dark:bg-gray-800 rounded-xl shadow-2xl border-t-4 border-t-rose-500',
+          'bg-white/30 dark:bg-white/5 backdrop-blur-3xl rounded-xl border border-white/40 dark:border-white/10 shadow-2xl',
+        destructive:
+          'bg-white dark:bg-slate-900 rounded-xl shadow-2xl border-t-4 border-t-rose-500',
       },
       size: {
         sm: 'max-w-sm',
@@ -33,7 +35,8 @@ const modalVariants = cva(
 );
 
 export interface ModalProps
-  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof modalVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>,
+    VariantProps<typeof modalVariants> {
   isOpen: boolean;
   onClose: () => void;
   title: string;
@@ -61,10 +64,10 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
 
     if (!isOpen) return null;
 
-    return (
-      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-1 sm:p-2">
+    return createPortal(
+      <div className="fixed inset-0 z-[9999] flex items-center justify-center p-2 sm:p-4">
         <div
-          className="fixed inset-0 bg-gray-900/70 backdrop-blur-[3px] transition-opacity duration-300"
+          className="fixed inset-0 bg-slate-900/60 dark:bg-black/70 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
           onClick={onClose}
         />
 
@@ -75,23 +78,24 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           aria-modal="true"
           {...props}
         >
-          <div className="flex items-center justify-between px-5 py-1 border-b border-gray-100 dark:border-gray-700/50 bg-gray-50 dark:bg-gray-900/50 flex-shrink-0">
-            <h3 className="text-sm sm:text-base font-black text-gray-900 dark:text-white truncate pr-4 uppercase tracking-wider">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-white/5 bg-white/20 dark:bg-white/5 flex-shrink-0">
+            <h3 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white truncate pr-4 uppercase tracking-wider">
               {title}
             </h3>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none bg-white dark:bg-gray-800 p-1.5 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm transition-all active:scale-90"
+              className="text-slate-400 hover:text-primary dark:hover:text-blue-400 focus:outline-none bg-white/50 dark:bg-white/10 p-2 rounded-xl border border-white/20 dark:border-white/5 shadow-sm transition-all active:scale-90"
             >
-              <X size={16} />
+              <X size={18} />
             </button>
           </div>
 
-          <div className="px-5 py-1 sm:py-2 overflow-y-auto custom-scrollbar flex-1">
+          <div className="px-6 py-4 overflow-y-auto custom-scrollbar flex-1 min-h-0 bg-transparent">
             {children}
           </div>
         </div>
-      </div>
+      </div>,
+      document.body
     );
   }
 );

@@ -5,6 +5,7 @@ import { format, startOfWeek, addDays, startOfMonth, endOfMonth, endOfWeek } fro
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES, VIEW_MODES } from '@/utils/constants';
+import { handleApiError } from '@/utils/errorHelper';
 import toast from 'react-hot-toast';
 import type { Session, Branch, ClassData, Room, Teacher, ViewMode } from '@/types';
 
@@ -20,7 +21,18 @@ export const useScheduleBoard = () => {
 
   // State
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [viewMode, setViewMode] = useState<ViewMode>(VIEW_MODES.WEEK);
+  
+  // Persistence for viewMode
+  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
+    const saved = localStorage.getItem('scheduleViewMode');
+    return (saved as ViewMode) || VIEW_MODES.WEEK;
+  });
+
+  const setViewMode = (mode: ViewMode) => {
+    setViewModeState(mode);
+    localStorage.setItem('scheduleViewMode', mode);
+  };
+
   const [selectedBranch, setSelectedBranch] = useState<string>(user?.branch_id || '');
   const [selectedTeacher, setSelectedTeacher] = useState<string>(
     user?.role === USER_ROLES.TEACHER ? user.id : ''
@@ -51,17 +63,10 @@ export const useScheduleBoard = () => {
       return Array.from({ length: 7 }).map((_, i) => addDays(weekStart, i));
     } else {
       const monthStart = startOfMonth(selectedDate);
-      const monthEnd = endOfMonth(selectedDate);
       const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-      const endDate = endOfWeek(monthEnd, { weekStartsOn: 1 });
-
-      const days = [];
-      let current = startDate;
-      while (current <= endDate) {
-        days.push(current);
-        current = addDays(current, 1);
-      }
-      return days;
+      
+      // Always show 42 days (6 weeks) for a consistent monthly grid
+      return Array.from({ length: 42 }).map((_, i) => addDays(startDate, i));
     }
   }, [selectedDate, viewMode]);
 
@@ -108,6 +113,7 @@ export const useScheduleBoard = () => {
       toast.success(t('common.success'));
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
     },
+    onError: (error: any) => handleApiError(error, t),
   });
 
   const createSessionMutation = useMutation({
@@ -117,6 +123,7 @@ export const useScheduleBoard = () => {
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       setIsModalOpen(false);
     },
+    onError: (error: any) => handleApiError(error, t),
   });
 
   const deleteSessionMutation = useMutation({
@@ -127,6 +134,7 @@ export const useScheduleBoard = () => {
       setIsDeleteModalOpen(false);
       setIsModalOpen(false);
     },
+    onError: (error: any) => handleApiError(error, t),
   });
 
   const handleOpenModal = (session?: Session) => {

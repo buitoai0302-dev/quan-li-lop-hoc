@@ -121,32 +121,32 @@ const ScheduleBoard: React.FC = () => {
   }, [sessions]);
 
   return (
-    <Card className="flex flex-col h-full overflow-hidden" scrollable={false}>
-      <ScheduleHeader
-        selectedDate={selectedDate}
-        setSelectedDate={setSelectedDate}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        branches={branches}
-        selectedBranch={selectedBranch}
-        setSelectedBranch={setSelectedBranch}
-        teachers={teachers}
-        selectedTeacher={selectedTeacher}
-        setSelectedTeacher={setSelectedTeacher}
-        classes={classes}
-        selectedClass={selectedClass}
-        setSelectedClass={setSelectedClass}
-        isFilterVisible={isFilterVisible}
-        setIsFilterVisible={setIsFilterVisible}
-        canEdit={canEdit}
-        onAddSession={() => handleOpenModal()}
-        currentLocale={currentLocale}
-        user={user}
-        t={t}
-      />
-
+    <Card className="flex flex-col flex-1 h-full overflow-hidden" scrollable={false}>
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <div className="flex-1 overflow-auto bg-white dark:bg-gray-800 flex flex-col">
+        <ScheduleHeader
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          branches={branches}
+          selectedBranch={selectedBranch}
+          setSelectedBranch={setSelectedBranch}
+          teachers={teachers}
+          selectedTeacher={selectedTeacher}
+          setSelectedTeacher={setSelectedTeacher}
+          classes={classes}
+          selectedClass={selectedClass}
+          setSelectedClass={setSelectedClass}
+          isFilterVisible={isFilterVisible}
+          setIsFilterVisible={setIsFilterVisible}
+          canEdit={canEdit}
+          onAddSession={() => handleOpenModal()}
+          currentLocale={currentLocale}
+          user={user}
+          t={t}
+        />
+
+        <div className="h-[calc(100vh-220px)] sm:h-[calc(100vh-250px)] overflow-y-auto bg-white dark:bg-gray-800">
           {viewMode === 'month' && (
             <div className="grid grid-cols-7 border-b border-border dark:border-gray-600 bg-gray-50 dark:bg-gray-900 sticky top-0 z-20 min-w-[800px] sm:min-w-[1000px] xl:min-w-full">
               {[
@@ -168,7 +168,7 @@ const ScheduleBoard: React.FC = () => {
             </div>
           )}
           <div
-            className={`grid ${viewMode === 'day' ? 'grid-cols-1' : 'grid-cols-7 min-w-[800px] sm:min-w-[1000px] xl:min-w-full'} divide-x divide-y divide-border dark:divide-gray-700 flex-1`}
+            className={`grid ${viewMode === 'day' ? 'grid-cols-1' : 'grid-cols-7 min-w-[800px] sm:min-w-[1000px] xl:min-w-full'} divide-x divide-y divide-border dark:divide-gray-700`}
           >
             {daysToShow.map((day, idx) => {
               const dateStr = format(day, 'yyyy-MM-dd');
@@ -179,7 +179,7 @@ const ScheduleBoard: React.FC = () => {
               return (
                 <div
                   key={idx}
-                  className={`flex flex-col ${viewMode === 'month' ? 'min-h-[100px] sm:min-h-[140px]' : 'min-h-[300px]'} ${!isCurrentMonth ? 'bg-gray-50/80 dark:bg-gray-900/50' : ''}`}
+                  className={`flex flex-col ${viewMode === 'month' ? 'min-h-[120px] sm:min-h-[160px]' : 'min-h-[300px]'} ${!isCurrentMonth ? 'bg-gray-50/80 dark:bg-gray-900/50' : ''}`}
                 >
                   {viewMode !== 'month' ? (
                     <div

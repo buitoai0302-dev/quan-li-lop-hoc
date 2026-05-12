@@ -10,7 +10,15 @@ function App() {
   return (
     <AuthProvider>
       <ErrorBoundary>
-        <Toaster position="top-right" />
+        <Toaster
+          position="top-right"
+          containerStyle={{ zIndex: 10000 }}
+          toastOptions={{
+            style: {
+              zIndex: 10001,
+            },
+          }}
+        />
         <RouterProvider router={router} />
       </ErrorBoundary>
     </AuthProvider>
