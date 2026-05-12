@@ -8,7 +8,7 @@ import { FeatureFlagService } from '../services/feature-flag.service';
 export const getRooms = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
-    
+
     const result = await pool.query(
       `SELECT r.*, b.name as branch_name 
        FROM rooms r

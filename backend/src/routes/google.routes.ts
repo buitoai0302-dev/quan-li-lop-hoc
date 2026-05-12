@@ -1,5 +1,10 @@
 import { Router } from 'express';
-import { googleAuthUrl, googleCallback, disconnectGoogle, syncAll } from '../controllers/google.controller';
+import {
+  googleAuthUrl,
+  googleCallback,
+  disconnectGoogle,
+  syncAll,
+} from '../controllers/google.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
 
 const router = Router();

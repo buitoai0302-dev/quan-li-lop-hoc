@@ -8,7 +8,7 @@ import { FeatureFlagService } from '../services/feature-flag.service';
 export const getStudents = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
-    
+
     const result = await pool.query(
       `SELECT s.*, b.name as branch_name 
        FROM students s
@@ -35,7 +35,10 @@ export const createStudent = async (req: AuthRequest, res: Response, next: NextF
     const { full_name, email, phone, date_of_birth, branch_id, parent_phone } = req.body;
 
     if (!full_name || !email || !branch_id) {
-      throw new ValidationError('Vui lòng điền đầy đủ thông tin bắt buộc', 'MISSING_REQUIRED_FIELDS');
+      throw new ValidationError(
+        'Vui lòng điền đầy đủ thông tin bắt buộc',
+        'MISSING_REQUIRED_FIELDS'
+      );
     }
 
     // Check Plan Limit
@@ -125,7 +128,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
 
     for (const s of students) {
       const { full_name, email, phone, class_name } = s;
-      
+
       if (!full_name || !email) continue;
 
       // 1. Create Student (if not exists by email, or skip/update)
@@ -144,14 +147,14 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
       // 2. Handle Class
       if (class_name) {
         let classId = createdClasses.get(class_name);
-        
+
         if (!classId) {
           // Check if class exists in DB
           const classRes = await client.query(
             `SELECT id FROM classes WHERE name = $1 AND tenant_id = $2 AND branch_id = $3 AND is_deleted = false`,
             [class_name, tenantId, branch_id]
           );
-          
+
           if (classRes.rows.length > 0) {
             classId = classRes.rows[0].id;
           } else {
@@ -160,7 +163,7 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
               `SELECT id FROM subjects WHERE tenant_id = $1 LIMIT 1`,
               [tenantId]
             );
-            
+
             let subjectId;
             if (subjectRes.rows.length > 0) {
               subjectId = subjectRes.rows[0].id;
@@ -204,10 +207,10 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
     }
 
     await client.query('COMMIT');
-    res.status(201).json({ 
-      success: true, 
+    res.status(201).json({
+      success: true,
       students_count: createdStudents.length,
-      classes_count: createdClasses.size 
+      classes_count: createdClasses.size,
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -216,4 +219,3 @@ export const bulkImport = async (req: AuthRequest, res: Response, next: NextFunc
     client.release();
   }
 };
-

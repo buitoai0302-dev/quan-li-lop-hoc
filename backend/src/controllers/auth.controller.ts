@@ -7,8 +7,19 @@ import { OAuth2Client } from 'google-auth-library';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email.service';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-import { checkRateLimit, recordFailedAttempt, clearAttempts, checkEmailRateLimit, recordEmailAttempt } from '../services/rateLimit.service';
-import { ValidationError, AuthenticationError, ForbiddenError, NotFoundError } from '../utils/errors';
+import {
+  checkRateLimit,
+  recordFailedAttempt,
+  clearAttempts,
+  checkEmailRateLimit,
+  recordEmailAttempt,
+} from '../services/rateLimit.service';
+import {
+  ValidationError,
+  AuthenticationError,
+  ForbiddenError,
+  NotFoundError,
+} from '../utils/errors';
 
 import { config } from '../utils/config';
 import { PLAN_CODES, TENANT_STATUS, DEFAULT_FREE_PLAN_ID } from '../utils/constants';
@@ -31,14 +42,17 @@ const issueTokens = async (user: any) => {
     role: user.role,
   };
 
-  const accessToken = jwt.sign(payload, config.jwtSecret(), { expiresIn: config.jwtExpiresIn() as any });
+  const accessToken = jwt.sign(payload, config.jwtSecret(), {
+    expiresIn: config.jwtExpiresIn() as any,
+  });
   const refreshToken = crypto.randomBytes(64).toString('hex');
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 ngày
 
-  await pool.query(
-    'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
-    [user.id, refreshToken, expiresAt]
-  );
+  await pool.query('INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)', [
+    user.id,
+    refreshToken,
+    expiresAt,
+  ]);
 
   return { accessToken, refreshToken };
 };
@@ -59,7 +73,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     return res.status(429).json({
       error: `Too many failed attempts. Try again in ${Math.ceil(rateCheck.retryAfter! / 60)} min.`,
       code: 'TOO_MANY_ATTEMPTS',
-      retryAfter: rateCheck.retryAfter
+      retryAfter: rateCheck.retryAfter,
     });
   }
 
@@ -83,7 +97,7 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     if (user.role !== 'super_admin' && !user.tenant_active) {
       return next(new ForbiddenError('Your center is inactive or suspended', 'TENANT_INACTIVE'));
     }
-    
+
     if (!user.is_email_verified) {
       return next(new ForbiddenError('Email not verified', 'EMAIL_NOT_VERIFIED'));
     }
@@ -92,14 +106,20 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     if (!isMatch) {
       await recordFailedAttempt(ip, email);
       const remaining = (await checkRateLimit(ip, email)).remainingAttempts;
-      return next(new AuthenticationError(`Invalid email or password. ${remaining} attempts left.`, 'INVALID_CREDENTIALS'));
+      return next(
+        new AuthenticationError(
+          `Invalid email or password. ${remaining} attempts left.`,
+          'INVALID_CREDENTIALS'
+        )
+      );
     }
 
     // Success
     await clearAttempts(ip, email);
 
     const { accessToken, refreshToken } = await issueTokens(user);
-    const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } = user;
+    const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } =
+      user;
     res.json({ token: accessToken, refreshToken, user: userWithoutSensitive });
   } catch (error) {
     next(error);
@@ -141,14 +161,16 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
       const client = await pool.connect();
       try {
         await client.query('BEGIN');
-        
+
         // Default plan
-        const planResult = await client.query(`SELECT id FROM plan_definitions WHERE code = $1`, [PLAN_CODES.FREE]);
+        const planResult = await client.query(`SELECT id FROM plan_definitions WHERE code = $1`, [
+          PLAN_CODES.FREE,
+        ]);
         const planId = planResult.rows[0]?.id || DEFAULT_FREE_PLAN_ID;
 
         // Create ACTIVE tenant for Google login
         const tenantResult = await client.query(
-          "INSERT INTO tenants (plan_id, name, status, is_active, contact_email) VALUES ($1, $2, $3, true, $4) RETURNING id, name as tenant_name, plan_id, is_active as tenant_active, settings as tenant_settings",
+          'INSERT INTO tenants (plan_id, name, status, is_active, contact_email) VALUES ($1, $2, $3, true, $4) RETURNING id, name as tenant_name, plan_id, is_active as tenant_active, settings as tenant_settings',
           [planId, `Center of ${fullName}`, TENANT_STATUS.ACTIVE, email]
         );
         const newTenant = tenantResult.rows[0];
@@ -163,10 +185,10 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
         user = { ...userResult.rows[0], ...newTenant };
 
         // Create default branch
-        await client.query(
-          `INSERT INTO branches (tenant_id, name) VALUES ($1, $2)`,
-          [newTenant.id, 'Chi nhánh chính']
-        );
+        await client.query(`INSERT INTO branches (tenant_id, name) VALUES ($1, $2)`, [
+          newTenant.id,
+          'Chi nhánh chính',
+        ]);
 
         await client.query('COMMIT');
       } catch (err) {
@@ -190,7 +212,8 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     }
 
     const { accessToken, refreshToken } = await issueTokens(user);
-    const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } = user;
+    const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } =
+      user;
     res.json({ token: accessToken, refreshToken, user: userWithoutSensitive });
   } catch (error) {
     next(error);
@@ -221,11 +244,13 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
       return next(new ValidationError('Email already registered', 'EMAIL_ALREADY_EXISTS'));
     }
 
-    const planResult = await client.query(`SELECT id FROM plan_definitions WHERE code = $1`, [PLAN_CODES.FREE]);
+    const planResult = await client.query(`SELECT id FROM plan_definitions WHERE code = $1`, [
+      PLAN_CODES.FREE,
+    ]);
     const planId = planResult.rows[0]?.id || DEFAULT_FREE_PLAN_ID;
 
     const tenantResult = await client.query(
-      "INSERT INTO tenants (plan_id, name, status, is_active, contact_email) VALUES ($1, $2, $3, false, $4) RETURNING id, settings as tenant_settings",
+      'INSERT INTO tenants (plan_id, name, status, is_active, contact_email) VALUES ($1, $2, $3, false, $4) RETURNING id, settings as tenant_settings',
       [planId, tenantName || `Center of ${fullName}`, TENANT_STATUS.PENDING, email]
     );
     const { id: tenantId, tenant_settings } = tenantResult.rows[0];
@@ -243,10 +268,10 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     );
 
     // Tạo chi nhánh mặc định - sẽ được người dùng đặt tên lại trong bước onboarding
-    await client.query(
-      `INSERT INTO branches (tenant_id, name) VALUES ($1, $2)`,
-      [tenantId, tenantName || 'Chi nhánh chính']
-    );
+    await client.query(`INSERT INTO branches (tenant_id, name) VALUES ($1, $2)`, [
+      tenantId,
+      tenantName || 'Chi nhánh chính',
+    ]);
 
     await client.query('COMMIT');
     await sendVerificationEmail(email, verificationToken);
@@ -286,14 +311,18 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
       const checkResult = await pool.query(
         'SELECT id, is_email_verified FROM users WHERE verification_token IS NULL AND is_email_verified = true LIMIT 1'
       );
-      
-      // Lưu ý: Logic này hơi rộng vì không biết email nào. 
+
+      // Lưu ý: Logic này hơi rộng vì không biết email nào.
       // Tốt nhất là frontend nên gửi kèm email hoặc chúng ta tìm user theo token (nhưng token đã bị xóa).
       // Cách an toàn hơn: Kiểm tra xem có User nào vừa mới được xác thực gần đây không hoặc đơn giản là trả về success nếu frontend React gọi 2 lần.
-      
-      // Thực tế: Nếu rowCount === 0 thì có thể token sai thật hoặc đã dùng. 
+
+      // Thực tế: Nếu rowCount === 0 thì có thể token sai thật hoặc đã dùng.
       // Để trải nghiệm tốt nhất, ta có thể báo thành công nếu đây là một "double request" từ client.
-      return res.json({ message: 'Success', code: 'VERIFY_EMAIL_SUCCESS', note: 'Already verified or double request' });
+      return res.json({
+        message: 'Success',
+        code: 'VERIFY_EMAIL_SUCCESS',
+        note: 'Already verified or double request',
+      });
     }
 
     const { tenant_id } = result.rows[0];
@@ -323,10 +352,17 @@ export const resendVerification = async (req: Request, res: Response, next: Next
     const ip = req.ip || req.socket?.remoteAddress || 'unknown';
     const rateCheck = await checkEmailRateLimit(ip);
     if (rateCheck.blocked) {
-      return next(new ForbiddenError(`Too many requests. Please try again in ${rateCheck.retryAfter} seconds.`, 'RATE_LIMIT_EXCEEDED'));
+      return next(
+        new ForbiddenError(
+          `Too many requests. Please try again in ${rateCheck.retryAfter} seconds.`,
+          'RATE_LIMIT_EXCEEDED'
+        )
+      );
     }
 
-    const result = await pool.query('SELECT id, is_email_verified FROM users WHERE email = $1', [email]);
+    const result = await pool.query('SELECT id, is_email_verified FROM users WHERE email = $1', [
+      email,
+    ]);
 
     if (result.rows.length === 0 || result.rows[0].is_email_verified) {
       return res.json({ message: 'Sent if applicable', code: 'RESEND_VERIFICATION_SENT' });
@@ -361,7 +397,12 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     const ip = req.ip || req.socket?.remoteAddress || 'unknown';
     const rateCheck = await checkEmailRateLimit(ip);
     if (rateCheck.blocked) {
-      return next(new ForbiddenError(`Too many requests. Please try again in ${rateCheck.retryAfter} seconds.`, 'RATE_LIMIT_EXCEEDED'));
+      return next(
+        new ForbiddenError(
+          `Too many requests. Please try again in ${rateCheck.retryAfter} seconds.`,
+          'RATE_LIMIT_EXCEEDED'
+        )
+      );
     }
 
     const result = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
@@ -505,7 +546,9 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
     );
 
     if (result.rows.length === 0) {
-      return next(new AuthenticationError('Invalid or expired refresh token', 'INVALID_REFRESH_TOKEN'));
+      return next(
+        new AuthenticationError('Invalid or expired refresh token', 'INVALID_REFRESH_TOKEN')
+      );
     }
 
     const user = result.rows[0];
@@ -540,4 +583,3 @@ export const logout = async (req: Request, res: Response, next: NextFunction) =>
     next(error);
   }
 };
-

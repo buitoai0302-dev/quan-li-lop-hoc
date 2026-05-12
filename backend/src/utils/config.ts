@@ -16,12 +16,12 @@ export const config = {
   google: {
     clientId: () => getEnv('GOOGLE_CLIENT_ID'),
     clientSecret: () => getEnv('GOOGLE_CLIENT_SECRET'),
-    redirectUri: () => `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/google/callback`
+    redirectUri: () => `${process.env.BACKEND_URL || 'http://localhost:3000'}/api/google/callback`,
   },
   smtp: {
     host: () => process.env.SMTP_HOST || 'smtp.gmail.com',
     port: () => parseInt(process.env.SMTP_PORT || '465', 10),
     user: () => process.env.SMTP_USER,
-    pass: () => process.env.SMTP_PASS
-  }
+    pass: () => process.env.SMTP_PASS,
+  },
 };

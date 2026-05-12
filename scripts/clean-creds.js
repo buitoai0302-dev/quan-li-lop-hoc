@@ -21,36 +21,36 @@ const replacements = [
   // Remove hardcoded Neon DB password
   {
     pattern: /postgresql:\/\/neondb_owner:npg_[A-Za-z0-9]+@/g,
-    replacement: 'postgresql://neondb_owner:REDACTED@'
+    replacement: 'postgresql://neondb_owner:REDACTED@',
   },
   // Remove hardcoded connection strings with full URL
   {
     pattern: /'postgresql:\/\/neondb_owner:[^']+'/g,
-    replacement: "'process.env.DATABASE_URL'"
+    replacement: "'process.env.DATABASE_URL'",
   },
   {
     pattern: /"postgresql:\/\/neondb_owner:[^"]+"/g,
-    replacement: '"process.env.DATABASE_URL"'
+    replacement: '"process.env.DATABASE_URL"',
   },
   // Remove Gmail App Password
   {
     pattern: /prygaujiljllbcpy/g,
-    replacement: 'REDACTED'
+    replacement: 'REDACTED',
   },
   // Remove Google Client Secret pattern
   {
     pattern: /GOCSPX-[A-Za-z0-9_-]+/g,
-    replacement: 'REDACTED'
-  }
+    replacement: 'REDACTED',
+  },
 ];
 
 let cleaned = 0;
 
-filesToClean.forEach(filePath => {
+filesToClean.forEach((filePath) => {
   if (fs.existsSync(filePath)) {
     let content = fs.readFileSync(filePath, 'utf8');
     let changed = false;
-    
+
     replacements.forEach(({ pattern, replacement }) => {
       if (pattern.test(content)) {
         content = content.replace(pattern, replacement);
@@ -58,7 +58,7 @@ filesToClean.forEach(filePath => {
       }
       pattern.lastIndex = 0; // Reset regex state
     });
-    
+
     if (changed) {
       fs.writeFileSync(filePath, content, 'utf8');
       cleaned++;

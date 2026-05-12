@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { 
-  getPlans, 
-  createPlanRequest, 
-  getPlanRequests, 
+import {
+  getPlans,
+  createPlanRequest,
+  getPlanRequests,
   approvePlanRequest,
   rejectPlanRequest,
-  getPlanRequestStatus
+  getPlanRequestStatus,
 } from '../controllers/plan.controller';
 import { authMiddleware, requireRole } from '../middlewares/auth.middleware';
 
@@ -20,7 +20,17 @@ router.post('/request', authMiddleware, requireRole(['admin', 'super_admin']), c
 
 // Management (Super Admin only)
 router.get('/requests', authMiddleware, requireRole(['super_admin']), getPlanRequests);
-router.post('/requests/:id/approve', authMiddleware, requireRole(['super_admin']), approvePlanRequest);
-router.post('/requests/:id/reject', authMiddleware, requireRole(['super_admin']), rejectPlanRequest);
+router.post(
+  '/requests/:id/approve',
+  authMiddleware,
+  requireRole(['super_admin']),
+  approvePlanRequest
+);
+router.post(
+  '/requests/:id/reject',
+  authMiddleware,
+  requireRole(['super_admin']),
+  rejectPlanRequest
+);
 
 export default router;

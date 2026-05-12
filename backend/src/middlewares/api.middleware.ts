@@ -20,14 +20,14 @@ export const apiKeyMiddleware = async (req: AuthRequest, res: Response, next: Ne
     }
 
     const tenant = result.rows[0];
-    
+
     // Inject a "virtual" user for the API request
     req.user = {
       userId: 'api_user',
       tenantId: tenant.id,
       branchId: null,
       role: 'admin', // API access acts as admin
-      email: `api@${tenant.name.toLowerCase().replace(/\s+/g, '-')}.com`
+      email: `api@${tenant.name.toLowerCase().replace(/\s+/g, '-')}.com`,
     };
     req.tenantId = tenant.id;
 

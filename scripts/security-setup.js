@@ -65,14 +65,14 @@ const IGNORABLE_ERRORS = [
 ];
 
 function isIgnorable(errMsg) {
-  return IGNORABLE_ERRORS.some(e => errMsg.toLowerCase().includes(e));
+  return IGNORABLE_ERRORS.some((e) => errMsg.toLowerCase().includes(e));
 }
 
 async function runMigration() {
   console.log('\n📦 Step 1: Running migrate.sql (statement by statement)...');
   const migrateSql = fs.readFileSync(path.join(__dirname, '../migrate.sql'), 'utf8');
   const statements = splitSqlStatements(migrateSql);
-  
+
   console.log(`   Found ${statements.length} statements to execute\n`);
 
   const client = await pool.connect();
@@ -95,7 +95,9 @@ async function runMigration() {
         }
       } catch (err) {
         if (isIgnorable(err.message)) {
-          console.log(`   ⚠️  [${i + 1}/${statements.length}] Skipped (already applied): ${preview.substring(0, 60)}...`);
+          console.log(
+            `   ⚠️  [${i + 1}/${statements.length}] Skipped (already applied): ${preview.substring(0, 60)}...`
+          );
           skippedCount++;
         } else {
           console.error(`   ❌ [${i + 1}/${statements.length}] Error: ${err.message}`);
@@ -108,7 +110,9 @@ async function runMigration() {
     client.release();
   }
 
-  console.log(`\n   Migration summary: ✅ ${successCount} applied | ⚠️  ${skippedCount} skipped | ❌ ${errorCount} errors`);
+  console.log(
+    `\n   Migration summary: ✅ ${successCount} applied | ⚠️  ${skippedCount} skipped | ❌ ${errorCount} errors`
+  );
   if (errorCount > 0) {
     console.log('   ⚠️  Some statements failed. Review errors above.');
   } else {
@@ -119,10 +123,10 @@ async function runMigration() {
 function updateEnvJwtSecret() {
   console.log('\n🔑 Step 2: Generating new JWT_SECRET...');
   const newSecret = crypto.randomBytes(64).toString('hex');
-  
+
   const envPath = path.join(__dirname, '../backend/.env');
   let content = fs.readFileSync(envPath, 'utf8');
-  
+
   if (content.match(/JWT_SECRET=.+/)) {
     content = content.replace(/JWT_SECRET=.+/, `JWT_SECRET=${newSecret}`);
     fs.writeFileSync(envPath, content, 'utf8');
@@ -140,11 +144,11 @@ function updateEnvJwtSecret() {
 async function main() {
   console.log('🚀 EduSchedule Security Automation Script');
   console.log('==========================================');
-  
+
   try {
     await runMigration();
     updateEnvJwtSecret();
-    
+
     console.log('\n==========================================');
     console.log('✅ Automation complete!\n');
     console.log('📋 Remaining MANUAL steps (external services):');
@@ -168,7 +172,6 @@ async function main() {
     console.log('   git push origin --force --all');
     console.log('');
     console.log('5. 🔄 RESTART backend server to apply new JWT_SECRET');
-    
   } catch (err) {
     console.error('\n❌ Script failed:', err.message);
     process.exit(1);

@@ -17,7 +17,7 @@ export class FeatureFlagService {
    */
   public static async getTenantPlan(tenantId: string): Promise<PlanDetails | null> {
     const cacheKey = `tenant_plan_${tenantId}`;
-    
+
     // Check Cache
     const cached = cache.get<PlanDetails>(cacheKey);
     if (cached) {
@@ -27,27 +27,27 @@ export class FeatureFlagService {
     // Query DB
     const tenantSql = `SELECT plan_id FROM tenants WHERE id = $1`;
     const tenantRes = await query(tenantSql, [tenantId]);
-    
+
     if (tenantRes.rows.length === 0) return null;
     const planId = tenantRes.rows[0].plan_id;
 
     const featuresSql = `SELECT feature_key, is_enabled FROM plan_features WHERE plan_id = $1`;
     const featuresRes = await query(featuresSql, [planId]);
-    
+
     const limitsSql = `SELECT limit_key, limit_value FROM plan_limits WHERE plan_id = $1`;
     const limitsRes = await query(limitsSql, [planId]);
 
     const planDetails: PlanDetails = {
       plan_id: planId,
       features: {},
-      limits: {}
+      limits: {},
     };
 
-    featuresRes.rows.forEach(row => {
+    featuresRes.rows.forEach((row) => {
       planDetails.features[row.feature_key] = row.is_enabled;
     });
 
-    limitsRes.rows.forEach(row => {
+    limitsRes.rows.forEach((row) => {
       planDetails.limits[row.limit_key] = row.limit_value;
     });
 

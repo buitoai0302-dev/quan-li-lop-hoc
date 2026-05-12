@@ -12,7 +12,7 @@ export const googleAuthUrl = (req: Request, res: Response) => {
 
   // Sign the state to prevent CSRF
   const state = jwt.sign({ userId }, config.jwtSecret(), { expiresIn: '15m' });
-  
+
   const url = getAuthUrl(state);
   res.json({ url });
 };
@@ -58,7 +58,7 @@ export const syncAll = async (req: Request, res: Response) => {
   const userId = (req as any).user?.userId;
   const tenantId = (req as any).user?.tenantId;
   const userRole = (req as any).user?.role;
-  
+
   console.log(`[GoogleSync] Request from user ${userId}, role: ${userRole}, tenantId: ${tenantId}`);
 
   if (!userId || !tenantId) return res.status(401).json({ error: 'Unauthorized' });

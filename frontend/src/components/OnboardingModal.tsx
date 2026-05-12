@@ -1,10 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import {
-  Rocket,
-  CheckCircle2,
-  ArrowRight
-} from 'lucide-react';
+import { Rocket, CheckCircle2, ArrowRight } from 'lucide-react';
 import api from '../api';
 import { useAuth } from '../contexts/AuthContext';
 import { handleApiError } from '../utils/errorHelper';
@@ -25,7 +21,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
   const [branchData, setBranchData] = useState({
     name: '',
     address: '',
-    phone: ''
+    phone: '',
   });
 
   const handleNext = async () => {
@@ -53,7 +49,6 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-white/20 animate-in zoom-in-95 duration-500">
-
         {/* Progress Bar */}
         <div className="h-2 bg-gray-100 dark:bg-gray-700 flex">
           <div
@@ -88,7 +83,9 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
 
               <div className="space-y-4 pt-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">{t('branches.name')} *</label>
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
+                    {t('branches.name')} *
+                  </label>
                   <input
                     type="text"
                     required
@@ -99,7 +96,9 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">{t('branches.address')}</label>
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
+                    {t('branches.address')}
+                  </label>
                   <input
                     type="text"
                     placeholder={t('onboarding.addressPlace')}
@@ -109,7 +108,9 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">{t('branches.phone')}</label>
+                  <label className="text-sm font-bold text-gray-700 dark:text-gray-300 ml-1">
+                    {t('branches.phone')}
+                  </label>
                   <input
                     type="text"
                     placeholder="0912 345 678"
@@ -145,8 +146,14 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
               disabled={(step === 2 && !branchData.name) || isSubmitting}
               className="flex items-center gap-3 px-10 py-5 bg-primary text-white rounded-xl font-black text-lg shadow-xl shadow-primary/30 hover:scale-105 transition-all active:scale-95 group disabled:opacity-50 disabled:hover:scale-100"
             >
-              {isSubmitting ? t('common.loading') : (step === totalSteps ? t('onboarding.startNow') : t('common.continue'))}
-              {!isSubmitting && <ArrowRight className="group-hover:translate-x-1 transition-transform" />}
+              {isSubmitting
+                ? t('common.loading')
+                : step === totalSteps
+                  ? t('onboarding.startNow')
+                  : t('common.continue')}
+              {!isSubmitting && (
+                <ArrowRight className="group-hover:translate-x-1 transition-transform" />
+              )}
             </button>
           </div>
         </div>

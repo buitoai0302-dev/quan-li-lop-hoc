@@ -8,7 +8,7 @@ import { FeatureFlagService } from '../services/feature-flag.service';
 export const getBranches = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
-    
+
     const result = await pool.query(
       `SELECT * FROM branches WHERE tenant_id = $1 AND is_deleted = false ORDER BY created_at ASC`,
       [tenantId]

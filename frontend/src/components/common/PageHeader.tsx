@@ -21,25 +21,13 @@ const PageHeader: React.FC<PageHeaderProps> = ({ icon: Icon, actions, children }
           </div>
 
           {/* Desktop Filters - Hidden on mobile, shown in middle on desktop */}
-          {children && (
-            <div className="hidden lg:block flex-1 max-w-2xl px-4">
-              {children}
-            </div>
-          )}
+          {children && <div className="hidden lg:block flex-1 max-w-2xl px-4">{children}</div>}
 
-          {actions && (
-            <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-              {actions}
-            </div>
-          )}
+          {actions && <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">{actions}</div>}
         </div>
 
         {/* Mobile Filters - Shown below title on mobile and tablet only if children exist */}
-        {children && (
-          <div className="lg:hidden pt-2">
-            {children}
-          </div>
-        )}
+        {children && <div className="lg:hidden pt-2">{children}</div>}
       </div>
     </div>
   );

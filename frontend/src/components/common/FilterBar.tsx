@@ -15,7 +15,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
   searchQuery,
   onSearchChange,
   searchPlaceholder,
-  children
+  children,
 }) => {
   const { t } = useTranslation();
 
@@ -36,11 +36,7 @@ const FilterBar: React.FC<FilterBarProps> = ({
       </div>
 
       {/* Extra Filters (Selects, etc.) */}
-      {children && (
-        <div className="flex flex-col sm:flex-row gap-3">
-          {children}
-        </div>
-      )}
+      {children && <div className="flex flex-col sm:flex-row gap-3">{children}</div>}
     </div>
   );
 };

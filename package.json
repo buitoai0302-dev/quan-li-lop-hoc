@@ -1,0 +1,30 @@
+{
+  "name": "quan-li-lop-hoc",
+  "version": "1.0.0",
+  "description": "Một nền tảng SaaS toàn diện giúp quản lý lịch học, điểm danh, giáo viên và học sinh. Hệ thống được thiết kế theo kiến trúc đa người dùng (Multi-tenant) với khả năng phân quyền mạnh mẽ (Admin, Staff, Teacher, Student) và hỗ trợ đa chi nhánh.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^15.5.2",
+    "prettier": "^3.8.3"
+  },
+  "lint-staged": {
+    "frontend/src/**/*.{ts,tsx}": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "backend/src/**/*.ts": [
+      "prettier --write"
+    ],
+    "*.{json,md,css,scss}": [
+      "prettier --write"
+    ]
+  }
+}

@@ -3,18 +3,31 @@ import type { TFunction } from 'i18next';
 import { AxiosError } from 'axios';
 import { ERROR_CODES } from './constants';
 
-export const handleApiError = (error: AxiosError<any>, t: TFunction, defaultMessageKey: string = 'common.error') => {
+export interface ApiErrorData {
+  code?: string;
+  errorCode?: string;
+  message?: string;
+  error?: string;
+}
+
+export const handleApiError = (
+  error: AxiosError<ApiErrorData>,
+  t: TFunction,
+  defaultMessageKey: string = 'common.error'
+) => {
   const data = error.response?.data;
   const errorCode = data?.code || data?.errorCode;
   const errorMessage = data?.message || data?.error || '';
   const status = error.response?.status;
-  
+
   console.log('API Error:', { status, errorCode, errorMessage, data });
 
   // Detect Limit Exceeded (via code or 403 + message)
-  const isLimitExceeded = 
-    errorCode === ERROR_CODES.LIMIT_EXCEEDED || 
-    (status === 403 && (errorMessage.toLowerCase().includes('limit') || errorMessage.toLowerCase().includes('giới hạn')));
+  const isLimitExceeded =
+    errorCode === ERROR_CODES.LIMIT_EXCEEDED ||
+    (status === 403 &&
+      (errorMessage.toLowerCase().includes('limit') ||
+        errorMessage.toLowerCase().includes('giới hạn')));
 
   if (isLimitExceeded) {
     toast(
@@ -22,13 +35,15 @@ export const handleApiError = (error: AxiosError<any>, t: TFunction, defaultMess
         <div className="flex flex-col gap-2 min-w-[250px]">
           <div className="flex items-center gap-2">
             <span className="text-xl">⚠️</span>
-            <p className="font-black text-sm text-gray-900 dark:text-white">{t('errors.LIMIT_EXCEEDED_TITLE')}</p>
+            <p className="font-black text-sm text-gray-900 dark:text-white">
+              {t('errors.LIMIT_EXCEEDED_TITLE')}
+            </p>
           </div>
           <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
             {t('errors.LIMIT_EXCEEDED_DESC')}
           </p>
           <div className="flex gap-2 mt-2">
-            <button 
+            <button
               onClick={() => {
                 window.location.href = '/subscription';
                 toast.dismiss(tObj.id);
@@ -37,7 +52,7 @@ export const handleApiError = (error: AxiosError<any>, t: TFunction, defaultMess
             >
               {t('common.upgradeNow')}
             </button>
-            <button 
+            <button
               onClick={() => toast.dismiss(tObj.id)}
               className="px-3 py-2 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all"
             >

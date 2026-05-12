@@ -12,7 +12,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
   icon: Icon = Search,
   title,
   description,
-  action
+  action,
 }) => {
   return (
     <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 text-center animate-in fade-in zoom-in duration-500">
@@ -27,11 +27,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
           {description}
         </p>
       )}
-      {action && (
-        <div className="animate-in slide-in-from-bottom-2 duration-700">
-          {action}
-        </div>
-      )}
+      {action && <div className="animate-in slide-in-from-bottom-2 duration-700">{action}</div>}
     </div>
   );
 };

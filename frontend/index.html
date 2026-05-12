@@ -4,8 +4,24 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="EduSchedule - Hệ thống quản lý lớp học, giáo viên và học sinh thông minh, hiện đại." />
+    <meta
+      name="description"
+      content="EduSchedule - Hệ thống quản lý lớp học, giáo viên và học sinh thông minh, hiện đại."
+    />
     <title>EduSchedule - Quản lý lớp học thông minh</title>
+    <script>
+      (function () {
+        try {
+          var theme = localStorage.getItem('app-theme') || 'system';
+          var supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+          if (theme === 'dark' || (theme === 'system' && supportDarkMode)) {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

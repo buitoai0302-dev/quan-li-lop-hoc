@@ -7,16 +7,18 @@ interface PageContainerProps {
   scrollable?: boolean;
 }
 
-const PageContainer: React.FC<PageContainerProps> = ({ 
-  children, 
-  maxWidth = 'max-w-7xl', 
-  className = '', 
-  scrollable = true 
+const PageContainer: React.FC<PageContainerProps> = ({
+  children,
+  maxWidth = 'max-w-7xl',
+  className = '',
+  scrollable = true,
 }) => {
   return (
     <div className={`h-full flex flex-col overflow-hidden ${className}`}>
       <div className={`flex-1 w-full mx-auto ${maxWidth} flex flex-col overflow-hidden`}>
-        <div className={`flex-1 ${scrollable ? 'overflow-auto custom-scrollbar' : 'overflow-hidden'} flex flex-col p-1`}>
+        <div
+          className={`flex-1 ${scrollable ? 'overflow-auto custom-scrollbar' : 'overflow-hidden'} flex flex-col p-1`}
+        >
           {children}
         </div>
       </div>

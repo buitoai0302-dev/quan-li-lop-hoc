@@ -5,10 +5,14 @@ import { NotFoundError, ValidationError } from '../utils/errors';
 
 /**
  * Get attendance list for a specific session
- * Includes all students enrolled in the class of that session, 
+ * Includes all students enrolled in the class of that session,
  * merged with existing attendance records.
  */
-export const getAttendanceBySession = async (req: AuthRequest, res: Response, next: NextFunction) => {
+export const getAttendanceBySession = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { sessionId } = req.params;
@@ -35,7 +39,7 @@ export const getAttendanceBySession = async (req: AuthRequest, res: Response, ne
       return res.status(403).json({
         success: false,
         error: 'FEATURE_DISABLED',
-        message: 'Tính năng điểm danh chưa được kích hoạt cho trung tâm của bạn.'
+        message: 'Tính năng điểm danh chưa được kích hoạt cho trung tâm của bạn.',
       });
     }
 
@@ -59,7 +63,7 @@ export const getAttendanceBySession = async (req: AuthRequest, res: Response, ne
 
     res.json({
       session: sessionRes.rows[0],
-      attendance: attendanceRes.rows
+      attendance: attendanceRes.rows,
     });
   } catch (error) {
     next(error);
@@ -74,7 +78,7 @@ export const recordAttendance = async (req: AuthRequest, res: Response, next: Ne
   try {
     client = await pool.connect();
     await client.query('BEGIN');
-    
+
     const tenantId = req.tenantId || req.user?.tenantId;
     const { sessionId } = req.params;
     const { records } = req.body; // Array of { student_id, status }
@@ -102,14 +106,14 @@ export const recordAttendance = async (req: AuthRequest, res: Response, next: Ne
       return res.status(403).json({
         success: false,
         error: 'FEATURE_DISABLED',
-        message: 'Tính năng điểm danh chưa được kích hoạt cho trung tâm của bạn.'
+        message: 'Tính năng điểm danh chưa được kích hoạt cho trung tâm của bạn.',
       });
     }
 
     const results = [];
     for (const record of records) {
       const { student_id, status } = record;
-      
+
       // UPSERT attendance: Insert new or update existing if conflict on (session_id, student_id)
       const queryRes = await client.query(
         `INSERT INTO attendance (tenant_id, session_id, student_id, status, updated_at)
@@ -129,9 +133,9 @@ export const recordAttendance = async (req: AuthRequest, res: Response, next: Ne
   } catch (error: any) {
     if (client) await client.query('ROLLBACK');
     console.error('Record attendance error:', error);
-    res.status(error.status || 500).json({ 
+    res.status(error.status || 500).json({
       error: error.message || 'Internal Server Error',
-      code: error.code || 'ATTENDANCE_ERROR'
+      code: error.code || 'ATTENDANCE_ERROR',
     });
   } finally {
     if (client) client.release();

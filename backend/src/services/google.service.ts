@@ -14,13 +14,13 @@ export const getAuthUrl = (state: string) => {
     access_type: 'offline',
     scope: ['https://www.googleapis.com/auth/calendar.events'],
     state: state,
-    prompt: 'consent' // Để luôn trả về refresh_token
+    prompt: 'consent', // Để luôn trả về refresh_token
   });
 };
 
 export const handleCallback = async (code: string, userId: string) => {
   const { tokens } = await oauth2Client.getToken(code);
-  
+
   await pool.query(
     'UPDATE users SET google_access_token = $1, google_refresh_token = $2 WHERE id = $3',
     [tokens.access_token, tokens.refresh_token, userId]
@@ -34,18 +34,15 @@ const getClientForUser = async (userId: string) => {
     'SELECT google_access_token, google_refresh_token FROM users WHERE id = $1',
     [userId]
   );
-  
+
   const user = result.rows[0];
   if (!user || !user.google_access_token) return null;
 
-  const client = new google.auth.OAuth2(
-    config.google.clientId(),
-    config.google.clientSecret()
-  );
-  
+  const client = new google.auth.OAuth2(config.google.clientId(), config.google.clientSecret());
+
   client.setCredentials({
     access_token: user.google_access_token,
-    refresh_token: user.google_refresh_token
+    refresh_token: user.google_refresh_token,
   });
 
   return google.calendar({ version: 'v3', auth: client });
@@ -69,13 +66,17 @@ export const syncEventToGoogle = async (userId: string, sessionData: any) => {
       notes ? `📝 Ghi chú (Notes): ${notes}` : '',
       '------------------',
       '📅 Được đồng bộ tự động từ hệ thống quản lý EduSchedule',
-      '📅 Automatically synced from EduSchedule Management System'
-    ].filter(Boolean).join('\n');
+      '📅 Automatically synced from EduSchedule Management System',
+    ]
+      .filter(Boolean)
+      .join('\n');
 
     // Fetch teacher email for attendees
     let attendees = [];
     if (sessionData.teacherId) {
-      const teacherRes = await pool.query('SELECT email FROM teachers WHERE id = $1', [sessionData.teacherId]);
+      const teacherRes = await pool.query('SELECT email FROM teachers WHERE id = $1', [
+        sessionData.teacherId,
+      ]);
       if (teacherRes.rows[0]?.email) {
         attendees.push({ email: teacherRes.rows[0].email });
       }
@@ -99,13 +100,16 @@ export const syncEventToGoogle = async (userId: string, sessionData: any) => {
         useDefault: false,
         overrides: [
           { method: 'popup', minutes: 30 },
-          { method: 'email', minutes: 60 }
-        ]
-      }
+          { method: 'email', minutes: 60 },
+        ],
+      },
     };
 
     // Check if session already has a google_event_id
-    const sessionRes = await pool.query('SELECT google_event_id FROM schedule_sessions WHERE id = $1', [id]);
+    const sessionRes = await pool.query(
+      'SELECT google_event_id FROM schedule_sessions WHERE id = $1',
+      [id]
+    );
     const existingEventId = sessionRes.rows[0]?.google_event_id;
 
     let response;
@@ -125,7 +129,10 @@ export const syncEventToGoogle = async (userId: string, sessionData: any) => {
 
       // Save the new event ID to database
       if (response.data.id) {
-        await pool.query('UPDATE schedule_sessions SET google_event_id = $1 WHERE id = $2', [response.data.id, id]);
+        await pool.query('UPDATE schedule_sessions SET google_event_id = $1 WHERE id = $2', [
+          response.data.id,
+          id,
+        ]);
       }
     }
   } catch (error) {
@@ -138,7 +145,9 @@ export const deleteEventFromGoogle = async (userId: string, sessionId: string) =
     const calendar = await getClientForUser(userId);
     if (!calendar) return;
 
-    const result = await pool.query('SELECT google_event_id FROM schedule_sessions WHERE id = $1', [sessionId]);
+    const result = await pool.query('SELECT google_event_id FROM schedule_sessions WHERE id = $1', [
+      sessionId,
+    ]);
     const eventId = result.rows[0]?.google_event_id;
 
     if (eventId) {
@@ -146,9 +155,11 @@ export const deleteEventFromGoogle = async (userId: string, sessionId: string) =
         calendarId: 'primary',
         eventId: eventId,
       });
-      
+
       // Clear the ID from DB
-      await pool.query('UPDATE schedule_sessions SET google_event_id = NULL WHERE id = $1', [sessionId]);
+      await pool.query('UPDATE schedule_sessions SET google_event_id = NULL WHERE id = $1', [
+        sessionId,
+      ]);
     }
   } catch (error) {
     console.error('Error deleting from Google Calendar:', error);
@@ -192,12 +203,16 @@ export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) 
   const result = await pool.query(query, role === 'teacher' ? [userId, userEmail] : [userId]);
 
   const sessions = result.rows;
-  console.log(`[GoogleSync] Found ${sessions.length} sessions in DB. Raw rows:`, JSON.stringify(sessions));
+  console.log(
+    `[GoogleSync] Found ${sessions.length} sessions in DB. Raw rows:`,
+    JSON.stringify(sessions)
+  );
   let successCount = 0;
 
   for (const sessionData of sessions) {
     try {
-      const { class_name, room_name, session_date, start_time, end_time, teacher_name, notes } = sessionData;
+      const { class_name, room_name, session_date, start_time, end_time, teacher_name, notes } =
+        sessionData;
       const startDateTime = new Date(`${session_date}T${start_time}`);
       const endDateTime = new Date(`${session_date}T${end_time}`);
 
@@ -208,8 +223,10 @@ export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) 
         notes ? `📝 Ghi chú (Notes): ${notes}` : '',
         '------------------',
         '📅 Được đồng bộ tự động từ hệ thống quản lý EduSchedule',
-        '📅 Automatically synced from EduSchedule Management System'
-      ].filter(Boolean).join('\n');
+        '📅 Automatically synced from EduSchedule Management System',
+      ]
+        .filter(Boolean)
+        .join('\n');
 
       const response = await calendar.events.insert({
         calendarId: 'primary',
@@ -230,14 +247,17 @@ export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) 
             useDefault: false,
             overrides: [
               { method: 'popup', minutes: 30 },
-              { method: 'email', minutes: 60 }
-            ]
-          }
+              { method: 'email', minutes: 60 },
+            ],
+          },
         },
       });
 
       if (response.data.id) {
-        await pool.query('UPDATE schedule_sessions SET google_event_id = $1 WHERE id = $2', [response.data.id, sessionData.id]);
+        await pool.query('UPDATE schedule_sessions SET google_event_id = $1 WHERE id = $2', [
+          response.data.id,
+          sessionData.id,
+        ]);
       }
       successCount++;
     } catch (err) {

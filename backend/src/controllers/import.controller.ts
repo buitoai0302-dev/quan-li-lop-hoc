@@ -17,7 +17,10 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
     }
 
     if (data.length > 500) {
-      throw new ValidationError('Import batch too large. Maximum 500 records per request.', 'IMPORT_BATCH_TOO_LARGE');
+      throw new ValidationError(
+        'Import batch too large. Maximum 500 records per request.',
+        'IMPORT_BATCH_TOO_LARGE'
+      );
     }
 
     let successCount = 0;
@@ -77,18 +80,33 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
             const verificationToken = crypto.randomUUID();
             const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-            const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
-            
+            const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [
+              email,
+            ]);
+
             if (existingUser.rows.length === 0) {
               await client.query(
                 `INSERT INTO users (tenant_id, branch_id, email, password_hash, full_name, role, is_email_verified, verification_token, verification_token_expires, onboarding_completed) 
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-                [tenantId, branch_id, email, passwordHash, full_name, 'teacher', false, verificationToken, tokenExpires, true]
+                [
+                  tenantId,
+                  branch_id,
+                  email,
+                  passwordHash,
+                  full_name,
+                  'teacher',
+                  false,
+                  verificationToken,
+                  tokenExpires,
+                  true,
+                ]
               );
-              
+
               await client.query('COMMIT');
               // Send welcome email outside transaction
-              await sendTeacherWelcomeEmail(email, verificationToken, full_name).catch(err => console.error(`Error sending email to ${email}:`, err));
+              await sendTeacherWelcomeEmail(email, verificationToken, full_name).catch((err) =>
+                console.error(`Error sending email to ${email}:`, err)
+              );
             } else {
               await client.query('COMMIT');
             }
@@ -150,12 +168,14 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
           const teacherId = teacherRes.rows[0].id;
 
           let subjectId = null;
-          const subRes = await pool.query(`SELECT id FROM subjects WHERE tenant_id = $1 LIMIT 1`, [tenantId]);
+          const subRes = await pool.query(`SELECT id FROM subjects WHERE tenant_id = $1 LIMIT 1`, [
+            tenantId,
+          ]);
           if (subRes.rows.length > 0) {
             subjectId = subRes.rows[0].id;
           } else {
             const newSub = await pool.query(
-              `INSERT INTO subjects (tenant_id, name, code) VALUES ($1, 'General', 'GEN') RETURNING id`, 
+              `INSERT INTO subjects (tenant_id, name, code) VALUES ($1, 'General', 'GEN') RETURNING id`,
               [tenantId]
             );
             subjectId = newSub.rows[0].id;
@@ -166,7 +186,16 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
              ON CONFLICT (tenant_id, branch_id, name) DO NOTHING
              RETURNING id`,
-            [tenantId, branch_id, subjectId, teacherId, name, parseInt(max_capacity, 10) || 30, start_date || new Date().toISOString().split('T')[0], end_date || new Date().toISOString().split('T')[0]]
+            [
+              tenantId,
+              branch_id,
+              subjectId,
+              teacherId,
+              name,
+              parseInt(max_capacity, 10) || 30,
+              start_date || new Date().toISOString().split('T')[0],
+              end_date || new Date().toISOString().split('T')[0],
+            ]
           );
 
           if (result.rowCount && result.rowCount > 0) {
@@ -182,7 +211,12 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
       throw new ValidationError('Unsupported import type', 'INVALID_IMPORT_TYPE');
     }
 
-    res.json({ success: true, message: `Imported ${successCount} records. Skipped ${skipCount} records.`, successCount, skipCount });
+    res.json({
+      success: true,
+      message: `Imported ${successCount} records. Skipped ${skipCount} records.`,
+      successCount,
+      skipCount,
+    });
   } catch (error) {
     next(error);
   }

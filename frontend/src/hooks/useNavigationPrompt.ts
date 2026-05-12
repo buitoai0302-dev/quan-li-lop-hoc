@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 
 /**
  * Hook to prevent navigation and page reload when there are unsaved changes.
- * 
+ *
  * @param isDirty - Boolean indicating if there are unsaved changes
  * @returns blocker - The blocker object from react-router-dom to handle internal navigation
  */
@@ -15,7 +15,10 @@ export const useNavigationPrompt = (isDirty: boolean) => {
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
-        const message = t('attendance.unsavedDesc', 'You have unsaved changes. Are you sure you want to leave?');
+        const message = t(
+          'attendance.unsavedDesc',
+          'You have unsaved changes. Are you sure you want to leave?'
+        );
         e.preventDefault();
         e.returnValue = message;
         return message;

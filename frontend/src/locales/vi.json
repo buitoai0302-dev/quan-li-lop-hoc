@@ -479,7 +479,8 @@
     "namePlaceholder": "Tên lớp học...",
     "scheduleNote": "Ghi chú buổi học...",
     "selectRoom": "Chọn phòng",
-    "selectStudent": "Chọn học sinh để thêm..."
+    "selectStudent": "Chọn học sinh để thêm...",
+    "noStudents": "Chưa có học sinh trong lớp"
   },
   "rooms": {
     "title": "Quản lý Phòng học",
@@ -702,5 +703,13 @@
     "USER_NOT_FOUND": "Không tìm thấy người dùng.",
     "LIMIT_EXCEEDED_TITLE": "Đã đạt giới hạn gói",
     "LIMIT_EXCEEDED_DESC": "Bạn đã đạt đến hạn mức tối đa của gói hiện tại. Vui lòng nâng cấp để tiếp tục sử dụng tính năng này."
+  },
+  "validation": {
+    "nameMin": "Tên phải có ít nhất 2 ký tự",
+    "emailInvalid": "Email không hợp lệ",
+    "branchRequired": "Vui lòng chọn chi nhánh",
+    "roomNameRequired": "Tên phòng không được để trống",
+    "capacityMin": "Sức chứa phải ít nhất là 1",
+    "classNameRequired": "Tên lớp không được để trống"
   }
 }

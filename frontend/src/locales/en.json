@@ -453,7 +453,8 @@
     "namePlaceholder": "Class name...",
     "scheduleNote": "Session notes...",
     "selectRoom": "Select Room",
-    "selectStudent": "Select student to add..."
+    "selectStudent": "Select student to add...",
+    "noStudents": "No students in this class"
   },
   "rooms": {
     "title": "Room Management",
@@ -676,5 +677,13 @@
     "USER_NOT_FOUND": "User not found.",
     "LIMIT_EXCEEDED_TITLE": "Plan Limit Reached",
     "LIMIT_EXCEEDED_DESC": "You have reached the maximum limit of your current plan. Please upgrade to continue using this feature."
+  },
+  "validation": {
+    "nameMin": "Name must be at least 2 characters",
+    "emailInvalid": "Invalid email address",
+    "branchRequired": "Please select a branch",
+    "roomNameRequired": "Room name is required",
+    "capacityMin": "Capacity must be at least 1",
+    "classNameRequired": "Class name is required"
   }
 }

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { Menu, Globe, Moon, Sun, Monitor, HelpCircle } from 'lucide-react';
 import { getMenuItems } from '../routes';
 import { useAuth } from '../contexts/AuthContext';
@@ -13,14 +13,12 @@ const MainLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
   };
 
   const toggleLanguage = () => {
@@ -44,10 +42,11 @@ const MainLayout: React.FC = () => {
   const menuItems = getMenuItems(t, user?.role);
 
   // Flatten the groups to find the active menu item
-  const allMenuItems = menuItems.flatMap(group => group.items);
-  const currentMenu = allMenuItems.find((m: any) => 
-    m.path === '/' ? location.pathname === '/' : location.pathname.startsWith(m.path)
-  )?.label || 'EduSchedule';
+  const allMenuItems = menuItems.flatMap((group) => group.items);
+  const currentMenu =
+    allMenuItems.find((m: any) =>
+      m.path === '/' ? location.pathname === '/' : location.pathname.startsWith(m.path)
+    )?.label || 'EduSchedule';
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-slate-950 font-sans overflow-hidden transition-colors duration-200">
@@ -68,7 +67,9 @@ const MainLayout: React.FC = () => {
             >
               <Menu size={24} />
             </button>
-            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 dark:text-white truncate tracking-tight">{currentMenu}</h2>
+            <h2 className="text-base sm:text-lg md:text-xl font-bold text-gray-800 dark:text-white truncate tracking-tight">
+              {currentMenu}
+            </h2>
           </div>
 
           <div className="flex items-center gap-2 sm:gap-3">

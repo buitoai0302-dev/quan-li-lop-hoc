@@ -10,14 +10,14 @@ export const getSystemStats = async (req: AuthRequest, res: Response, next: Next
     const [tenantsRes, usersRes, sessionsRes] = await Promise.all([
       pool.query('SELECT COUNT(*) FROM tenants'),
       pool.query('SELECT COUNT(*) FROM users'),
-      pool.query('SELECT COUNT(*) FROM schedule_sessions WHERE status != \'cancelled\'')
+      pool.query("SELECT COUNT(*) FROM schedule_sessions WHERE status != 'cancelled'"),
     ]);
 
     res.json({
       totalTenants: parseInt(tenantsRes.rows[0].count, 10),
       totalUsers: parseInt(usersRes.rows[0].count, 10),
       totalSessions: parseInt(sessionsRes.rows[0].count, 10),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
     next(error);
@@ -50,7 +50,10 @@ export const updateTenant = async (req: AuthRequest, res: Response, next: NextFu
     const { planId, isActive, status } = req.body;
 
     if (!planId && isActive === undefined && !status) {
-      throw new ValidationError('At least one field is required (planId, isActive, or status)', 'MISSING_REQUIRED_FIELDS');
+      throw new ValidationError(
+        'At least one field is required (planId, isActive, or status)',
+        'MISSING_REQUIRED_FIELDS'
+      );
     }
 
     const updates: string[] = [];
@@ -79,7 +82,7 @@ export const updateTenant = async (req: AuthRequest, res: Response, next: NextFu
 
     params.push(id);
     const sql = `UPDATE tenants SET ${updates.join(', ')} WHERE id = $${params.length} RETURNING *`;
-    
+
     const result = await pool.query(sql, params);
 
     if (result.rowCount === 0) {
@@ -100,18 +103,30 @@ export const getPlans = async (req: AuthRequest, res: Response, next: NextFuncti
     const plans = plansResult.rows;
 
     // Fetch limits and features for each plan
-    const plansWithDetails = await Promise.all(plans.map(async (plan) => {
-      const [limitsRes, featuresRes] = await Promise.all([
-        pool.query('SELECT limit_key, limit_value FROM plan_limits WHERE plan_id = $1', [plan.id]),
-        pool.query('SELECT feature_key, is_enabled FROM plan_features WHERE plan_id = $1', [plan.id])
-      ]);
+    const plansWithDetails = await Promise.all(
+      plans.map(async (plan) => {
+        const [limitsRes, featuresRes] = await Promise.all([
+          pool.query('SELECT limit_key, limit_value FROM plan_limits WHERE plan_id = $1', [
+            plan.id,
+          ]),
+          pool.query('SELECT feature_key, is_enabled FROM plan_features WHERE plan_id = $1', [
+            plan.id,
+          ]),
+        ]);
 
-      return {
-        ...plan,
-        limits: limitsRes.rows.reduce((acc: any, row: any) => ({ ...acc, [row.limit_key]: row.limit_value }), {}),
-        features: featuresRes.rows.reduce((acc: any, row: any) => ({ ...acc, [row.feature_key]: row.is_enabled }), {})
-      };
-    }));
+        return {
+          ...plan,
+          limits: limitsRes.rows.reduce(
+            (acc: any, row: any) => ({ ...acc, [row.limit_key]: row.limit_value }),
+            {}
+          ),
+          features: featuresRes.rows.reduce(
+            (acc: any, row: any) => ({ ...acc, [row.feature_key]: row.is_enabled }),
+            {}
+          ),
+        };
+      })
+    );
 
     res.json(plansWithDetails);
   } catch (error) {
@@ -129,16 +144,37 @@ export const updatePlanDetails = async (req: AuthRequest, res: Response, next: N
     if (name || priceVnd !== undefined || priceUsd !== undefined || isActive !== undefined) {
       const updates: string[] = [];
       const params: any[] = [];
-      if (name) { params.push(name); updates.push(`name = $${params.length}`); }
-      if (priceVnd !== undefined) { params.push(priceVnd); updates.push(`price_vnd = $${params.length}`); }
-      if (priceUsd !== undefined) { params.push(priceUsd); updates.push(`price_usd = $${params.length}`); }
-      if (isActive !== undefined) { params.push(isActive); updates.push(`is_active = $${params.length}`); }
+      if (name) {
+        params.push(name);
+        updates.push(`name = $${params.length}`);
+      }
+      if (priceVnd !== undefined) {
+        params.push(priceVnd);
+        updates.push(`price_vnd = $${params.length}`);
+      }
+      if (priceUsd !== undefined) {
+        params.push(priceUsd);
+        updates.push(`price_usd = $${params.length}`);
+      }
+      if (isActive !== undefined) {
+        params.push(isActive);
+        updates.push(`is_active = $${params.length}`);
+      }
       params.push(id);
-      await pool.query(`UPDATE plan_definitions SET ${updates.join(', ')} WHERE id = $${params.length}`, params);
+      await pool.query(
+        `UPDATE plan_definitions SET ${updates.join(', ')} WHERE id = $${params.length}`,
+        params
+      );
     }
 
     if (limits) {
-      const ALLOWED_LIMIT_KEYS = ['max_branches', 'max_classes', 'max_students', 'max_teachers', 'max_rooms'];
+      const ALLOWED_LIMIT_KEYS = [
+        'max_branches',
+        'max_classes',
+        'max_students',
+        'max_teachers',
+        'max_rooms',
+      ];
       for (const [key, value] of Object.entries(limits)) {
         if (!ALLOWED_LIMIT_KEYS.includes(key)) continue; // Silently skip unknown keys
         await pool.query(
@@ -149,7 +185,15 @@ export const updatePlanDetails = async (req: AuthRequest, res: Response, next: N
     }
 
     if (features) {
-      const ALLOWED_FEATURE_KEYS = ['google_calendar_sync', 'attendance_tracking', 'advanced_analytics', 'api_access', 'multi_branch', 'custom_domain', 'yearly_chart'];
+      const ALLOWED_FEATURE_KEYS = [
+        'google_calendar_sync',
+        'attendance_tracking',
+        'advanced_analytics',
+        'api_access',
+        'multi_branch',
+        'custom_domain',
+        'yearly_chart',
+      ];
       for (const [key, value] of Object.entries(features)) {
         if (!ALLOWED_FEATURE_KEYS.includes(key)) continue; // Silently skip unknown keys
         await pool.query(

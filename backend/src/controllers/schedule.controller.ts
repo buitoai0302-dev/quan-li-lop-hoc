@@ -4,7 +4,11 @@ import { syncEventToGoogle, deleteEventFromGoogle } from '../services/google.ser
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ValidationError, NotFoundError } from '../utils/errors';
 
-export const getWeeklySchedule = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const getWeeklySchedule = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { weekStart, startDate, endDate, branchId, teacherId, classId } = req.query;
@@ -54,7 +58,10 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response, next: N
     const params: any[] = [tenantId, queryStartDate, queryEndDate];
 
     if (userRole === 'teacher') {
-      const teacherRes = await pool.query('SELECT id FROM teachers WHERE email = $1 AND tenant_id = $2', [userEmail, tenantId]);
+      const teacherRes = await pool.query(
+        'SELECT id FROM teachers WHERE email = $1 AND tenant_id = $2',
+        [userEmail, tenantId]
+      );
       if (teacherRes.rows.length > 0) {
         params.push(teacherRes.rows[0].id);
         sql += ` AND s.teacher_id = $${params.length}`;
@@ -67,11 +74,17 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response, next: N
           sql += ` AND r.branch_id = $${params.length}`;
         }
       } else {
-        res.json({ success: true, data: { startDate: queryStartDate, endDate: queryEndDate, sessions: [] } });
+        res.json({
+          success: true,
+          data: { startDate: queryStartDate, endDate: queryEndDate, sessions: [] },
+        });
         return;
       }
     } else if (userRole === 'student') {
-      const studentRes = await pool.query('SELECT id FROM students WHERE email = $1 AND tenant_id = $2', [userEmail, tenantId]);
+      const studentRes = await pool.query(
+        'SELECT id FROM students WHERE email = $1 AND tenant_id = $2',
+        [userEmail, tenantId]
+      );
       if (studentRes.rows.length > 0) {
         params.push(studentRes.rows[0].id);
         sql += ` AND s.class_id IN (SELECT class_id FROM class_students WHERE student_id = $${params.length})`;
@@ -80,7 +93,10 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response, next: N
           sql += ` AND s.class_id = $${params.length}`;
         }
       } else {
-        res.json({ success: true, data: { startDate: queryStartDate, endDate: queryEndDate, sessions: [] } });
+        res.json({
+          success: true,
+          data: { startDate: queryStartDate, endDate: queryEndDate, sessions: [] },
+        });
         return;
       }
     } else {
@@ -101,32 +117,37 @@ export const getWeeklySchedule = async (req: AuthRequest, res: Response, next: N
     sql += ` ORDER BY s.session_date, s.start_time`;
 
     const result = await pool.query(sql, params);
-    
+
     res.json({
       success: true,
       data: {
         startDate: queryStartDate,
         endDate: queryEndDate,
-        sessions: result.rows
-      }
+        sessions: result.rows,
+      },
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const createSession = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const createSession = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   const client = await pool.connect();
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
-    const { classId, roomId, teacherId, sessionDate, startTime, endTime, sessionType, notes } = req.body;
+    const { classId, roomId, teacherId, sessionDate, startTime, endTime, sessionType, notes } =
+      req.body;
 
     await client.query('BEGIN');
     await client.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
 
     const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)`;
     const conflictParams = [tenantId, teacherId, roomId, classId, sessionDate, startTime, endTime];
-    
+
     const conflictResult = await client.query(conflictSql, conflictParams);
 
     if (conflictResult.rows.length > 0) {
@@ -134,7 +155,7 @@ export const createSession = async (req: AuthRequest, res: Response, next: NextF
       res.status(409).json({
         success: false,
         error: 'SCHEDULE_CONFLICT',
-        conflicts: conflictResult.rows
+        conflicts: conflictResult.rows,
       });
       return;
     }
@@ -145,7 +166,17 @@ export const createSession = async (req: AuthRequest, res: Response, next: NextF
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
       RETURNING *, session_date::text as session_date
     `;
-    const insertParams = [tenantId, classId, roomId, teacherId, sessionDate, startTime, endTime, sessionType || 'lecture', notes || ''];
+    const insertParams = [
+      tenantId,
+      classId,
+      roomId,
+      teacherId,
+      sessionDate,
+      startTime,
+      endTime,
+      sessionType || 'lecture',
+      notes || '',
+    ];
 
     const newSession = await client.query(insertSql, insertParams);
     const sessionData = newSession.rows[0];
@@ -154,8 +185,10 @@ export const createSession = async (req: AuthRequest, res: Response, next: NextF
 
     const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [classId]);
     const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [roomId]);
-    const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [teacherId]);
-    
+    const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [
+      teacherId,
+    ]);
+
     if (req.user?.userId) {
       await syncEventToGoogle(req.user.userId, {
         id: sessionData.id,
@@ -166,13 +199,13 @@ export const createSession = async (req: AuthRequest, res: Response, next: NextF
         notes: sessionData.notes,
         date: sessionData.session_date,
         startTime: sessionData.start_time,
-        endTime: sessionData.end_time
+        endTime: sessionData.end_time,
       });
     }
 
     res.status(201).json({
       success: true,
-      data: sessionData
+      data: sessionData,
     });
   } catch (error) {
     await client.query('ROLLBACK');
@@ -182,18 +215,26 @@ export const createSession = async (req: AuthRequest, res: Response, next: NextF
   }
 };
 
-export const updateSession = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const updateSession = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
-    const { classId, roomId, teacherId, sessionDate, startTime, endTime, sessionType, notes } = req.body;
+    const { classId, roomId, teacherId, sessionDate, startTime, endTime, sessionType, notes } =
+      req.body;
 
-    const getResult = await pool.query(`SELECT * FROM schedule_sessions WHERE id = $1 AND tenant_id = $2`, [id, tenantId]);
-    
+    const getResult = await pool.query(
+      `SELECT * FROM schedule_sessions WHERE id = $1 AND tenant_id = $2`,
+      [id, tenantId]
+    );
+
     if (getResult.rows.length === 0) {
       throw new NotFoundError('Session not found', 'NOT_FOUND');
     }
-    
+
     const session = getResult.rows[0];
     const newRoomId = roomId || session.room_id;
     const newTeacherId = teacherId || session.teacher_id;
@@ -201,17 +242,26 @@ export const updateSession = async (req: AuthRequest, res: Response, next: NextF
     const newSessionDate = sessionDate || session.session_date;
     const newStartTime = startTime || session.start_time;
     const newEndTime = endTime || session.end_time;
-    
+
     const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7, $8)`;
-    const conflictParams = [tenantId, newTeacherId, newRoomId, newClassId, newSessionDate, newStartTime, newEndTime, id];
-    
+    const conflictParams = [
+      tenantId,
+      newTeacherId,
+      newRoomId,
+      newClassId,
+      newSessionDate,
+      newStartTime,
+      newEndTime,
+      id,
+    ];
+
     const conflictResult = await pool.query(conflictSql, conflictParams);
 
     if (conflictResult.rows.length > 0) {
       res.status(409).json({
         success: false,
         error: 'SCHEDULE_CONFLICT',
-        conflicts: conflictResult.rows
+        conflicts: conflictResult.rows,
       });
       return;
     }
@@ -222,14 +272,27 @@ export const updateSession = async (req: AuthRequest, res: Response, next: NextF
       WHERE id = $9 AND tenant_id = $10
       RETURNING *, session_date::text as session_date
     `;
-    const updateParams = [newSessionDate, newStartTime, newEndTime, newRoomId, newTeacherId, newClassId, sessionType || session.session_type, notes !== undefined ? notes : session.notes, id, tenantId];
+    const updateParams = [
+      newSessionDate,
+      newStartTime,
+      newEndTime,
+      newRoomId,
+      newTeacherId,
+      newClassId,
+      sessionType || session.session_type,
+      notes !== undefined ? notes : session.notes,
+      id,
+      tenantId,
+    ];
 
     const updatedSession = await pool.query(updateSql, updateParams);
     const sessionData = updatedSession.rows[0];
 
     const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [newClassId]);
     const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [newRoomId]);
-    const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [newTeacherId]);
+    const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [
+      newTeacherId,
+    ]);
 
     if (req.user?.userId) {
       await syncEventToGoogle(req.user.userId, {
@@ -241,20 +304,24 @@ export const updateSession = async (req: AuthRequest, res: Response, next: NextF
         notes: sessionData.notes,
         date: sessionData.session_date,
         startTime: sessionData.start_time,
-        endTime: sessionData.end_time
+        endTime: sessionData.end_time,
       });
     }
 
     res.status(200).json({
       success: true,
-      data: sessionData
+      data: sessionData,
     });
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteSession = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
+export const deleteSession = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;

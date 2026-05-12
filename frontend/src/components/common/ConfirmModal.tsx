@@ -1,6 +1,6 @@
 import React from 'react';
-import Modal from './Modal';
-import { AlertTriangle, Info, AlertCircle, Loader2 } from 'lucide-react';
+import { Modal, Button } from './UI';
+import { AlertTriangle, Info, AlertCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
 interface ConfirmModalProps {
@@ -15,16 +15,16 @@ interface ConfirmModalProps {
   isLoading?: boolean;
 }
 
-const ConfirmModal: React.FC<ConfirmModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  onConfirm, 
-  title, 
+const ConfirmModal: React.FC<ConfirmModalProps> = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
   message,
   confirmText,
   cancelText,
   type = 'danger',
-  isLoading = false
+  isLoading = false,
 }) => {
   const { t } = useTranslation();
 
@@ -40,7 +40,8 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
         return {
           icon: <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400" />,
           iconBg: 'bg-amber-100 dark:bg-amber-900/30',
-          confirmBtn: 'bg-amber-600 hover:bg-amber-700 shadow-amber-500/20 dark:shadow-amber-900/40',
+          confirmBtn:
+            'bg-amber-600 hover:bg-amber-700 shadow-amber-500/20 dark:shadow-amber-900/40',
         };
       default:
         return {
@@ -54,36 +55,42 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   const theme = getThemeClasses();
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} maxWidth="max-w-sm">
+    <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
       <div className="flex flex-col items-center text-center">
-        <div className={`w-14 h-14 rounded-full ${theme.iconBg} flex items-center justify-center mb-4 shadow-sm shrink-0`}>
+        <div
+          className={`w-14 h-14 rounded-full ${theme.iconBg} flex items-center justify-center mb-4 shadow-sm shrink-0`}
+        >
           {theme.icon}
         </div>
         <p className="text-gray-600 dark:text-gray-300 mb-6 text-sm whitespace-pre-line leading-relaxed font-medium px-2">
           {message}
         </p>
-        
+
         <div className="flex w-full gap-3">
-          <button
-            type="button"
+          <Button
+            variant="outline"
             disabled={isLoading}
-            className="flex-1 px-4 py-2 bg-gray-50 dark:bg-gray-700/50 text-gray-600 dark:text-gray-300 border border-gray-100 dark:border-gray-700 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 transition-all font-bold text-[10px] uppercase tracking-widest disabled:opacity-50"
+            className="flex-1 uppercase tracking-widest text-[10px]"
             onClick={onClose}
           >
             {cancelText || t('common.cancel')}
-          </button>
-          <button
-            type="button"
+          </Button>
+          <Button
+            variant={type === 'danger' ? 'destructive' : 'default'}
             disabled={isLoading}
-            className={`flex-1 px-4 py-2 text-white rounded-xl transition-all font-bold text-[10px] uppercase tracking-widest shadow-md disabled:opacity-50 flex items-center justify-center gap-2 ${theme.confirmBtn}`}
+            loading={isLoading}
+            className="flex-1 uppercase tracking-widest text-[10px]"
             onClick={() => {
-              onConfirm();
-              if (!isLoading) onClose();
+              const result = onConfirm();
+              if (result instanceof Promise) {
+                // If it's a promise, we let the caller handle closing or loading
+              } else {
+                onClose();
+              }
             }}
           >
-            {isLoading && <Loader2 size={12} className="animate-spin" />}
             {confirmText || (type === 'danger' ? t('common.delete') : t('common.confirm'))}
-          </button>
+          </Button>
         </div>
       </div>
     </Modal>

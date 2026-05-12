@@ -15,12 +15,12 @@ export const requireFeature = (featureKey: string) => {
       }
 
       const hasFeature = await FeatureFlagService.isEnabled(tenantId, featureKey);
-      
+
       if (!hasFeature) {
-        res.status(403).json({ 
-          success: false, 
+        res.status(403).json({
+          success: false,
           error: 'FEATURE_DISABLED',
-          message: `Your current plan does not support the '${featureKey}' feature. Please upgrade your plan.`
+          message: `Your current plan does not support the '${featureKey}' feature. Please upgrade your plan.`,
         });
         return;
       }
@@ -47,7 +47,7 @@ export const enforceLimit = (limitKey: string, countQuery: string) => {
       }
 
       const limit = await FeatureFlagService.checkLimit(tenantId, limitKey);
-      
+
       // -1 means unlimited
       if (limit === -1) {
         next();
@@ -56,10 +56,10 @@ export const enforceLimit = (limitKey: string, countQuery: string) => {
 
       // If limit is 0 or less than 0 (but not -1), it's strictly not allowed
       if (limit <= 0) {
-        res.status(403).json({ 
-          success: false, 
+        res.status(403).json({
+          success: false,
           error: 'LIMIT_EXCEEDED',
-          message: `Your plan does not allow this resource (${limitKey}).`
+          message: `Your plan does not allow this resource (${limitKey}).`,
         });
         return;
       }
@@ -69,10 +69,10 @@ export const enforceLimit = (limitKey: string, countQuery: string) => {
       const currentCount = parseInt(result.rows[0].count, 10);
 
       if (currentCount >= limit) {
-        res.status(403).json({ 
-          success: false, 
+        res.status(403).json({
+          success: false,
           error: 'LIMIT_EXCEEDED',
-          message: `You have reached the maximum allowed limit for ${limitKey} (${limit}). Please upgrade your plan.`
+          message: `You have reached the maximum allowed limit for ${limitKey} (${limit}). Please upgrade your plan.`,
         });
         return;
       }

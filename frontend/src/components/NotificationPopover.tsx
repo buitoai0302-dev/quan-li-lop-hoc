@@ -7,8 +7,6 @@ import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
 import type { ActivityItem } from '../types';
 
-
-
 const NotificationPopover: React.FC = () => {
   const { t, i18n } = useTranslation();
   const navigate = useNavigate();
@@ -47,10 +45,14 @@ const NotificationPopover: React.FC = () => {
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'student': return <Users size={14} className="text-indigo-500" />;
-      case 'class': return <BookOpen size={14} className="text-emerald-500" />;
-      case 'session': return <Calendar size={14} className="text-rose-500" />;
-      default: return <Activity size={14} className="text-gray-500" />;
+      case 'student':
+        return <Users size={14} className="text-indigo-500" />;
+      case 'class':
+        return <BookOpen size={14} className="text-emerald-500" />;
+      case 'session':
+        return <Calendar size={14} className="text-rose-500" />;
+      default:
+        return <Activity size={14} className="text-gray-500" />;
     }
   };
 
@@ -58,7 +60,7 @@ const NotificationPopover: React.FC = () => {
     try {
       return formatDistanceToNow(new Date(dateStr), {
         addSuffix: true,
-        locale: i18n.language === 'vi' ? vi : enUS
+        locale: i18n.language === 'vi' ? vi : enUS,
       });
     } catch (e) {
       return dateStr;
@@ -72,7 +74,10 @@ const NotificationPopover: React.FC = () => {
         className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all active:scale-95 shadow-sm group"
         title="Notifications"
       >
-        <Bell size={18} className={`transition-colors ${isOpen ? 'text-primary' : 'text-gray-600 dark:text-gray-400 group-hover:text-primary'}`} />
+        <Bell
+          size={18}
+          className={`transition-colors ${isOpen ? 'text-primary' : 'text-gray-600 dark:text-gray-400 group-hover:text-primary'}`}
+        />
         <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse"></span>
       </button>
 
@@ -83,7 +88,10 @@ const NotificationPopover: React.FC = () => {
               <Activity size={14} className="text-primary" />
               {t('dashboard.liveFeed')}
             </h3>
-            <button onClick={() => setIsOpen(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+            <button
+              onClick={() => setIsOpen(false)}
+              className="text-gray-400 hover:text-gray-600 transition-colors"
+            >
               <X size={16} />
             </button>
           </div>
@@ -96,13 +104,21 @@ const NotificationPopover: React.FC = () => {
             ) : activities.length > 0 ? (
               <div className="divide-y divide-gray-50 dark:divide-gray-700/50">
                 {activities.map((act) => (
-                  <div key={act.id} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors flex gap-3 group cursor-pointer" onClick={() => { setIsOpen(false); navigate('/activities'); }}>
+                  <div
+                    key={act.id}
+                    className="p-4 hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors flex gap-3 group cursor-pointer"
+                    onClick={() => {
+                      setIsOpen(false);
+                      navigate('/activities');
+                    }}
+                  >
                     <div className="w-8 h-8 rounded-md bg-gray-50 dark:bg-gray-900 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                       {getActivityIcon(act.type)}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-bold text-gray-800 dark:text-white leading-snug">
-                        {act.user} <span className="font-medium text-gray-500">{act.action}</span> <span className="text-gray-400">{act.target}</span>
+                        {act.user} <span className="font-medium text-gray-500">{act.action}</span>{' '}
+                        <span className="text-gray-400">{act.target}</span>
                       </p>
                       <div className="flex items-center gap-1 text-[9px] text-gray-400 mt-1 uppercase font-black">
                         <Clock size={10} />
@@ -120,7 +136,10 @@ const NotificationPopover: React.FC = () => {
           </div>
 
           <button
-            onClick={() => { setIsOpen(false); navigate('/activities'); }}
+            onClick={() => {
+              setIsOpen(false);
+              navigate('/activities');
+            }}
             className="w-full py-3 bg-white dark:bg-gray-800 border-t border-gray-100 dark:border-gray-700 text-[10px] font-black text-primary uppercase tracking-widest hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-all flex items-center justify-center gap-2"
           >
             {t('dashboard.viewAllEvents')} <ChevronRight size={14} />

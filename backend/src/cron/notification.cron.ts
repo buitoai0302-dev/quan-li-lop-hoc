@@ -6,7 +6,7 @@ import { sendReminderEmail } from '../services/email.service';
 export const initCronJobs = () => {
   cron.schedule('*/15 * * * *', async () => {
     console.log('[Cron] Checking for upcoming sessions to notify...');
-    
+
     try {
       const now = new Date();
       const in60Mins = new Date(now.getTime() + 60 * 60000);
@@ -58,15 +58,19 @@ export const initCronJobs = () => {
           roomName: recipient.room_name,
           date: recipient.session_date,
           startTime: recipient.start_time,
-          endTime: recipient.end_time
+          endTime: recipient.end_time,
         });
 
         // If any email fails for this session, mark session as failed
         if (!sent) {
           sessionSuccess.set(sessionId, false);
-          console.warn(`[Cron] Failed to send reminder to ${recipient.recipient_email} for session ${sessionId}`);
+          console.warn(
+            `[Cron] Failed to send reminder to ${recipient.recipient_email} for session ${sessionId}`
+          );
         } else {
-          console.log(`[Cron] Sent reminder to ${recipient.recipient_email} for session ${sessionId}`);
+          console.log(
+            `[Cron] Sent reminder to ${recipient.recipient_email} for session ${sessionId}`
+          );
         }
       }
 
@@ -76,23 +80,22 @@ export const initCronJobs = () => {
         .map(([id]) => id);
 
       if (fullyNotifiedIds.length > 0) {
-        await pool.query(
-          `UPDATE schedule_sessions SET is_notified = true WHERE id = ANY($1)`,
-          [fullyNotifiedIds]
-        );
+        await pool.query(`UPDATE schedule_sessions SET is_notified = true WHERE id = ANY($1)`, [
+          fullyNotifiedIds,
+        ]);
         console.log(`[Cron] Marked ${fullyNotifiedIds.length} session(s) as notified.`);
       }
 
       const failedCount = sessionSuccess.size - fullyNotifiedIds.length;
       if (failedCount > 0) {
-        console.warn(`[Cron] ${failedCount} session(s) had email failures and will retry next run.`);
+        console.warn(
+          `[Cron] ${failedCount} session(s) had email failures and will retry next run.`
+        );
       }
-
     } catch (error) {
       console.error('[Cron] Error running notification job:', error);
     }
   });
-  
+
   console.log('[Cron] Jobs initialized (runs every 15 minutes)');
 };
-

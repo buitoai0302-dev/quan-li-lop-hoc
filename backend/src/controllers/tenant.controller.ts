@@ -6,14 +6,17 @@ import { AuthRequest } from '../middlewares/auth.middleware';
 export const getApiKey = async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const tenantId = req.user?.tenantId;
-    
+
     // Check if plan supports API Access
-    const planResult = await pool.query(`
+    const planResult = await pool.query(
+      `
       SELECT pf.is_enabled 
       FROM tenants t
       JOIN plan_features pf ON t.plan_id = pf.plan_id
       WHERE t.id = $1 AND pf.feature_key = 'api_access'
-    `, [tenantId]);
+    `,
+      [tenantId]
+    );
 
     if (!planResult.rows[0]?.is_enabled) {
       res.json({ hasAccess: false, apiKey: null });
@@ -33,12 +36,15 @@ export const generateApiKey = async (req: AuthRequest, res: Response): Promise<v
     const tenantId = req.user?.tenantId;
 
     // Check if plan supports API Access
-    const planResult = await pool.query(`
+    const planResult = await pool.query(
+      `
       SELECT pf.is_enabled 
       FROM tenants t
       JOIN plan_features pf ON t.plan_id = pf.plan_id
       WHERE t.id = $1 AND pf.feature_key = 'api_access'
-    `, [tenantId]);
+    `,
+      [tenantId]
+    );
 
     if (!planResult.rows[0]?.is_enabled) {
       res.status(403).json({ error: 'API Access is not included in your current plan.' });

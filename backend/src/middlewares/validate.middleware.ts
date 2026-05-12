@@ -14,7 +14,9 @@ export const validateUUID = (params: string[]) => {
     for (const param of params) {
       const value = req.params[param];
       if (typeof value === 'string' && !UUID_REGEX.test(value)) {
-        next(new ValidationError(`Invalid ID format for parameter '${param}'`, 'INVALID_ID_FORMAT'));
+        next(
+          new ValidationError(`Invalid ID format for parameter '${param}'`, 'INVALID_ID_FORMAT')
+        );
         return;
       }
     }

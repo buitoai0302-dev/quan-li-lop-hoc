@@ -19,33 +19,39 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
   const { t } = useTranslation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({
-    0: true, 1: true, 2: true, 3: true, 4: true
+    0: true,
+    1: true,
+    2: true,
+    3: true,
+    4: true,
   });
 
   const toggleGroup = (idx: number) => {
-    setExpandedGroups(prev => ({ ...prev, [idx]: !prev[idx] }));
+    setExpandedGroups((prev) => ({ ...prev, [idx]: !prev[idx] }));
   };
 
   const menuItems = getMenuItems(t, user?.role);
 
   const visibleGroups: MenuGroup[] = menuItems
-    .map(group => ({
+    .map((group) => ({
       ...group,
       items: group.items.filter((item: MenuItem) => {
         // 1. Check Roles
-        const hasRole = (!group.roles || group.roles.includes(user?.role || '')) &&
-                      (!item.roles || item.roles.includes(user?.role || ''));
+        const hasRole =
+          (!group.roles || group.roles.includes(user?.role || '')) &&
+          (!item.roles || item.roles.includes(user?.role || ''));
         if (!hasRole) return false;
 
         // 2. Check Tenant Menu Settings (for non-system routes)
         const menuKey = item.path.substring(1).split('/')[0] || 'dashboard';
-        if (['settings', 'admin', 'subscription', 'help', 'activities'].includes(menuKey)) return true;
-        
+        if (['settings', 'admin', 'subscription', 'help', 'activities'].includes(menuKey))
+          return true;
+
         const isEnabled = user?.tenant_settings?.menu?.[menuKey] ?? true;
         return isEnabled;
-      })
+      }),
     }))
-    .filter(group => group.items.length > 0);
+    .filter((group) => group.items.length > 0);
 
   return (
     <>
@@ -58,15 +64,23 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
       )}
 
       {/* Sidebar */}
-      <aside className={`fixed md:static inset-y-0 left-0 z-[70] w-60 bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800 shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}>
+      <aside
+        className={`fixed md:static inset-y-0 left-0 z-[70] w-60 bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800 shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+      >
         <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-slate-800/50 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <img src="/logo.png" alt="Logo" className="w-9 h-9 rounded-lg shadow-md shadow-primary/10 object-cover shrink-0" />
+            <img
+              src="/logo.png"
+              alt="Logo"
+              className="w-9 h-9 rounded-lg shadow-md shadow-primary/10 object-cover shrink-0"
+            />
             <div className="min-w-0">
               <h1 className="text-xl font-black bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent tracking-tight leading-tight truncate">
                 {t('common.appName')}
               </h1>
-              <div className="text-[8px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] truncate">{user?.tenant_name || t('common.premiumEdition')}</div>
+              <div className="text-[8px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-[0.2em] truncate">
+                {user?.tenant_name || t('common.premiumEdition')}
+              </div>
             </div>
           </div>
           <button
@@ -81,7 +95,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
           {visibleGroups.map((group, groupIdx) => (
             <div key={groupIdx} className="space-y-1">
               {group.group && (
-                <button 
+                <button
                   onClick={() => toggleGroup(groupIdx)}
                   className="w-full flex items-center justify-between px-3 py-1.5 group/header"
                 >
@@ -89,35 +103,49 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
                     {group.group}
                   </p>
                   <div className="text-gray-300 dark:text-gray-600 group-hover/header:text-primary transition-colors">
-                    {expandedGroups[groupIdx] ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
+                    {expandedGroups[groupIdx] ? (
+                      <ChevronDown size={12} />
+                    ) : (
+                      <ChevronRight size={12} />
+                    )}
                   </div>
                 </button>
               )}
-              
-              <div className={`space-y-1 transition-all duration-300 overflow-hidden ${expandedGroups[groupIdx] ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}>
+
+              <div
+                className={`space-y-1 transition-all duration-300 overflow-hidden ${expandedGroups[groupIdx] ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
+              >
                 {group.items.map((item) => (
                   <NavLink
                     key={item.path}
                     to={item.path}
                     onClick={onClose}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive
-                        ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-400'
-                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
+                      `flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                        isActive
+                          ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-400'
+                          : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
                       }`
                     }
                   >
                     {({ isActive }) => (
                       <>
-                        <div className={isActive ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}>
+                        <div
+                          className={isActive ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}
+                        >
                           <item.icon size={20} />
                         </div>
                         <span className="flex-1">{item.label}</span>
-                        {item.isPremium && [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
-                          <div className="flex items-center justify-center px-1.5 py-0.5 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-md shadow-md shadow-orange-500/20 animate-pulse">
-                            <span className="text-[7px] font-black text-white uppercase tracking-tighter">PRO</span>
-                          </div>
-                        )}
+                        {item.isPremium &&
+                          [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(
+                            user?.role || ''
+                          ) && (
+                            <div className="flex items-center justify-center px-1.5 py-0.5 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-md shadow-md shadow-orange-500/20 animate-pulse">
+                              <span className="text-[7px] font-black text-white uppercase tracking-tighter">
+                                PRO
+                              </span>
+                            </div>
+                          )}
                       </>
                     )}
                   </NavLink>
@@ -134,8 +162,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
                 {user?.full_name ? user.full_name.substring(0, 2).toUpperCase() : 'AD'}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-black text-gray-800 dark:text-gray-200 truncate leading-none mb-1">{user?.full_name}</p>
-                <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tighter truncate">{user?.role}</p>
+                <p className="text-xs font-black text-gray-800 dark:text-gray-200 truncate leading-none mb-1">
+                  {user?.full_name}
+                </p>
+                <p className="text-[9px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-tighter truncate">
+                  {user?.role}
+                </p>
               </div>
             </div>
             <button

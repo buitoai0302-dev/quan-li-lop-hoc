@@ -6,11 +6,11 @@ interface FilterSelectProps extends React.SelectHTMLAttributes<HTMLSelectElement
   placeholder?: string;
 }
 
-const FilterSelect: React.FC<FilterSelectProps> = ({ 
-  options, 
-  placeholder, 
-  className = "", 
-  ...props 
+const FilterSelect: React.FC<FilterSelectProps> = ({
+  options,
+  placeholder,
+  className = '',
+  ...props
 }) => {
   return (
     <select

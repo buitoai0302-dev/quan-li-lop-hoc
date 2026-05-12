@@ -1,18 +1,18 @@
 import React, { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { USER_ROLES } from '../../utils/constants';
+import { useAuth } from '@/contexts/AuthContext';
+import { USER_ROLES } from '@/utils/constants';
 
-import EmptyState from '../../components/common/EmptyState';
-import ConfirmModal from '../../components/common/ConfirmModal';
+import EmptyState from '@/components/common/EmptyState';
+import ConfirmModal from '@/components/common/ConfirmModal';
 
 // Local components
-import { useAttendance } from '../../hooks/useAttendance';
-import AttendanceHeader from './components/AttendanceHeader';
-import AttendanceControls from './components/AttendanceControls';
-import SessionList from './components/SessionList';
-import StudentList from './components/StudentList';
+import { useAttendance } from '@/features/attendance/hooks/useAttendance';
+import AttendanceHeader from '@/features/attendance/components/AttendanceHeader';
+import AttendanceControls from '@/features/attendance/components/AttendanceControls';
+import SessionList from '@/features/attendance/components/SessionList';
+import StudentList from '@/features/attendance/components/StudentList';
 
 const AttendancePage: React.FC = () => {
   const { t } = useTranslation();
@@ -47,7 +47,7 @@ const AttendancePage: React.FC = () => {
     handleToday,
     confirmLeave,
     cancelLeave,
-    fetchAttendance
+    fetchAttendance,
   } = useAttendance(isAttendanceEnabled);
 
   if (!isAttendanceEnabled) {
@@ -55,14 +55,26 @@ const AttendancePage: React.FC = () => {
       <EmptyState
         icon={AlertCircle}
         title={t('attendance.disabledTitle')}
-        description={user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.SUPER_ADMIN
-          ? t('attendance.disabledAdminDesc')
-          : t('attendance.disabledDesc')}
+        description={
+          user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.SUPER_ADMIN
+            ? t('attendance.disabledAdminDesc')
+            : t('attendance.disabledDesc')
+        }
         action={
           <div className="flex gap-3">
-            <button onClick={() => window.history.back()} className="px-6 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-bold">{t('common.goBack')}</button>
+            <button
+              onClick={() => window.history.back()}
+              className="px-6 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-bold"
+            >
+              {t('common.goBack')}
+            </button>
             {(user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.SUPER_ADMIN) && (
-              <button onClick={() => window.location.href = '/settings'} className="px-6 py-2 bg-primary text-white rounded-lg font-bold shadow-lg shadow-primary/20">{t('settings.title')}</button>
+              <button
+                onClick={() => (window.location.href = '/settings')}
+                className="px-6 py-2 bg-primary text-white rounded-lg font-bold shadow-lg shadow-primary/20"
+              >
+                {t('settings.title')}
+              </button>
             )}
           </div>
         }
@@ -73,7 +85,7 @@ const AttendancePage: React.FC = () => {
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-3 sm:gap-4 overflow-hidden">
       <ConfirmModal
-        isOpen={!!(blocker.state === "blocked" || pendingAction)}
+        isOpen={!!(blocker.state === 'blocked' || pendingAction)}
         onClose={cancelLeave}
         onConfirm={confirmLeave}
         title={t('attendance.unsavedTitle')}

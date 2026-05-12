@@ -11,7 +11,7 @@ import { FeatureFlagService } from '../services/feature-flag.service';
 export const getTeachers = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
-    
+
     const result = await pool.query(
       `SELECT t.*, b.name as branch_name 
        FROM teachers t
@@ -39,11 +39,19 @@ export const createTeacher = async (req: AuthRequest, res: Response, next: NextF
     const { full_name, email, phone, specialization, branch_id } = req.body;
 
     if (!full_name || !email || !branch_id) {
-      throw new ValidationError('Vui lòng điền đầy đủ thông tin bắt buộc', 'MISSING_REQUIRED_FIELDS');
+      throw new ValidationError(
+        'Vui lòng điền đầy đủ thông tin bắt buộc',
+        'MISSING_REQUIRED_FIELDS'
+      );
     }
 
     // Check Plan Limit
-    await checkPlanLimit(tenantId as string, 'max_teachers', 'teachers', 'Bạn đã đạt giới hạn tối đa số lượng nhân sự/giáo viên.');
+    await checkPlanLimit(
+      tenantId as string,
+      'max_teachers',
+      'teachers',
+      'Bạn đã đạt giới hạn tối đa số lượng nhân sự/giáo viên.'
+    );
 
     await client.query('BEGIN');
 
@@ -64,12 +72,23 @@ export const createTeacher = async (req: AuthRequest, res: Response, next: NextF
 
     // Check if user already exists
     const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
-    
+
     if (existingUser.rows.length === 0) {
       await client.query(
         `INSERT INTO users (tenant_id, branch_id, email, password_hash, full_name, role, is_email_verified, verification_token, verification_token_expires, onboarding_completed) 
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
-        [tenantId, branch_id, email, passwordHash, full_name, 'teacher', false, verificationToken, tokenExpires, true]
+        [
+          tenantId,
+          branch_id,
+          email,
+          passwordHash,
+          full_name,
+          'teacher',
+          false,
+          verificationToken,
+          tokenExpires,
+          true,
+        ]
       );
     }
 
@@ -84,7 +103,9 @@ export const createTeacher = async (req: AuthRequest, res: Response, next: NextF
   } catch (error: any) {
     await client.query('ROLLBACK');
     if (error.code === '23505') {
-      return next(new ValidationError('Email này đã tồn tại trong hệ thống', 'EMAIL_ALREADY_EXISTS'));
+      return next(
+        new ValidationError('Email này đã tồn tại trong hệ thống', 'EMAIL_ALREADY_EXISTS')
+      );
     }
     next(error);
   } finally {

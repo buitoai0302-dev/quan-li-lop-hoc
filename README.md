@@ -7,6 +7,7 @@ Một nền tảng SaaS toàn diện giúp quản lý lịch học, điểm danh
 ## 🛠 Công Nghệ Sử Dụng
 
 ### Frontend
+
 - **Framework**: React 19 + TypeScript
 - **Build Tool**: Vite
 - **Styling**: Vanilla CSS (Premium Aesthetics) & TailwindCSS (Utility)
@@ -15,6 +16,7 @@ Một nền tảng SaaS toàn diện giúp quản lý lịch học, điểm danh
 - **Quốc tế hóa**: i18next (Tiếng Việt & Tiếng Anh)
 
 ### Backend
+
 - **Runtime**: Node.js + TypeScript
 - **Framework**: Express.js
 - **Database**: PostgreSQL
@@ -26,17 +28,21 @@ Một nền tảng SaaS toàn diện giúp quản lý lịch học, điểm danh
 ## 🚀 Hướng Dẫn Cài Đặt
 
 ### 1. Yêu Cầu Hệ Thống
+
 - **Node.js**: v18.0.0 trở lên
 - **PostgreSQL**: v14.0 trở lên
 
 ### 2. Cài Đặt Backend
+
 ```bash
 cd backend
 npm install
 ```
+
 - Tạo file `.env` dựa trên cấu hình mẫu (tham khảo `DATABASE_URL`, `JWT_SECRET`, `SMTP_...`).
 
 ### 3. Khởi Tạo Database (Quan Trọng)
+
 Chúng tôi cung cấp bộ công cụ mạnh mẽ để quản lý Database trong thư mục `backend/scripts`:
 
 - **Khởi tạo mới**: Xóa sạch và tạo lại toàn bộ cấu trúc DB từ `schema.sql`.
@@ -53,6 +59,7 @@ Chúng tôi cung cấp bộ công cụ mạnh mẽ để quản lý Database tro
   ```
 
 ### 4. Cài Đặt Frontend
+
 ```bash
 cd frontend
 npm install
@@ -86,14 +93,17 @@ npm run dev
 ---
 
 ## 🛡 Bảo Trì & Phát Triển
+
 Mọi thay đổi về cấu trúc Database phải được cập nhật đồng thời vào file `schema.sql` ở thư mục gốc và chạy lệnh `npm run db:extract` để cập nhật tài liệu hướng dẫn.
 
 ---
 
 ## 📄 Bản Quyền & Giấy Phép
+
 Dự án này thuộc bản quyền của **EduSchedule**. Mọi hành vi sao chép hoặc phân phối trái phép mã nguồn này đều bị nghiêm cấm.
 
 © 2026 EduSchedule. All Rights Reserved.
 
 ---
-*Phát triển bởi Đội ngũ EduSchedule.*
+
+_Phát triển bởi Đội ngũ EduSchedule._

@@ -10,24 +10,27 @@ async function checkTypes() {
       AND NOT EXISTS(SELECT 1 FROM pg_catalog.pg_type el WHERE el.oid = t.typelem AND el.typarray = t.oid)
       AND n.nspname = 'public'
     `);
-    
+
     console.log('Custom Types in public schema:');
     for (const row of res.rows) {
       console.log(`- ${row.type}`);
       // Get enum values if it's an enum
-      const enumRes = await pool.query(`
+      const enumRes = await pool.query(
+        `
         SELECT enumlabel 
         FROM pg_enum e
         JOIN pg_type t ON e.enumtypid = t.oid
         WHERE t.typname = $1
         ORDER BY enumsortorder
-      `, [row.type]);
-      
+      `,
+        [row.type]
+      );
+
       if (enumRes.rows.length > 0) {
-        console.log(`  Values: ${enumRes.rows.map(r => r.enumlabel).join(', ')}`);
+        console.log(`  Values: ${enumRes.rows.map((r) => r.enumlabel).join(', ')}`);
       }
     }
-    
+
     process.exit(0);
   } catch (err) {
     console.error(err);

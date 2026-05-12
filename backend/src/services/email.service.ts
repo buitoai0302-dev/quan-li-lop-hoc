@@ -28,7 +28,6 @@ const logPreviewUrl = (info: any) => {
   }
 };
 
-
 // ─── Shared HTML Helpers ────────────────────────────────────────────────────
 
 const emailWrapper = (content: string) => `
@@ -225,8 +224,18 @@ export const sendReminderEmail = async (to: string, sessionDetails: any) => {
   const safeEndTime = endTime ? escapeHtml(endTime) : '';
 
   const dateObj = new Date(date);
-  const viDate = dateObj.toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-  const enDate = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const viDate = dateObj.toLocaleDateString('vi-VN', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+  const enDate = dateObj.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
   const body = `
     <!-- VI -->

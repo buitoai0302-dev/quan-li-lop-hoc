@@ -1,6 +1,12 @@
 import { Router } from 'express';
 import { requireFeature } from '../middlewares/feature.middleware';
-import { getBranches, createBranch, updateBranch, deleteBranch, updateFirstBranch } from '../controllers/branch.controller';
+import {
+  getBranches,
+  createBranch,
+  updateBranch,
+  deleteBranch,
+  updateFirstBranch,
+} from '../controllers/branch.controller';
 import { requireRole } from '../middlewares/auth.middleware';
 import { validateUUID } from '../middlewares/validate.middleware';
 

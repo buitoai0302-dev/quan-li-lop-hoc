@@ -1,3 +1,22 @@
+import type { TFunction } from 'i18next';
+
+export interface User {
+  id: string;
+  tenant_id: string;
+  branch_id: string | null;
+  branch_name?: string;
+  email: string;
+  full_name: string;
+  role: string;
+  tenant_name: string;
+  onboarding_completed: boolean;
+  notify_upcoming_sessions: boolean;
+  is_google_connected: boolean;
+  tenant_settings?: {
+    menu: Record<string, boolean>;
+  };
+}
+
 export interface Session {
   id: string;
   tenant_id: string;
@@ -119,6 +138,9 @@ export interface Tenant {
   max_users: number;
   max_students: number;
   created_at: string;
+  settings?: {
+    menu: Record<string, boolean>;
+  };
 }
 
 export interface Plan {
@@ -221,7 +243,7 @@ export type ViewMode = 'day' | 'week' | 'month';
 
 // Component Props Interfaces
 export interface BaseTableProps<T> {
-  t: any;
+  t: TFunction;
   onEdit: (item: T) => void;
   onDelete: (id: string) => void;
 }
@@ -246,47 +268,90 @@ export interface ClassTableProps extends BaseTableProps<ClassData> {
   classes: ClassData[];
 }
 
+export type StudentFormData = {
+  full_name: string;
+  email: string;
+  phone?: string;
+  date_of_birth?: string;
+  branch_id: string;
+  is_active: boolean;
+  parent_phone?: string;
+};
+
 export interface StudentFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  initialData?: StudentFormData;
+  onSubmit: (data: StudentFormData) => void;
   branches: Branch[];
   editingId: string | null;
   isSubmitting: boolean;
   onClose: () => void;
-  t: any;
-  dobInputRef: React.RefObject<HTMLInputElement>;
+  t: TFunction;
+  dobInputRef: React.RefObject<HTMLInputElement | null>;
 }
+
+export type TeacherFormData = {
+  full_name: string;
+  email: string;
+  phone?: string;
+  specialization?: string;
+  branch_id: string;
+  is_active: boolean;
+};
 
 export interface TeacherFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  initialData?: TeacherFormData;
+  onSubmit: (data: TeacherFormData) => void;
   branches: Branch[];
   editingId: string | null;
   isSubmitting: boolean;
   onClose: () => void;
-  t: any;
+  t: TFunction;
 }
+
+export type BranchFormData = {
+  name: string;
+  address?: string;
+  phone?: string;
+  is_active: boolean;
+};
 
 export interface BranchFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  initialData?: BranchFormData;
+  onSubmit: (data: BranchFormData) => void;
   isSubmitting: boolean;
   onClose: () => void;
-  t: any;
+  t: TFunction;
 }
 
+export type RoomFormData = {
+  name: string;
+  capacity: number;
+  room_type: string;
+  branch_id: string;
+  is_active: boolean;
+};
+
 export interface RoomFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  initialData?: RoomFormData;
+  onSubmit: (data: RoomFormData) => void;
   branches: Branch[];
   isSubmitting: boolean;
   onClose: () => void;
-  t: any;
+  t: TFunction;
 }
 
+export type ClassBasicFormData = {
+  name: string;
+  branch_id: string;
+  teacher_id?: string;
+  max_capacity?: number;
+  start_date?: string;
+  end_date?: string;
+};
+
 export interface ClassFormProps {
-  formData: any;
-  setFormData: (data: any) => void;
+  initialData?: ClassBasicFormData;
+  onSubmit: (data: ClassBasicFormData) => void;
   branches: Branch[];
   teachers: Teacher[];
   rooms: Room[];
@@ -301,9 +366,9 @@ export interface ClassFormProps {
   onOpenBulkEnroll: () => void;
   onClose: () => void;
   isSubmitting: boolean;
-  t: any;
-  startDateRef: React.RefObject<HTMLInputElement>;
-  endDateRef: React.RefObject<HTMLInputElement>;
+  t: TFunction;
+  startDateRef: React.RefObject<HTMLInputElement | null>;
+  endDateRef: React.RefObject<HTMLInputElement | null>;
 }
 
 export interface ScheduleHeaderProps {
@@ -324,9 +389,9 @@ export interface ScheduleHeaderProps {
   setIsFilterVisible: (visible: boolean) => void;
   canEdit: boolean;
   onAddSession: () => void;
-  currentLocale: any;
-  user: any;
-  t: any;
+  currentLocale: unknown;
+  user: User | null;
+  t: TFunction;
 }
 
 export interface BulkEnrollModalProps {
@@ -335,7 +400,7 @@ export interface BulkEnrollModalProps {
   allStudents: Student[];
   enrollments: Enrollment[];
   onBulkEnroll: (studentIds: string[]) => void;
-  t: any;
+  t: TFunction;
 }
 
 export interface ProfileSettingsProps {
@@ -345,5 +410,5 @@ export interface ProfileSettingsProps {
   setNotifySessions: (notify: boolean) => void;
   onSave: () => void;
   saving: boolean;
-  t: any;
+  t: TFunction;
 }

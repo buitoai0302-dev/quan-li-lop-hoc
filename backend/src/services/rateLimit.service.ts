@@ -7,9 +7,9 @@ if (process.env.REDIS_URL) {
   try {
     redisClient = new Redis(process.env.REDIS_URL, {
       maxRetriesPerRequest: 1,
-      retryStrategy: () => null // Không retry mãi mãi nếu không kết nối được
+      retryStrategy: () => null, // Không retry mãi mãi nếu không kết nối được
     });
-    
+
     redisClient.on('error', (err) => {
       console.warn('[Redis] Connection error, falling back to in-memory cache.', err.message);
       redisClient = null;
@@ -23,7 +23,9 @@ if (process.env.REDIS_URL) {
     redisClient = null;
   }
 } else {
-  console.log('[RateLimit] No REDIS_URL provided. Using in-memory node-cache. (Not recommended for multi-instance deployments)');
+  console.log(
+    '[RateLimit] No REDIS_URL provided. Using in-memory node-cache. (Not recommended for multi-instance deployments)'
+  );
 }
 
 const loginAttemptCache = new NodeCache({ stdTTL: 15 * 60, checkperiod: 60 });
@@ -45,7 +47,9 @@ const getCache = async (key: string, isEmail: boolean): Promise<AttemptData | nu
     const data = await redisClient.get(key);
     return data ? JSON.parse(data) : null;
   }
-  return isEmail ? emailRateCache.get<AttemptData>(key) || null : loginAttemptCache.get<AttemptData>(key) || null;
+  return isEmail
+    ? emailRateCache.get<AttemptData>(key) || null
+    : loginAttemptCache.get<AttemptData>(key) || null;
 };
 
 const setCache = async (key: string, data: AttemptData, ttlSeconds: number, isEmail: boolean) => {
@@ -66,31 +70,33 @@ const delCache = async (key: string, isEmail: boolean) => {
   }
 };
 
-
 // ─── Login Rate Limiting ─────────────────────────────────────────────────────
 
-export const checkRateLimit = async (ip: string, email: string): Promise<{ blocked: boolean; remainingAttempts: number; retryAfter?: number }> => {
+export const checkRateLimit = async (
+  ip: string,
+  email: string
+): Promise<{ blocked: boolean; remainingAttempts: number; retryAfter?: number }> => {
   const key = `login:${ip}:${email}`;
-  const data = await getCache(key, false) || { count: 0 };
+  const data = (await getCache(key, false)) || { count: 0 };
 
   if (data.blockedUntil && Date.now() < data.blockedUntil) {
     return {
       blocked: true,
       remainingAttempts: 0,
-      retryAfter: Math.ceil((data.blockedUntil - Date.now()) / 1000)
+      retryAfter: Math.ceil((data.blockedUntil - Date.now()) / 1000),
     };
   }
 
   return {
     blocked: false,
-    remainingAttempts: Math.max(0, MAX_ATTEMPTS - data.count)
+    remainingAttempts: Math.max(0, MAX_ATTEMPTS - data.count),
   };
 };
 
 export const recordFailedAttempt = async (ip: string, email: string): Promise<void> => {
   const key = `login:${ip}:${email}`;
-  const data = await getCache(key, false) || { count: 0 };
-  
+  const data = (await getCache(key, false)) || { count: 0 };
+
   data.count += 1;
 
   if (data.count >= MAX_ATTEMPTS) {
@@ -108,9 +114,11 @@ export const clearAttempts = async (ip: string, email: string): Promise<void> =>
 
 // ─── Email Endpoint Rate Limiting (forgot-password, resend-verification) ──────
 
-export const checkEmailRateLimit = async (ip: string): Promise<{ blocked: boolean; retryAfter?: number }> => {
+export const checkEmailRateLimit = async (
+  ip: string
+): Promise<{ blocked: boolean; retryAfter?: number }> => {
   const key = `email:${ip}`;
-  const data = await getCache(key, true) || { count: 0 };
+  const data = (await getCache(key, true)) || { count: 0 };
 
   if (data.blockedUntil && Date.now() < data.blockedUntil) {
     return { blocked: true, retryAfter: Math.ceil((data.blockedUntil - Date.now()) / 1000) };
@@ -120,7 +128,7 @@ export const checkEmailRateLimit = async (ip: string): Promise<{ blocked: boolea
 
 export const recordEmailAttempt = async (ip: string): Promise<void> => {
   const key = `email:${ip}`;
-  const data = await getCache(key, true) || { count: 0 };
+  const data = (await getCache(key, true)) || { count: 0 };
   data.count += 1;
 
   if (data.count >= MAX_EMAIL_ATTEMPTS) {

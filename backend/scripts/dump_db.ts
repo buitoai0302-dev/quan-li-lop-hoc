@@ -7,7 +7,7 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 async function dumpDatabase() {
   const dbUrl = process.env.DATABASE_URL;
-  
+
   if (!dbUrl) {
     console.error('Error: DATABASE_URL not found in .env file');
     process.exit(1);
@@ -18,7 +18,7 @@ async function dumpDatabase() {
   const dumpPath = path.join(__dirname, '../', dumpFile);
 
   console.log(`--- Starting Database Dump to ${dumpFile} ---`);
-  
+
   // Note: This requires pg_dump to be installed and in your PATH
   const command = `pg_dump "${dbUrl}" > "${dumpPath}"`;
 
@@ -26,13 +26,15 @@ async function dumpDatabase() {
     if (error) {
       console.error('Error during dump:');
       console.error(error.message);
-      console.log('\nTip: Make sure PostgreSQL tools (pg_dump) are installed and added to your system PATH.');
+      console.log(
+        '\nTip: Make sure PostgreSQL tools (pg_dump) are installed and added to your system PATH.'
+      );
       process.exit(1);
     }
     if (stderr && !stderr.includes('Warning')) {
       console.error('Stderr:', stderr);
     }
-    
+
     console.log(`--- Success! Database dumped to: ${dumpPath} ---`);
     process.exit(0);
   });

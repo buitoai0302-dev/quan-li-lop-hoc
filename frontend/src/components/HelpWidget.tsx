@@ -18,49 +18,55 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
   const isTeacher = user?.role === USER_ROLES.TEACHER;
   const isAttendanceEnabled = user?.tenant_settings?.menu?.attendance !== false;
 
-  const steps = isTeacher ? [
-    {
-      icon: <Layout className="text-blue-500" size={20} />,
-      title: t('helpWidget.teacher.step1.title'),
-      desc: t('helpWidget.teacher.step1.desc')
-    },
-    {
-      icon: <Calendar className="text-green-500" size={20} />,
-      title: t('helpWidget.teacher.step2.title'),
-      desc: t('helpWidget.teacher.step2.desc')
-    },
-    {
-      icon: <BookOpen className="text-purple-500" size={20} />,
-      title: t('helpWidget.teacher.step3.title'),
-      desc: t('helpWidget.teacher.step3.desc')
-    },
-    isAttendanceEnabled && {
-      icon: <UserPlus className="text-orange-500" size={20} />,
-      title: t('helpWidget.teacher.step4.title'),
-      desc: t('helpWidget.teacher.step4.desc')
-    }
-  ].filter(Boolean) : [
-    {
-      icon: <Layout className="text-blue-500" size={20} />,
-      title: t('helpWidget.step1.title'),
-      desc: t('helpWidget.step1.desc')
-    },
-    {
-      icon: <UserPlus className="text-green-500" size={20} />,
-      title: t('helpWidget.step2.title'),
-      desc: t('helpWidget.step2.desc')
-    },
-    {
-      icon: <Calendar className="text-purple-500" size={20} />,
-      title: t('helpWidget.step3.title'),
-      desc: t('helpWidget.step3.desc')
-    },
-    isAttendanceEnabled && {
-      icon: <BookOpen className="text-orange-500" size={20} />,
-      title: t('helpWidget.step4.title'),
-      desc: t('helpWidget.step4.desc')
-    }
-  ].filter(Boolean);
+  const steps = isTeacher
+    ? (
+        [
+          {
+            icon: <Layout className="text-blue-500" size={20} />,
+            title: t('helpWidget.teacher.step1.title'),
+            desc: t('helpWidget.teacher.step1.desc'),
+          },
+          {
+            icon: <Calendar className="text-green-500" size={20} />,
+            title: t('helpWidget.teacher.step2.title'),
+            desc: t('helpWidget.teacher.step2.desc'),
+          },
+          {
+            icon: <BookOpen className="text-purple-500" size={20} />,
+            title: t('helpWidget.teacher.step3.title'),
+            desc: t('helpWidget.teacher.step3.desc'),
+          },
+          isAttendanceEnabled && {
+            icon: <UserPlus className="text-orange-500" size={20} />,
+            title: t('helpWidget.teacher.step4.title'),
+            desc: t('helpWidget.teacher.step4.desc'),
+          },
+        ] as any[]
+      ).filter(Boolean)
+    : (
+        [
+          {
+            icon: <Layout className="text-blue-500" size={20} />,
+            title: t('helpWidget.step1.title'),
+            desc: t('helpWidget.step1.desc'),
+          },
+          {
+            icon: <UserPlus className="text-green-500" size={20} />,
+            title: t('helpWidget.step2.title'),
+            desc: t('helpWidget.step2.desc'),
+          },
+          {
+            icon: <Calendar className="text-purple-500" size={20} />,
+            title: t('helpWidget.step3.title'),
+            desc: t('helpWidget.step3.desc'),
+          },
+          isAttendanceEnabled && {
+            icon: <BookOpen className="text-orange-500" size={20} />,
+            title: t('helpWidget.step4.title'),
+            desc: t('helpWidget.step4.desc'),
+          },
+        ] as any[]
+      ).filter(Boolean);
 
   if (!isOpen) return null;
 
@@ -83,19 +89,22 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
 
         {/* Content */}
         <div className="p-6 space-y-6">
-          <p className="text-gray-600 dark:text-gray-400 text-sm">
-            {t('helpWidget.subtitle')}
-          </p>
+          <p className="text-gray-600 dark:text-gray-400 text-sm">{t('helpWidget.subtitle')}</p>
 
           <div className="space-y-4">
             {steps.map((step, index) => (
-              <div key={index} className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
+              <div
+                key={index}
+                className="flex items-start space-x-4 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+              >
                 <div className="mt-1 p-2 bg-white dark:bg-gray-700 rounded-md shadow-sm border border-gray-100 dark:border-gray-600">
                   {step.icon}
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-gray-900 dark:text-white text-sm">{step.title}</h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 leading-relaxed">{step.desc}</p>
+                  <p className="text-gray-500 dark:text-gray-400 text-xs mt-1 leading-relaxed">
+                    {step.desc}
+                  </p>
                 </div>
               </div>
             ))}
@@ -105,7 +114,10 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
         {/* Footer */}
         <div className="p-6 bg-gray-50 dark:bg-gray-700/30 flex flex-col sm:flex-row gap-3 justify-center items-center">
           <button
-            onClick={() => { onClose(); navigate('/help'); }}
+            onClick={() => {
+              onClose();
+              navigate('/help');
+            }}
             className="text-primary hover:underline text-sm font-semibold order-2 sm:order-1"
           >
             {t('helpWidget.viewFull')}

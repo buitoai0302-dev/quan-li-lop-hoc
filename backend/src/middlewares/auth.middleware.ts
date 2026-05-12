@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 
-
 export interface AuthRequest extends Request {
   user?: {
     userId: string;
@@ -28,12 +27,12 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as any;
     req.user = decoded;
-    
+
     // Also inject tenantId so it can replace tenantMiddleware logic for authenticated routes
     if (decoded.tenantId) {
       req.tenantId = decoded.tenantId;
     }
-    
+
     next();
   } catch (error) {
     return res.status(401).json({ error: 'Invalid token' });
@@ -42,7 +41,6 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
 
 export const requireRole = (roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
-    
     // Super Admin always has access to everything
     if (req.user?.role === 'super_admin') {
       return next();

@@ -4,14 +4,16 @@ import pool from '../db';
 
 export const getPlans = async (req: Request, res: Response) => {
   try {
-    const plansResult = await pool.query('SELECT * FROM plan_definitions WHERE is_active = true ORDER BY sort_order');
+    const plansResult = await pool.query(
+      'SELECT * FROM plan_definitions WHERE is_active = true ORDER BY sort_order'
+    );
     const limitsResult = await pool.query('SELECT * FROM plan_limits');
     const featuresResult = await pool.query('SELECT * FROM plan_features');
 
-    const plans = plansResult.rows.map(plan => ({
+    const plans = plansResult.rows.map((plan) => ({
       ...plan,
-      limits: limitsResult.rows.filter(l => l.plan_id === plan.id),
-      features: featuresResult.rows.filter(f => f.plan_id === plan.id)
+      limits: limitsResult.rows.filter((l) => l.plan_id === plan.id),
+      features: featuresResult.rows.filter((f) => f.plan_id === plan.id),
     }));
 
     res.json(plans);
@@ -69,7 +71,10 @@ export const approvePlanRequest = async (req: Request, res: Response) => {
   const client = await pool.connect();
 
   try {
-    const requestResult = await client.query('SELECT * FROM plan_requests WHERE id = $1 AND status = $2', [id, 'pending']);
+    const requestResult = await client.query(
+      'SELECT * FROM plan_requests WHERE id = $1 AND status = $2',
+      [id, 'pending']
+    );
     if (requestResult.rows.length === 0) {
       return res.status(404).json({ error: 'Request not found or already processed' });
     }
@@ -78,10 +83,16 @@ export const approvePlanRequest = async (req: Request, res: Response) => {
     await client.query('BEGIN');
 
     // Update tenant plan
-    await client.query('UPDATE tenants SET plan_id = $1 WHERE id = $2', [request.plan_id, request.tenant_id]);
+    await client.query('UPDATE tenants SET plan_id = $1 WHERE id = $2', [
+      request.plan_id,
+      request.tenant_id,
+    ]);
 
     // Update request status
-    await client.query('UPDATE plan_requests SET status = $1, updated_at = NOW() WHERE id = $2', ['approved', id]);
+    await client.query('UPDATE plan_requests SET status = $1, updated_at = NOW() WHERE id = $2', [
+      'approved',
+      id,
+    ]);
 
     await client.query('COMMIT');
 

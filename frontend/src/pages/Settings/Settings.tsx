@@ -1,21 +1,30 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useTheme } from '../../contexts/ThemeContext';
-import api from '../../api';
+import { useTheme } from '@/contexts/ThemeContext';
+import {
+  getTenant,
+  updateTenant as updateTenantApi,
+  getApiKeyInfo,
+  generateApiKey,
+  getGoogleAuthUrl,
+  disconnectGoogle,
+  syncAllGoogle,
+} from '@/features/settings/api';
+import { getCurrentUser, updateProfile } from '@/features/auth/api';
 import toast from 'react-hot-toast';
-import { Key, Copy, RefreshCw, ShieldCheck, Building, User, Globe, Palette, ChevronRight, Zap, LayoutDashboard, Calendar, BookOpen, ClipboardCheck, Users, DoorOpen, Import } from 'lucide-react';
-import ConfirmModal from '../../components/common/ConfirmModal';
-import { useAuth } from '../../contexts/AuthContext';
-import { USER_ROLES } from '../../utils/constants';
+import { Key, Building, User, Globe, Palette, ChevronRight, Zap } from 'lucide-react';
+import ConfirmModal from '@/components/common/ConfirmModal';
+import { useAuth } from '@/contexts/AuthContext';
+import { USER_ROLES } from '@/utils/constants';
 
 type SettingSection = 'general' | 'profile' | 'features' | 'integration' | 'api' | 'appearance';
 
-import GeneralSettings from './components/GeneralSettings';
-import ProfileSettings from './components/ProfileSettings';
-import MenuConfigSettings from './components/MenuConfigSettings';
-import IntegrationSettings from './components/IntegrationSettings';
-import ApiSettings from './components/ApiSettings';
-import AppearanceSettings from './components/AppearanceSettings';
+import GeneralSettings from '@/features/settings/components/GeneralSettings';
+import ProfileSettings from '@/features/settings/components/ProfileSettings';
+import MenuConfigSettings from '@/features/settings/components/MenuConfigSettings';
+import IntegrationSettings from '@/features/settings/components/IntegrationSettings';
+import ApiSettings from '@/features/settings/components/ApiSettings';
+import AppearanceSettings from '@/features/settings/components/AppearanceSettings';
 
 const Settings: React.FC = () => {
   const { t } = useTranslation();
@@ -44,39 +53,42 @@ const Settings: React.FC = () => {
     branches: true,
     import: true,
   });
-  const [confirmModal, setConfirmModal] = useState<{ open: boolean; message: string; onConfirm: () => void }>({ open: false, message: '', onConfirm: () => { } });
+  const [confirmModal, setConfirmModal] = useState<{
+    open: boolean;
+    message: string;
+    onConfirm: () => void;
+  }>({ open: false, message: '', onConfirm: () => {} });
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
-        const [tenantRes, userRes] = await Promise.all([
-          api.get('/tenant'),
-          api.get('/auth/me')
-        ]);
+        const [tenantData, userData] = await Promise.all([getTenant(), getCurrentUser()]);
 
-        setCenterName(tenantRes.data.name || '');
-        setContactEmail(tenantRes.data.contact_email || '');
-        setMenuSettings(tenantRes.data.settings?.menu || {
-          dashboard: true,
-          schedule: true,
-          classes: true,
-          attendance: true,
-          students: true,
-          teachers: true,
-          rooms: true,
-          branches: true,
-          import: true,
-        });
+        setCenterName(tenantData.name || '');
+        setContactEmail(tenantData.contact_email || '');
+        setMenuSettings(
+          tenantData.settings?.menu || {
+            dashboard: true,
+            schedule: true,
+            classes: true,
+            attendance: true,
+            students: true,
+            teachers: true,
+            rooms: true,
+            branches: true,
+            import: true,
+          }
+        );
 
-        setFullName(userRes.data.full_name || '');
-        setNotifySessions(userRes.data.notify_upcoming_sessions);
-        setIsGoogleConnected(userRes.data.is_google_connected);
+        setFullName(userData.full_name || '');
+        setNotifySessions(userData.notify_upcoming_sessions);
+        setIsGoogleConnected(userData.is_google_connected);
 
         // Fetch API Key if available
         try {
-          const apiRes = await api.get('/tenant/api-key');
-          if (apiRes.data.hasAccess) {
-            setApiKey(apiRes.data.apiKey);
+          const apiData = await getApiKeyInfo();
+          if (apiData.hasAccess) {
+            setApiKey(apiData.apiKey || null);
             setHasApiAccess(true);
           } else {
             setHasApiAccess(false);
@@ -97,7 +109,7 @@ const Settings: React.FC = () => {
     if (saving) return;
     setSaving(true);
     try {
-      await api.put('/tenant', { name: centerName, contact_email: contactEmail });
+      await updateTenantApi({ name: centerName, contact_email: contactEmail });
       toast.success(t('common.success'));
     } catch (error) {
       toast.error(t('common.error'));
@@ -110,14 +122,14 @@ const Settings: React.FC = () => {
     if (saving) return;
     setSaving(true);
     try {
-      const res = await api.put('/tenant', {
+      const data = await updateTenantApi({
         name: centerName,
         contact_email: contactEmail,
-        settings: { menu: menuSettings }
+        settings: { menu: menuSettings },
       });
 
       // Update local user context so menu updates immediately
-      updateUser({ tenant_settings: res.data.settings });
+      updateUser({ tenant_settings: data.settings });
 
       toast.success(t('common.success'));
     } catch (error) {
@@ -131,9 +143,9 @@ const Settings: React.FC = () => {
     if (saving) return;
     setSaving(true);
     try {
-      await api.put('/auth/me', {
+      await updateProfile({
         full_name: fullName,
-        notify_upcoming_sessions: notifySessions
+        notify_upcoming_sessions: notifySessions,
       });
       toast.success(t('common.success'));
     } catch (error) {
@@ -145,8 +157,8 @@ const Settings: React.FC = () => {
 
   const handleConnectGoogle = async () => {
     try {
-      const response = await api.get('/google/url');
-      window.location.href = response.data.url;
+      const data = await getGoogleAuthUrl();
+      window.location.href = data.url;
     } catch (error) {
       toast.error(t('settings.googleUrlError'));
     }
@@ -158,21 +170,21 @@ const Settings: React.FC = () => {
       message: t('settings.disconnectConfirm'),
       onConfirm: async () => {
         try {
-          await api.delete('/google/disconnect');
+          await disconnectGoogle();
           setIsGoogleConnected(false);
           toast.success(t('settings.disconnectSuccess'));
         } catch (error) {
           toast.error(t('settings.disconnectError'));
         }
-      }
+      },
     });
   };
   const handleSyncAll = async () => {
     if (syncing) return;
     setSyncing(true);
     try {
-      const res = await api.post('/google/sync-all');
-      toast.success(res.data.message);
+      const data = await syncAllGoogle();
+      toast.success(data.message);
     } catch (error) {
       toast.error(t('common.error'));
     } finally {
@@ -188,23 +200,23 @@ const Settings: React.FC = () => {
         onConfirm: async () => {
           setGeneratingKey(true);
           try {
-            const res = await api.post('/tenant/api-key');
-            setApiKey(res.data.apiKey);
+            const data = await generateApiKey();
+            setApiKey(data.apiKey);
             toast.success(t('common.success'));
           } catch (error) {
             toast.error(t('common.error'));
           } finally {
             setGeneratingKey(false);
           }
-        }
+        },
       });
     } else {
       // No existing key, generate directly
       (async () => {
         setGeneratingKey(true);
         try {
-          const res = await api.post('/tenant/api-key');
-          setApiKey(res.data.apiKey);
+          const data = await generateApiKey();
+          setApiKey(data.apiKey);
           toast.success(t('common.success'));
         } catch (error) {
           toast.error(t('common.error'));
@@ -215,15 +227,56 @@ const Settings: React.FC = () => {
     }
   };
 
-
   const navItems = [
-    { id: 'general' as SettingSection, icon: Building, label: t('settings.basicInfo'), roles: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN] },
-    { id: 'profile' as SettingSection, icon: User, label: t('settings.personalSettings'), roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.STUDENT, USER_ROLES.SUPER_ADMIN] },
-    { id: 'features' as SettingSection, icon: Zap, label: t('settings.menuConfig'), roles: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN] },
-    { id: 'integration' as SettingSection, icon: Globe, label: t('settings.appConnection'), roles: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN] },
-    { id: 'api' as SettingSection, icon: Key, label: t('settings.apiTitle'), roles: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN] },
-    { id: 'appearance' as SettingSection, icon: Palette, label: t('settings.appearance'), roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.STUDENT, USER_ROLES.SUPER_ADMIN] },
-  ].filter(item => user?.role && item.roles.includes(user.role));
+    {
+      id: 'general' as SettingSection,
+      icon: Building,
+      label: t('settings.basicInfo'),
+      roles: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN],
+    },
+    {
+      id: 'profile' as SettingSection,
+      icon: User,
+      label: t('settings.personalSettings'),
+      roles: [
+        USER_ROLES.ADMIN,
+        USER_ROLES.STAFF,
+        USER_ROLES.TEACHER,
+        USER_ROLES.STUDENT,
+        USER_ROLES.SUPER_ADMIN,
+      ],
+    },
+    {
+      id: 'features' as SettingSection,
+      icon: Zap,
+      label: t('settings.menuConfig'),
+      roles: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN],
+    },
+    {
+      id: 'integration' as SettingSection,
+      icon: Globe,
+      label: t('settings.appConnection'),
+      roles: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN],
+    },
+    {
+      id: 'api' as SettingSection,
+      icon: Key,
+      label: t('settings.apiTitle'),
+      roles: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN],
+    },
+    {
+      id: 'appearance' as SettingSection,
+      icon: Palette,
+      label: t('settings.appearance'),
+      roles: [
+        USER_ROLES.ADMIN,
+        USER_ROLES.STAFF,
+        USER_ROLES.TEACHER,
+        USER_ROLES.STUDENT,
+        USER_ROLES.SUPER_ADMIN,
+      ],
+    },
+  ].filter((item) => user?.role && item.roles.includes(user.role));
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -235,21 +288,36 @@ const Settings: React.FC = () => {
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                className={`flex-1 lg:flex-none flex flex-col lg:flex-row items-center lg:justify-between px-0 py-2 lg:px-4 lg:py-3 rounded-lg lg:rounded-xl transition-all duration-300 group min-w-[54px] sm:min-w-[60px] lg:min-w-0 ${activeSection === item.id
-                  ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]'
-                  : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-primary'
-                  }`}
+                className={`flex-1 lg:flex-none flex flex-col lg:flex-row items-center lg:justify-between px-0 py-2 lg:px-4 lg:py-3 rounded-lg lg:rounded-xl transition-all duration-300 group min-w-[54px] sm:min-w-[60px] lg:min-w-0 ${
+                  activeSection === item.id
+                    ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]'
+                    : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-primary'
+                }`}
                 title={item.label}
               >
                 <div className="flex flex-col lg:flex-row items-center gap-1 lg:gap-3">
-                  <item.icon size={18} className={activeSection === item.id ? 'text-white' : 'group-hover:scale-110 transition-transform'} />
-                  <span className={`text-[9px] lg:text-sm font-bold truncate ${activeSection === item.id ? 'opacity-100' : 'opacity-60 lg:opacity-100'}`}>
-                    {item.id === 'general' ? t('common.general') :
-                      item.id === 'profile' ? t('common.profile') :
-                        item.id === 'features' ? t('common.features') :
-                          item.id === 'integration' ? t('common.app') :
-                            item.id === 'api' ? t('common.api') :
-                              item.label}
+                  <item.icon
+                    size={18}
+                    className={
+                      activeSection === item.id
+                        ? 'text-white'
+                        : 'group-hover:scale-110 transition-transform'
+                    }
+                  />
+                  <span
+                    className={`text-[9px] lg:text-sm font-bold truncate ${activeSection === item.id ? 'opacity-100' : 'opacity-60 lg:opacity-100'}`}
+                  >
+                    {item.id === 'general'
+                      ? t('common.general')
+                      : item.id === 'profile'
+                        ? t('common.profile')
+                        : item.id === 'features'
+                          ? t('common.features')
+                          : item.id === 'integration'
+                            ? t('common.app')
+                            : item.id === 'api'
+                              ? t('common.api')
+                              : item.label}
                   </span>
                 </div>
                 <ChevronRight size={14} className="hidden lg:block opacity-50" />
@@ -261,7 +329,6 @@ const Settings: React.FC = () => {
         {/* Main Content Area */}
         <div className="flex-1 min-w-0 h-full flex flex-col overflow-hidden">
           <div className="flex-1 bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-2xl shadow-xl shadow-gray-200/20 dark:shadow-none border border-white dark:border-gray-700/50 p-4 sm:p-6 lg:p-8 overflow-y-auto custom-scrollbar transition-all">
-
             {activeSection === 'general' && (
               <GeneralSettings
                 centerName={centerName}
@@ -318,11 +385,7 @@ const Settings: React.FC = () => {
             )}
 
             {activeSection === 'appearance' && (
-              <AppearanceSettings
-                theme={theme}
-                setTheme={setTheme}
-                t={t}
-              />
+              <AppearanceSettings theme={theme} setTheme={setTheme} t={t} />
             )}
           </div>
         </div>
@@ -332,8 +395,11 @@ const Settings: React.FC = () => {
         isOpen={confirmModal.open}
         title={t('common.confirm')}
         message={confirmModal.message}
-        onConfirm={() => { confirmModal.onConfirm(); setConfirmModal(m => ({ ...m, open: false })); }}
-        onClose={() => setConfirmModal(m => ({ ...m, open: false }))}
+        onConfirm={() => {
+          confirmModal.onConfirm();
+          setConfirmModal((m) => ({ ...m, open: false }));
+        }}
+        onClose={() => setConfirmModal((m) => ({ ...m, open: false }))}
       />
     </div>
   );

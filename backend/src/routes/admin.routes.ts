@@ -1,10 +1,10 @@
 import { Router, Request, Response } from 'express';
-import { 
-  getSystemStats, 
-  getAllTenants, 
-  updateTenant, 
-  getPlans, 
-  updatePlanDetails 
+import {
+  getSystemStats,
+  getAllTenants,
+  updateTenant,
+  getPlans,
+  updatePlanDetails,
 } from '../controllers/admin.controller';
 import { authMiddleware, requireRole } from '../middlewares/auth.middleware';
 

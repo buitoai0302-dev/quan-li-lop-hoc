@@ -1,5 +1,5 @@
 import React from 'react';
-import ScheduleBoard from '../../components/ScheduleBoard';
+import ScheduleBoard from '@/features/schedule/components/ScheduleBoard';
 
 const Schedule: React.FC = () => {
   return <ScheduleBoard />;

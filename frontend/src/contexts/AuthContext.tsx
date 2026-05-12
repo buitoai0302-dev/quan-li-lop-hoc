@@ -1,20 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../api';
-
-export interface User {
-  id: string;
-  tenant_id: string;
-  branch_id: string | null;
-  branch_name?: string;
-  email: string;
-  full_name: string;
-  role: string;
-  tenant_name: string;
-  onboarding_completed: boolean;
-  tenant_settings?: {
-    menu: Record<string, boolean>;
-  };
-}
+import { getCurrentUser, logout as logoutApi } from '../features/auth/api';
+import { queryClient } from '../utils/queryClient';
+import type { User } from '../types';
+export type { User };
 
 interface AuthContextType {
   user: User | null;
@@ -35,8 +23,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          const response = await api.get('/auth/me');
-          setUser(response.data);
+          const data = await getCurrentUser();
+          setUser(data);
         } catch (error) {
           console.error('Auth check failed:', error);
           localStorage.removeItem('token');
@@ -59,15 +47,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const refreshToken = localStorage.getItem('refreshToken');
     // Thu hồi refresh token phía server (non-blocking)
     if (refreshToken) {
-      api.post('/auth/logout', { refreshToken }).catch(() => { });
+      logoutApi().catch(() => {});
     }
+
+    // 1. Xóa thông tin xác thực trong localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('refreshToken');
-    setUser(null);
+
+    // 2. Xóa sạch cache của TanStack Query để tránh lộ dữ liệu người dùng cũ
+    queryClient.clear();
+
+    // 3. Chuyển hướng về trang login và buộc tải lại trang
+    // Việc này sẽ xóa sạch toàn bộ State trong React
+    window.location.href = '/login';
   };
 
   const updateUser = (updates: Partial<User>) => {
-    setUser(prev => prev ? { ...prev, ...updates } : prev);
+    setUser((prev) => (prev ? { ...prev, ...updates } : prev));
   };
 
   return (

@@ -3,10 +3,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const poolConfig: any = process.env.DATABASE_URL 
-  ? { 
+const poolConfig: any = process.env.DATABASE_URL
+  ? {
       connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false } // Required for Neon/Supabase cloud databases
+      ssl: { rejectUnauthorized: false }, // Required for Neon/Supabase cloud databases
     }
   : {
       user: process.env.DB_USER || 'postgres',
