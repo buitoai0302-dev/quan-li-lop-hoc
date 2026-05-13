@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { createRoom, updateRoom, deleteRoom } from '@/features/rooms/api';
+import { createRoom, updateRoom, deleteRoom } from '@/services/roomsService';
 import { Modal, Card } from '@/components/common/UI';
 import { DoorOpen, Plus, Upload, Search } from 'lucide-react';
 import ConfirmModal from '@/components/common/ConfirmModal';

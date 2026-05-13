@@ -8,6 +8,8 @@ interface AttendanceHeaderProps {
   selectedSession: Session | null;
   attendance: AttendanceRecord[];
   saving: boolean;
+  isReadOnly: boolean;
+  isFutureDate: boolean;
   handleMarkAllAsPresent: () => void;
   handleSave: () => void;
 }
@@ -16,6 +18,8 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
   selectedSession,
   attendance,
   saving,
+  isReadOnly,
+  isFutureDate,
   handleMarkAllAsPresent,
   handleSave,
 }) => {
@@ -30,6 +34,16 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
             <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold border border-blue-100 dark:border-blue-800/50">
               <CalendarIcon size={14} />
               {t('attendance.selectSession')}
+            </div>
+          ) : isFutureDate ? (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-50 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400 rounded-lg text-xs font-bold border border-amber-100 dark:border-amber-800/50">
+              <CalendarIcon size={14} />
+              {t('attendance.futureSessionWarning')}
+            </div>
+          ) : isReadOnly ? (
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 rounded-lg text-xs font-bold border border-blue-100 dark:border-blue-800/50">
+              <ClipboardCheck size={14} />
+              {t('attendance.pastSessionWarning')}
             </div>
           ) : (
             <div className="flex items-center gap-2">

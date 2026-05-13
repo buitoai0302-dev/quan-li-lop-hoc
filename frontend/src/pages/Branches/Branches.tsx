@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { createBranch, updateBranch, deleteBranch } from '@/features/branches/api';
+import { createBranch, updateBranch, deleteBranch } from '@/services/branchesService';
 import { Modal, Card } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';

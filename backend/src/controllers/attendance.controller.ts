@@ -89,7 +89,7 @@ export const recordAttendance = async (req: AuthRequest, res: Response, next: Ne
 
     // Verify session AND attendance feature gate
     const sessionRes = await client.query(
-      `SELECT s.id, t.settings as tenant_settings 
+      `SELECT s.id, s.session_date, t.settings as tenant_settings 
        FROM schedule_sessions s
        JOIN tenants t ON s.tenant_id = t.id
        WHERE s.id = $1 AND s.tenant_id = $2`,
@@ -100,7 +100,23 @@ export const recordAttendance = async (req: AuthRequest, res: Response, next: Ne
       throw new NotFoundError('Không tìm thấy buổi học', 'SESSION_NOT_FOUND');
     }
 
-    const { tenant_settings } = sessionRes.rows[0];
+    const { session_date, tenant_settings } = sessionRes.rows[0];
+
+    // Check if session is NOT today (only allow marking for current date)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const sessionDate = new Date(session_date);
+    sessionDate.setHours(0, 0, 0, 0);
+
+    if (sessionDate.getTime() !== today.getTime()) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({
+        success: false,
+        error: 'SESSION_DATE_RESTRICTED',
+        message: 'Chỉ có thể điểm danh cho các buổi học diễn ra trong ngày hôm nay.',
+      });
+    }
+
     if (tenant_settings?.menu?.attendance === false) {
       await client.query('ROLLBACK');
       return res.status(403).json({

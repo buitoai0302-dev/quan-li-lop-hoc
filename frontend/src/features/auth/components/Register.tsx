@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { register as registerApi, googleLogin } from '../../auth/api';
+import { register as registerApi, googleLogin } from '@/services/authService';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Globe, User, Mail, Lock, Eye, EyeOff } from 'lucide-react';

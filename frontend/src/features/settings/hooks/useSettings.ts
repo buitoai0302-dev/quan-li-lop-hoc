@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import api from '@/api';
+import {
+  getTenant,
+  updateTenant as updateTenantApi,
+  getApiKeyInfo,
+  generateApiKey,
+  syncAllGoogle,
+} from '@/services/settingsService';
+import { getCurrentUser, updateProfile } from '@/services/authService';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -34,12 +41,12 @@ export const useSettings = () => {
   const fetchSettings = async () => {
     try {
       setLoading(true);
-      const [tenantRes, userRes] = await Promise.all([api.get('/tenant'), api.get('/auth/me')]);
+      const [tenantData, userData] = await Promise.all([getTenant(), getCurrentUser()]);
 
-      setCenterName(tenantRes.data.name || '');
-      setContactEmail(tenantRes.data.contact_email || '');
+      setCenterName(tenantData.name || '');
+      setContactEmail(tenantData.contact_email || '');
       setMenuSettings(
-        tenantRes.data.settings?.menu || {
+        tenantData.settings?.menu || {
           dashboard: true,
           schedule: true,
           classes: true,
@@ -52,14 +59,14 @@ export const useSettings = () => {
         }
       );
 
-      setFullName(userRes.data.full_name || '');
-      setNotifySessions(userRes.data.notify_upcoming_sessions);
-      setIsGoogleConnected(userRes.data.is_google_connected);
+      setFullName(userData.full_name || '');
+      setNotifySessions(userData.notify_upcoming_sessions);
+      setIsGoogleConnected(userData.is_google_connected);
 
       try {
-        const apiRes = await api.get('/tenant/api-key');
-        if (apiRes.data.hasAccess) {
-          setApiKey(apiRes.data.apiKey);
+        const apiData = await getApiKeyInfo();
+        if (apiData.hasAccess) {
+          setApiKey(apiData.apiKey || null);
           setHasApiAccess(true);
         } else {
           setHasApiAccess(false);
@@ -83,7 +90,7 @@ export const useSettings = () => {
     if (saving) return;
     setSaving(true);
     try {
-      await api.put('/tenant', { name: centerName, contact_email: contactEmail });
+      await updateTenantApi({ name: centerName, contact_email: contactEmail });
       toast.success(t('common.success'));
     } catch (error) {
       toast.error(t('common.error'));
@@ -96,12 +103,12 @@ export const useSettings = () => {
     if (saving) return;
     setSaving(true);
     try {
-      const res = await api.put('/tenant', {
+      const data = await updateTenantApi({
         name: centerName,
         contact_email: contactEmail,
         settings: { menu: menuSettings },
       });
-      updateUser({ tenant_settings: res.data.settings });
+      updateUser({ tenant_settings: data.settings });
       toast.success(t('common.success'));
     } catch (error) {
       toast.error(t('common.error'));
@@ -114,7 +121,7 @@ export const useSettings = () => {
     if (saving) return;
     setSaving(true);
     try {
-      await api.put('/auth/me', {
+      await updateProfile({
         full_name: fullName,
         notify_upcoming_sessions: notifySessions,
       });
@@ -130,8 +137,8 @@ export const useSettings = () => {
     if (syncing) return;
     setSyncing(true);
     try {
-      const res = await api.post('/google/sync-all');
-      toast.success(res.data.message);
+      const data = await syncAllGoogle();
+      toast.success(data.message);
     } catch (error) {
       toast.error(t('common.error'));
     } finally {
@@ -142,8 +149,8 @@ export const useSettings = () => {
   const handleGenerateApiKey = async () => {
     setGeneratingKey(true);
     try {
-      const res = await api.post('/tenant/api-key');
-      setApiKey(res.data.apiKey);
+      const data = await generateApiKey();
+      setApiKey(data.apiKey);
       toast.success(t('common.success'));
     } catch (error) {
       toast.error(t('common.error'));

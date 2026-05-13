@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { bulkImportStudents, bulkImportOther } from '../api';
-import { getBranches } from '../../branches/api';
+import { bulkImportStudents, bulkImportOther } from '@/services/importService';
+import { getBranches } from '@/services/branchesService';
 import toast from 'react-hot-toast';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
@@ -162,7 +162,7 @@ export const useImport = () => {
       }
     });
 
-    let validData = mappedData.filter(
+    const validData = mappedData.filter(
       (d: any) =>
         (importType === 'rooms' ? d.name : d.full_name || d.name) &&
         (importType === 'classes' ? d.teacher_email : true)

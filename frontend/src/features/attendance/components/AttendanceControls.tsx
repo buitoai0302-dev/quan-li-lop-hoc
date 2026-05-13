@@ -17,6 +17,8 @@ interface AttendanceControlsProps {
   selectedSession: Session | null;
   stats: AttendanceStats;
   selectedDate: string;
+  isReadOnly: boolean;
+  isFutureDate: boolean;
   handlePrevDay: () => void;
   handleNextDay: () => void;
   handleToday: () => void;
@@ -32,6 +34,8 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
   selectedSession,
   stats,
   selectedDate,
+  isReadOnly,
+  isFutureDate,
   handlePrevDay,
   handleNextDay,
   handleToday,
@@ -120,11 +124,23 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
                   type="date"
                   value={selectedDate}
                   onChange={(e) => handleDateChange(e.target.value)}
-                  className="w-full pl-8 sm:pl-9 pr-2 sm:pr-3 py-2 bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-slate-800 rounded-lg text-[10px] sm:text-xs font-bold outline-none focus:ring-2 focus:ring-primary/20 dark:text-white cursor-pointer truncate"
+                  className={`w-full pl-8 sm:pl-9 pr-2 sm:pr-3 py-2 ${
+                    isFutureDate
+                      ? 'bg-amber-50/30 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 focus:ring-amber-500/20'
+                      : isReadOnly
+                        ? 'bg-blue-50/30 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800 focus:ring-blue-500/20'
+                        : 'bg-gray-50 dark:bg-slate-950 border-gray-100 dark:border-slate-800 focus:ring-primary/20'
+                  } border rounded-lg text-[10px] sm:text-xs font-bold outline-none dark:text-white cursor-pointer truncate`}
                 />
                 <CalendarIcon
                   size={12}
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 group-hover:text-primary transition-colors"
+                  className={`absolute left-2.5 top-1/2 -translate-y-1/2 ${
+                    isFutureDate
+                      ? 'text-amber-500'
+                      : isReadOnly
+                        ? 'text-blue-500'
+                        : 'text-slate-500 dark:text-slate-400 group-hover:text-primary'
+                  } transition-colors`}
                 />
               </div>
               <button

@@ -46,7 +46,7 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           </div>
         )}
 
-        <div className={cn('flex-1 flex flex-col', scrollable && 'overflow-auto custom-scrollbar')}>
+        <div className={cn('flex-1 flex flex-col min-h-0 overflow-hidden', scrollable && 'overflow-auto custom-scrollbar')}>
           {children}
         </div>
 

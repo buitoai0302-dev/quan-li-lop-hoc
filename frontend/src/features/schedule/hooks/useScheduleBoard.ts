@@ -1,13 +1,22 @@
 import { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import api from '@/api';
-import { format, startOfWeek, addDays, startOfMonth, endOfMonth, endOfWeek } from 'date-fns';
+import {
+  getWeeklySchedule,
+  updateSession,
+  createSession,
+  deleteSession,
+} from '@/services/scheduleService';
+import { getBranches } from '@/services/branchesService';
+import { getTeachers } from '@/services/teachersService';
+import { getClasses } from '@/services/classesService';
+import { getRooms } from '@/services/roomsService';
+import { format, startOfWeek, addDays, startOfMonth, addMonths } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES, VIEW_MODES } from '@/utils/constants';
 import { handleApiError } from '@/utils/errorHelper';
 import toast from 'react-hot-toast';
-import type { Session, Branch, ClassData, Room, Teacher, ViewMode } from '@/types';
+import type { Session, ViewMode } from '@/types';
 
 export const useScheduleBoard = () => {
   const { t } = useTranslation();
@@ -21,7 +30,7 @@ export const useScheduleBoard = () => {
 
   // State
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  
+
   // Persistence for viewMode
   const [viewMode, setViewModeState] = useState<ViewMode>(() => {
     const saved = localStorage.getItem('scheduleViewMode');
@@ -64,7 +73,7 @@ export const useScheduleBoard = () => {
     } else {
       const monthStart = startOfMonth(selectedDate);
       const startDate = startOfWeek(monthStart, { weekStartsOn: 1 });
-      
+
       // Always show 42 days (6 weeks) for a consistent monthly grid
       return Array.from({ length: 42 }).map((_, i) => addDays(startDate, i));
     }
@@ -76,39 +85,42 @@ export const useScheduleBoard = () => {
     queryFn: async () => {
       const startDateStr = format(daysToShow[0], 'yyyy-MM-dd');
       const endDateStr = format(daysToShow[daysToShow.length - 1], 'yyyy-MM-dd');
-      const res = await api.get(
-        `/schedule/weekly?startDate=${startDateStr}&endDate=${endDateStr}&branchId=${selectedBranch}&teacherId=${selectedTeacher}&classId=${selectedClass}`
+      const data = await getWeeklySchedule(
+        startDateStr,
+        endDateStr,
+        selectedBranch,
+        selectedTeacher,
+        selectedClass
       );
-      return res.data.data.sessions as Session[];
+      return data.sessions as Session[];
     },
   });
 
   const branchesQuery = useQuery({
     queryKey: ['branches'],
-    queryFn: async () => (await api.get('/branches')).data as Branch[],
+    queryFn: () => getBranches(),
   });
 
   const teachersQuery = useQuery({
     queryKey: ['teachers'],
-    queryFn: async () => (await api.get('/teachers')).data as Teacher[],
+    queryFn: () => getTeachers(),
   });
 
   const classesQuery = useQuery({
     queryKey: ['classes'],
-    queryFn: async () => (await api.get('/classes')).data as ClassData[],
+    queryFn: () => getClasses(),
     enabled: canEdit || user?.role === USER_ROLES.TEACHER,
   });
 
   const roomsQuery = useQuery({
     queryKey: ['rooms'],
-    queryFn: async () => (await api.get('/rooms')).data as Room[],
+    queryFn: () => getRooms(),
     enabled: canEdit || user?.role === USER_ROLES.TEACHER,
   });
 
   // Mutations
   const updateSessionMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) =>
-      api.put(`/schedule/sessions/${id}`, data),
+    mutationFn: ({ id, data }: { id: string; data: any }) => updateSession(id, data),
     onSuccess: () => {
       toast.success(t('common.success'));
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
@@ -117,7 +129,7 @@ export const useScheduleBoard = () => {
   });
 
   const createSessionMutation = useMutation({
-    mutationFn: async (data: any) => api.post('/schedule/sessions', data),
+    mutationFn: (data: any) => createSession(data),
     onSuccess: () => {
       toast.success(t('common.success'));
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
@@ -127,7 +139,7 @@ export const useScheduleBoard = () => {
   });
 
   const deleteSessionMutation = useMutation({
-    mutationFn: async (id: string) => api.delete(`/schedule/sessions/${id}`),
+    mutationFn: (id: string) => deleteSession(id),
     onSuccess: () => {
       toast.success(t('common.success'));
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
@@ -165,6 +177,18 @@ export const useScheduleBoard = () => {
     setIsModalOpen(true);
   };
 
+  const handlePrev = () => {
+    if (viewMode === VIEW_MODES.DAY) setSelectedDate((prev) => addDays(prev, -1));
+    else if (viewMode === VIEW_MODES.WEEK) setSelectedDate((prev) => addDays(prev, -7));
+    else if (viewMode === VIEW_MODES.MONTH) setSelectedDate((prev) => addMonths(prev, -1));
+  };
+
+  const handleNext = () => {
+    if (viewMode === VIEW_MODES.DAY) setSelectedDate((prev) => addDays(prev, 1));
+    else if (viewMode === VIEW_MODES.WEEK) setSelectedDate((prev) => addDays(prev, 7));
+    else if (viewMode === VIEW_MODES.MONTH) setSelectedDate((prev) => addMonths(prev, 1));
+  };
+
   return {
     sessions: sessionsQuery.data || [],
     isLoading: sessionsQuery.isLoading,
@@ -196,6 +220,8 @@ export const useScheduleBoard = () => {
     daysToShow,
     canEdit,
     handleOpenModal,
+    handlePrev,
+    handleNext,
     handleCloseModal: () => setIsModalOpen(false),
     handleSubmit: (e: React.FormEvent) => {
       e.preventDefault();

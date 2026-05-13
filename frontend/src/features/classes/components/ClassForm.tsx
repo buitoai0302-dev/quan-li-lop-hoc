@@ -358,6 +358,11 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   <p className="text-[11px] font-black text-gray-900 dark:text-white truncate">
                     {s.full_name}
                   </p>
+                  {s.email && (
+                    <p className="text-[9px] text-gray-400 dark:text-gray-500 truncate">
+                      {s.email}
+                    </p>
+                  )}
                 </div>
                 <Button
                   type="button"

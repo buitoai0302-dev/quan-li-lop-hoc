@@ -32,6 +32,8 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
   setIsFilterVisible,
   canEdit,
   onAddSession,
+  onPrev,
+  onNext,
   currentLocale,
   user,
   t,
@@ -39,15 +41,23 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
   const dateInputRef = React.useRef<HTMLInputElement>(null);
 
   const handlePrev = () => {
-    if (viewMode === VIEW_MODES.DAY) setSelectedDate(addDays(selectedDate, -1));
-    else if (viewMode === VIEW_MODES.WEEK) setSelectedDate(addDays(selectedDate, -7));
-    else setSelectedDate(addDays(selectedDate, -30));
+    if (onPrev) {
+      onPrev();
+    } else {
+      if (viewMode === VIEW_MODES.DAY) setSelectedDate(addDays(selectedDate, -1));
+      else if (viewMode === VIEW_MODES.WEEK) setSelectedDate(addDays(selectedDate, -7));
+      else setSelectedDate(addDays(selectedDate, -30));
+    }
   };
 
   const handleNext = () => {
-    if (viewMode === VIEW_MODES.DAY) setSelectedDate(addDays(selectedDate, 1));
-    else if (viewMode === VIEW_MODES.WEEK) setSelectedDate(addDays(selectedDate, 7));
-    else setSelectedDate(addDays(selectedDate, 30));
+    if (onNext) {
+      onNext();
+    } else {
+      if (viewMode === VIEW_MODES.DAY) setSelectedDate(addDays(selectedDate, 1));
+      else if (viewMode === VIEW_MODES.WEEK) setSelectedDate(addDays(selectedDate, 7));
+      else setSelectedDate(addDays(selectedDate, 30));
+    }
   };
 
   const handleShowPicker = () => {
@@ -173,7 +183,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             {/* Branch Filter */}
             <div className="flex-1 space-y-2">
               <Label className="uppercase tracking-[0.15em] ml-1 flex items-center gap-1.5 text-[10px]">
-                <MapPin size={12} className="text-primary/50" />
+                <MapPin size={12} className="text-primary/70" />
                 {t('common.branch')}
               </Label>
               <Select
@@ -194,7 +204,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             {user?.role !== USER_ROLES.TEACHER && (
               <div className="flex-1 space-y-2">
                 <Label className="uppercase tracking-[0.15em] ml-1 flex items-center gap-1.5 text-[10px]">
-                  <User size={12} className="text-primary/50" />
+                  <User size={12} className="text-primary/70" />
                   {t('schedule.teacher')}
                 </Label>
                 <Select
@@ -217,7 +227,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             {/* Class Filter */}
             <div className="flex-1 space-y-2">
               <Label className="uppercase tracking-[0.15em] ml-1 flex items-center gap-1.5 text-[10px]">
-                <BookOpen size={12} className="text-primary/50" />
+                <BookOpen size={12} className="text-primary/70" />
                 {t('menu.classes')}
               </Label>
               <Select

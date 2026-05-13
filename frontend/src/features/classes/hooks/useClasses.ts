@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { getBranches } from '../../branches/api';
-import { getTeachers } from '../../teachers/api';
-import { getRooms } from '../../rooms/api';
-import { getStudents } from '../../students/api';
-import { getClasses } from '../api';
+import { getBranches } from '@/services/branchesService';
+import { getTeachers } from '@/services/teachersService';
+import { getRooms } from '@/services/roomsService';
+import { getStudents } from '@/services/studentsService';
+import { getClasses } from '@/services/classesService';
 import type { ClassData, Branch, Teacher, Room, Student } from '@/types';
 
 /**

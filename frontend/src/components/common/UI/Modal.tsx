@@ -5,7 +5,7 @@ import { X } from 'lucide-react';
 import { cn } from '@/utils/cn';
 
 const modalVariants = cva(
-  'relative w-full max-w-[calc(100%-1rem)] sm:max-w-[calc(100%-2rem)] max-h-[90vh] sm:max-h-[calc(100vh-80px)] overflow-hidden transform transition-all flex flex-col mx-auto my-auto animate-in fade-in zoom-in-95 duration-300',
+  'relative w-[95%] sm:w-full max-h-[90vh] sm:max-h-[92vh] overflow-hidden transform transition-all flex flex-col mx-auto my-auto animate-in fade-in zoom-in-95 duration-300',
   {
     variants: {
       variant: {
@@ -36,7 +36,7 @@ const modalVariants = cva(
 
 export interface ModalProps
   extends React.HTMLAttributes<HTMLDivElement>,
-    VariantProps<typeof modalVariants> {
+  VariantProps<typeof modalVariants> {
   isOpen: boolean;
   onClose: () => void;
   title: string;

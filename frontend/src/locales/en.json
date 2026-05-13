@@ -396,7 +396,9 @@
     "save": "Save Attendance",
     "noSessionsDesc": "No classes scheduled for this day. Try another date or check the schedule.",
     "unsavedTitle": "Unsaved Changes!",
-    "unsavedDesc": "You have unsaved attendance data. If you leave now, your changes will be lost."
+    "unsavedDesc": "You have unsaved attendance data. If you leave now, your changes will be lost.",
+    "futureSessionWarning": "Future Session",
+    "pastSessionWarning": "Attendance History (Read-only)"
   },
   "schedule": {
     "title": "Schedule Management",
@@ -676,7 +678,11 @@
     "RESET_PASSWORD_EXPIRED": "Password reset token expired.",
     "USER_NOT_FOUND": "User not found.",
     "LIMIT_EXCEEDED_TITLE": "Plan Limit Reached",
-    "LIMIT_EXCEEDED_DESC": "You have reached the maximum limit of your current plan. Please upgrade to continue using this feature."
+    "LIMIT_EXCEEDED_DESC": "You have reached the maximum limit of your current plan. Please upgrade to continue using this feature.",
+    "SCHEDULE_CONFLICT": "Schedule Conflict",
+    "TEACHER_CONFLICT": "Teacher already has a session at this time",
+    "ROOM_CONFLICT": "Room is already booked at this time",
+    "CLASS_CONFLICT": "Class already has a session at this time"
   },
   "validation": {
     "nameMin": "Name must be at least 2 characters",

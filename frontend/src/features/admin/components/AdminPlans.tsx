@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getAdminPlans, updatePlan } from '../api';
+import { getAdminPlans, updatePlan } from '@/services/adminService';
 import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';
 import { Save, Info, Building, Zap, Shield, Crown, Settings } from 'lucide-react';

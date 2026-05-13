@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Clock, Activity, Users, BookOpen, Calendar, ChevronRight, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import api from '../api';
+import { getActivities } from '@/services/adminService';
 import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
 import type { ActivityItem } from '../types';
@@ -18,8 +18,8 @@ const NotificationPopover: React.FC = () => {
   const fetchActivities = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/dashboard/activities?page=1&limit=5');
-      setActivities(res.data.activities);
+      const data = await getActivities(1, 5);
+      setActivities(data.activities);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     } finally {

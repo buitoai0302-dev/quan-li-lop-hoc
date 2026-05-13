@@ -8,6 +8,11 @@ export interface ApiErrorData {
   errorCode?: string;
   message?: string;
   error?: string;
+  conflicts?: Array<{
+    conflict_type: string;
+    conflict_id: string;
+    detail: string;
+  }>;
 }
 
 export const handleApiError = (
@@ -16,7 +21,7 @@ export const handleApiError = (
   defaultMessageKey: string = 'common.error'
 ) => {
   const data = error.response?.data;
-  const errorCode = data?.code || data?.errorCode;
+  const errorCode = data?.code || data?.errorCode || data?.error;
   const errorMessage = data?.message || data?.error || '';
   const status = error.response?.status;
 
@@ -64,6 +69,25 @@ export const handleApiError = (
       { duration: 6000, position: 'top-center' }
     );
     return;
+  }
+
+  // Handle Schedule Conflicts
+  if (errorCode === ERROR_CODES.SCHEDULE_CONFLICT || errorCode === 'SCHEDULE_CONFLICT') {
+    if (data?.conflicts && Array.isArray(data.conflicts) && data.conflicts.length > 0) {
+      // Group conflicts by type for cleaner messages
+      const conflictMessages = data.conflicts.map((c) => {
+        const typeKey = `errors.${c.conflict_type}`;
+        const translatedType = t(typeKey);
+        // If translation doesn't exist, use the detail from server (fallback)
+        return translatedType !== typeKey ? translatedType : c.detail;
+      });
+
+      // Show unique messages
+      Array.from(new Set(conflictMessages)).forEach((msg) => {
+        toast.error(msg, { duration: 5000 });
+      });
+      return;
+    }
   }
 
   if (errorCode && errorCode !== ERROR_CODES.INTERNAL_ERROR) {

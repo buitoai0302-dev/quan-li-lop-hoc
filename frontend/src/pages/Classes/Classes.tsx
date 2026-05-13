@@ -8,7 +8,7 @@ import {
   enrollStudent,
   unenrollStudent,
   enrollBulk,
-} from '@/features/classes/api';
+} from '@/services/classesService';
 import { Modal, Card } from '@/components/common/UI';
 import { BookOpen, Plus, Upload, Search } from 'lucide-react';
 import ConfirmModal from '@/components/common/ConfirmModal';

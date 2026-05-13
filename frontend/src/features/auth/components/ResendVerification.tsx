@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import api from '@/api';
+import { resendVerification } from '@/services/authService';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
@@ -15,7 +15,7 @@ const ResendVerification: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
     try {
-      await api.post('/auth/resend-verification', { email });
+      await resendVerification(email);
       setSent(true);
     } catch (error: any) {
       toast.error(error.response?.data?.error || t('common.error'));

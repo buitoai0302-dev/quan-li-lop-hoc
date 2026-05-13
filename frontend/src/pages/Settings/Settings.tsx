@@ -9,8 +9,8 @@ import {
   getGoogleAuthUrl,
   disconnectGoogle,
   syncAllGoogle,
-} from '@/features/settings/api';
-import { getCurrentUser, updateProfile } from '@/features/auth/api';
+} from '@/services/settingsService';
+import { getCurrentUser, updateProfile } from '@/services/authService';
 import toast from 'react-hot-toast';
 import { Key, Building, User, Globe, Palette, ChevronRight, Zap } from 'lucide-react';
 import ConfirmModal from '@/components/common/ConfirmModal';

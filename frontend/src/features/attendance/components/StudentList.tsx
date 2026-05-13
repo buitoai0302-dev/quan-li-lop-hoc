@@ -11,6 +11,7 @@ interface StudentListProps {
   attendanceLoading: boolean;
   selectedSession: Session | null;
   filteredAttendance: AttendanceRecord[];
+  isReadOnly: boolean;
   handleStatusChange: (studentId: string, status: AttendanceRecord['status']) => void;
 }
 
@@ -18,6 +19,7 @@ const StudentList: React.FC<StudentListProps> = ({
   attendanceLoading,
   selectedSession,
   filteredAttendance,
+  isReadOnly,
   handleStatusChange,
 }) => {
   const { t } = useTranslation();
@@ -65,7 +67,8 @@ const StudentList: React.FC<StudentListProps> = ({
                     <button
                       key={status}
                       onClick={() => handleStatusChange(record.student_id, status as any)}
-                      className={`flex-1 sm:flex-none px-2.5 sm:px-3 py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-tighter transition-all border ${
+                      disabled={isReadOnly}
+                      className={`flex-1 sm:flex-none px-2.5 sm:px-3 py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-tighter transition-all border disabled:opacity-40 disabled:cursor-not-allowed ${
                         record.status === status
                           ? status === ATTENDANCE_STATUS.PRESENT
                             ? 'bg-green-500 border-green-500 text-white shadow-md'

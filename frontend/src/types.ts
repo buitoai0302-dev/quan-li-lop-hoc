@@ -389,6 +389,8 @@ export interface ScheduleHeaderProps {
   setIsFilterVisible: (visible: boolean) => void;
   canEdit: boolean;
   onAddSession: () => void;
+  onPrev?: () => void;
+  onNext?: () => void;
   currentLocale: unknown;
   user: User | null;
   t: TFunction;

@@ -11,7 +11,7 @@ import {
 import * as XLSX from 'xlsx';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import PageHeader from '@/components/common/PageHeader';
-import { Card, Button } from '@/components/common/UI';
+import { Card } from '@/components/common/UI';
 import PageLoading from '@/components/common/PageLoading';
 
 import { useImport } from '@/features/import/hooks/useImport';

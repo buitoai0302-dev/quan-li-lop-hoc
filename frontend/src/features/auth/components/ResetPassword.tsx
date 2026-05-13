@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import api from '@/api';
+import { resetPassword } from '@/services/authService';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
@@ -49,7 +49,7 @@ const ResetPassword: React.FC = () => {
     }
     setIsLoading(true);
     try {
-      await api.post('/auth/reset-password', { token, password });
+      await resetPassword({ token, password });
       setSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
     } catch (error: any) {

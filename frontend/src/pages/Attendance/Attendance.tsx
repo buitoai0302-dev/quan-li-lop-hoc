@@ -36,6 +36,8 @@ const AttendancePage: React.FC = () => {
     isSessionsExpanded,
     setIsSessionsExpanded,
     blocker,
+    isReadOnly,
+    isFutureDate,
     stats,
     filteredAttendance,
     handleDateChange,
@@ -99,6 +101,8 @@ const AttendancePage: React.FC = () => {
         selectedSession={selectedSession}
         attendance={attendance}
         saving={saving}
+        isReadOnly={isReadOnly}
+        isFutureDate={isFutureDate}
         handleMarkAllAsPresent={handleMarkAllAsPresent}
         handleSave={handleSave}
       />
@@ -109,6 +113,8 @@ const AttendancePage: React.FC = () => {
         selectedSession={selectedSession}
         stats={stats}
         selectedDate={selectedDate}
+        isReadOnly={isReadOnly}
+        isFutureDate={isFutureDate}
         handlePrevDay={handlePrevDay}
         handleNextDay={handleNextDay}
         handleToday={handleToday}
@@ -132,6 +138,7 @@ const AttendancePage: React.FC = () => {
           attendanceLoading={attendanceLoading}
           selectedSession={selectedSession}
           filteredAttendance={filteredAttendance}
+          isReadOnly={isReadOnly}
           handleStatusChange={handleStatusChange}
         />
       </div>

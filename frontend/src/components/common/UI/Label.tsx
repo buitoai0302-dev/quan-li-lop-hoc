@@ -3,12 +3,13 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/utils/cn';
 
 const labelVariants = cva(
-  'font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2 block transition-colors group-focus-within:text-primary',
+  'font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1 block transition-colors group-focus-within:text-primary',
   {
     variants: {
       size: {
-        default: 'text-sm',
-        xs: 'text-[11px]',
+        default: 'text-[11px]',
+        xs: 'text-[10px]',
+        sm: 'text-xs',
       },
     },
     defaultVariants: {

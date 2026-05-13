@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { createStudent, updateStudent, deleteStudent } from '@/features/students/api';
+import { createStudent, updateStudent, deleteStudent } from '@/services/studentsService';
 import { Modal, Card } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';

@@ -12,10 +12,10 @@ function App() {
       <ErrorBoundary>
         <Toaster
           position="top-right"
-          containerStyle={{ zIndex: 10000 }}
+          containerStyle={{ zIndex: 100000 }}
           toastOptions={{
             style: {
-              zIndex: 10001,
+              zIndex: 100001,
             },
           }}
         />

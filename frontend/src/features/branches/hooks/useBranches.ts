@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getBranches } from '../api';
+import { getBranches } from '@/services/branchesService';
 
 export const useBranches = () => {
   const query = useQuery({

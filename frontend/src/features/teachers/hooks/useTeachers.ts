@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getTeachers } from '../api';
+import { getTeachers } from '@/services/teachersService';
 
 export const useTeachers = (branchId?: string) => {
   const query = useQuery({

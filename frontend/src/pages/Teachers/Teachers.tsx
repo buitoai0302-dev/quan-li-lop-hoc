@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { createTeacher, updateTeacher, deleteTeacher } from '@/features/teachers/api';
+import { createTeacher, updateTeacher, deleteTeacher } from '@/services/teachersService';
 import { Modal, Card } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';

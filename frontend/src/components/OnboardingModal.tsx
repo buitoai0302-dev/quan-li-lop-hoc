@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Rocket, CheckCircle2, ArrowRight } from 'lucide-react';
-import api from '../api';
-import { useAuth } from '../contexts/AuthContext';
-import { handleApiError } from '../utils/errorHelper';
+import { setupFirstBranch } from '@/services/branchesService';
+import { completeOnboarding } from '@/services/authService';
+import { useAuth } from '@/contexts/AuthContext';
+import { handleApiError } from '@/utils/errorHelper';
 
 interface OnboardingModalProps {
   isOpen: boolean;
@@ -30,8 +31,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
     } else {
       setIsSubmitting(true);
       try {
-        await api.put('/branches/first', branchData);
-        await api.post('/auth/onboarding/complete');
+        await setupFirstBranch(branchData);
+        await completeOnboarding();
         // Cập nhật ngay trong context để modal không hiện lại
         updateUser({ onboarding_completed: true });
         onComplete();
@@ -47,7 +48,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center p-3 bg-gray-900/60 backdrop-blur-md animate-in fade-in duration-300">
       <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden border border-white/20 animate-in zoom-in-95 duration-500">
         {/* Progress Bar */}
         <div className="h-2 bg-gray-100 dark:bg-gray-700 flex">

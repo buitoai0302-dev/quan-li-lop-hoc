@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getDashboardStats } from '../api';
+import { getDashboardStats } from '@/services/dashboardService';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { TENANT_STATUS, ACTIVITY_TYPES } from '@/utils/constants';

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { getRooms } from '../api';
+import { getRooms } from '@/services/roomsService';
 
 export const useRooms = (branchId?: string) => {
   const query = useQuery({

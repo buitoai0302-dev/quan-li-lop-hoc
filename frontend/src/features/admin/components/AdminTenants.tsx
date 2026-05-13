@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getAdminTenants, getAdminPlans, getAdminStats, updateTenant } from '../../admin/api';
+import { getAdminTenants, getAdminPlans, getAdminStats, updateTenant } from '@/services/adminService';
 import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';
 import {

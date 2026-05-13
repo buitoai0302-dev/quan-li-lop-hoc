@@ -222,6 +222,19 @@ export const createClass = async (req: AuthRequest, res: Response, next: NextFun
       );
     }
 
+    // Handle Enrollments
+    const { enrollments } = req.body; // Array of student_id
+    if (enrollments && Array.isArray(enrollments) && enrollments.length > 0) {
+      for (const sid of enrollments) {
+        await client.query(
+          `INSERT INTO class_students (tenant_id, class_id, student_id)
+           VALUES ($1, $2, $3)
+           ON CONFLICT (class_id, student_id) DO NOTHING`,
+          [tenantId, classId, sid]
+        );
+      }
+    }
+
     await client.query('COMMIT');
     res.status(201).json(newClass.rows[0]);
   } catch (error: any) {
@@ -380,6 +393,47 @@ export const updateClass = async (req: AuthRequest, res: Response, next: NextFun
       } catch (syncError: any) {
         console.error('SYNC SESSIONS ERROR:', syncError);
         throw syncError;
+      }
+    }
+
+    // Update Enrollments if provided
+    const { enrollments } = req.body;
+    if (enrollments && Array.isArray(enrollments)) {
+      // For update, we might want to sync: remove missing, add new.
+      // But usually enroll/unenroll are handled individually.
+      // If enrollments is provided, we treat it as the complete new list.
+      
+      // 1. Get existing
+      const existingRes = await client.query(
+        `SELECT student_id FROM class_students WHERE class_id = $1`,
+        [id]
+      );
+      const existingIds = existingRes.rows.map((r: any) => r.student_id);
+
+      // 2. Add new ones
+      for (const sid of enrollments) {
+        if (!existingIds.includes(sid)) {
+          await client.query(
+            `INSERT INTO class_students (tenant_id, class_id, student_id)
+             VALUES ($1, $2, $3)
+             ON CONFLICT (class_id, student_id) DO NOTHING`,
+            [tenantId, id, sid]
+          );
+        }
+      }
+
+      // 3. Optional: Remove those not in the new list? 
+      // For now, let's only add missing ones to prevent accidental deletion 
+      // if the frontend payload was incomplete. 
+      // Actually, if it's a sync, it should be exact. 
+      // But the frontend handleSubmit currently sends the full enrollments list.
+      for (const exId of existingIds) {
+        if (!enrollments.includes(exId)) {
+          await client.query(
+            `DELETE FROM class_students WHERE class_id = $1 AND student_id = $2`,
+            [id, exId]
+          );
+        }
       }
     }
 

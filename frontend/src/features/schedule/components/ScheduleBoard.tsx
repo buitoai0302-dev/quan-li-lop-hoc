@@ -53,8 +53,53 @@ const ScheduleBoard: React.FC = () => {
     handleCloseModal,
     handleSubmit,
     handleDelete,
+    handlePrev,
+    handleNext,
     updateSessionMutation,
   } = useScheduleBoard();
+
+  // Swipe Handlers
+  const touchStartX = React.useRef(0);
+  const touchStartY = React.useRef(0);
+  const touchEndX = React.useRef(0);
+  const touchEndY = React.useRef(0);
+  const touchStartTime = React.useRef(0);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.targetTouches[0].clientX;
+    touchStartY.current = e.targetTouches[0].clientY;
+    touchStartTime.current = Date.now();
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    touchEndX.current = e.targetTouches[0].clientX;
+    touchEndY.current = e.targetTouches[0].clientY;
+  };
+
+  const handleTouchEnd = () => {
+    const distanceX = touchStartX.current - touchEndX.current;
+    const distanceY = touchStartY.current - touchEndY.current;
+    const duration = Date.now() - touchStartTime.current;
+    const velocity = Math.abs(distanceX) / duration;
+
+    // Trigger only if horizontal movement is dominant and meets threshold
+    if (
+      Math.abs(distanceX) > Math.abs(distanceY) * 1.5 && // Horizontal dominance
+      Math.abs(distanceX) > 70 && // Min distance
+      velocity > 0.4 // Acceleration threshold
+    ) {
+      if (distanceX > 0) {
+        handleNext(); // Swipe Left -> Next
+      } else {
+        handlePrev(); // Swipe Right -> Prev
+      }
+    }
+    // Reset
+    touchStartX.current = 0;
+    touchStartY.current = 0;
+    touchEndX.current = 0;
+    touchEndY.current = 0;
+  };
 
   useEffect(() => {
     const handleResize = () => {
@@ -121,7 +166,7 @@ const ScheduleBoard: React.FC = () => {
   }, [sessions]);
 
   return (
-    <Card className="flex flex-col flex-1 h-full overflow-hidden" scrollable={false}>
+    <Card className="flex flex-col flex-1 h-full min-h-0 overflow-hidden shadow-none border-none bg-transparent" scrollable={false}>
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <ScheduleHeader
           selectedDate={selectedDate}
@@ -141,12 +186,19 @@ const ScheduleBoard: React.FC = () => {
           setIsFilterVisible={setIsFilterVisible}
           canEdit={canEdit}
           onAddSession={() => handleOpenModal()}
+          onPrev={handlePrev}
+          onNext={handleNext}
           currentLocale={currentLocale}
           user={user}
           t={t}
         />
 
-        <div className="h-[calc(100vh-220px)] sm:h-[calc(100vh-250px)] overflow-y-auto bg-white dark:bg-gray-800">
+        <div
+          className="flex-1 min-h-0 overflow-auto custom-scrollbar bg-white dark:bg-gray-800"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           {viewMode === 'month' && (
             <div className="grid grid-cols-7 border-b border-border dark:border-gray-600 bg-gray-50 dark:bg-gray-900 sticky top-0 z-20 min-w-[800px] sm:min-w-[1000px] xl:min-w-full">
               {[
@@ -168,7 +220,7 @@ const ScheduleBoard: React.FC = () => {
             </div>
           )}
           <div
-            className={`grid ${viewMode === 'day' ? 'grid-cols-1' : 'grid-cols-7 min-w-[800px] sm:min-w-[1000px] xl:min-w-full'} divide-x divide-y divide-border dark:divide-gray-700`}
+            className={`grid ${viewMode === 'day' ? 'grid-cols-1' : 'grid-cols-7 min-w-[800px] sm:min-w-[1000px] xl:min-w-full'} border-l border-t border-border dark:border-gray-700`}
           >
             {daysToShow.map((day, idx) => {
               const dateStr = format(day, 'yyyy-MM-dd');
@@ -179,7 +231,7 @@ const ScheduleBoard: React.FC = () => {
               return (
                 <div
                   key={idx}
-                  className={`flex flex-col ${viewMode === 'month' ? 'min-h-[120px] sm:min-h-[160px]' : 'min-h-[300px]'} ${!isCurrentMonth ? 'bg-gray-50/80 dark:bg-gray-900/50' : ''}`}
+                  className={`flex flex-col border-r border-b border-border dark:border-gray-700 ${viewMode === 'month' ? 'min-h-[120px] sm:min-h-[160px]' : 'min-h-[300px]'} ${!isCurrentMonth ? 'bg-gray-50/80 dark:bg-gray-900/50' : ''}`}
                 >
                   {viewMode !== 'month' ? (
                     <div

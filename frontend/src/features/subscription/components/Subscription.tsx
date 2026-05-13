@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, ArrowRight, Info, CreditCard } from 'lucide-react';
-import { getPlans, getTenant, getPlanRequestStatus, requestPlanUpgrade } from '../api';
+import { getPlans, getTenant, getPlanRequestStatus, requestPlanUpgrade } from '@/services/subscriptionService';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';

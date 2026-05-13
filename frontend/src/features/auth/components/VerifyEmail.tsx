@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import api from '@/api';
+import { verifyEmail } from '@/services/authService';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
@@ -21,9 +21,9 @@ const VerifyEmail: React.FC = () => {
         return;
       }
       try {
-        const response = await api.get(`/auth/verify-email?token=${token}`);
+        const data = await verifyEmail(token);
         setStatus('success');
-        setMessage(response.data.message || t('auth.verifyEmailSuccessDesc'));
+        setMessage(data.message || t('auth.verifyEmailSuccessDesc'));
         setTimeout(() => navigate('/login'), 3000);
       } catch (error: any) {
         setStatus('error');

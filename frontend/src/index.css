@@ -26,6 +26,11 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Ensure toasts are always on top of modals */
+div[id^='react-hot-toast'] {
+  z-index: 1000000 !important;
+}
+
 /* Custom Utilities for Drag and Drop */
 .drag-overlay {
   cursor: grabbing !important;

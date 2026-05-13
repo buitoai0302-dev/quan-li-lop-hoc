@@ -422,7 +422,9 @@
     "save": "Lưu điểm danh",
     "noSessionsDesc": "Không có ca học nào được xếp lịch cho ngày này. Hãy thử chọn ngày khác hoặc kiểm tra Lịch dạy.",
     "unsavedTitle": "Thay đổi chưa lưu!",
-    "unsavedDesc": "Bạn có dữ liệu điểm danh chưa được lưu. Nếu rời đi bây giờ, các thay đổi của bạn sẽ bị mất."
+    "unsavedDesc": "Bạn có dữ liệu điểm danh chưa được lưu. Nếu rời đi bây giờ, các thay đổi của bạn sẽ bị mất.",
+    "futureSessionWarning": "Buổi học trong tương lai",
+    "pastSessionWarning": "Lịch sử điểm danh (Chế độ xem)"
   },
   "schedule": {
     "title": "Quản lý Lịch học",
@@ -702,7 +704,11 @@
     "RESET_PASSWORD_EXPIRED": "Mã đặt lại mật khẩu đã hết hạn.",
     "USER_NOT_FOUND": "Không tìm thấy người dùng.",
     "LIMIT_EXCEEDED_TITLE": "Đã đạt giới hạn gói",
-    "LIMIT_EXCEEDED_DESC": "Bạn đã đạt đến hạn mức tối đa của gói hiện tại. Vui lòng nâng cấp để tiếp tục sử dụng tính năng này."
+    "LIMIT_EXCEEDED_DESC": "Bạn đã đạt đến hạn mức tối đa của gói hiện tại. Vui lòng nâng cấp để tiếp tục sử dụng tính năng này.",
+    "SCHEDULE_CONFLICT": "Trùng lịch học",
+    "TEACHER_CONFLICT": "Giáo viên đã có lịch dạy vào thời gian này",
+    "ROOM_CONFLICT": "Phòng học đã được sử dụng vào thời gian này",
+    "CLASS_CONFLICT": "Lớp học đã có buổi dạy vào thời gian này"
   },
   "validation": {
     "nameMin": "Tên phải có ít nhất 2 ký tự",

@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getAttendanceForSession, saveAttendance } from '../api';
-import { getWeeklySchedule } from '../../schedule/api';
+import { getAttendanceForSession, saveAttendance } from '@/services/attendanceService';
+import { getWeeklySchedule } from '@/services/scheduleService';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ATTENDANCE_STATUS } from '@/utils/constants';
@@ -29,7 +29,7 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
     queryKey: ['sessions', selectedDate],
     queryFn: async () => {
       const data = await getWeeklySchedule(selectedDate, selectedDate);
-      return data.data.sessions as Session[];
+      return data.sessions as Session[];
     },
     enabled: isAttendanceEnabled,
   });
@@ -171,11 +171,30 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
     setPendingAction(null);
   };
 
+  const isReadOnly = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selDate = new Date(selectedDate);
+    selDate.setHours(0, 0, 0, 0);
+    // Read-only if it's NOT today (either past or future)
+    return selDate.getTime() !== today.getTime();
+  }, [selectedDate]);
+
+  const isFutureDate = useMemo(() => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selDate = new Date(selectedDate);
+    selDate.setHours(0, 0, 0, 0);
+    return selDate > today;
+  }, [selectedDate]);
+
   return {
     sessions: sessionsQuery.data || [],
     selectedSession: attendanceQuery.data?.session || null,
     attendance: localAttendance,
     selectedDate,
+    isReadOnly,
+    isFutureDate,
     sessionsLoading: sessionsQuery.isLoading,
     attendanceLoading: attendanceQuery.isLoading,
     saving: saveMutation.isPending,
