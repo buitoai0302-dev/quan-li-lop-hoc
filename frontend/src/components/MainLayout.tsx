@@ -59,6 +59,25 @@ const MainLayout: React.FC = () => {
 
       {/* Main Content */}
       <main className="flex-1 overflow-hidden flex flex-col relative custom-scrollbar bg-gray-50/50 dark:bg-slate-950/50">
+        {/* Impersonation Banner */}
+        {localStorage.getItem('impersonatedTenantId') && (
+          <div className="w-full z-[100] bg-rose-500 text-white px-4 py-2 flex items-center justify-center gap-4 text-xs font-bold shadow-md shrink-0">
+            <span>
+              Đang quản lý Trung tâm: {localStorage.getItem('impersonatedTenantName') || 'Unknown'}
+            </span>
+            <button
+              onClick={() => {
+                localStorage.removeItem('impersonatedTenantId');
+                localStorage.removeItem('impersonatedTenantName');
+                window.location.href = '/';
+              }}
+              className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-md transition-colors uppercase tracking-widest text-[10px]"
+            >
+              Thoát
+            </button>
+          </div>
+        )}
+
         <header className="sticky top-0 z-40 h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 shadow-sm transition-colors duration-200 shrink-0 will-change-transform">
           <div className="flex items-center min-w-0 mr-4">
             <button
