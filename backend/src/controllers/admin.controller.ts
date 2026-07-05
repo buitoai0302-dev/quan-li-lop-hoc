@@ -34,7 +34,7 @@ export const getAllTenants = async (req: AuthRequest, res: Response, next: NextF
               (SELECT COUNT(*) FROM users WHERE tenant_id = t.id) as user_count,
               (SELECT COUNT(*) FROM branches WHERE tenant_id = t.id) as branch_count
        FROM tenants t
-       JOIN plan_definitions p ON t.plan_id = p.id
+       LEFT JOIN plan_definitions p ON t.plan_id = p.id
        ORDER BY t.created_at DESC`
     );
 
