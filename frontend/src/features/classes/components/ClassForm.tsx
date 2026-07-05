@@ -238,7 +238,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
             {recurringSchedules.map((schedule, index) => (
               <div
                 key={index}
-                className="relative bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md"
+                className="relative bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md pr-8"
               >
                 <Button
                   type="button"
@@ -247,11 +247,11 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   onClick={() =>
                     setRecurringSchedules(recurringSchedules.filter((_, i) => i !== index))
                   }
-                  className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full shadow-md border border-gray-100 dark:border-gray-600 text-red-500 hover:bg-red-50 z-10"
+                  className="absolute top-1 right-1 w-6 h-6 rounded-full shadow-sm border border-gray-100 dark:border-gray-600 text-red-500 hover:bg-red-50 z-10"
                 >
-                  <X size={8} />
+                  <X size={10} />
                 </Button>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2 mt-1">
                   <Select
                     size="xs"
                     variant="muted"
