@@ -45,8 +45,12 @@ const AdminTenants: React.FC = () => {
   }>({ isOpen: false, tenant: null, action: TENANT_ACTIONS.APPROVE });
 
   const filteredTenants = useMemo(() => {
+    const term = searchTerm.toLowerCase();
     return tenants.filter(
-      (t) => t.domain !== SYSTEM_DOMAIN && t.name.toLowerCase().includes(searchTerm.toLowerCase())
+      (t) =>
+        t.domain !== SYSTEM_DOMAIN &&
+        (t.name.toLowerCase().includes(term) ||
+          (t.contact_email && t.contact_email.toLowerCase().includes(term)))
     );
   }, [tenants, searchTerm]);
 
