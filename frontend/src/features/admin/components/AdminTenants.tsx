@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';
@@ -12,6 +12,7 @@ import {
   Zap,
   Clock,
   Crown,
+  Search,
 } from 'lucide-react';
 import { Modal, Card, Button, Badge } from '@/components/common/UI';
 import { TENANT_STATUS, PLAN_CODES, TENANT_ACTIONS, SYSTEM_DOMAIN } from '@/utils/constants';
@@ -32,6 +33,7 @@ const AdminTenants: React.FC = () => {
 
   const loading = loadingTenants || loadingPlans || loadingStats;
 
+  const [searchTerm, setSearchTerm] = useState('');
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [newPlanId, setNewPlanId] = useState('');
@@ -41,6 +43,12 @@ const AdminTenants: React.FC = () => {
     tenant: Tenant | null;
     action: (typeof TENANT_ACTIONS)[keyof typeof TENANT_ACTIONS];
   }>({ isOpen: false, tenant: null, action: TENANT_ACTIONS.APPROVE });
+
+  const filteredTenants = useMemo(() => {
+    return tenants.filter(
+      (t) => t.domain !== SYSTEM_DOMAIN && t.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [tenants, searchTerm]);
 
   const handleConfirmAction = () => {
     if (!confirmModal.tenant) return;
@@ -99,7 +107,7 @@ const AdminTenants: React.FC = () => {
       />
 
       <div className="flex-1 overflow-hidden flex flex-col px-1">
-        <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col space-y-6 min-h-0 py-4">
+        <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col space-y-4 sm:space-y-6 min-h-0 py-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 shrink-0">
             <StatCard
               label={t('admin.stats.totalTenants')}
@@ -120,6 +128,22 @@ const AdminTenants: React.FC = () => {
               color="emerald"
               className="sm:col-span-2 lg:col-span-1"
             />
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0">
+            <div className="relative w-full sm:max-w-md">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                size={18}
+              />
+              <input
+                type="text"
+                placeholder={t('common.search')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-2.5 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all shadow-sm"
+              />
+            </div>
           </div>
 
           <Card className="flex-1 min-h-0 overflow-hidden" scrollable={true}>
@@ -145,130 +169,138 @@ const AdminTenants: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                  {tenants.map((tenant) => (
-                    <tr
-                      key={tenant.id}
-                      className="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group"
-                    >
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 border border-gray-100 dark:border-gray-700 group-hover:scale-105 transition-transform">
-                            <Building size={20} />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <div className="text-sm font-bold text-gray-900 dark:text-white">
-                                {tenant.name}
+                  {filteredTenants.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500 text-sm">
+                        {t('common.noResults')}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredTenants.map((tenant) => (
+                      <tr
+                        key={tenant.id}
+                        className="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group"
+                      >
+                        <td className="px-6 py-5">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 border border-gray-100 dark:border-gray-700 group-hover:scale-105 transition-transform">
+                              <Building size={20} />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <div className="text-sm font-bold text-gray-900 dark:text-white">
+                                  {tenant.name}
+                                </div>
+                                {tenant.domain === SYSTEM_DOMAIN && (
+                                  <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] font-black uppercase rounded tracking-widest border border-primary/20">
+                                    System
+                                  </span>
+                                )}
                               </div>
-                              {tenant.domain === SYSTEM_DOMAIN && (
-                                <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] font-black uppercase rounded tracking-widest border border-primary/20">
-                                  System
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-[10px] text-gray-400 font-medium mt-0.5">
-                              {tenant.contact_email}
+                              <div className="text-[10px] text-gray-400 font-medium mt-0.5">
+                                {tenant.contact_email}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 truncate uppercase tracking-tighter">
-                          {t(`admin.planNames.${(tenant.plan_code || 'FREE').toUpperCase()}`, {
-                            defaultValue: tenant.plan_code || 'FREE',
-                          })}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 whitespace-nowrap text-xs font-bold text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center gap-4">
-                          <span className="flex items-center gap-1.5">
-                            <Users size={14} className="text-primary" /> {tenant.user_count}
+                        </td>
+                        <td className="px-6 py-5">
+                          <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 truncate uppercase tracking-tighter">
+                            {t(`admin.planNames.${(tenant.plan_code || 'FREE').toUpperCase()}`, {
+                              defaultValue: tenant.plan_code || 'FREE',
+                            })}
                           </span>
-                          <span className="flex items-center gap-1.5">
-                            <Building size={14} className="text-primary" /> {tenant.branch_count}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <StatusBadge status={tenant.status} t={t} />
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex justify-end gap-1.5">
-                          {tenant.domain === SYSTEM_DOMAIN ? (
-                            <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-gray-200 dark:border-gray-700">
-                              <Shield size={14} /> {t('common.roles.super_admin')}
-                            </div>
-                          ) : (
-                            <>
-                              {tenant.status === TENANT_STATUS.PENDING && (
+                        </td>
+                        <td className="px-6 py-5 whitespace-nowrap text-xs font-bold text-gray-600 dark:text-gray-400">
+                          <div className="flex items-center gap-4">
+                            <span className="flex items-center gap-1.5">
+                              <Users size={14} className="text-primary" /> {tenant.user_count}
+                            </span>
+                            <span className="flex items-center gap-1.5">
+                              <Building size={14} className="text-primary" /> {tenant.branch_count}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-5">
+                          <StatusBadge status={tenant.status} t={t} />
+                        </td>
+                        <td className="px-6 py-5 text-right">
+                          <div className="flex justify-end gap-1.5">
+                            {tenant.domain === SYSTEM_DOMAIN ? (
+                              <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-gray-200 dark:border-gray-700">
+                                <Shield size={14} /> {t('common.roles.super_admin')}
+                              </div>
+                            ) : (
+                              <>
+                                {tenant.status === TENANT_STATUS.PENDING && (
+                                  <button
+                                    onClick={() =>
+                                      setConfirmModal({
+                                        isOpen: true,
+                                        tenant,
+                                        action: TENANT_ACTIONS.APPROVE,
+                                      })
+                                    }
+                                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
+                                  >
+                                    {t('admin.approve')}
+                                  </button>
+                                )}
+                                {tenant.status === TENANT_STATUS.ACTIVE && (
+                                  <button
+                                    onClick={() => {
+                                      localStorage.setItem('impersonatedTenantId', tenant.id);
+                                      localStorage.setItem('impersonatedTenantName', tenant.name);
+                                      window.location.href = '/';
+                                    }}
+                                    className="px-3 h-9 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/20 flex items-center justify-center"
+                                    title={t('admin.manageTenant', 'Quản lý Center')}
+                                  >
+                                    {t('admin.manage', 'Quản lý')}
+                                  </button>
+                                )}
+                                {tenant.status !== TENANT_STATUS.PENDING && (
+                                  <button
+                                    onClick={() => handleOpenPlanModal(tenant)}
+                                    className="w-9 h-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg transition-all"
+                                    title={t('admin.changePlan')}
+                                  >
+                                    <Zap size={18} />
+                                  </button>
+                                )}
                                 <button
                                   onClick={() =>
                                     setConfirmModal({
                                       isOpen: true,
                                       tenant,
-                                      action: TENANT_ACTIONS.APPROVE,
+                                      action:
+                                        tenant.status === TENANT_STATUS.ACTIVE ||
+                                        tenant.status === TENANT_STATUS.PENDING
+                                          ? TENANT_ACTIONS.SUSPEND
+                                          : TENANT_ACTIONS.ACTIVATE,
                                     })
                                   }
-                                  className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
+                                  className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
+                                  title={
+                                    tenant.status === TENANT_STATUS.ACTIVE ||
+                                    tenant.status === TENANT_STATUS.PENDING
+                                      ? t('admin.deactivate')
+                                      : t('admin.activate')
+                                  }
                                 >
-                                  {t('admin.approve')}
+                                  {tenant.status === TENANT_STATUS.ACTIVE ||
+                                  tenant.status === TENANT_STATUS.PENDING ? (
+                                    <XCircle size={18} />
+                                  ) : (
+                                    <CheckCircle size={18} />
+                                  )}
                                 </button>
-                              )}
-                              {tenant.status === TENANT_STATUS.ACTIVE && (
-                                <button
-                                  onClick={() => {
-                                    localStorage.setItem('impersonatedTenantId', tenant.id);
-                                    localStorage.setItem('impersonatedTenantName', tenant.name);
-                                    window.location.href = '/';
-                                  }}
-                                  className="px-3 h-9 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/20 flex items-center justify-center"
-                                  title={t('admin.manageTenant', 'Quản lý Center')}
-                                >
-                                  {t('admin.manage', 'Quản lý')}
-                                </button>
-                              )}
-                              {tenant.status !== TENANT_STATUS.PENDING && (
-                                <button
-                                  onClick={() => handleOpenPlanModal(tenant)}
-                                  className="w-9 h-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg transition-all"
-                                  title={t('admin.changePlan')}
-                                >
-                                  <Zap size={18} />
-                                </button>
-                              )}
-                              <button
-                                onClick={() =>
-                                  setConfirmModal({
-                                    isOpen: true,
-                                    tenant,
-                                    action:
-                                      tenant.status === TENANT_STATUS.ACTIVE ||
-                                      tenant.status === TENANT_STATUS.PENDING
-                                        ? TENANT_ACTIONS.SUSPEND
-                                        : TENANT_ACTIONS.ACTIVATE,
-                                  })
-                                }
-                                className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
-                                title={
-                                  tenant.status === TENANT_STATUS.ACTIVE ||
-                                  tenant.status === TENANT_STATUS.PENDING
-                                    ? t('admin.deactivate')
-                                    : t('admin.activate')
-                                }
-                              >
-                                {tenant.status === TENANT_STATUS.ACTIVE ||
-                                tenant.status === TENANT_STATUS.PENDING ? (
-                                  <XCircle size={18} />
-                                ) : (
-                                  <CheckCircle size={18} />
-                                )}
-                              </button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
