@@ -134,15 +134,24 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
 
         {/* Right Side: Switcher + Actions */}
         <div className="flex items-center gap-4 w-full lg:w-auto">
-          <div className="flex flex-1 sm:flex-none p-1.5 bg-gray-100/50 dark:bg-gray-800/40 backdrop-blur-md rounded-xl shadow-inner border border-gray-200/20 dark:border-gray-700/30">
+          <div className="relative flex flex-1 sm:flex-none p-1 bg-gray-100/80 dark:bg-gray-800/80 rounded-xl shadow-inner border border-gray-200/50 dark:border-gray-700/50 isolate">
+            <div
+              className="absolute top-1 bottom-1 w-[calc(33.333%-0.15rem)] bg-white dark:bg-gray-600 rounded-lg shadow-md ring-1 ring-black/5 dark:ring-white/10 transition-all duration-300 ease-out z-[-1]"
+              style={{
+                left: '0.25rem',
+                transform: `translateX(${
+                  viewMode === VIEW_MODES.DAY ? '0' : viewMode === VIEW_MODES.WEEK ? '100%' : '200%'
+                })`,
+              }}
+            />
             {([VIEW_MODES.DAY, VIEW_MODES.WEEK, VIEW_MODES.MONTH] as const).map((mode) => (
               <button
                 key={mode}
                 onClick={() => setViewMode(mode)}
-                className={`flex-1 sm:px-6 py-2 rounded-lg text-[10px] font-black transition-all whitespace-nowrap uppercase tracking-widest flex items-center justify-center min-w-[70px] ${
+                className={`flex-1 sm:px-6 py-2 rounded-lg text-[10px] font-black transition-colors duration-300 whitespace-nowrap uppercase tracking-widest flex items-center justify-center min-w-[70px] ${
                   viewMode === mode
-                    ? 'bg-white dark:bg-gray-600 text-primary shadow-md ring-1 ring-black/5 dark:ring-white/10 scale-100'
-                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:bg-white/40 dark:hover:bg-white/5'
+                    ? 'text-primary'
+                    : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:text-gray-200'
                 }`}
               >
                 {t(`schedule.view${mode.charAt(0).toUpperCase() + mode.slice(1)}`)}
