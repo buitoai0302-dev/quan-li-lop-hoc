@@ -82,11 +82,11 @@ const ScheduleBoard: React.FC = () => {
     const duration = Date.now() - touchStartTime.current;
     const velocity = Math.abs(distanceX) / duration;
 
-    // Trigger only if horizontal movement is dominant and meets threshold
+    // Trigger only if horizontal movement is strongly dominant and meets higher thresholds
     if (
-      Math.abs(distanceX) > Math.abs(distanceY) * 1.5 && // Horizontal dominance
-      Math.abs(distanceX) > 70 && // Min distance
-      velocity > 0.4 // Acceleration threshold
+      Math.abs(distanceX) > Math.abs(distanceY) * 2.5 && // Strict horizontal dominance
+      Math.abs(distanceX) > 120 && // Higher minimum distance to prevent accidental swipe
+      velocity > 0.6 // Higher velocity threshold
     ) {
       if (distanceX > 0) {
         handleNext(); // Swipe Left -> Next
@@ -166,7 +166,10 @@ const ScheduleBoard: React.FC = () => {
   }, [sessions]);
 
   return (
-    <Card className="flex flex-col flex-1 h-full min-h-0 overflow-hidden shadow-none border-none bg-transparent" scrollable={false}>
+    <Card
+      className="flex flex-col flex-1 h-full min-h-0 overflow-hidden shadow-none border-none bg-transparent"
+      scrollable={false}
+    >
       <DndContext collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <ScheduleHeader
           selectedDate={selectedDate}
