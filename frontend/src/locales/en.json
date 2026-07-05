@@ -327,6 +327,7 @@
     "activate": "Activate",
     "tenantsTitle": "Tenant Management",
     "tenantsSubtitle": "Manage and approve organizations participating in the system",
+    "organization": "Organization / Tenant",
     "tenantName": "Center Name / Tenant",
     "plan": "Service Plan",
     "userCount": "Users",

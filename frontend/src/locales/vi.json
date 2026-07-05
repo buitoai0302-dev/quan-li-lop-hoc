@@ -353,6 +353,7 @@
     "activate": "Kích hoạt",
     "tenantsTitle": "Quản lý Đối tác (Tenant)",
     "tenantsSubtitle": "Quản lý và phê duyệt các tổ chức tham gia hệ thống",
+    "organization": "Tổ chức / Đối tác",
     "tenantName": "Tên trung tâm / Đối tác",
     "plan": "Gói dịch vụ",
     "userCount": "Người dùng",
