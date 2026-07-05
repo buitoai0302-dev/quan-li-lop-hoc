@@ -68,20 +68,43 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
     }
   };
 
+  const actionButtons = (
+    <div className="flex items-center gap-2 shrink-0">
+      <Button
+        variant={isFilterVisible ? 'secondary' : 'outline'}
+        size="icon"
+        onClick={() => setIsFilterVisible(!isFilterVisible)}
+        className="w-9 h-9 sm:w-10 sm:h-10 shadow-sm"
+        title={t('common.filter')}
+      >
+        <SlidersHorizontal size={18} />
+      </Button>
+      {canEdit && (
+        <Button
+          size="icon"
+          onClick={onAddSession}
+          className="w-9 h-9 sm:w-10 sm:h-10 bg-primary hover:bg-primary-dark text-white rounded-lg transition-all shadow-lg shadow-primary/25 group active:scale-95"
+        >
+          <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+        </Button>
+      )}
+    </div>
+  );
+
   return (
     <div className="flex flex-col border-b border-gray-200 dark:border-gray-700 bg-surface dark:bg-gray-900 transition-all sticky top-0 z-30 shadow-sm">
       {/* Main Header Row */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between px-3 sm:px-4 py-3 sm:py-4 gap-4">
-        {/* Left Side: Title */}
-        <div className="flex items-center flex-1 min-w-0">
-          <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3 truncate">
-            <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between px-3 sm:px-4 py-3 sm:py-4 gap-3 sm:gap-4 relative">
+        {/* Left Side: Title & Mobile Actions */}
+        <div className="flex items-center justify-between flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2 sm:gap-3 truncate">
+            <div className="p-1.5 sm:p-2 bg-primary/10 rounded-lg shrink-0">
               <Calendar size={20} className="text-primary" />
             </div>
             <span className="truncate">
               {viewMode === VIEW_MODES.DAY && format(selectedDate, 'dd/MM/yyyy')}
               {viewMode === VIEW_MODES.WEEK && (
-                <span className="flex items-center gap-2 text-primary">
+                <span className="flex items-center gap-1 sm:gap-2 text-primary">
                   <span>{format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'dd/MM')}</span>
                   <span className="text-gray-300 dark:text-gray-600 font-normal">—</span>
                   <span>
@@ -93,24 +116,25 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
                 format(selectedDate, 'MMMM yyyy', { locale: currentLocale as any })}
             </span>
           </h1>
+          <div className="lg:hidden">{actionButtons}</div>
         </div>
 
         {/* Center: Date Navigation */}
-        <div className="flex items-center justify-start lg:justify-center flex-none">
-          <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800/50 rounded-xl p-1 shadow-inner border border-gray-200/20 dark:border-gray-700/30">
+        <div className="flex items-center justify-center flex-none w-full sm:w-auto order-last lg:order-none">
+          <div className="flex w-full sm:w-auto items-center justify-between bg-gray-100 dark:bg-gray-800/50 rounded-xl p-1 shadow-inner border border-gray-200/20 dark:border-gray-700/30">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-white dark:hover:bg-gray-700 rounded-lg"
+              className="h-8 w-10 sm:w-8 hover:bg-white dark:hover:bg-gray-700 rounded-lg shrink-0"
               onClick={handlePrev}
             >
               <ChevronLeft size={16} />
             </Button>
             <div
-              className="relative flex items-center bg-white dark:bg-gray-700 px-4 py-1.5 rounded-lg mx-1 border border-gray-200/50 dark:border-gray-600/50 cursor-pointer shadow-sm hover:ring-1 hover:ring-primary/30 transition-all"
+              className="flex-1 sm:flex-none relative flex justify-center items-center bg-white dark:bg-gray-700 px-4 py-1.5 rounded-lg mx-1 border border-gray-200/50 dark:border-gray-600/50 cursor-pointer shadow-sm hover:ring-1 hover:ring-primary/30 transition-all"
               onClick={handleShowPicker}
             >
-              <span className="text-[11px] font-black text-gray-700 dark:text-gray-200 w-24 text-center">
+              <span className="text-[11px] sm:text-xs font-black text-gray-700 dark:text-gray-200 text-center truncate">
                 {format(selectedDate, 'dd/MM/yyyy')}
               </span>
               <input
@@ -118,14 +142,14 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
                 type="date"
                 value={format(selectedDate, 'yyyy-MM-dd')}
                 onChange={(e) => e.target.value && setSelectedDate(new Date(e.target.value))}
-                className="absolute inset-0 opacity-0 cursor-pointer"
+                className="absolute inset-0 opacity-0 cursor-pointer w-full"
               />
-              <Calendar size={14} className="text-primary ml-1" />
+              <Calendar size={14} className="text-primary ml-2 hidden sm:block shrink-0" />
             </div>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 hover:bg-white dark:hover:bg-gray-700 rounded-lg"
+              className="h-8 w-10 sm:w-8 hover:bg-white dark:hover:bg-gray-700 rounded-lg shrink-0"
               onClick={handleNext}
             >
               <ChevronRight size={16} />
@@ -134,7 +158,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
         </div>
 
         {/* Right Side: Switcher + Actions */}
-        <div className="flex items-center gap-4 w-full lg:w-auto">
+        <div className="flex items-center lg:justify-end gap-4 flex-1">
           <div className="relative flex flex-1 sm:flex-none p-1 bg-gray-100/80 dark:bg-gray-800/80 rounded-xl shadow-inner border border-gray-200/50 dark:border-gray-700/50 isolate">
             <div
               className="absolute top-1 bottom-1 w-[calc(33.333%-0.15rem)] bg-white dark:bg-gray-600 rounded-lg shadow-md ring-1 ring-black/5 dark:ring-white/10 transition-all duration-300 ease-out z-[-1]"
@@ -160,29 +184,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant={isFilterVisible ? 'secondary' : 'outline'}
-              size="icon"
-              onClick={() => setIsFilterVisible(!isFilterVisible)}
-              className="w-10 h-10 shadow-sm"
-              title={t('common.filter')}
-            >
-              <SlidersHorizontal size={18} />
-            </Button>
-            {canEdit && (
-              <Button
-                size="icon"
-                onClick={onAddSession}
-                className="w-10 h-10 bg-primary hover:bg-primary-dark text-white rounded-lg transition-all shadow-lg shadow-primary/25 group active:scale-95"
-              >
-                <Plus
-                  size={20}
-                  className="group-hover:rotate-90 transition-transform duration-300"
-                />
-              </Button>
-            )}
-          </div>
+          <div className="hidden lg:block">{actionButtons}</div>
         </div>
       </div>
 
