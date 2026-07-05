@@ -72,30 +72,31 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
     <div className="flex flex-col border-b border-gray-200 dark:border-gray-700 bg-surface dark:bg-gray-900 transition-all sticky top-0 z-30 shadow-sm">
       {/* Main Header Row */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between px-3 sm:px-4 py-3 sm:py-4 gap-4">
-        {/* Left Side: Title & Date Navigation */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
-          <div className="flex flex-col">
-            <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Calendar size={20} className="text-primary" />
-              </div>
-              <span>
-                {viewMode === VIEW_MODES.DAY && format(selectedDate, 'dd/MM/yyyy')}
-                {viewMode === VIEW_MODES.WEEK && (
-                  <span className="flex items-center gap-2 text-primary">
-                    <span>{format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'dd/MM')}</span>
-                    <span className="text-gray-300 dark:text-gray-600 font-normal">—</span>
-                    <span>
-                      {format(addDays(startOfWeek(selectedDate, { weekStartsOn: 1 }), 6), 'dd/MM')}
-                    </span>
+        {/* Left Side: Title */}
+        <div className="flex items-center flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-3 truncate">
+            <div className="p-2 bg-primary/10 rounded-lg shrink-0">
+              <Calendar size={20} className="text-primary" />
+            </div>
+            <span className="truncate">
+              {viewMode === VIEW_MODES.DAY && format(selectedDate, 'dd/MM/yyyy')}
+              {viewMode === VIEW_MODES.WEEK && (
+                <span className="flex items-center gap-2 text-primary">
+                  <span>{format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'dd/MM')}</span>
+                  <span className="text-gray-300 dark:text-gray-600 font-normal">—</span>
+                  <span>
+                    {format(addDays(startOfWeek(selectedDate, { weekStartsOn: 1 }), 6), 'dd/MM')}
                   </span>
-                )}
-                {viewMode === VIEW_MODES.MONTH &&
-                  format(selectedDate, 'MMMM yyyy', { locale: currentLocale as any })}
-              </span>
-            </h1>
-          </div>
+                </span>
+              )}
+              {viewMode === VIEW_MODES.MONTH &&
+                format(selectedDate, 'MMMM yyyy', { locale: currentLocale as any })}
+            </span>
+          </h1>
+        </div>
 
+        {/* Center: Date Navigation */}
+        <div className="flex items-center justify-start lg:justify-center flex-none">
           <div className="flex items-center justify-between bg-gray-100 dark:bg-gray-800/50 rounded-xl p-1 shadow-inner border border-gray-200/20 dark:border-gray-700/30">
             <Button
               variant="ghost"
