@@ -23,11 +23,11 @@ import { useAdminTenants, useAdminPlans, useAdminStats, useUpdateTenant } from '
 
 const AdminTenants: React.FC = () => {
   const { t } = useTranslation();
-  
+
   const { data: tenants = [], isLoading: loadingTenants } = useAdminTenants();
   const { data: plans = [], isLoading: loadingPlans } = useAdminPlans();
   const { data: stats, isLoading: loadingStats } = useAdminStats();
-  
+
   const { mutate: updateTenantMutate } = useUpdateTenant();
 
   const loading = loadingTenants || loadingPlans || loadingStats;
@@ -48,7 +48,7 @@ const AdminTenants: React.FC = () => {
       confirmModal.action === TENANT_ACTIONS.SUSPEND
         ? TENANT_STATUS.SUSPENDED
         : TENANT_STATUS.ACTIVE;
-    
+
     updateTenantMutate(
       { id: confirmModal.tenant.id, data: { status: newStatus } },
       {
@@ -212,6 +212,19 @@ const AdminTenants: React.FC = () => {
                                   className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
                                 >
                                   {t('admin.approve')}
+                                </button>
+                              )}
+                              {tenant.status === TENANT_STATUS.ACTIVE && (
+                                <button
+                                  onClick={() => {
+                                    localStorage.setItem('impersonatedTenantId', tenant.id);
+                                    localStorage.setItem('impersonatedTenantName', tenant.name);
+                                    window.location.href = '/';
+                                  }}
+                                  className="px-3 h-9 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/20 flex items-center justify-center"
+                                  title={t('admin.manageTenant', 'Quản lý Center')}
+                                >
+                                  {t('admin.manage', 'Quản lý')}
                                 </button>
                               )}
                               {tenant.status !== TENANT_STATUS.PENDING && (

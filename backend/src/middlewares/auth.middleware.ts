@@ -33,6 +33,11 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
       req.tenantId = decoded.tenantId;
     }
 
+    // Super Admin Tenant Impersonation
+    if (decoded.role === 'super_admin' && req.headers['x-tenant-id']) {
+      req.tenantId = req.headers['x-tenant-id'] as string;
+    }
+
     next();
   } catch (error) {
     return res.status(401).json({ error: 'Invalid token' });

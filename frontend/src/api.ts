@@ -13,6 +13,13 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  // Inject impersonated tenant ID if Super Admin is impersonating a center
+  const impersonatedTenantId = localStorage.getItem('impersonatedTenantId');
+  if (impersonatedTenantId) {
+    config.headers['x-tenant-id'] = impersonatedTenantId;
+  }
+
   return config;
 });
 

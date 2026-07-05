@@ -9,8 +9,8 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
     const role = (req as any).user?.role;
     const userId = (req as any).user?.userId;
 
-    // 1. Priority: Super Admin always sees global stats
-    if (role === 'super_admin') {
+    // 1. Priority: Super Admin always sees global stats unless impersonating
+    if (role === 'super_admin' && !req.headers['x-tenant-id']) {
       // Return global system stats for global super admin
       const [tenantsRes, studentsRes, classesRes, teachersRes, activitiesRes, attendanceRateRes] =
         await Promise.all([

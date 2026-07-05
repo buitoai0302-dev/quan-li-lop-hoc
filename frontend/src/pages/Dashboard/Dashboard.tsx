@@ -109,7 +109,6 @@ const Dashboard: React.FC = () => {
             hasBranches={(stats?.usage?.branches?.used || 0) > 0}
             hasRooms={(stats?.rooms || 0) > 0}
             hasClasses={(stats?.activeClasses || 0) > 0}
-            hasStudents={(stats?.students || 0) > 0}
           />
         )}
 

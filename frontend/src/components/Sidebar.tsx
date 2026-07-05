@@ -60,6 +60,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
         />
       )}
 
+      {/* Impersonation Banner */}
+      {localStorage.getItem('impersonatedTenantId') && (
+        <div className="fixed top-0 left-0 w-full z-[100] bg-rose-500 text-white px-4 py-2 flex items-center justify-center gap-4 text-xs font-bold shadow-md animate-in slide-in-from-top-full duration-300">
+          <span>
+            Đang quản lý Trung tâm: {localStorage.getItem('impersonatedTenantName') || 'Unknown'}
+          </span>
+          <button
+            onClick={() => {
+              localStorage.removeItem('impersonatedTenantId');
+              localStorage.removeItem('impersonatedTenantName');
+              window.location.href = '/';
+            }}
+            className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-md transition-colors uppercase tracking-widest text-[10px]"
+          >
+            Thoát
+          </button>
+        </div>
+      )}
+
       {/* Sidebar */}
       <aside
         className={`fixed md:static inset-y-0 left-0 z-[70] w-60 bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800 shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
