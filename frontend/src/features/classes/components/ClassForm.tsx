@@ -41,7 +41,12 @@ const ClassForm: React.FC<ClassFormProps> = ({
   endDateRef,
 }) => {
   const schema = getClassSchema(t);
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<ClassBasicSchemaType>({
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<ClassBasicSchemaType>({
     resolver: zodResolver(schema),
     defaultValues: initialData || {
       name: '',
@@ -100,7 +105,9 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 {...register('name')}
               />
               {errors.name && (
-                <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.name.message}</p>
+                <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">
+                  {errors.name.message}
+                </p>
               )}
             </div>
 
@@ -124,7 +131,9 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 ))}
               </Select>
               {errors.branch_id && (
-                <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.branch_id.message}</p>
+                <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">
+                  {errors.branch_id.message}
+                </p>
               )}
             </div>
 
@@ -166,8 +175,10 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 onClick={() => handleShowPicker(startDateRef)}
                 className="cursor-pointer"
                 {...startRegisterRest}
+                // eslint-disable-next-line react-hooks/immutability
                 ref={(e) => {
                   startRef(e);
+                  // eslint-disable-next-line react-hooks/immutability, @typescript-eslint/no-explicit-any
                   if (startDateRef) (startDateRef as any).current = e;
                 }}
               />
@@ -184,8 +195,10 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 onClick={() => handleShowPicker(endDateRef)}
                 className="cursor-pointer"
                 {...endRegisterRest}
+                // eslint-disable-next-line react-hooks/immutability
                 ref={(e) => {
                   endRef(e);
+                  // eslint-disable-next-line react-hooks/immutability, @typescript-eslint/no-explicit-any
                   if (endDateRef) (endDateRef as any).current = e;
                 }}
               />
@@ -219,7 +232,8 @@ const ClassForm: React.FC<ClassFormProps> = ({
 
           <Card
             variant="muted"
-            className="flex-1 p-3 overflow-y-auto custom-scrollbar space-y-2 max-h-[220px]"
+            scrollable={true}
+            className="flex-1 p-3 custom-scrollbar space-y-2 max-h-[220px]"
           >
             {recurringSchedules.map((schedule, index) => (
               <div
@@ -360,7 +374,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
           </Button>
         </div>
 
-        <Card variant="muted" className="p-2 max-h-[150px] overflow-y-auto custom-scrollbar">
+        <Card variant="muted" scrollable={true} className="p-2 max-h-[150px] custom-scrollbar">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {enrollments.map((s) => (
               <div
