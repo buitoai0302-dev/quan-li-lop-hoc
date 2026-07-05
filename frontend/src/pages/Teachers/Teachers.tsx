@@ -19,9 +19,13 @@ import type { ApiErrorData } from '@/utils/errorHelper';
 
 import { TeacherTable, TeacherForm } from '@/features/teachers/components';
 
-import { useTeachers, useCreateTeacher, useUpdateTeacher, useDeleteTeacher } from '@/features/teachers/hooks/useTeachers';
+import {
+  useTeachers,
+  useCreateTeacher,
+  useUpdateTeacher,
+  useDeleteTeacher,
+} from '@/features/teachers/hooks/useTeachers';
 import { useBranches } from '@/features/branches/hooks/useBranches';
-
 
 const Teachers: React.FC = () => {
   const { t } = useTranslation();
@@ -35,7 +39,7 @@ const Teachers: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  
+
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   // Pagination states
@@ -213,7 +217,50 @@ const Teachers: React.FC = () => {
         ) : filteredTeachers.length === 0 ? (
           <EmptyState
             title={searchTerm || branchFilter ? t('common.noResults') : t('teachers.noData')}
-            icon={Users}
+            description={
+              searchTerm || branchFilter
+                ? t('common.tryDifferentSearch')
+                : t('teachers.createFirstTeacher', 'Thêm giáo viên đầu tiên của bạn')
+            }
+            showArrow={!(searchTerm || branchFilter)}
+            illustration={
+              <svg
+                viewBox="0 0 200 200"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-48 h-48 mx-auto"
+              >
+                <rect
+                  x="40"
+                  y="50"
+                  width="120"
+                  height="90"
+                  rx="8"
+                  className="fill-emerald-50 dark:fill-emerald-900/20 stroke-emerald-200 dark:stroke-emerald-800"
+                  strokeWidth="4"
+                />
+                <path
+                  d="M100 80c-8.3 0-15 6.7-15 15s6.7 15 15 15 15-6.7 15-15-6.7-15-15-15zm0 35c-11.3 0-33.8 5.6-33.8 16.9V140h67.5v-8.1C133.8 120.6 111.3 115 100 115z"
+                  className="fill-emerald-300 dark:fill-emerald-700"
+                />
+                <path
+                  d="M40 140h120"
+                  className="stroke-emerald-200 dark:stroke-emerald-800"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            }
+            action={
+              !(searchTerm || branchFilter) ? (
+                <button
+                  onClick={() => handleOpenModal()}
+                  className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/25 active:scale-95"
+                >
+                  {t('teachers.addTeacher')}
+                </button>
+              ) : undefined
+            }
           />
         ) : (
           <TeacherTable

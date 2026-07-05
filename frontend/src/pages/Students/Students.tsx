@@ -20,7 +20,13 @@ import type { ApiErrorData } from '@/utils/errorHelper';
 import StudentTable from '@/features/students/components/StudentTable';
 import StudentForm from '@/features/students/components/StudentForm';
 
-import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent, useDeleteBulkStudents } from '@/features/students/hooks/useStudents';
+import {
+  useStudents,
+  useCreateStudent,
+  useUpdateStudent,
+  useDeleteStudent,
+  useDeleteBulkStudents,
+} from '@/features/students/hooks/useStudents';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 
 const Students: React.FC = () => {
@@ -45,7 +51,7 @@ const Students: React.FC = () => {
   const [branchFilter, setBranchFilter] = useState('');
 
   const [editingStudent, setEditingStudent] = useState<StudentFormData | null>(null);
-  
+
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
@@ -134,7 +140,7 @@ const Students: React.FC = () => {
       onSuccess: () => {
         toast.success(t('common.success'));
         setDeletingId(null);
-        setSelectedIds(prev => prev.filter(id => id !== deletingId));
+        setSelectedIds((prev) => prev.filter((id) => id !== deletingId));
       },
       onError: (error: unknown) => {
         handleApiError(error as AxiosError<ApiErrorData>, t);
@@ -142,19 +148,22 @@ const Students: React.FC = () => {
     });
   }, [deletingId, t, deleteStudentMutate]);
 
-  const handleSelectAll = useCallback((checked: boolean) => {
-    if (checked) {
-      setSelectedIds(filteredStudents.map(s => s.id));
-    } else {
-      setSelectedIds([]);
-    }
-  }, [filteredStudents]);
+  const handleSelectAll = useCallback(
+    (checked: boolean) => {
+      if (checked) {
+        setSelectedIds(filteredStudents.map((s) => s.id));
+      } else {
+        setSelectedIds([]);
+      }
+    },
+    [filteredStudents]
+  );
 
   const handleSelectOne = useCallback((id: string, checked: boolean) => {
     if (checked) {
-      setSelectedIds(prev => [...prev, id]);
+      setSelectedIds((prev) => [...prev, id]);
     } else {
-      setSelectedIds(prev => prev.filter(item => item !== id));
+      setSelectedIds((prev) => prev.filter((item) => item !== id));
     }
   }, []);
 
@@ -169,7 +178,7 @@ const Students: React.FC = () => {
       onError: (error: unknown) => {
         handleApiError(error as AxiosError<ApiErrorData>, t);
         setIsBulkDeleteModalOpen(false);
-      }
+      },
     });
   }, [selectedIds, deleteBulkStudentsMutate, t]);
 
@@ -258,8 +267,43 @@ const Students: React.FC = () => {
           </div>
         ) : filteredStudents.length === 0 ? (
           <EmptyState
-            title={searchQuery ? t('common.noResults') : t('students.noData')}
-            icon={Users}
+            title={searchQuery || branchFilter ? t('common.noResults') : t('students.noData')}
+            description={
+              searchQuery || branchFilter
+                ? t('common.tryDifferentSearch')
+                : t('students.createFirstStudent', 'Thêm học viên đầu tiên của bạn')
+            }
+            showArrow={!(searchQuery || branchFilter)}
+            illustration={
+              <svg
+                viewBox="0 0 200 200"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-48 h-48 mx-auto"
+              >
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="60"
+                  className="fill-indigo-50 dark:fill-indigo-900/20 stroke-indigo-200 dark:stroke-indigo-800"
+                  strokeWidth="4"
+                />
+                <path
+                  d="M100 70c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20zm0 45c-15 0-45 7.5-45 22.5V145h90v-7.5c0-15-30-22.5-45-22.5z"
+                  className="fill-indigo-300 dark:fill-indigo-700"
+                />
+              </svg>
+            }
+            action={
+              !(searchQuery || branchFilter) ? (
+                <button
+                  onClick={() => handleOpenModal()}
+                  className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/25 active:scale-95"
+                >
+                  {t('students.addStudent')}
+                </button>
+              ) : undefined
+            }
           />
         ) : (
           <StudentTable
@@ -303,7 +347,7 @@ const Students: React.FC = () => {
         message={t('common.deleteWarning')}
         type="danger"
       />
-      
+
       <ConfirmModal
         isOpen={isBulkDeleteModalOpen}
         onClose={() => setIsBulkDeleteModalOpen(false)}

@@ -18,7 +18,12 @@ import type { ApiErrorData } from '@/utils/errorHelper';
 import BranchTable from '@/features/branches/components/BranchTable';
 import BranchForm from '@/features/branches/components/BranchForm';
 
-import { useBranches, useCreateBranch, useUpdateBranch, useDeleteBranch } from '@/features/branches/hooks/useBranches';
+import {
+  useBranches,
+  useCreateBranch,
+  useUpdateBranch,
+  useDeleteBranch,
+} from '@/features/branches/hooks/useBranches';
 
 const Branches: React.FC = () => {
   const { t } = useTranslation();
@@ -179,7 +184,50 @@ const Branches: React.FC = () => {
         ) : filteredBranches.length === 0 ? (
           <EmptyState
             title={searchQuery ? t('common.noResults') : t('branches.noData')}
-            icon={Building}
+            description={
+              searchQuery
+                ? t('common.tryDifferentSearch')
+                : t('branches.createFirstBranch', 'Thêm chi nhánh đầu tiên của bạn')
+            }
+            showArrow={!searchQuery}
+            illustration={
+              <svg
+                viewBox="0 0 200 200"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-48 h-48 mx-auto"
+              >
+                <path
+                  d="M50 160V60h40V40h60v120"
+                  className="fill-cyan-50 dark:fill-cyan-900/20 stroke-cyan-200 dark:stroke-cyan-800"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M70 80h10M70 100h10M70 120h10M110 60h20M110 80h20M110 100h20M110 120h20"
+                  className="stroke-cyan-300 dark:stroke-cyan-700"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M40 160h120"
+                  className="stroke-cyan-200 dark:stroke-cyan-800"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            }
+            action={
+              !searchQuery ? (
+                <button
+                  onClick={() => handleOpenModal()}
+                  className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/25 active:scale-95"
+                >
+                  {t('branches.addBranch')}
+                </button>
+              ) : undefined
+            }
           />
         ) : (
           <BranchTable

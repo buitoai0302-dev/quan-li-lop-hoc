@@ -20,7 +20,12 @@ import type { ApiErrorData } from '@/utils/errorHelper';
 import RoomTable from '@/features/rooms/components/RoomTable';
 import RoomForm from '@/features/rooms/components/RoomForm';
 
-import { useRooms, useCreateRoom, useUpdateRoom, useDeleteRoom } from '@/features/rooms/hooks/useRooms';
+import {
+  useRooms,
+  useCreateRoom,
+  useUpdateRoom,
+  useDeleteRoom,
+} from '@/features/rooms/hooks/useRooms';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 
 const Rooms: React.FC = () => {
@@ -210,8 +215,51 @@ const Rooms: React.FC = () => {
           </div>
         ) : filteredRooms.length === 0 ? (
           <EmptyState
-            title={searchQuery ? t('common.noResults') : t('rooms.noData')}
-            icon={DoorOpen}
+            title={searchQuery || branchFilter ? t('common.noResults') : t('rooms.noData')}
+            description={
+              searchQuery || branchFilter
+                ? t('common.tryDifferentSearch')
+                : t('rooms.createFirstRoom', 'Thêm phòng học đầu tiên của bạn')
+            }
+            showArrow={!(searchQuery || branchFilter)}
+            illustration={
+              <svg
+                viewBox="0 0 200 200"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-48 h-48 mx-auto"
+              >
+                <rect
+                  x="60"
+                  y="40"
+                  width="80"
+                  height="120"
+                  rx="8"
+                  className="fill-amber-50 dark:fill-amber-900/20 stroke-amber-200 dark:stroke-amber-800"
+                  strokeWidth="4"
+                />
+                <path
+                  d="M120 100c0 2.8-2.2 5-5 5s-5-2.2-5-5 2.2-5 5-5 5 2.2 5 5z"
+                  className="fill-amber-400 dark:fill-amber-600"
+                />
+                <path
+                  d="M40 160h120"
+                  className="stroke-amber-200 dark:stroke-amber-800"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+              </svg>
+            }
+            action={
+              !(searchQuery || branchFilter) ? (
+                <button
+                  onClick={() => handleOpenModal()}
+                  className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/25 active:scale-95"
+                >
+                  {t('rooms.addRoom')}
+                </button>
+              ) : undefined
+            }
           />
         ) : (
           <RoomTable
