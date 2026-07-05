@@ -84,9 +84,9 @@ const ScheduleBoard: React.FC = () => {
 
     // Trigger only if horizontal movement is strongly dominant and meets higher thresholds
     if (
-      Math.abs(distanceX) > Math.abs(distanceY) * 2.5 && // Strict horizontal dominance
-      Math.abs(distanceX) > 120 && // Higher minimum distance to prevent accidental swipe
-      velocity > 0.6 // Higher velocity threshold
+      Math.abs(distanceX) > Math.abs(distanceY) * 3 && // Extremely strict horizontal dominance
+      Math.abs(distanceX) > 150 && // Minimum distance of 150px
+      velocity > 0.8 // High velocity required
     ) {
       if (distanceX > 0) {
         handleNext(); // Swipe Left -> Next
