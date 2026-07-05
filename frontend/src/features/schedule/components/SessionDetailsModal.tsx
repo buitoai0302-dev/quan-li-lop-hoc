@@ -2,7 +2,9 @@ import React from 'react';
 import { format } from 'date-fns';
 import { Clock, User, MapPin, FileText } from 'lucide-react';
 import { Modal, Button, Badge } from '@/components/common/UI';
-import type { Session } from '@/types';
+import type { Session, User as AppUser } from '@/types';
+import type { Locale } from 'date-fns';
+import type { TFunction } from 'i18next';
 
 interface SessionDetailsModalProps {
   isOpen: boolean;
@@ -10,9 +12,9 @@ interface SessionDetailsModalProps {
   session: Session | null;
   onEdit: (session: Session) => void;
   canEdit: boolean;
-  currentLocale: any;
-  user: any;
-  t: any;
+  currentLocale: Locale;
+  user: AppUser | null;
+  t: TFunction;
 }
 
 const SessionDetailsModal: React.FC<SessionDetailsModalProps> = ({

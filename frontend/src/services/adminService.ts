@@ -5,8 +5,8 @@ export const getAdminTenants = () => api.get<Tenant[]>('/admin/tenants').then((r
 export const getAdminPlans = () => api.get<Plan[]>('/admin/plans').then((res) => res.data);
 export const getAdminStats = () => api.get<AdminStats>('/admin/stats').then((res) => res.data);
 
-export const updateTenant = (id: string, data: any) => api.patch(`/admin/tenants/${id}`, data);
-export const updatePlan = (id: string, data: any) => api.put(`/admin/plans/${id}`, data);
+export const updateTenant = (id: string, data: Partial<Tenant>) => api.patch(`/admin/tenants/${id}`, data);
+export const updatePlan = (id: string, data: Partial<Plan>) => api.put(`/admin/plans/${id}`, data);
 
 export const getPlanRequests = () =>
   api.get<PlanRequest[]>('/plans/requests').then((res) => res.data);
@@ -17,6 +17,11 @@ export const getActivities = (page: number, limit: number = 20) =>
   api
     .get<{
       activities: ActivityItem[];
-      pagination: any;
+      pagination: {
+        total: number;
+        page: number;
+        limit: number;
+        totalPages: number;
+      };
     }>(`/dashboard/activities?page=${page}&limit=${limit}`)
     .then((res) => res.data);

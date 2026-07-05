@@ -2,11 +2,13 @@ import { NavLink } from 'react-router-dom';
 import { X, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useState } from 'react';
+import { Download } from 'lucide-react';
 import ConfirmModal from './common/ConfirmModal';
-import type { User } from '../contexts/AuthContext';
+import type { User } from '@/types';
 import { getMenuItems } from '../routes';
 import type { MenuGroup, MenuItem } from '../routes';
 import { USER_ROLES } from '../utils/constants';
+import { usePWAInstall } from '@/hooks/usePWAInstall';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -18,17 +20,7 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) => {
   const { t } = useTranslation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
-  const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>({
-    0: true,
-    1: true,
-    2: true,
-    3: true,
-    4: true,
-  });
-
-  const toggleGroup = (idx: number) => {
-    setExpandedGroups((prev) => ({ ...prev, [idx]: !prev[idx] }));
-  };
+  const { isInstallable, promptInstall } = usePWAInstall();
 
   const menuItems = getMenuItems(t, user?.role);
 
@@ -36,22 +28,27 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
     .map((group) => ({
       ...group,
       items: group.items.filter((item: MenuItem) => {
-        // 1. Check Roles
         const hasRole =
           (!group.roles || group.roles.includes(user?.role || '')) &&
           (!item.roles || item.roles.includes(user?.role || ''));
         if (!hasRole) return false;
-
-        // 2. Check Tenant Menu Settings (for non-system routes)
         const menuKey = item.path.substring(1).split('/')[0] || 'dashboard';
         if (['settings', 'admin', 'subscription', 'help', 'activities'].includes(menuKey))
           return true;
-
         const isEnabled = user?.tenant_settings?.menu?.[menuKey] ?? true;
         return isEnabled;
       }),
     }))
     .filter((group) => group.items.length > 0);
+
+  // Dynamic: all groups expanded by default
+  const [expandedGroups, setExpandedGroups] = useState<Record<number, boolean>>(() =>
+    Object.fromEntries(visibleGroups.map((_, i) => [i, true]))
+  );
+
+  const toggleGroup = (idx: number) => {
+    setExpandedGroups((prev) => ({ ...prev, [idx]: !prev[idx] }));
+  };
 
   return (
     <>
@@ -156,6 +153,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
         </nav>
 
         <div className="p-1 border-t border-gray-200 dark:border-slate-800">
+          {isInstallable && (
+            <div className="px-2 mb-2">
+              <button
+                onClick={promptInstall}
+                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 rounded-xl transition-colors shadow-sm"
+              >
+                <Download size={16} className="animate-bounce" />
+                <span className="text-sm font-bold">{t('common.installApp', 'Cài đặt App')}</span>
+              </button>
+            </div>
+          )}
+
           <div className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-slate-900/50 p-2 rounded-xl border border-gray-100 dark:border-slate-800 mb-2">
             <div className="flex items-center gap-3 overflow-hidden">
               <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-indigo-600 flex items-center justify-center text-white font-bold shadow-inner shrink-0 border-2 border-white dark:border-gray-800">

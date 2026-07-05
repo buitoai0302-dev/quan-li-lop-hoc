@@ -63,3 +63,37 @@ export const useClasses = () => {
     refreshClasses: refreshData,
   };
 };
+
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { createClass, updateClass, deleteClass } from '@/services/classesService';
+import type { ClassBasicFormData } from '@/types';
+
+export const useCreateClass = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: ClassBasicFormData) => createClass(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
+    },
+  });
+};
+
+export const useUpdateClass = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: ClassBasicFormData }) => updateClass(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
+    },
+  });
+};
+
+export const useDeleteClass = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteClass(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
+    },
+  });
+};

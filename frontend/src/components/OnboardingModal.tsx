@@ -19,10 +19,16 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
   const [isSubmitting, setIsSubmitting] = useState(false);
   const totalSteps = 3;
 
-  const [branchData, setBranchData] = useState({
+  const [branchData, setBranchData] = useState<{
+    name: string;
+    address: string;
+    phone: string;
+    is_active: boolean;
+  }>({
     name: '',
     address: '',
     phone: '',
+    is_active: true,
   });
 
   const handleNext = async () => {

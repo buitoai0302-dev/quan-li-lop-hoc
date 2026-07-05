@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { createRoom, updateRoom, deleteRoom } from '@/services/roomsService';
+
 import { Modal, Card } from '@/components/common/UI';
 import { DoorOpen, Plus, Upload, Search } from 'lucide-react';
 import ConfirmModal from '@/components/common/ConfirmModal';
@@ -9,22 +9,24 @@ import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/common/PageHeader';
-import PageLoading from '@/components/common/PageLoading';
+import SkeletonTable from '@/components/common/SkeletonTable';
 import FilterBar from '@/components/common/FilterBar';
 import FilterSelect from '@/components/common/FilterSelect';
 import EmptyState from '@/components/common/EmptyState';
-import type { Room } from '@/types';
+import type { Room, RoomFormData } from '@/types';
+import type { AxiosError } from 'axios';
+import type { ApiErrorData } from '@/utils/errorHelper';
 
 import RoomTable from '@/features/rooms/components/RoomTable';
 import RoomForm from '@/features/rooms/components/RoomForm';
 
-import { useRooms } from '@/features/rooms/hooks/useRooms';
+import { useRooms, useCreateRoom, useUpdateRoom, useDeleteRoom } from '@/features/rooms/hooks/useRooms';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 
 const Rooms: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { rooms, loading: roomsLoading, refreshRooms } = useRooms();
+  const { rooms, loading: roomsLoading } = useRooms();
   const { branches, loading: branchesLoading } = useBranches();
 
   const loading = roomsLoading || branchesLoading;
@@ -32,7 +34,7 @@ const Rooms: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   // Pagination states
@@ -41,7 +43,7 @@ const Rooms: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
 
-  const [editingRoom, setEditingRoom] = useState<any>(null);
+  const [editingRoom, setEditingRoom] = useState<RoomFormData | null>(null);
 
   const filteredRooms = useMemo(() => {
     return rooms.filter((room) => {
@@ -67,7 +69,7 @@ const Rooms: React.FC = () => {
           capacity: room.capacity || 30,
           room_type: room.room_type || 'classroom',
           branch_id: room.branch_id || (branches.length > 0 ? branches[0].id : ''),
-          is_active: room.is_active,
+          is_active: room.is_active ?? true,
         });
       } else {
         setEditingId(null);
@@ -78,45 +80,59 @@ const Rooms: React.FC = () => {
     [branches]
   );
 
+  const { mutate: createRoomMutate, isPending: isCreating } = useCreateRoom();
+  const { mutate: updateRoomMutate, isPending: isUpdating } = useUpdateRoom();
+  const { mutate: deleteRoomMutate } = useDeleteRoom();
+
+  const isSubmitting = isCreating || isUpdating;
+
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setEditingId(null);
   }, []);
 
   const handleSubmit = useCallback(
-    async (data: any) => {
-      if (isSubmitting) return;
-      setIsSubmitting(true);
-      try {
-        if (editingId) {
-          await updateRoom(editingId, data);
-          toast.success(t('common.success'));
-        } else {
-          await createRoom(data);
-          toast.success(t('common.success'));
-        }
-        handleCloseModal();
-        refreshRooms();
-      } catch (error: any) {
-        handleApiError(error, t);
-      } finally {
-        setIsSubmitting(false);
+    (data: RoomFormData) => {
+      if (editingId) {
+        updateRoomMutate(
+          { id: editingId, data },
+          {
+            onSuccess: () => {
+              toast.success(t('common.success'));
+              handleCloseModal();
+            },
+            onError: (error: unknown) => {
+              handleApiError(error as AxiosError<ApiErrorData>, t);
+            },
+          }
+        );
+      } else {
+        createRoomMutate(data, {
+          onSuccess: () => {
+            toast.success(t('common.success'));
+            handleCloseModal();
+          },
+          onError: (error: unknown) => {
+            handleApiError(error as AxiosError<ApiErrorData>, t);
+          },
+        });
       }
     },
-    [editingId, isSubmitting, t, handleCloseModal, refreshRooms]
+    [editingId, t, handleCloseModal, createRoomMutate, updateRoomMutate]
   );
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (!deletingId) return;
-    try {
-      await deleteRoom(deletingId);
-      toast.success(t('common.success'));
-      setDeletingId(null);
-      refreshRooms();
-    } catch (error: any) {
-      handleApiError(error, t);
-    }
-  }, [deletingId, t, refreshRooms]);
+    deleteRoomMutate(deletingId, {
+      onSuccess: () => {
+        toast.success(t('common.success'));
+        setDeletingId(null);
+      },
+      onError: (error: unknown) => {
+        handleApiError(error as AxiosError<ApiErrorData>, t);
+      },
+    });
+  }, [deletingId, t, deleteRoomMutate]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -189,7 +205,9 @@ const Rooms: React.FC = () => {
         }
       >
         {loading ? (
-          <PageLoading />
+          <div className="p-4 sm:p-6">
+            <SkeletonTable columns={5} rows={5} />
+          </div>
         ) : filteredRooms.length === 0 ? (
           <EmptyState
             title={searchQuery ? t('common.noResults') : t('rooms.noData')}
@@ -215,7 +233,7 @@ const Rooms: React.FC = () => {
         size="xl"
       >
         <RoomForm
-          initialData={editingRoom}
+          initialData={editingRoom || undefined}
           onSubmit={handleSubmit}
           branches={branches}
           isSubmitting={isSubmitting}

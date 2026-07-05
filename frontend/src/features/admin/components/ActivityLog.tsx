@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getActivities } from '@/services/adminService';
 import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
 import {
@@ -15,33 +14,17 @@ import {
 } from 'lucide-react';
 import PageHeader from '@/components/common/PageHeader';
 import EmptyState from '@/components/common/EmptyState';
-import type { ActivityItem } from '@/types';
+
+import { useActivities } from '../hooks/useAdmin';
 
 const ActivityLog: React.FC = () => {
   const { t, i18n } = useTranslation();
-  const [activities, setActivities] = useState<ActivityItem[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [pagination, setPagination] = useState({ page: 1, totalPages: 1 });
+  const [page, setPage] = useState(1);
 
-  const fetchActivities = async (page: number) => {
-    setLoading(true);
-    try {
-      const data = await getActivities(page);
-      setActivities(data.activities);
-      setPagination({
-        page: data.pagination.page,
-        totalPages: data.pagination.totalPages,
-      });
-    } catch (error) {
-      console.error('Failed to fetch activities:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { data, isLoading: loading } = useActivities(page, 20);
 
-  useEffect(() => {
-    fetchActivities(1);
-  }, []);
+  const activities = data?.activities || [];
+  const pagination = data?.pagination || { page: 1, totalPages: 1 };
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -116,14 +99,14 @@ const ActivityLog: React.FC = () => {
               </p>
               <div className="flex gap-2">
                 <button
-                  onClick={() => fetchActivities(pagination.page - 1)}
+                  onClick={() => setPage(pagination.page - 1)}
                   disabled={pagination.page <= 1 || loading}
                   className="p-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-50 transition-colors shadow-sm active:scale-95"
                 >
                   <ChevronLeft size={16} />
                 </button>
                 <button
-                  onClick={() => fetchActivities(pagination.page + 1)}
+                  onClick={() => setPage(pagination.page + 1)}
                   disabled={pagination.page >= pagination.totalPages || loading}
                   className="p-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-50 transition-colors shadow-sm active:scale-95"
                 >

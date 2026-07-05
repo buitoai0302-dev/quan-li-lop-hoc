@@ -2,20 +2,31 @@ import React from 'react';
 import { Calendar, Info, User, MapPin, FileText, Clock } from 'lucide-react';
 import { Button, Input, Select, Label, Modal } from '@/components/common/UI';
 import type { ClassData, Room, Teacher, Session } from '@/types';
+import type { TFunction } from 'i18next';
+
+interface SessionFormState {
+  classId: string;
+  roomId: string;
+  teacherId: string;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  notes: string;
+}
 
 interface SessionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   editingSession: Session | null;
-  formData: any;
-  setFormData: (data: any) => void;
+  formData: SessionFormState;
+  setFormData: React.Dispatch<React.SetStateAction<SessionFormState>>;
   classes: ClassData[];
   rooms: Room[];
   teachers: Teacher[];
-  onSubmit: (e: React.FormEvent) => void;
+  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
   onDelete: () => void;
   onClassChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
-  t: any;
+  t: TFunction;
 }
 
 const SessionFormModal: React.FC<SessionFormModalProps> = ({

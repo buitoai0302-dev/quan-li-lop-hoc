@@ -1,13 +1,15 @@
 import React from 'react';
 import { RefreshCw } from 'lucide-react';
 
+import type { TFunction } from 'i18next';
+
 interface IntegrationSettingsProps {
   isGoogleConnected: boolean;
   onConnectGoogle: () => void;
   onDisconnectGoogle: () => void;
   onSyncAll: () => void;
   syncing: boolean;
-  t: any;
+  t: TFunction;
 }
 
 const IntegrationSettings: React.FC<IntegrationSettingsProps> = ({

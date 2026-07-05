@@ -1,7 +1,9 @@
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { Suspense } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from './components/ErrorBoundary';
+import PageLoading from './components/common/PageLoading';
 import { appRoutes } from './routes';
 
 const router = createBrowserRouter(appRoutes);
@@ -19,7 +21,9 @@ function App() {
             },
           }}
         />
-        <RouterProvider router={router} />
+        <Suspense fallback={<PageLoading />}>
+          <RouterProvider router={router} />
+        </Suspense>
       </ErrorBoundary>
     </AuthProvider>
   );

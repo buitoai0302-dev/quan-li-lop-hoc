@@ -1,13 +1,14 @@
 import React from 'react';
 import { ShieldCheck, Copy, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
+import type { TFunction } from 'i18next';
 
 interface ApiSettingsProps {
   hasApiAccess: boolean;
   apiKey: string | null;
   generatingKey: boolean;
   onGenerateKey: () => void;
-  t: any;
+  t: TFunction;
 }
 
 const ApiSettings: React.FC<ApiSettingsProps> = ({

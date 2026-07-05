@@ -1,5 +1,4 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { createTeacher, updateTeacher, deleteTeacher } from '@/services/teachersService';
 import { Modal, Card } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';
@@ -10,22 +9,25 @@ import { UserCheck, Plus, Upload, Search, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import PageHeader from '@/components/common/PageHeader';
-import PageLoading from '@/components/common/PageLoading';
+import SkeletonTable from '@/components/common/SkeletonTable';
 import FilterBar from '@/components/common/FilterBar';
 import FilterSelect from '@/components/common/FilterSelect';
 import EmptyState from '@/components/common/EmptyState';
-import type { Teacher } from '@/types';
+import type { Teacher, TeacherFormData } from '@/types';
+import type { AxiosError } from 'axios';
+import type { ApiErrorData } from '@/utils/errorHelper';
 
 import { TeacherTable, TeacherForm } from '@/features/teachers/components';
 
-import { useTeachers } from '@/features/teachers/hooks/useTeachers';
+import { useTeachers, useCreateTeacher, useUpdateTeacher, useDeleteTeacher } from '@/features/teachers/hooks/useTeachers';
 import { useBranches } from '@/features/branches/hooks/useBranches';
+
 
 const Teachers: React.FC = () => {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const navigate = useNavigate();
-  const { teachers, loading: teachersLoading, refreshTeachers } = useTeachers();
+  const { user } = useAuth();
+  const { teachers, loading: teachersLoading } = useTeachers();
   const { branches, loading: branchesLoading } = useBranches();
 
   const loading = teachersLoading || branchesLoading;
@@ -33,7 +35,7 @@ const Teachers: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   // Pagination states
@@ -43,7 +45,7 @@ const Teachers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
 
-  const [editingTeacher, setEditingTeacher] = useState<any>(null);
+  const [editingTeacher, setEditingTeacher] = useState<TeacherFormData | null>(null);
 
   const filteredTeachers = useMemo(() => {
     return teachers.filter((teacher) => {
@@ -64,12 +66,12 @@ const Teachers: React.FC = () => {
         setEditingId(teacher.id);
         setEditingTeacher({
           full_name: teacher.full_name,
-          email: teacher.email,
+          email: teacher.email || '',
           phone: teacher.phone || '',
           specialization: teacher.specialization || '',
           branch_id:
             teacher.branch_id || user?.branch_id || (branches.length > 0 ? branches[0].id : ''),
-          is_active: teacher.is_active,
+          is_active: teacher.is_active ?? true,
         });
       } else {
         setEditingId(null);
@@ -80,45 +82,59 @@ const Teachers: React.FC = () => {
     [branches, user?.branch_id]
   );
 
+  const { mutate: createTeacherMutate, isPending: isCreating } = useCreateTeacher();
+  const { mutate: updateTeacherMutate, isPending: isUpdating } = useUpdateTeacher();
+  const { mutate: deleteTeacherMutate } = useDeleteTeacher();
+
+  const isSubmitting = isCreating || isUpdating;
+
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setEditingId(null);
   }, []);
 
   const handleSubmit = useCallback(
-    async (data: any) => {
-      if (isSubmitting) return;
-      setIsSubmitting(true);
-      try {
-        if (editingId) {
-          await updateTeacher(editingId, data);
-          toast.success(t('common.success'));
-        } else {
-          await createTeacher(data);
-          toast.success(t('common.success'));
-        }
-        handleCloseModal();
-        refreshTeachers();
-      } catch (error: any) {
-        handleApiError(error, t);
-      } finally {
-        setIsSubmitting(false);
+    (data: TeacherFormData) => {
+      if (editingId) {
+        updateTeacherMutate(
+          { id: editingId, data },
+          {
+            onSuccess: () => {
+              toast.success(t('common.success'));
+              handleCloseModal();
+            },
+            onError: (error: unknown) => {
+              handleApiError(error as AxiosError<ApiErrorData>, t);
+            },
+          }
+        );
+      } else {
+        createTeacherMutate(data, {
+          onSuccess: () => {
+            toast.success(t('common.success'));
+            handleCloseModal();
+          },
+          onError: (error: unknown) => {
+            handleApiError(error as AxiosError<ApiErrorData>, t);
+          },
+        });
       }
     },
-    [editingId, isSubmitting, t, handleCloseModal, refreshTeachers]
+    [editingId, t, handleCloseModal, createTeacherMutate, updateTeacherMutate]
   );
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (!deletingId) return;
-    try {
-      await deleteTeacher(deletingId);
-      toast.success(t('common.success'));
-      setDeletingId(null);
-      refreshTeachers();
-    } catch (error: any) {
-      handleApiError(error, t);
-    }
-  }, [deletingId, t, refreshTeachers]);
+    deleteTeacherMutate(deletingId, {
+      onSuccess: () => {
+        toast.success(t('common.success'));
+        setDeletingId(null);
+      },
+      onError: (error: unknown) => {
+        handleApiError(error as AxiosError<ApiErrorData>, t);
+      },
+    });
+  }, [deletingId, t, deleteTeacherMutate]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -191,7 +207,9 @@ const Teachers: React.FC = () => {
         }
       >
         {loading ? (
-          <PageLoading />
+          <div className="p-4 sm:p-6">
+            <SkeletonTable columns={6} rows={5} />
+          </div>
         ) : filteredTeachers.length === 0 ? (
           <EmptyState
             title={searchTerm || branchFilter ? t('common.noResults') : t('teachers.noData')}
@@ -217,7 +235,7 @@ const Teachers: React.FC = () => {
         size="xl"
       >
         <TeacherForm
-          initialData={editingTeacher}
+          initialData={editingTeacher || undefined}
           onSubmit={handleSubmit}
           branches={branches}
           editingId={editingId}

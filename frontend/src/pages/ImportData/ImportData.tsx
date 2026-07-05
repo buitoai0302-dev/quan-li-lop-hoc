@@ -47,7 +47,7 @@ const ImportData: React.FC = () => {
   };
 
   const downloadTemplate = () => {
-    let templateData: any[] = [];
+    let templateData: Record<string, unknown>[];
     if (importType === 'students') {
       templateData = [
         {

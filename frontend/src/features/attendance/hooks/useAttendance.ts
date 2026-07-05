@@ -53,7 +53,7 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
   }, [attendanceQuery.data]);
 
   const saveMutation = useMutation({
-    mutationFn: async (records: any[]) => {
+    mutationFn: async (records: { student_id: string; status: string }[]) => {
       if (!selectedSessionId) return;
       return saveAttendance(selectedSessionId, records);
     },
@@ -108,7 +108,7 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
   const handleMarkAllAsPresent = () => {
     setIsDirty(true);
     setLocalAttendance((prev) =>
-      prev.map((record) => ({ ...record, status: ATTENDANCE_STATUS.PRESENT as any }))
+      prev.map((record) => ({ ...record, status: ATTENDANCE_STATUS.PRESENT }))
     );
   };
 
@@ -127,10 +127,10 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
 
   const stats: AttendanceStats = useMemo(
     () => ({
-      present: localAttendance.filter((r) => r.status === 'present').length,
-      absent: localAttendance.filter((r) => r.status === 'absent').length,
-      late: localAttendance.filter((r) => r.status === 'late').length,
-      excused: localAttendance.filter((r) => r.status === 'excused').length,
+      present: localAttendance.filter((r) => r.status === ATTENDANCE_STATUS.PRESENT).length,
+      absent: localAttendance.filter((r) => r.status === ATTENDANCE_STATUS.ABSENT).length,
+      late: localAttendance.filter((r) => r.status === ATTENDANCE_STATUS.LATE).length,
+      excused: localAttendance.filter((r) => r.status === ATTENDANCE_STATUS.EXCUSED).length,
       total: localAttendance.length,
     }),
     [localAttendance]

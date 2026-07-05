@@ -25,7 +25,7 @@ export const handleApiError = (
   const errorMessage = data?.message || data?.error || '';
   const status = error.response?.status;
 
-  console.log('API Error:', { status, errorCode, errorMessage, data });
+  console.error('[API Error]', { status, errorCode, errorMessage, data });
 
   // Detect Limit Exceeded (via code or 403 + message)
   const isLimitExceeded =

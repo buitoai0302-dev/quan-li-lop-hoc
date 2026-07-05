@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { getRooms } from '@/services/roomsService';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getRooms, createRoom, updateRoom, deleteRoom } from '@/services/roomsService';
+import type { RoomFormData } from '@/types';
 
 export const useRooms = (branchId?: string) => {
   const query = useQuery({
@@ -13,4 +14,34 @@ export const useRooms = (branchId?: string) => {
     refreshRooms: query.refetch,
     query,
   };
+};
+
+export const useCreateRoom = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: RoomFormData) => createRoom(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+    },
+  });
+};
+
+export const useUpdateRoom = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: RoomFormData }) => updateRoom(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+    },
+  });
+};
+
+export const useDeleteRoom = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteRoom(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+    },
+  });
 };

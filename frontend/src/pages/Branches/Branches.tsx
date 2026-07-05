@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { createBranch, updateBranch, deleteBranch } from '@/services/branchesService';
+
 import { Modal, Card } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';
@@ -8,23 +8,24 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
 import PageHeader from '@/components/common/PageHeader';
-import PageLoading from '@/components/common/PageLoading';
+import SkeletonTable from '@/components/common/SkeletonTable';
 import FilterBar from '@/components/common/FilterBar';
 import EmptyState from '@/components/common/EmptyState';
-import type { Branch } from '@/types';
+import type { Branch, BranchFormData } from '@/types';
+import type { AxiosError } from 'axios';
+import type { ApiErrorData } from '@/utils/errorHelper';
 
 import BranchTable from '@/features/branches/components/BranchTable';
 import BranchForm from '@/features/branches/components/BranchForm';
 
-import { useBranches } from '@/features/branches/hooks/useBranches';
+import { useBranches, useCreateBranch, useUpdateBranch, useDeleteBranch } from '@/features/branches/hooks/useBranches';
 
 const Branches: React.FC = () => {
   const { t } = useTranslation();
-  const { branches, loading, refreshBranches } = useBranches();
+  const { branches, loading } = useBranches();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   // Pagination states
@@ -32,7 +33,7 @@ const Branches: React.FC = () => {
   const [itemsPerPage, setItemsPerPage] = useState(window.innerWidth < 768 ? 5 : 10);
   const [searchQuery, setSearchQuery] = useState('');
 
-  const [editingBranch, setEditingBranch] = useState<any>(null);
+  const [editingBranch, setEditingBranch] = useState<BranchFormData | null>(null);
 
   const filteredBranches = useMemo(() => {
     return branches.filter((branch) => {
@@ -66,40 +67,54 @@ const Branches: React.FC = () => {
     setEditingId(null);
   }, []);
 
+  const { mutate: createBranchMutate, isPending: isCreating } = useCreateBranch();
+  const { mutate: updateBranchMutate, isPending: isUpdating } = useUpdateBranch();
+  const { mutate: deleteBranchMutate } = useDeleteBranch();
+
+  const isSubmitting = isCreating || isUpdating;
+
   const handleSubmit = useCallback(
-    async (data: any) => {
-      if (isSubmitting) return;
-      setIsSubmitting(true);
-      try {
-        if (editingId) {
-          await updateBranch(editingId, data);
-          toast.success(t('common.success'));
-        } else {
-          await createBranch(data);
-          toast.success(t('common.success'));
-        }
-        handleCloseModal();
-        refreshBranches();
-      } catch (error: any) {
-        handleApiError(error, t);
-      } finally {
-        setIsSubmitting(false);
+    (data: BranchFormData) => {
+      if (editingId) {
+        updateBranchMutate(
+          { id: editingId, data },
+          {
+            onSuccess: () => {
+              toast.success(t('common.success'));
+              handleCloseModal();
+            },
+            onError: (error: unknown) => {
+              handleApiError(error as AxiosError<ApiErrorData>, t);
+            },
+          }
+        );
+      } else {
+        createBranchMutate(data, {
+          onSuccess: () => {
+            toast.success(t('common.success'));
+            handleCloseModal();
+          },
+          onError: (error: unknown) => {
+            handleApiError(error as AxiosError<ApiErrorData>, t);
+          },
+        });
       }
     },
-    [editingId, isSubmitting, t, handleCloseModal, refreshBranches]
+    [editingId, t, handleCloseModal, createBranchMutate, updateBranchMutate]
   );
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (!deletingId) return;
-    try {
-      await deleteBranch(deletingId);
-      toast.success(t('common.success'));
-      setDeletingId(null);
-      refreshBranches();
-    } catch (error: any) {
-      handleApiError(error, t);
-    }
-  }, [deletingId, t, refreshBranches]);
+    deleteBranchMutate(deletingId, {
+      onSuccess: () => {
+        toast.success(t('common.success'));
+        setDeletingId(null);
+      },
+      onError: (error: unknown) => {
+        handleApiError(error as AxiosError<ApiErrorData>, t);
+      },
+    });
+  }, [deletingId, t, deleteBranchMutate]);
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -158,7 +173,9 @@ const Branches: React.FC = () => {
         }
       >
         {loading ? (
-          <PageLoading />
+          <div className="p-4 sm:p-6">
+            <SkeletonTable columns={4} rows={5} />
+          </div>
         ) : filteredBranches.length === 0 ? (
           <EmptyState
             title={searchQuery ? t('common.noResults') : t('branches.noData')}
@@ -184,7 +201,7 @@ const Branches: React.FC = () => {
         size="xl"
       >
         <BranchForm
-          initialData={editingBranch}
+          initialData={editingBranch || undefined}
           onSubmit={handleSubmit}
           isSubmitting={isSubmitting}
           onClose={handleCloseModal}

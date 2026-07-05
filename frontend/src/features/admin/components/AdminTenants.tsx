@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getAdminTenants, getAdminPlans, getAdminStats, updateTenant } from '@/services/adminService';
 import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';
 import {
@@ -18,14 +17,20 @@ import { Modal, Card, Button, Badge } from '@/components/common/UI';
 import { TENANT_STATUS, PLAN_CODES, TENANT_ACTIONS, SYSTEM_DOMAIN } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
-import type { Tenant, AdminStats, Plan } from '@/types';
+import type { Tenant } from '@/types';
+
+import { useAdminTenants, useAdminPlans, useAdminStats, useUpdateTenant } from '../hooks/useAdmin';
 
 const AdminTenants: React.FC = () => {
   const { t } = useTranslation();
-  const [tenants, setTenants] = useState<Tenant[]>([]);
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [stats, setStats] = useState<AdminStats | null>(null);
-  const [loading, setLoading] = useState(true);
+  
+  const { data: tenants = [], isLoading: loadingTenants } = useAdminTenants();
+  const { data: plans = [], isLoading: loadingPlans } = useAdminPlans();
+  const { data: stats, isLoading: loadingStats } = useAdminStats();
+  
+  const { mutate: updateTenantMutate } = useUpdateTenant();
+
+  const loading = loadingTenants || loadingPlans || loadingStats;
 
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
@@ -37,41 +42,23 @@ const AdminTenants: React.FC = () => {
     action: (typeof TENANT_ACTIONS)[keyof typeof TENANT_ACTIONS];
   }>({ isOpen: false, tenant: null, action: TENANT_ACTIONS.APPROVE });
 
-  const fetchData = async () => {
-    try {
-      const [tenantsData, plansData, statsData] = await Promise.all([
-        getAdminTenants(),
-        getAdminPlans(),
-        getAdminStats(),
-      ]);
-      setTenants(tenantsData);
-      setPlans(plansData);
-      setStats(statsData);
-    } catch (error: any) {
-      handleApiError(error, t);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const handleConfirmAction = async () => {
+  const handleConfirmAction = () => {
     if (!confirmModal.tenant) return;
     const newStatus =
       confirmModal.action === TENANT_ACTIONS.SUSPEND
         ? TENANT_STATUS.SUSPENDED
         : TENANT_STATUS.ACTIVE;
-    try {
-      await updateTenant(confirmModal.tenant.id, { status: newStatus });
-      toast.success(t('common.success'));
-      setConfirmModal({ ...confirmModal, isOpen: false });
-      fetchData();
-    } catch (error: any) {
-      handleApiError(error, t);
-    }
+    
+    updateTenantMutate(
+      { id: confirmModal.tenant.id, data: { status: newStatus } },
+      {
+        onSuccess: () => {
+          toast.success(t('common.success'));
+          setConfirmModal({ ...confirmModal, isOpen: false });
+        },
+        onError: (error: any) => handleApiError(error, t),
+      }
+    );
   };
 
   const handleOpenPlanModal = (tenant: Tenant) => {
@@ -80,16 +67,18 @@ const AdminTenants: React.FC = () => {
     setIsPlanModalOpen(true);
   };
 
-  const handleUpdatePlan = async () => {
+  const handleUpdatePlan = () => {
     if (!selectedTenant) return;
-    try {
-      await updateTenant(selectedTenant.id, { planId: newPlanId });
-      toast.success(t('common.success'));
-      setIsPlanModalOpen(false);
-      fetchData();
-    } catch (error: any) {
-      handleApiError(error, t);
-    }
+    updateTenantMutate(
+      { id: selectedTenant.id, data: { plan_id: newPlanId } },
+      {
+        onSuccess: () => {
+          toast.success(t('common.success'));
+          setIsPlanModalOpen(false);
+        },
+        onError: (error: any) => handleApiError(error, t),
+      }
+    );
   };
 
   if (loading) return <PageLoading />;

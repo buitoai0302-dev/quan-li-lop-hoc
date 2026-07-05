@@ -10,12 +10,14 @@ import {
   Import,
 } from 'lucide-react';
 
+import type { TFunction } from 'i18next';
+
 interface MenuConfigSettingsProps {
   menuSettings: Record<string, boolean>;
-  setMenuSettings: (settings: any) => void;
-  onSave: () => void;
+  setMenuSettings: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
   saving: boolean;
-  t: any;
+  onSave: () => void;
+  t: TFunction;
 }
 
 const MenuConfigSettings: React.FC<MenuConfigSettingsProps> = ({
@@ -70,7 +72,7 @@ const MenuConfigSettings: React.FC<MenuConfigSettingsProps> = ({
               </div>
             </div>
             <div
-              onClick={() => setMenuSettings((prev: any) => ({ ...prev, [key]: !prev[key] }))}
+              onClick={() => setMenuSettings((prev) => ({ ...prev, [key]: !prev[key] }))}
               className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-300 ease-in-out ${menuSettings[key] ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}
             >
               <span

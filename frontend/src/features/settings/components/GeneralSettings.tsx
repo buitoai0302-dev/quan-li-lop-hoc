@@ -1,5 +1,7 @@
 import React from 'react';
 
+import type { TFunction } from 'i18next';
+
 interface GeneralSettingsProps {
   centerName: string;
   setCenterName: (name: string) => void;
@@ -7,7 +9,7 @@ interface GeneralSettingsProps {
   setContactEmail: (email: string) => void;
   onSave: (e: React.FormEvent) => void;
   saving: boolean;
-  t: any;
+  t: TFunction;
 }
 
 const GeneralSettings: React.FC<GeneralSettingsProps> = ({

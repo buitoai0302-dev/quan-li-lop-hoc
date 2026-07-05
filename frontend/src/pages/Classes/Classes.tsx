@@ -1,8 +1,5 @@
 import React, { useState, useCallback } from 'react';
 import {
-  createClass,
-  updateClass,
-  deleteClass,
   getClassSchedules,
   getClassEnrollments,
   enrollStudent,
@@ -18,18 +15,20 @@ import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/common/PageHeader';
-import PageLoading from '@/components/common/PageLoading';
+import SkeletonTable from '@/components/common/SkeletonTable';
 import FilterBar from '@/components/common/FilterBar';
 import FilterSelect from '@/components/common/FilterSelect';
 import EmptyState from '@/components/common/EmptyState';
 
-import type { ClassData, Enrollment, RecurringSchedule } from '@/types';
+import type { ClassData, Enrollment, RecurringSchedule, ClassBasicFormData } from '@/types';
+import type { AxiosError } from 'axios';
+import type { ApiErrorData } from '@/utils/errorHelper';
 
 import ClassTable from '@/features/classes/components/ClassTable';
 import ClassForm from '@/features/classes/components/ClassForm';
 import BulkEnrollModal from '@/features/classes/components/BulkEnrollModal';
 
-import { useClasses } from '@/features/classes/hooks/useClasses';
+import { useClasses, useCreateClass, useUpdateClass, useDeleteClass } from '@/features/classes/hooks/useClasses';
 
 const Classes: React.FC = () => {
   const { t } = useTranslation();
@@ -42,7 +41,6 @@ const Classes: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [recurringSchedules, setRecurringSchedules] = useState<RecurringSchedule[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
@@ -55,7 +53,7 @@ const Classes: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
 
-  const [editingClass, setEditingClass] = useState<any>(null);
+  const [editingClass, setEditingClass] = useState<ClassBasicFormData | null>(null);
 
   const filteredClasses = React.useMemo(() => {
     return classes.filter((cls) => {
@@ -112,46 +110,60 @@ const Classes: React.FC = () => {
     setEnrollments([]);
   }, []);
 
-  const handleSubmit = useCallback(
-    async (data: any) => {
-      if (isSubmitting) return;
-      setIsSubmitting(true);
-      try {
-        const payload = {
-          ...data,
-          schedules: recurringSchedules,
-          enrollments: enrollments.map((e) => e.id),
-        };
+  const { mutate: createClassMutate, isPending: isCreating } = useCreateClass();
+  const { mutate: updateClassMutate, isPending: isUpdating } = useUpdateClass();
+  const { mutate: deleteClassMutate } = useDeleteClass();
 
-        if (editingId) {
-          await updateClass(editingId, payload);
-          toast.success(t('common.success'));
-        } else {
-          await createClass(payload);
-          toast.success(t('common.success'));
-        }
-        handleCloseModal();
-        refreshClasses();
-      } catch (error: any) {
-        handleApiError(error, t);
-      } finally {
-        setIsSubmitting(false);
+  const isSubmitting = isCreating || isUpdating;
+
+  const handleSubmit = useCallback(
+    (data: ClassBasicFormData) => {
+      const payload = {
+        ...data,
+        schedules: recurringSchedules,
+        enrollments: enrollments.map((e) => e.id),
+      };
+
+      if (editingId) {
+        updateClassMutate(
+          { id: editingId, data: payload },
+          {
+            onSuccess: () => {
+              toast.success(t('common.success'));
+              handleCloseModal();
+            },
+            onError: (error: unknown) => {
+              handleApiError(error as AxiosError<ApiErrorData>, t);
+            },
+          }
+        );
+      } else {
+        createClassMutate(payload, {
+          onSuccess: () => {
+            toast.success(t('common.success'));
+            handleCloseModal();
+          },
+          onError: (error: unknown) => {
+            handleApiError(error as AxiosError<ApiErrorData>, t);
+          },
+        });
       }
     },
-    [editingId, isSubmitting, recurringSchedules, enrollments, t, handleCloseModal, refreshClasses]
+    [editingId, recurringSchedules, enrollments, t, handleCloseModal, createClassMutate, updateClassMutate]
   );
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (!deletingId) return;
-    try {
-      await deleteClass(deletingId);
-      toast.success(t('common.success'));
-      setDeletingId(null);
-      refreshClasses();
-    } catch (error: any) {
-      handleApiError(error, t);
-    }
-  }, [deletingId, t, refreshClasses]);
+    deleteClassMutate(deletingId, {
+      onSuccess: () => {
+        toast.success(t('common.success'));
+        setDeletingId(null);
+      },
+      onError: (error: unknown) => {
+        handleApiError(error as AxiosError<ApiErrorData>, t);
+      },
+    });
+  }, [deletingId, t, deleteClassMutate]);
 
   const handleEnrollStudent = useCallback(async () => {
     if (!selectedStudentId) return;
@@ -165,8 +177,8 @@ const Classes: React.FC = () => {
         setEnrollments(data);
         setSelectedStudentId('');
         refreshClasses();
-      } catch (error: any) {
-        handleApiError(error, t);
+      } catch (error: unknown) {
+        handleApiError(error as AxiosError<ApiErrorData>, t);
       }
     } else {
       const student = allStudents.find((s) => String(s.id) === String(selectedStudentId));
@@ -197,8 +209,8 @@ const Classes: React.FC = () => {
           setEnrollments(data);
           setIsBulkEnrollOpen(false);
           refreshClasses();
-        } catch (error: any) {
-          handleApiError(error, t);
+        } catch (error: unknown) {
+          handleApiError(error as AxiosError<ApiErrorData>, t);
         }
       } else {
         const newEnrollments = [...enrollments];
@@ -228,8 +240,8 @@ const Classes: React.FC = () => {
           toast.success(t('common.success'));
           setEnrollments(enrollments.filter((e) => e.id !== studentId));
           refreshClasses();
-        } catch (error: any) {
-          handleApiError(error, t);
+        } catch (error: unknown) {
+          handleApiError(error as AxiosError<ApiErrorData>, t);
         }
       } else {
         setEnrollments(enrollments.filter((e) => e.id !== studentId));
@@ -308,12 +320,34 @@ const Classes: React.FC = () => {
           )
         }
       >
+        <div className="flex-1 overflow-hidden">
         {loading ? (
-          <PageLoading />
+          <div className="p-4 sm:p-6">
+            <SkeletonTable columns={6} rows={5} />
+          </div>
         ) : filteredClasses.length === 0 ? (
           <EmptyState
-            title={searchQuery ? t('common.noResults') : t('classes.noData')}
-            icon={BookOpen}
+            title={searchQuery || branchFilter ? t('common.noResults') : t('classes.noClasses')}
+            description={searchQuery || branchFilter ? t('common.tryDifferentSearch') : t('classes.createFirstClass')}
+            showArrow={!(searchQuery || branchFilter)}
+            illustration={
+              <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-48 h-48 mx-auto">
+                <rect x="30" y="50" width="140" height="100" rx="12" className="fill-blue-50 dark:fill-blue-900/20 stroke-blue-200 dark:stroke-blue-800" strokeWidth="4" />
+                <path d="M70 90h60M70 110h40" className="stroke-blue-300 dark:stroke-blue-700" strokeWidth="4" strokeLinecap="round" />
+                <circle cx="130" cy="120" r="12" className="fill-blue-400 dark:fill-blue-600" />
+                <path d="M125 120l3 3 6-6" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            }
+            action={
+              !(searchQuery || branchFilter) ? (
+                <button
+                  onClick={() => handleOpenModal()}
+                  className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/25 active:scale-95"
+                >
+                  {t('classes.addClass')}
+                </button>
+              ) : undefined
+            }
           />
         ) : (
           <ClassTable
@@ -326,6 +360,7 @@ const Classes: React.FC = () => {
             t={t}
           />
         )}
+        </div>
       </Card>
 
       <Modal
@@ -335,7 +370,7 @@ const Classes: React.FC = () => {
         size="4xl"
       >
         <ClassForm
-          initialData={editingClass}
+          initialData={editingClass || undefined}
           onSubmit={handleSubmit}
           branches={branches}
           teachers={teachers}

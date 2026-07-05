@@ -33,11 +33,15 @@ import {
   Area,
   BarChart,
   Bar,
+  ComposedChart,
+  Line,
+  Legend,
 } from 'recharts';
 import ShortcutButton from '@/features/dashboard/components/ShortcutButton';
 import QuickStat from '@/features/dashboard/components/QuickStat';
 import { useDashboard } from '@/features/dashboard/hooks/useDashboard';
 import UsageBar from '@/features/dashboard/components/UsageBar';
+import SetupChecklist from '@/features/dashboard/components/SetupChecklist';
 
 const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
@@ -99,6 +103,15 @@ const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
+          <SetupChecklist
+            hasBranches={(stats?.usage?.branches?.used || 0) > 0}
+            hasTeachers={(stats?.teachers || 0) > 0}
+            hasClasses={(stats?.activeClasses || 0) > 0}
+            hasStudents={(stats?.students || 0) > 0}
+          />
+        )}
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           <ShortcutButton
@@ -295,7 +308,7 @@ const Dashboard: React.FC = () => {
                   <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart
-                        data={(stats?.studentTrends || []).map((t: any) => ({
+                        data={(stats?.studentTrends || []).map((t: { month: string; new: number; active: number; [key: string]: any }) => ({
                           ...t,
                           monthLabel: new Date(Date.parse(t.month + ' 1, 2024')).toLocaleDateString(
                             i18n.language,
@@ -341,6 +354,81 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
 
+                {/* stats?.revenueTrends && (
+                  <div className="bg-white dark:bg-gray-800 p-8 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-xl shadow-gray-200/20 dark:shadow-none overflow-hidden relative mt-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+                      <div>
+                        <h3 className="text-lg font-black text-gray-900 dark:text-white flex items-center gap-2">
+                          <TrendingUp className="text-emerald-500" size={20} />
+                          {t('dashboard.revenueForecast', 'Doanh thu dự kiến')}
+                        </h3>
+                        <p className="text-xs text-gray-400 mt-1">{t('dashboard.revenueNote', 'Dựa trên số lượng học viên thực tế')}</p>
+                      </div>
+                    </div>
+                    
+                    <div className="h-[300px] w-full">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart
+                          data={(stats?.revenueTrends || []).map((t: any) => ({
+                            ...t,
+                            monthLabel: new Date(Date.parse(t.month + ' 1, 2024')).toLocaleDateString(
+                              i18n.language,
+                              { month: 'short' }
+                            ),
+                          }))}
+                        >
+                          <defs>
+                            <linearGradient id="revenueColor" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#10B981" stopOpacity={0.2} />
+                              <stop offset="95%" stopColor="#10B981" stopOpacity={0} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                          <XAxis
+                            dataKey="monthLabel"
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 11, fill: '#94a3b8' }}
+                          />
+                          <YAxis
+                            axisLine={false}
+                            tickLine={false}
+                            tick={{ fontSize: 11, fill: '#94a3b8' }}
+                            tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              borderRadius: '1rem',
+                              border: 'none',
+                              boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
+                            }}
+                            formatter={(value: any) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value) || 0)}
+                          />
+                          <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 'bold' }} />
+                          <Area
+                            type="monotone"
+                            dataKey="expected"
+                            name={t('dashboard.expectedRevenue', 'Dự kiến') as string}
+                            stroke="#10B981"
+                            strokeWidth={3}
+                            fillOpacity={1}
+                            fill="url(#revenueColor)"
+                          />
+                          <Line
+                            type="monotone"
+                            dataKey="actual"
+                            name={t('dashboard.actualRevenue', 'Thực tế') as string}
+                            stroke="#F59E0B"
+                            strokeWidth={3}
+                            dot={{ r: 4, strokeWidth: 2 }}
+                            activeDot={{ r: 6 }}
+                          />
+                        </ComposedChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                ) */}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {user?.tenant_settings?.menu?.attendance !== false && (
                     <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-lg shadow-gray-200/20 dark:shadow-none relative overflow-hidden">
@@ -359,7 +447,7 @@ const Dashboard: React.FC = () => {
                             />
                             <Tooltip cursor={{ fill: 'transparent' }} />
                             <Bar dataKey="rate" radius={[4, 4, 0, 0]} barSize={20}>
-                              {(stats?.attendanceTrends || []).map((entry: any, index: number) => (
+                              {(stats?.attendanceTrends || []).map((entry: { rate: number; month: string; [key: string]: any }, index: number) => (
                                 <Cell
                                   key={`cell-${index}`}
                                   fill={entry.rate > 80 ? '#10B981' : '#6366F1'}
@@ -382,7 +470,7 @@ const Dashboard: React.FC = () => {
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={(stats?.classDistribution || []).map((d: any) => ({
+                            data={(stats?.classDistribution || []).map((d: { status: string; count: number; [key: string]: any }) => ({
                               ...d,
                               label: getStatusLabel(d.status),
                             }))}
@@ -392,7 +480,7 @@ const Dashboard: React.FC = () => {
                             dataKey="count"
                             nameKey="label"
                           >
-                            {(stats?.classDistribution || []).map((_: any, index: number) => (
+                            {(stats?.classDistribution || []).map((_: unknown, index: number) => (
                               <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                           </Pie>
@@ -400,7 +488,7 @@ const Dashboard: React.FC = () => {
                         </PieChart>
                       </ResponsiveContainer>
                       <div className="flex flex-col gap-2 shrink-0">
-                        {(stats?.classDistribution || []).map((entry: any, index: number) => (
+                        {(stats?.classDistribution || []).map((entry: { status: string; count: number; [key: string]: any }, index: number) => (
                           <div key={entry.status} className="flex items-center gap-2">
                             <div
                               className="w-2 h-2 rounded-full"
@@ -457,7 +545,7 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-5">
                     {stats?.recentActivities && stats.recentActivities.length > 0 ? (
-                      stats.recentActivities.map((act: any, i: number) => (
+                      stats.recentActivities.map((act: { type: string; user: string; action: string; time: string; [key: string]: any }, i: number) => (
                         <div key={i} className="flex gap-3 group">
                           <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-primary/60 group-hover:bg-primary group-hover:text-white transition-all shrink-0">
                             {getActivityIcon(act.type)}

@@ -1,16 +1,22 @@
 import api from '@/api';
-import type { ClassData, Enrollment, RecurringSchedule } from '@/types';
+import { ClassSchema, EnrollmentSchema, RecurringScheduleSchema, safeParseArray } from '@/types/schemas';
+import type { ClassBasicFormData } from '@/types/schemas';
 
-export const getClasses = () => api.get<ClassData[]>('/classes').then((res) => res.data);
+export const getClasses = () =>
+  api.get<unknown>('/classes').then((res) => safeParseArray(ClassSchema, res.data, 'getClasses'));
 
 export const getClassSchedules = (classId: string) =>
-  api.get<RecurringSchedule[]>(`/classes/${classId}/recurring`).then((res) => res.data);
+  api
+    .get<unknown>(`/classes/${classId}/recurring`)
+    .then((res) => safeParseArray(RecurringScheduleSchema, res.data, 'getClassSchedules'));
 
 export const getClassEnrollments = (classId: string) =>
-  api.get<Enrollment[]>(`/classes/${classId}/students`).then((res) => res.data);
+  api
+    .get<unknown>(`/classes/${classId}/students`)
+    .then((res) => safeParseArray(EnrollmentSchema, res.data, 'getClassEnrollments'));
 
-export const createClass = (data: any) => api.post('/classes', data);
-export const updateClass = (id: string, data: any) => api.put(`/classes/${id}`, data);
+export const createClass = (data: ClassBasicFormData) => api.post('/classes', data);
+export const updateClass = (id: string, data: ClassBasicFormData) => api.put(`/classes/${id}`, data);
 export const deleteClass = (id: string) => api.delete(`/classes/${id}`);
 
 export const enrollStudent = (classId: string, studentId: string) =>

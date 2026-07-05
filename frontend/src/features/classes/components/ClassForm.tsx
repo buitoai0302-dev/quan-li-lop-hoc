@@ -4,9 +4,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { ClassFormProps } from '@/types';
+import type { TFunction } from 'i18next';
 import { Input, Select, Label, Button, Card, Badge } from '@/components/common/UI';
 
-const getClassSchema = (t: any) =>
+const getClassSchema = (t: TFunction) =>
   z.object({
     name: z.string().min(1, { message: t('validation.classNameRequired') }),
     branch_id: z.string().min(1, { message: t('validation.branchRequired') }),
@@ -40,7 +41,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
   endDateRef,
 }) => {
   const schema = getClassSchema(t);
-  const { register, handleSubmit, reset } = useForm<ClassBasicSchemaType>({
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<ClassBasicSchemaType>({
     resolver: zodResolver(schema),
     defaultValues: initialData || {
       name: '',
@@ -95,15 +96,24 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 variant="muted"
                 size="sm"
                 placeholder={t('classes.namePlaceholder')}
+                className={errors.name ? 'ring-2 ring-red-500' : ''}
                 {...register('name')}
               />
+              {errors.name && (
+                <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.name.message}</p>
+              )}
             </div>
 
             <div>
               <Label required ml-1 size="xs">
                 {t('classes.branch')}
               </Label>
-              <Select variant="muted" size="sm" {...register('branch_id')}>
+              <Select
+                variant="muted"
+                size="sm"
+                className={errors.branch_id ? 'ring-2 ring-red-500' : ''}
+                {...register('branch_id')}
+              >
                 <option value="" disabled>
                   ---
                 </option>
@@ -113,6 +123,9 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   </option>
                 ))}
               </Select>
+              {errors.branch_id && (
+                <p className="text-red-500 text-[10px] mt-1 ml-1 font-bold">{errors.branch_id.message}</p>
+              )}
             </div>
 
             <div>

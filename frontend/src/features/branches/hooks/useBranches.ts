@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { getBranches } from '@/services/branchesService';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getBranches, createBranch, updateBranch, deleteBranch } from '@/services/branchesService';
+import type { BranchFormData } from '@/types';
 
 export const useBranches = () => {
   const query = useQuery({
@@ -13,4 +14,34 @@ export const useBranches = () => {
     refreshBranches: query.refetch,
     query,
   };
+};
+
+export const useCreateBranch = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (data: BranchFormData) => createBranch(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+    },
+  });
+};
+
+export const useUpdateBranch = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: BranchFormData }) => updateBranch(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+    },
+  });
+};
+
+export const useDeleteBranch = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => deleteBranch(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+    },
+  });
 };

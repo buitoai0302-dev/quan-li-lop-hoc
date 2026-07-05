@@ -1,30 +1,33 @@
+import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import type { LucideIcon } from 'lucide-react';
 import type { TFunction } from 'i18next';
 import MainLayout from './components/MainLayout';
-import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
-import VerifyEmail from './pages/Auth/VerifyEmail';
-import ForgotPassword from './pages/Auth/ForgotPassword';
-import ResetPassword from './pages/Auth/ResetPassword';
-import ResendVerification from './pages/Auth/ResendVerification';
-import Dashboard from './pages/Dashboard';
-import Schedule from './pages/Schedule';
-import Classes from './pages/Classes';
-import Attendance from './pages/Attendance';
-import Teachers from './pages/Teachers';
-import Students from './pages/Students';
-import Rooms from './pages/Rooms';
-import Branches from './pages/Branches';
-import Settings from './pages/Settings';
-import ImportData from './pages/ImportData';
-import Help from './pages/Help';
-import Subscription from './pages/Subscription';
-import AdminTenants from './pages/Admin/AdminTenants';
-import AdminPlans from './pages/Admin/AdminPlans';
-import AdminPlanRequests from './pages/Admin/AdminPlanRequests';
-import ActivityLog from './pages/Admin/ActivityLog';
+
+// Lazy-loaded pages for code splitting
+const Login = lazy(() => import('./pages/Auth/Login'));
+const Register = lazy(() => import('./pages/Auth/Register'));
+const VerifyEmail = lazy(() => import('./pages/Auth/VerifyEmail'));
+const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/Auth/ResetPassword'));
+const ResendVerification = lazy(() => import('./pages/Auth/ResendVerification'));
+const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Schedule = lazy(() => import('./pages/Schedule'));
+const Classes = lazy(() => import('./pages/Classes'));
+const Attendance = lazy(() => import('./pages/Attendance'));
+const Teachers = lazy(() => import('./pages/Teachers'));
+const Students = lazy(() => import('./pages/Students'));
+const Rooms = lazy(() => import('./pages/Rooms'));
+const Branches = lazy(() => import('./pages/Branches'));
+const Settings = lazy(() => import('./pages/Settings'));
+const ImportData = lazy(() => import('./pages/ImportData'));
+const Help = lazy(() => import('./pages/Help'));
+const Subscription = lazy(() => import('./pages/Subscription'));
+const AdminTenants = lazy(() => import('./pages/Admin/AdminTenants'));
+const AdminPlans = lazy(() => import('./pages/Admin/AdminPlans'));
+const AdminPlanRequests = lazy(() => import('./pages/Admin/AdminPlanRequests'));
+const ActivityLog = lazy(() => import('./pages/Admin/ActivityLog'));
 import { USER_ROLES, ROUTES } from './utils/constants';
 import {
   LayoutDashboard,

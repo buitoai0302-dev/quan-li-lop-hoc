@@ -15,8 +15,20 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES, VIEW_MODES } from '@/utils/constants';
 import { handleApiError } from '@/utils/errorHelper';
+import type { ApiErrorData } from '@/utils/errorHelper';
 import toast from 'react-hot-toast';
 import type { Session, ViewMode } from '@/types';
+import type { AxiosError } from 'axios';
+
+interface SessionFormState {
+  classId: string;
+  roomId: string;
+  teacherId: string;
+  sessionDate: string;
+  startTime: string;
+  endTime: string;
+  notes: string;
+}
 
 export const useScheduleBoard = () => {
   const { t } = useTranslation();
@@ -54,7 +66,7 @@ export const useScheduleBoard = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<Session | null>(null);
   const [viewingSession, setViewingSession] = useState<Session | null>(null);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<SessionFormState>({
     classId: '',
     roomId: '',
     teacherId: '',
@@ -120,22 +132,23 @@ export const useScheduleBoard = () => {
 
   // Mutations
   const updateSessionMutation = useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => updateSession(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      updateSession(id, data),
     onSuccess: () => {
       toast.success(t('common.success'));
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
     },
-    onError: (error: any) => handleApiError(error, t),
+    onError: (error: AxiosError<ApiErrorData>) => handleApiError(error, t),
   });
 
   const createSessionMutation = useMutation({
-    mutationFn: (data: any) => createSession(data),
+    mutationFn: (data: Record<string, unknown>) => createSession(data),
     onSuccess: () => {
       toast.success(t('common.success'));
       queryClient.invalidateQueries({ queryKey: ['sessions'] });
       setIsModalOpen(false);
     },
-    onError: (error: any) => handleApiError(error, t),
+    onError: (error: AxiosError<ApiErrorData>) => handleApiError(error, t),
   });
 
   const deleteSessionMutation = useMutation({
@@ -146,7 +159,7 @@ export const useScheduleBoard = () => {
       setIsDeleteModalOpen(false);
       setIsModalOpen(false);
     },
-    onError: (error: any) => handleApiError(error, t),
+    onError: (error: AxiosError<ApiErrorData>) => handleApiError(error, t),
   });
 
   const handleOpenModal = (session?: Session) => {
@@ -223,12 +236,13 @@ export const useScheduleBoard = () => {
     handlePrev,
     handleNext,
     handleCloseModal: () => setIsModalOpen(false),
-    handleSubmit: (e: React.FormEvent) => {
+    handleSubmit: (e: React.FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      const payload: Record<string, unknown> = { ...formData };
       if (editingSession) {
-        updateSessionMutation.mutate({ id: editingSession.id, data: formData });
+        updateSessionMutation.mutate({ id: editingSession.id, data: payload });
       } else {
-        createSessionMutation.mutate(formData);
+        createSessionMutation.mutate(payload);
       }
     },
     handleDelete: () => {

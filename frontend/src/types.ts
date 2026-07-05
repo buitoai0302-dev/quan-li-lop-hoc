@@ -1,4 +1,30 @@
 import type { TFunction } from 'i18next';
+import type React from 'react';
+
+// ---------------------------------------------------------------------------
+// Re-export all domain types from schemas (single source of truth)
+// ---------------------------------------------------------------------------
+export type {
+  Branch,
+  Teacher,
+  Student,
+  Room,
+  ClassData,
+  Session,
+  Enrollment,
+  AttendanceRecord,
+  RecurringSchedule,
+  StudentFormData,
+  TeacherFormData,
+  BranchFormData,
+  RoomFormData,
+  ClassBasicFormData,
+  SessionFormData,
+} from './types/schemas';
+
+// ---------------------------------------------------------------------------
+// Types that are NOT Zod-derived (app-level, UI-level, auth-level)
+// ---------------------------------------------------------------------------
 
 export interface User {
   id: string;
@@ -17,104 +43,15 @@ export interface User {
   };
 }
 
-export interface Session {
-  id: string;
-  tenant_id: string;
-  class_id: string;
-  room_id: string;
-  teacher_id: string;
-  session_date: string; // YYYY-MM-DD
-  start_time: string; // HH:mm:ss
-  end_time: string; // HH:mm:ss
-  session_type: string;
-  status: string;
-  notes?: string;
-  class_name?: string;
-  teacher_name?: string;
-  room_name?: string;
-  branch_name?: string;
-}
-
 export interface WeeklyScheduleData {
   weekStart: string;
   weekEnd: string;
-  sessions: Session[];
-}
-
-export interface Branch {
-  id: string;
-  name: string;
-  address?: string;
-  phone?: string;
-  is_active?: boolean;
-}
-
-export interface Teacher {
-  id: string;
-  full_name: string;
-  email?: string;
-  phone?: string;
-  specialization?: string;
-  branch_id?: string;
-  branch_name?: string;
-  is_active?: boolean;
-}
-
-export interface Room {
-  id: string;
-  name: string;
-  capacity?: number;
-  room_type?: string;
-  branch_id?: string;
-  branch_name?: string;
-  is_active?: boolean;
-}
-
-export interface ClassData {
-  id: string;
-  name: string;
-  max_capacity: number;
-  branch_id: string;
-  branch_name?: string;
-  teacher_id: string;
-  teacher_name?: string;
-  subject_id?: string;
-  start_date: string;
-  end_date: string;
-  status: string;
-  created_at?: string;
-}
-
-export interface Student {
-  id: string;
-  full_name: string;
-  email?: string;
-  phone?: string;
-  date_of_birth?: string;
-  branch_id?: string;
-  branch_name?: string;
-  is_active?: boolean;
-  parent_phone?: string;
-}
-
-export interface Enrollment {
-  id: string;
-  full_name: string;
-  email?: string;
-  enrolled_at: string;
-}
-
-export interface RecurringSchedule {
-  day_of_week: number;
-  start_time: string; // HH:mm
-  end_time: string; // HH:mm
-  room_id: string;
-  notes?: string;
+  sessions: import('./types/schemas').Session[];
 }
 
 export interface HelpCategory {
   id: string;
-  icon: import('react').ReactNode;
+  icon: React.ReactNode;
   title: string;
   description: string;
   steps: string[];
@@ -149,7 +86,7 @@ export interface Plan {
   code: string;
   price_vnd?: string | number;
   price_usd?: string | number;
-  price?: number; // Legacy/Public pricing
+  price?: number;
   max_users?: number;
   max_students?: number;
   is_active: boolean;
@@ -180,15 +117,6 @@ export interface SubscriptionHistory {
   created_at: string;
 }
 
-export interface AttendanceRecord {
-  student_id: string;
-  full_name: string;
-  email?: string;
-  attendance_id: string | null;
-  status: string;
-  marked_at: string | null;
-}
-
 export interface ActivityItem {
   id: string;
   user: string;
@@ -208,6 +136,7 @@ export interface DashboardStats {
   classTrend?: string;
   studentTrends?: { month: string; count: number }[];
   classDistribution?: { status: string; count: number }[];
+  revenueTrends?: { month: string; expected: number; actual: number }[];
   recentActivities?: ActivityItem[];
   attendanceTrends?: { day: string; rate: number }[];
   overallAttendance?: number;
@@ -224,13 +153,13 @@ export interface DashboardStats {
 export interface PlanLimit {
   limit_key: string;
   limit_value: number;
-  label?: string; // For display
+  label?: string;
 }
 
 export interface PlanFeature {
   feature_key: string;
   is_enabled: boolean;
-  label?: string; // For display
+  label?: string;
 }
 
 export interface AdminStats {
@@ -241,47 +170,43 @@ export interface AdminStats {
 
 export type ViewMode = 'day' | 'week' | 'month';
 
+// ---------------------------------------------------------------------------
 // Component Props Interfaces
+// ---------------------------------------------------------------------------
+
 export interface BaseTableProps<T> {
   t: TFunction;
   onEdit: (item: T) => void;
   onDelete: (id: string) => void;
 }
 
-export interface StudentTableProps extends BaseTableProps<Student> {
-  students: Student[];
+export interface StudentTableProps extends BaseTableProps<import('./types/schemas').Student> {
+  students: import('./types/schemas').Student[];
+  selectedIds?: string[];
+  onSelectAll?: (checked: boolean) => void;
+  onSelectOne?: (id: string, checked: boolean) => void;
 }
 
-export interface TeacherTableProps extends BaseTableProps<Teacher> {
-  teachers: Teacher[];
+export interface TeacherTableProps extends BaseTableProps<import('./types/schemas').Teacher> {
+  teachers: import('./types/schemas').Teacher[];
 }
 
-export interface BranchTableProps extends BaseTableProps<Branch> {
-  branches: Branch[];
+export interface BranchTableProps extends BaseTableProps<import('./types/schemas').Branch> {
+  branches: import('./types/schemas').Branch[];
 }
 
-export interface RoomTableProps extends BaseTableProps<Room> {
-  rooms: Room[];
+export interface RoomTableProps extends BaseTableProps<import('./types/schemas').Room> {
+  rooms: import('./types/schemas').Room[];
 }
 
-export interface ClassTableProps extends BaseTableProps<ClassData> {
-  classes: ClassData[];
+export interface ClassTableProps extends BaseTableProps<import('./types/schemas').ClassData> {
+  classes: import('./types/schemas').ClassData[];
 }
-
-export type StudentFormData = {
-  full_name: string;
-  email: string;
-  phone?: string;
-  date_of_birth?: string;
-  branch_id: string;
-  is_active: boolean;
-  parent_phone?: string;
-};
 
 export interface StudentFormProps {
-  initialData?: StudentFormData;
-  onSubmit: (data: StudentFormData) => void;
-  branches: Branch[];
+  initialData?: import('./types/schemas').StudentFormData;
+  onSubmit: (data: import('./types/schemas').StudentFormData) => void;
+  branches: import('./types/schemas').Branch[];
   editingId: string | null;
   isSubmitting: boolean;
   onClose: () => void;
@@ -289,76 +214,43 @@ export interface StudentFormProps {
   dobInputRef: React.RefObject<HTMLInputElement | null>;
 }
 
-export type TeacherFormData = {
-  full_name: string;
-  email: string;
-  phone?: string;
-  specialization?: string;
-  branch_id: string;
-  is_active: boolean;
-};
-
 export interface TeacherFormProps {
-  initialData?: TeacherFormData;
-  onSubmit: (data: TeacherFormData) => void;
-  branches: Branch[];
+  initialData?: import('./types/schemas').TeacherFormData;
+  onSubmit: (data: import('./types/schemas').TeacherFormData) => void;
+  branches: import('./types/schemas').Branch[];
   editingId: string | null;
   isSubmitting: boolean;
   onClose: () => void;
   t: TFunction;
 }
 
-export type BranchFormData = {
-  name: string;
-  address?: string;
-  phone?: string;
-  is_active: boolean;
-};
-
 export interface BranchFormProps {
-  initialData?: BranchFormData;
-  onSubmit: (data: BranchFormData) => void;
+  initialData?: import('./types/schemas').BranchFormData;
+  onSubmit: (data: import('./types/schemas').BranchFormData) => void;
   isSubmitting: boolean;
   onClose: () => void;
   t: TFunction;
 }
-
-export type RoomFormData = {
-  name: string;
-  capacity: number;
-  room_type: string;
-  branch_id: string;
-  is_active: boolean;
-};
 
 export interface RoomFormProps {
-  initialData?: RoomFormData;
-  onSubmit: (data: RoomFormData) => void;
-  branches: Branch[];
+  initialData?: import('./types/schemas').RoomFormData;
+  onSubmit: (data: import('./types/schemas').RoomFormData) => void;
+  branches: import('./types/schemas').Branch[];
   isSubmitting: boolean;
   onClose: () => void;
   t: TFunction;
 }
 
-export type ClassBasicFormData = {
-  name: string;
-  branch_id: string;
-  teacher_id?: string;
-  max_capacity?: number;
-  start_date?: string;
-  end_date?: string;
-};
-
 export interface ClassFormProps {
-  initialData?: ClassBasicFormData;
-  onSubmit: (data: ClassBasicFormData) => void;
-  branches: Branch[];
-  teachers: Teacher[];
-  rooms: Room[];
-  allStudents: Student[];
-  recurringSchedules: RecurringSchedule[];
-  setRecurringSchedules: (schedules: RecurringSchedule[]) => void;
-  enrollments: Enrollment[];
+  initialData?: import('./types/schemas').ClassBasicFormData;
+  onSubmit: (data: import('./types/schemas').ClassBasicFormData) => void;
+  branches: import('./types/schemas').Branch[];
+  teachers: import('./types/schemas').Teacher[];
+  rooms: import('./types/schemas').Room[];
+  allStudents: import('./types/schemas').Student[];
+  recurringSchedules: import('./types/schemas').RecurringSchedule[];
+  setRecurringSchedules: (schedules: import('./types/schemas').RecurringSchedule[]) => void;
+  enrollments: import('./types/schemas').Enrollment[];
   selectedStudentId: string;
   setSelectedStudentId: (id: string) => void;
   onEnrollStudent: () => void;
@@ -376,13 +268,13 @@ export interface ScheduleHeaderProps {
   setSelectedDate: (date: Date) => void;
   viewMode: ViewMode;
   setViewMode: (mode: ViewMode) => void;
-  branches: Branch[];
+  branches: import('./types/schemas').Branch[];
   selectedBranch: string;
   setSelectedBranch: (id: string) => void;
-  teachers: Teacher[];
+  teachers: import('./types/schemas').Teacher[];
   selectedTeacher: string;
   setSelectedTeacher: (id: string) => void;
-  classes: ClassData[];
+  classes: import('./types/schemas').ClassData[];
   selectedClass: string;
   setSelectedClass: (id: string) => void;
   isFilterVisible: boolean;
@@ -399,8 +291,8 @@ export interface ScheduleHeaderProps {
 export interface BulkEnrollModalProps {
   isOpen: boolean;
   onClose: () => void;
-  allStudents: Student[];
-  enrollments: Enrollment[];
+  allStudents: import('./types/schemas').Student[];
+  enrollments: import('./types/schemas').Enrollment[];
   onBulkEnroll: (studentIds: string[]) => void;
   t: TFunction;
 }

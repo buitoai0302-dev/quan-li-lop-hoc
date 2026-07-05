@@ -25,6 +25,25 @@ export const useDashboard = () => {
     queryKey: ['dashboard-stats', chartPeriod],
     queryFn: () => getDashboardStats(chartPeriod),
     staleTime: 5 * 60 * 1000,
+    select: (data) => {
+      // Inject mock revenue trends based on student trends
+      if (data && data.studentTrends) {
+        const baseRevenuePerStudent = 500000; // 500,000 VND
+        const revenueTrends = data.studentTrends.map((t: any) => {
+          const expected = t.count * baseRevenuePerStudent;
+          // Actual is expected with some random variance (e.g., 80% to 100%)
+          const variance = 0.8 + Math.random() * 0.2;
+          const actual = Math.floor(expected * variance);
+          return {
+            month: t.month,
+            expected,
+            actual,
+          };
+        });
+        return { ...data, revenueTrends };
+      }
+      return data;
+    },
   });
 
   const getStatusLabel = (status: string) => {

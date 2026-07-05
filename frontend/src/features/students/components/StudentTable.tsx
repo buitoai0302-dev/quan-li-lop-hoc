@@ -1,11 +1,31 @@
 import React from 'react';
 import type { StudentTableProps } from '@/types';
 
-const StudentTable: React.FC<StudentTableProps> = ({ students, onEdit, onDelete, t }) => {
+const StudentTable: React.FC<StudentTableProps> = ({ 
+  students, 
+  onEdit, 
+  onDelete, 
+  selectedIds = [],
+  onSelectAll,
+  onSelectOne,
+  t 
+}) => {
+  const allSelected = students.length > 0 && selectedIds.length === students.length;
+
   return (
     <table className="w-full border-separate border-spacing-0">
       <thead className="bg-gray-50 dark:bg-slate-900 sticky top-0 z-20 transition-colors">
         <tr>
+          <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-6 py-4 text-left w-12 border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            {onSelectAll && (
+              <input
+                type="checkbox"
+                className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
+                checked={allSelected}
+                onChange={(e) => onSelectAll(e.target.checked)}
+              />
+            )}
+          </th>
           <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
             {t('students.name')}
           </th>
@@ -27,8 +47,18 @@ const StudentTable: React.FC<StudentTableProps> = ({ students, onEdit, onDelete,
         {students.map((student) => (
           <tr
             key={student.id}
-            className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors group"
+            className={`hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors group ${selectedIds.includes(student.id) ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
           >
+            <td className="px-6 py-4">
+              {onSelectOne && (
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
+                  checked={selectedIds.includes(student.id)}
+                  onChange={(e) => onSelectOne(student.id, e.target.checked)}
+                />
+              )}
+            </td>
             <td className="px-6 py-4">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs shrink-0">

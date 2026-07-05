@@ -46,7 +46,7 @@ const MainLayout: React.FC = () => {
   const currentMenu =
     allMenuItems.find((m: any) =>
       m.path === '/' ? location.pathname === '/' : location.pathname.startsWith(m.path)
-    )?.label || 'EduSchedule';
+    )?.label || t('common.appName');
 
   return (
     <div className="flex h-screen bg-gray-100 dark:bg-slate-950 font-sans overflow-hidden transition-colors duration-200">

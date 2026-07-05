@@ -1,63 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, ArrowRight, Info, CreditCard } from 'lucide-react';
-import { getPlans, getTenant, getPlanRequestStatus, requestPlanUpgrade } from '@/services/subscriptionService';
+
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';
 import { PLAN_REQUEST_STATUS } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
-import type { Plan } from '@/types';
+
 
 import PlanCard from './PlanCard';
+
+import { useSubscriptionData, useRequestPlanUpgrade } from '../hooks/useSubscription';
 
 const Subscription: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
-  const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [currentTenantPlanId, setCurrentTenantPlanId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const { data, isLoading: loading } = useSubscriptionData();
+  const { mutate: requestUpgradeMutate, isPending: isSubmitting } = useRequestPlanUpgrade();
+
+  const plans = data?.plans || [];
+  const currentTenantPlanId = data?.tenant?.plan_id || null;
+  const initialPendingId = data?.requestStatus?.status === PLAN_REQUEST_STATUS.PENDING 
+    ? data?.requestStatus?.requested_plan_id 
+    : null;
 
   const isVi = i18n.language === 'vi';
 
-  const [pendingPlanId, setPendingPlanId] = useState<string | null>(null);
+  const [pendingPlanId, setPendingPlanId] = useState<string | null>(initialPendingId || null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [plansData, tenantData, requestsData] = await Promise.all([
-          getPlans(),
-          getTenant(),
-          getPlanRequestStatus().catch(() => null),
-        ]);
-        setPlans(plansData);
-        setCurrentTenantPlanId(tenantData.plan_id);
-        if (requestsData?.status === PLAN_REQUEST_STATUS.PENDING) {
-          setPendingPlanId(requestsData.requested_plan_id);
-        }
-      } catch (err: any) {
+  const handleRequestUpgrade = (planId: string, planName: string) => {
+    requestUpgradeMutate(planId, {
+      onSuccess: () => {
+        toast.success(t('subscription.requestSent', { planName }));
+        setPendingPlanId(planId);
+      },
+      onError: (err: unknown) => {
         handleApiError(err, t);
-      } finally {
-        setLoading(false);
       }
-    };
-    fetchData();
-  }, [t]);
-
-  const handleRequestUpgrade = async (planId: string, planName: string) => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      await requestPlanUpgrade(planId);
-      toast.success(t('subscription.requestSent', { planName }));
-      setPendingPlanId(planId);
-    } catch (err: any) {
-      handleApiError(err, t);
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
   };
 
   const handleContactSales = () => {

@@ -4,9 +4,10 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { TeacherFormProps } from '@/types';
+import type { TFunction } from 'i18next';
 import { Input, Select, Label, Button } from '@/components/common/UI';
 
-const getTeacherSchema = (t: any) =>
+const getTeacherSchema = (t: TFunction) =>
   z.object({
     full_name: z.string().min(2, { message: t('validation.nameMin') }),
     email: z.string().email({ message: t('validation.emailInvalid') }),

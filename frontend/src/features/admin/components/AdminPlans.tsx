@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getAdminPlans, updatePlan } from '@/services/adminService';
 import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';
 import { Save, Info, Building, Zap, Shield, Crown, Settings } from 'lucide-react';
@@ -10,26 +9,22 @@ import PageLoading from '@/components/common/PageLoading';
 import { Card, Button, Input } from '@/components/common/UI';
 import type { Plan } from '@/types';
 
+import { useAdminPlans, useUpdatePlan } from '../hooks/useAdmin';
+
 const AdminPlans: React.FC = () => {
   const { t } = useTranslation();
+  
+  const { data: fetchedPlans, isLoading: loading } = useAdminPlans();
+  const { mutate: updatePlanMutate } = useUpdatePlan();
+
   const [plans, setPlans] = useState<Plan[]>([]);
-  const [loading, setLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
 
-  const fetchPlans = async () => {
-    try {
-      const data = await getAdminPlans();
-      setPlans(data);
-    } catch (error: any) {
-      handleApiError(error, t);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchPlans();
-  }, []);
+    if (fetchedPlans) {
+      setPlans(fetchedPlans);
+    }
+  }, [fetchedPlans]);
 
   const handleUpdateField = (
     planId: string,
@@ -48,24 +43,31 @@ const AdminPlans: React.FC = () => {
     );
   };
 
-  const handleSavePlan = async (plan: Plan) => {
+  const handleSavePlan = (plan: Plan) => {
     setSavingId(plan.id);
-    try {
-      await updatePlan(plan.id, {
-        name: plan.name,
-        priceVnd: plan.price_vnd,
-        priceUsd: plan.price_usd,
-        isActive: plan.is_active,
-        limits: plan.limits,
-        features: plan.features,
-      });
-      toast.success(t('common.success'));
-      fetchPlans();
-    } catch (error: any) {
-      handleApiError(error, t);
-    } finally {
-      setSavingId(null);
-    }
+    updatePlanMutate(
+      {
+        id: plan.id,
+        data: {
+          name: plan.name,
+          price_vnd: plan.price_vnd,
+          price_usd: plan.price_usd,
+          is_active: plan.is_active,
+          limits: plan.limits,
+          features: plan.features,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success(t('common.success'));
+          setSavingId(null);
+        },
+        onError: (error: any) => {
+          handleApiError(error, t);
+          setSavingId(null);
+        },
+      }
+    );
   };
 
   if (loading) return <PageLoading />;

@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { createStudent, updateStudent, deleteStudent } from '@/services/studentsService';
+
 import { Modal, Card } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';
@@ -9,23 +9,25 @@ import { handleApiError } from '@/utils/errorHelper';
 import { Plus, Upload, Search, Users } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/common/PageHeader';
-import PageLoading from '@/components/common/PageLoading';
+import SkeletonTable from '@/components/common/SkeletonTable';
 import FilterBar from '@/components/common/FilterBar';
 import FilterSelect from '@/components/common/FilterSelect';
 import EmptyState from '@/components/common/EmptyState';
-import type { Student } from '@/types';
+import type { Student, StudentFormData } from '@/types';
+import type { AxiosError } from 'axios';
+import type { ApiErrorData } from '@/utils/errorHelper';
 
 import StudentTable from '@/features/students/components/StudentTable';
 import StudentForm from '@/features/students/components/StudentForm';
 
-import { useStudents } from '@/features/students/hooks/useStudents';
+import { useStudents, useCreateStudent, useUpdateStudent, useDeleteStudent, useDeleteBulkStudents } from '@/features/students/hooks/useStudents';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 
 const Students: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const dobInputRef = React.useRef<HTMLInputElement>(null);
-  const { students, loading: studentsLoading, refreshStudents } = useStudents();
+  const { students, loading: studentsLoading } = useStudents();
   const { branches, loading: branchesLoading } = useBranches();
 
   const loading = studentsLoading || branchesLoading;
@@ -33,7 +35,7 @@ const Students: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   // Pagination states
@@ -42,7 +44,10 @@ const Students: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [branchFilter, setBranchFilter] = useState('');
 
-  const [editingStudent, setEditingStudent] = useState<any>(null);
+  const [editingStudent, setEditingStudent] = useState<StudentFormData | null>(null);
+  
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
 
   const filteredStudents = useMemo(() => {
     return students.filter((student) => {
@@ -65,7 +70,7 @@ const Students: React.FC = () => {
         setEditingId(student.id);
         setEditingStudent({
           full_name: student.full_name,
-          email: student.email,
+          email: student.email || '',
           phone: student.phone || '',
           date_of_birth: student.date_of_birth ? student.date_of_birth.split('T')[0] : '',
           branch_id: student.branch_id || (branches.length > 0 ? branches[0].id : ''),
@@ -81,52 +86,108 @@ const Students: React.FC = () => {
     [branches]
   );
 
+  const { mutate: createStudentMutate, isPending: isCreating } = useCreateStudent();
+  const { mutate: updateStudentMutate, isPending: isUpdating } = useUpdateStudent();
+  const { mutate: deleteStudentMutate } = useDeleteStudent();
+  const { mutate: deleteBulkStudentsMutate, isPending: isDeletingBulk } = useDeleteBulkStudents();
+
+  const isSubmitting = isCreating || isUpdating;
+
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
     setEditingId(null);
   }, []);
 
   const handleSubmit = useCallback(
-    async (data: any) => {
-      if (isSubmitting) return;
-      setIsSubmitting(true);
-      try {
-        if (editingId) {
-          await updateStudent(editingId, data);
-          toast.success(t('common.success'));
-        } else {
-          await createStudent(data);
-          toast.success(t('common.success'));
-        }
-        handleCloseModal();
-        refreshStudents();
-      } catch (error: any) {
-        handleApiError(error, t);
-      } finally {
-        setIsSubmitting(false);
+    (data: StudentFormData) => {
+      if (editingId) {
+        updateStudentMutate(
+          { id: editingId, data },
+          {
+            onSuccess: () => {
+              toast.success(t('common.success'));
+              handleCloseModal();
+            },
+            onError: (error: unknown) => {
+              handleApiError(error as AxiosError<ApiErrorData>, t);
+            },
+          }
+        );
+      } else {
+        createStudentMutate(data, {
+          onSuccess: () => {
+            toast.success(t('common.success'));
+            handleCloseModal();
+          },
+          onError: (error: unknown) => {
+            handleApiError(error as AxiosError<ApiErrorData>, t);
+          },
+        });
       }
     },
-    [editingId, isSubmitting, t, handleCloseModal, refreshStudents]
+    [editingId, t, handleCloseModal, createStudentMutate, updateStudentMutate]
   );
 
-  const handleDelete = useCallback(async () => {
+  const handleDelete = useCallback(() => {
     if (!deletingId) return;
-    try {
-      await deleteStudent(deletingId);
-      toast.success(t('common.success'));
-      setDeletingId(null);
-      refreshStudents();
-    } catch (error: any) {
-      handleApiError(error, t);
+    deleteStudentMutate(deletingId, {
+      onSuccess: () => {
+        toast.success(t('common.success'));
+        setDeletingId(null);
+        setSelectedIds(prev => prev.filter(id => id !== deletingId));
+      },
+      onError: (error: unknown) => {
+        handleApiError(error as AxiosError<ApiErrorData>, t);
+      },
+    });
+  }, [deletingId, t, deleteStudentMutate]);
+
+  const handleSelectAll = useCallback((checked: boolean) => {
+    if (checked) {
+      setSelectedIds(filteredStudents.map(s => s.id));
+    } else {
+      setSelectedIds([]);
     }
-  }, [deletingId, t, refreshStudents]);
+  }, [filteredStudents]);
+
+  const handleSelectOne = useCallback((id: string, checked: boolean) => {
+    if (checked) {
+      setSelectedIds(prev => [...prev, id]);
+    } else {
+      setSelectedIds(prev => prev.filter(item => item !== id));
+    }
+  }, []);
+
+  const handleBulkDelete = useCallback(() => {
+    if (selectedIds.length === 0) return;
+    deleteBulkStudentsMutate(selectedIds, {
+      onSuccess: () => {
+        toast.success(t('common.success'));
+        setSelectedIds([]);
+        setIsBulkDeleteModalOpen(false);
+      },
+      onError: (error: unknown) => {
+        handleApiError(error as AxiosError<ApiErrorData>, t);
+        setIsBulkDeleteModalOpen(false);
+      }
+    });
+  }, [selectedIds, deleteBulkStudentsMutate, t]);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div className="h-full flex flex-col overflow-hidden relative">
       <PageHeader
         icon={Users}
         actions={
           <div className="flex items-center gap-2">
+            {selectedIds.length > 0 && (
+              <button
+                onClick={() => setIsBulkDeleteModalOpen(true)}
+                disabled={isDeletingBulk}
+                className="h-9 px-4 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-red-200 dark:border-red-800/50 whitespace-nowrap flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+              >
+                {t('common.delete')} ({selectedIds.length})
+              </button>
+            )}
             <button
               onClick={() => setIsFilterVisible(!isFilterVisible)}
               className={`h-9 w-9 flex items-center justify-center rounded-lg transition-all border active:scale-95 ${
@@ -192,7 +253,9 @@ const Students: React.FC = () => {
         }
       >
         {loading ? (
-          <PageLoading />
+          <div className="p-4 sm:p-6">
+            <SkeletonTable columns={6} rows={5} />
+          </div>
         ) : filteredStudents.length === 0 ? (
           <EmptyState
             title={searchQuery ? t('common.noResults') : t('students.noData')}
@@ -206,6 +269,9 @@ const Students: React.FC = () => {
             )}
             onEdit={handleOpenModal}
             onDelete={setDeletingId}
+            selectedIds={selectedIds}
+            onSelectAll={handleSelectAll}
+            onSelectOne={handleSelectOne}
             t={t}
           />
         )}
@@ -218,7 +284,7 @@ const Students: React.FC = () => {
         size="xl"
       >
         <StudentForm
-          initialData={editingStudent}
+          initialData={editingStudent || undefined}
           onSubmit={handleSubmit}
           branches={branches}
           editingId={editingId}
@@ -235,6 +301,15 @@ const Students: React.FC = () => {
         onConfirm={handleDelete}
         title={t('common.confirmDelete')}
         message={t('common.deleteWarning')}
+        type="danger"
+      />
+      
+      <ConfirmModal
+        isOpen={isBulkDeleteModalOpen}
+        onClose={() => setIsBulkDeleteModalOpen(false)}
+        onConfirm={handleBulkDelete}
+        title={t('common.confirmDelete')}
+        message={`${t('common.deleteWarning')} (${selectedIds.length} ${t('students.title')})`}
         type="danger"
       />
     </div>

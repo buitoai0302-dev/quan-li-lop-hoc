@@ -1,13 +1,14 @@
 import React from 'react';
 import { Palette } from 'lucide-react';
 import { THEMES } from '@/utils/constants';
+import type { TFunction } from 'i18next';
 
 type Theme = (typeof THEMES)[keyof typeof THEMES];
 
 interface AppearanceSettingsProps {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  t: any;
+  t: TFunction;
 }
 
 const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({ theme, setTheme, t }) => {
