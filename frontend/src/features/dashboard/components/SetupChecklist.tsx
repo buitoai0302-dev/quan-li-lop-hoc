@@ -1,58 +1,66 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { Building, Users, BookOpen, UserPlus, CheckCircle2, Circle, ArrowRight } from 'lucide-react';
+import {
+  Settings,
+  Building,
+  DoorOpen,
+  BookOpen,
+  CheckCircle2,
+  Circle,
+  ArrowRight,
+} from 'lucide-react';
 
 interface SetupChecklistProps {
+  hasCenterInfo?: boolean;
   hasBranches: boolean;
-  hasTeachers: boolean;
+  hasRooms: boolean;
   hasClasses: boolean;
-  hasStudents: boolean;
 }
 
 const SetupChecklist: React.FC<SetupChecklistProps> = ({
+  hasCenterInfo = true,
   hasBranches,
-  hasTeachers,
+  hasRooms,
   hasClasses,
-  hasStudents,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   const steps = [
     {
+      id: 'centerInfo',
+      title: t('settings.updateCenterInfo', 'Cập nhật thông tin trung tâm'),
+      isCompleted: hasCenterInfo,
+      icon: <Settings size={16} />,
+      path: '/settings',
+    },
+    {
       id: 'branches',
-      title: t('branches.addBranch'),
+      title: t('branches.addBranch', 'Thêm chi nhánh'),
       isCompleted: hasBranches,
       icon: <Building size={16} />,
       path: '/branches',
     },
     {
-      id: 'teachers',
-      title: t('teachers.addTeacher'),
-      isCompleted: hasTeachers,
-      icon: <Users size={16} />,
-      path: '/teachers',
+      id: 'rooms',
+      title: t('rooms.addRoom', 'Thêm phòng học'),
+      isCompleted: hasRooms,
+      icon: <DoorOpen size={16} />,
+      path: '/rooms',
     },
     {
       id: 'classes',
-      title: t('classes.createFirstClass'), // we'll use classes.add as fallback if this translation doesn't exist
+      title: t('classes.createFirstClass', 'Tạo lớp học'),
       isCompleted: hasClasses,
       icon: <BookOpen size={16} />,
       path: '/classes',
-    },
-    {
-      id: 'students',
-      title: t('students.addStudent'),
-      isCompleted: hasStudents,
-      icon: <UserPlus size={16} />,
-      path: '/students',
     },
   ];
 
   const completedSteps = steps.filter((s) => s.isCompleted).length;
   const progress = (completedSteps / steps.length) * 100;
-  
+
   if (progress === 100) return null;
 
   return (
@@ -65,7 +73,10 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({
               {t('dashboard.setupGuide', 'Setup Guide')}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              {t('dashboard.setupGuideDesc', 'Complete these steps to get your center up and running.')}
+              {t(
+                'dashboard.setupGuideDesc',
+                'Complete these steps to get your center up and running.'
+              )}
             </p>
           </div>
           <div className="flex items-center gap-4 bg-gray-50 dark:bg-gray-900/50 px-4 py-3 rounded-xl border border-gray-100 dark:border-gray-800">
@@ -78,7 +89,7 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({
               </span>
             </div>
             <div className="w-24 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-              <div 
+              <div
                 className="h-full bg-gradient-to-r from-indigo-500 to-primary transition-all duration-1000 ease-out"
                 style={{ width: `${progress}%` }}
               />
@@ -88,19 +99,22 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {steps.map((step) => (
-            <div 
+            <div
               key={step.id}
               onClick={() => !step.isCompleted && navigate(step.path)}
               className={`
                 relative p-5 rounded-xl border-2 transition-all duration-300
-                ${step.isCompleted 
-                  ? 'border-emerald-100 bg-emerald-50/50 dark:border-emerald-900/30 dark:bg-emerald-900/10' 
-                  : 'border-gray-100 hover:border-indigo-100 bg-white hover:bg-indigo-50/30 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-indigo-900/50 cursor-pointer group shadow-sm hover:shadow-md'
+                ${
+                  step.isCompleted
+                    ? 'border-emerald-100 bg-emerald-50/50 dark:border-emerald-900/30 dark:bg-emerald-900/10'
+                    : 'border-gray-100 hover:border-indigo-100 bg-white hover:bg-indigo-50/30 dark:border-gray-700 dark:bg-gray-800 dark:hover:border-indigo-900/50 cursor-pointer group shadow-sm hover:shadow-md'
                 }
               `}
             >
               <div className="flex justify-between items-start mb-4">
-                <div className={`p-2 rounded-lg ${step.isCompleted ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors'}`}>
+                <div
+                  className={`p-2 rounded-lg ${step.isCompleted ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/50 dark:text-emerald-400' : 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 group-hover:bg-indigo-100 group-hover:text-indigo-600 transition-colors'}`}
+                >
                   {step.icon}
                 </div>
                 {step.isCompleted ? (
@@ -109,7 +123,9 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({
                   <Circle className="text-gray-300 dark:text-gray-600 w-5 h-5 group-hover:text-indigo-300 transition-colors" />
                 )}
               </div>
-              <h3 className={`font-bold text-sm mb-1 ${step.isCompleted ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}>
+              <h3
+                className={`font-bold text-sm mb-1 ${step.isCompleted ? 'text-emerald-700 dark:text-emerald-400' : 'text-gray-900 dark:text-white'}`}
+              >
                 {step.title}
               </h3>
               {!step.isCompleted && (

@@ -107,7 +107,7 @@ const Dashboard: React.FC = () => {
         {[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
           <SetupChecklist
             hasBranches={(stats?.usage?.branches?.used || 0) > 0}
-            hasTeachers={(stats?.teachers || 0) > 0}
+            hasRooms={(stats?.rooms || 0) > 0}
             hasClasses={(stats?.activeClasses || 0) > 0}
             hasStudents={(stats?.students || 0) > 0}
           />
@@ -308,13 +308,19 @@ const Dashboard: React.FC = () => {
                   <div className="h-[300px] w-full">
                     <ResponsiveContainer width="100%" height="100%">
                       <AreaChart
-                        data={(stats?.studentTrends || []).map((t: { month: string; new: number; active: number; [key: string]: any }) => ({
-                          ...t,
-                          monthLabel: new Date(Date.parse(t.month + ' 1, 2024')).toLocaleDateString(
-                            i18n.language,
-                            { month: 'short' }
-                          ),
-                        }))}
+                        data={(stats?.studentTrends || []).map(
+                          (t: {
+                            month: string;
+                            new: number;
+                            active: number;
+                            [key: string]: any;
+                          }) => ({
+                            ...t,
+                            monthLabel: new Date(
+                              Date.parse(t.month + ' 1, 2024')
+                            ).toLocaleDateString(i18n.language, { month: 'short' }),
+                          })
+                        )}
                       >
                         <defs>
                           <linearGradient id="areaColor" x1="0" y1="0" x2="0" y2="1">
@@ -447,13 +453,18 @@ const Dashboard: React.FC = () => {
                             />
                             <Tooltip cursor={{ fill: 'transparent' }} />
                             <Bar dataKey="rate" radius={[4, 4, 0, 0]} barSize={20}>
-                              {(stats?.attendanceTrends || []).map((entry: { rate: number; month: string; [key: string]: any }, index: number) => (
-                                <Cell
-                                  key={`cell-${index}`}
-                                  fill={entry.rate > 80 ? '#10B981' : '#6366F1'}
-                                  fillOpacity={0.8}
-                                />
-                              ))}
+                              {(stats?.attendanceTrends || []).map(
+                                (
+                                  entry: { rate: number; month: string; [key: string]: any },
+                                  index: number
+                                ) => (
+                                  <Cell
+                                    key={`cell-${index}`}
+                                    fill={entry.rate > 80 ? '#10B981' : '#6366F1'}
+                                    fillOpacity={0.8}
+                                  />
+                                )
+                              )}
                             </Bar>
                           </BarChart>
                         </ResponsiveContainer>
@@ -470,10 +481,12 @@ const Dashboard: React.FC = () => {
                       <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
                           <Pie
-                            data={(stats?.classDistribution || []).map((d: { status: string; count: number; [key: string]: any }) => ({
-                              ...d,
-                              label: getStatusLabel(d.status),
-                            }))}
+                            data={(stats?.classDistribution || []).map(
+                              (d: { status: string; count: number; [key: string]: any }) => ({
+                                ...d,
+                                label: getStatusLabel(d.status),
+                              })
+                            )}
                             innerRadius={50}
                             outerRadius={70}
                             paddingAngle={5}
@@ -488,17 +501,22 @@ const Dashboard: React.FC = () => {
                         </PieChart>
                       </ResponsiveContainer>
                       <div className="flex flex-col gap-2 shrink-0">
-                        {(stats?.classDistribution || []).map((entry: { status: string; count: number; [key: string]: any }, index: number) => (
-                          <div key={entry.status} className="flex items-center gap-2">
-                            <div
-                              className="w-2 h-2 rounded-full"
-                              style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                            ></div>
-                            <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">
-                              {getStatusLabel(entry.status)}
-                            </span>
-                          </div>
-                        ))}
+                        {(stats?.classDistribution || []).map(
+                          (
+                            entry: { status: string; count: number; [key: string]: any },
+                            index: number
+                          ) => (
+                            <div key={entry.status} className="flex items-center gap-2">
+                              <div
+                                className="w-2 h-2 rounded-full"
+                                style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                              ></div>
+                              <span className="text-[9px] font-black text-gray-400 uppercase tracking-tighter">
+                                {getStatusLabel(entry.status)}
+                              </span>
+                            </div>
+                          )
+                        )}
                       </div>
                     </div>
                   </div>
@@ -545,23 +563,34 @@ const Dashboard: React.FC = () => {
                   </div>
                   <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-5">
                     {stats?.recentActivities && stats.recentActivities.length > 0 ? (
-                      stats.recentActivities.map((act: { type: string; user: string; action: string; time: string; [key: string]: any }, i: number) => (
-                        <div key={i} className="flex gap-3 group">
-                          <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-primary/60 group-hover:bg-primary group-hover:text-white transition-all shrink-0">
-                            {getActivityIcon(act.type)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-gray-800 dark:text-white leading-snug">
-                              {act.user}{' '}
-                              <span className="font-medium text-gray-500">{act.action}</span>
-                            </p>
-                            <div className="flex items-center gap-1 text-[9px] text-gray-400 mt-0.5 uppercase font-black">
-                              <Clock size={10} />
-                              {getTimeAgo(act.time)}
+                      stats.recentActivities.map(
+                        (
+                          act: {
+                            type: string;
+                            user: string;
+                            action: string;
+                            time: string;
+                            [key: string]: any;
+                          },
+                          i: number
+                        ) => (
+                          <div key={i} className="flex gap-3 group">
+                            <div className="w-8 h-8 rounded-lg bg-gray-50 dark:bg-gray-900 flex items-center justify-center text-primary/60 group-hover:bg-primary group-hover:text-white transition-all shrink-0">
+                              {getActivityIcon(act.type)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-gray-800 dark:text-white leading-snug">
+                                {act.user}{' '}
+                                <span className="font-medium text-gray-500">{act.action}</span>
+                              </p>
+                              <div className="flex items-center gap-1 text-[9px] text-gray-400 mt-0.5 uppercase font-black">
+                                <Clock size={10} />
+                                {getTimeAgo(act.time)}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))
+                        )
+                      )
                     ) : (
                       <div className="text-center py-10 text-gray-300 text-xs italic">
                         {t('dashboard.noActivity')}

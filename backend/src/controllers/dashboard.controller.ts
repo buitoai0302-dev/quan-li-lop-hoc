@@ -135,6 +135,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
       classesRes,
       teachersRes,
       studentsRes,
+      roomsRes,
       trendsRes,
       distributionRes,
       activitiesRes,
@@ -157,6 +158,9 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
         `SELECT COUNT(*) FROM students WHERE tenant_id = $1 AND is_active = true AND is_deleted = false`,
         [tenantId]
       ),
+      pool.query(`SELECT COUNT(*) FROM rooms WHERE tenant_id = $1 AND is_deleted = false`, [
+        tenantId,
+      ]),
       // Student trends by period
       pool.query(
         `
@@ -275,6 +279,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
       activeClasses: currentClasses,
       teachers: parseInt(teachersRes.rows[0].count, 10),
       students: currentStudents,
+      rooms: parseInt(roomsRes.rows[0].count, 10),
       upcomingSessions: parseInt(upcomingRes.rows[0].count, 10),
       studentTrend: calcTrend(currentStudents, prevStudents),
       classTrend: calcTrend(currentClasses, prevClasses),
