@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getTeachers, createTeacher, updateTeacher, deleteTeacher } from '@/services/teachersService';
-import type { TeacherFormData } from '@/types';
+import { getTeachers, createTeacher, updateTeacher, deleteTeacher } from '@/features/teachers/api/teachers.api';
+import type { TeacherFormData } from '@/types/schemas';
 
 export const useTeachers = (branchId?: string) => {
   const query = useQuery({

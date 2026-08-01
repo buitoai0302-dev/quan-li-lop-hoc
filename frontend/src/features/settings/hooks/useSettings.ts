@@ -6,8 +6,8 @@ import {
   getApiKeyInfo,
   generateApiKey,
   syncAllGoogle,
-} from '@/services/settingsService';
-import { getCurrentUser, updateProfile } from '@/services/authService';
+} from '../api/settings.api';
+import { getCurrentUser, updateProfile } from '@/features/auth';
 import toast from 'react-hot-toast';
 import { useAuth } from '@/contexts/AuthContext';
 

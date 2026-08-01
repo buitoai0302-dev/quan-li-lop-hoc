@@ -1,5 +1,5 @@
 import React from 'react';
-import type { RoomTableProps } from '@/types';
+import type {  RoomTableProps  } from '../types';
 
 const RoomTable: React.FC<RoomTableProps> = ({ rooms, onEdit, onDelete, t }) => {
   return (

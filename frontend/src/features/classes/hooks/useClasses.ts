@@ -1,10 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
-import { getBranches } from '@/services/branchesService';
-import { getTeachers } from '@/services/teachersService';
-import { getRooms } from '@/services/roomsService';
-import { getStudents } from '@/services/studentsService';
-import { getClasses } from '@/services/classesService';
-import type { ClassData, Branch, Teacher, Room, Student } from '@/types';
+import { getBranches } from '@/features/branches';
+import { getTeachers } from '@/features/teachers';
+import { getRooms } from '@/features/rooms';
+import { getStudents } from '@/features/students';
+import type { ClassData, Branch, Teacher, Room, Student } from '@/types/schemas';
 
 /**
  * Hook to manage class data and related entities using TanStack Query
@@ -65,8 +64,13 @@ export const useClasses = () => {
 };
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { createClass, updateClass, deleteClass } from '@/services/classesService';
-import type { ClassBasicFormData } from '@/types';
+import {
+  getClasses,
+  createClass,
+  updateClass,
+  deleteClass,
+} from '../api/classes.api';
+import type { ClassBasicFormData } from '@/types/schemas';
 
 export const useCreateClass = () => {
   const queryClient = useQueryClient();

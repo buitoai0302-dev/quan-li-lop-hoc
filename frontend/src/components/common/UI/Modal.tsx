@@ -78,15 +78,15 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           aria-modal="true"
           {...props}
         >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-white/10 dark:border-white/5 bg-white/20 dark:bg-white/5 flex-shrink-0">
-            <h3 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white truncate pr-4 uppercase tracking-wider">
+          <div className="flex items-center justify-between px-6 py-2 border-b border-white/10 dark:border-white/5 bg-white/20 dark:bg-white/5 flex-shrink-0">
+            <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate pr-4 uppercase tracking-wider">
               {title}
             </h3>
             <button
               onClick={onClose}
-              className="text-slate-400 hover:text-primary dark:hover:text-blue-400 focus:outline-none bg-white/50 dark:bg-white/10 p-2 rounded-xl border border-white/20 dark:border-white/5 shadow-sm transition-all active:scale-90"
+              className="text-slate-400 hover:text-primary dark:hover:text-blue-400 focus:outline-none bg-white/50 dark:bg-white/10 p-1.5 rounded-lg border border-white/20 dark:border-white/5 shadow-sm transition-all active:scale-90"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
           </div>
 

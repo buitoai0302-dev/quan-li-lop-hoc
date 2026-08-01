@@ -3,7 +3,7 @@ import { Mail, Briefcase, Phone } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { TeacherFormProps } from '@/types';
+import type { TeacherFormProps } from '../types';
 import type { TFunction } from 'i18next';
 import { Input, Select, Label, Button } from '@/components/common/UI';
 

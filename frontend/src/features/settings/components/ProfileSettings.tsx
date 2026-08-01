@@ -1,6 +1,6 @@
 import React from 'react';
 
-import type { ProfileSettingsProps } from '@/types';
+import type { ProfileSettingsProps } from '@/features/auth';
 
 const ProfileSettings: React.FC<ProfileSettingsProps> = ({
   fullName,

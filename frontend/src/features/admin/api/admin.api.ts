@@ -1,5 +1,6 @@
 import api from '@/api';
-import type { Tenant, AdminStats, Plan, PlanRequest, ActivityItem } from '@/types';
+import type { Tenant, AdminStats, Plan, PlanRequest } from '@/types';
+import type { ActivityItem } from '@/features/dashboard';
 
 export const getAdminTenants = () => api.get<Tenant[]>('/admin/tenants').then((res) => res.data);
 export const getAdminPlans = () => api.get<Plan[]>('/admin/plans').then((res) => res.data);

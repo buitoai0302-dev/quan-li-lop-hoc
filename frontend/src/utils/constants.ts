@@ -1,6 +1,7 @@
 export const SYSTEM_DOMAIN = 'system';
 
 export const ROUTES = {
+  HOME: '/',
   LOGIN: '/login',
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',

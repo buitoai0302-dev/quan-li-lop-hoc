@@ -1,5 +1,5 @@
 import { Edit2, Trash2 } from 'lucide-react';
-import type { ClassTableProps } from '@/types';
+import type {  ClassTableProps  } from '../types';
 import { CLASS_STATUS } from '@/utils/constants';
 import { Badge, Button } from '@/components/common/UI';
 

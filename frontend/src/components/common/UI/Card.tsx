@@ -34,10 +34,11 @@ export interface CardProps
   header?: React.ReactNode;
   footer?: React.ReactNode;
   scrollable?: boolean;
+  bodyClassName?: string;
 }
 
 const Card = React.forwardRef<HTMLDivElement, CardProps>(
-  ({ className, variant, hover, header, footer, scrollable, children, ...props }, ref) => {
+  ({ className, variant, hover, header, footer, scrollable, bodyClassName, children, ...props }, ref) => {
     return (
       <div ref={ref} className={cn(cardVariants({ variant, hover, className }))} {...props}>
         {header && (
@@ -46,7 +47,11 @@ const Card = React.forwardRef<HTMLDivElement, CardProps>(
           </div>
         )}
 
-        <div className={cn('flex-1 flex flex-col min-h-0 overflow-hidden', scrollable && 'overflow-auto custom-scrollbar')}>
+        <div className={cn(
+          'flex-1 flex flex-col min-h-0', 
+          scrollable && 'overflow-y-auto custom-scrollbar',
+          bodyClassName
+        )}>
           {children}
         </div>
 

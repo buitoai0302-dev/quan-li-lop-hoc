@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
-import { resetPassword } from '@/services/authService';
+import { resetPassword } from '@/features/auth';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';

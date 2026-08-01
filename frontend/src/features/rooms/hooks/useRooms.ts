@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getRooms, createRoom, updateRoom, deleteRoom } from '@/services/roomsService';
-import type { RoomFormData } from '@/types';
+import { getRooms, createRoom, updateRoom, deleteRoom } from '../api/rooms.api';
+import type { RoomFormData } from '@/types/schemas';
 
 export const useRooms = (branchId?: string) => {
   const query = useQuery({

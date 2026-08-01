@@ -46,8 +46,13 @@
     "end": "End",
     "branch": "Branch",
     "days": {
-      "sunday": "Sunday",
-      "weekday": "Weekday"
+      "0": "Sunday",
+      "1": "Monday",
+      "2": "Tuesday",
+      "3": "Wednesday",
+      "4": "Thursday",
+      "5": "Friday",
+      "6": "Saturday"
     },
     "noData": "No data available",
     "info": "Information",
@@ -690,7 +695,63 @@
     "emailInvalid": "Invalid email address",
     "branchRequired": "Please select a branch",
     "roomNameRequired": "Room name is required",
-    "capacityMin": "Capacity must be at least 1",
     "classNameRequired": "Class name is required"
+  },
+  "landing": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "newRelease": "New Release 2.0",
+    "heroTitle": "Manage your center with ",
+    "heroTitleHighlight": "ease",
+    "heroSubtitle": "EduSchedule is the most comprehensive platform to schedule classes, track attendance, and manage students across multiple branches.",
+    "startFree": "Start for free",
+    "learnMore": "Learn more",
+    "noCreditCard": "No credit card required",
+    "cancelAnytime": "Cancel anytime",
+    "freeSupport": "24/7 Support",
+    "featuresLabel": "Core Features",
+    "featuresHeading": "Everything you need to run your center",
+    "featuresSubheading": "Powerful tools designed specifically for educational institutions and learning centers.",
+    "features.schedule.title": "Smart Scheduling",
+    "features.schedule.desc": "Effortlessly create and manage complex class schedules without conflicts.",
+    "features.attendance.title": "Attendance Tracking",
+    "features.attendance.desc": "Track student and teacher attendance in real-time with comprehensive reports.",
+    "features.multitenant.title": "Multi-Branch Support",
+    "features.multitenant.desc": "Manage multiple branches or entire organizations from a single unified dashboard.",
+    "features.analytics.title": "Advanced Analytics",
+    "features.analytics.desc": "Gain actionable insights with detailed statistics and performance dashboards.",
+    "features.security.title": "Enterprise Security",
+    "features.security.desc": "Bank-grade security with role-based access control to protect your data.",
+    "features.speed.title": "Lightning Fast",
+    "features.speed.desc": "Optimized for speed and reliability, ensuring a smooth experience for all users.",
+    "pricingLabel": "Pricing Plans",
+    "pricingHeading": "Simple, transparent pricing",
+    "pricingSubheading": "Choose the perfect plan for your center. No hidden fees.",
+    "login": "Login",
+    "register": "Register"
+  },
+  "feedback": {
+    "title": "Send Feedback / Report Bug",
+    "description": "Your feedback helps us improve the system. Let us know what you think!",
+    "categoryLabel": "Issue Category",
+    "categories": {
+      "bug": "Report a Bug",
+      "feature": "Feature Request",
+      "support": "Need Support",
+      "other": "Other Feedback"
+    },
+    "priorityLabel": "Priority Level",
+    "priorities": {
+      "normal": "Normal",
+      "high": "High",
+      "urgent": "Urgent"
+    },
+    "messageLabel": "Detailed Description",
+    "messagePlaceholder": "Please describe the issue or your suggestion in detail...",
+    "send": "Send Feedback",
+    "successTitle": "Sent Successfully!",
+    "successDesc": "Thank you for your feedback. Our technical team will review and process it shortly.",
+    "toastSuccess": "Feedback sent successfully!",
+    "toastError": "Failed to send feedback. Please check API Key configuration."
   }
 }

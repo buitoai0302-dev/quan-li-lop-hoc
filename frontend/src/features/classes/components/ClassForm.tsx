@@ -3,7 +3,7 @@ import { Calendar, Clock, Plus, Search, Users, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { ClassFormProps } from '@/types';
+import type { ClassFormProps } from '../types';
 import type { TFunction } from 'i18next';
 import { Input, Select, Label, Button, Card, Badge } from '@/components/common/UI';
 
@@ -208,24 +208,23 @@ const ClassForm: React.FC<ClassFormProps> = ({
 
         {/* Recurring Schedule - Right Column */}
         <div className="lg:col-span-5 flex flex-col min-h-[120px]">
-          <div className="flex items-center justify-between mb-2 px-1">
-            <Label className="flex items-center gap-2 mb-0" size="xs">
-              <Clock size={12} className="text-primary" />
+          <div className="flex items-center justify-between pb-1">
+            <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
               {t('classes.recurringSchedule')}
             </Label>
             <Button
               type="button"
-              variant="secondary"
-              size="xs"
-              onClick={() =>
+              variant="outline"
+              size="sm"
+              onClick={() => {
                 setRecurringSchedules([
                   ...recurringSchedules,
                   { day_of_week: 1, start_time: '08:00', end_time: '10:00', room_id: '' },
-                ])
-              }
-              className="h-6 px-2 text-[9px]"
+                ]);
+              }}
+              className="h-6 text-[10px] font-bold uppercase tracking-wider bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all border border-primary/20 hover:border-primary/40 text-primary hover:bg-primary/5"
             >
-              <Plus size={10} />
+              <Plus size={12} className="mr-1" />
               {t('common.add')}
             </Button>
           </div>
@@ -233,12 +232,13 @@ const ClassForm: React.FC<ClassFormProps> = ({
           <Card
             variant="muted"
             scrollable={true}
-            className="flex-1 p-3 custom-scrollbar space-y-2 max-h-[220px]"
+            className="flex-1 max-h-[320px]"
+            bodyClassName="p-2 space-y-1 custom-scrollbar"
           >
             {recurringSchedules.map((schedule, index) => (
               <div
                 key={index}
-                className="relative bg-white dark:bg-gray-800 p-2.5 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md pr-8"
+                className="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md pr-8"
               >
                 <Button
                   type="button"
@@ -252,63 +252,76 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   <X size={10} />
                 </Button>
                 <div className="grid grid-cols-2 gap-2 mt-1">
-                  <Select
-                    size="xs"
-                    variant="muted"
-                    value={schedule.day_of_week}
-                    onChange={(e) => {
-                      const newSchedules = [...recurringSchedules];
-                      newSchedules[index].day_of_week = parseInt(e.target.value);
-                      setRecurringSchedules(newSchedules);
-                    }}
-                  >
-                    {[1, 2, 3, 4, 5, 6, 0].map((day) => (
-                      <option key={day} value={day}>
-                        {day === 0
-                          ? t('common.days.sunday')
-                          : `${t('common.days.weekday')} ${day + 1}`}
-                      </option>
-                    ))}
-                  </Select>
-                  <Select
-                    size="xs"
-                    variant="muted"
-                    value={schedule.room_id}
-                    onChange={(e) => {
-                      const newSchedules = [...recurringSchedules];
-                      newSchedules[index].room_id = e.target.value;
-                      setRecurringSchedules(newSchedules);
-                    }}
-                  >
-                    <option value="">{t('classes.selectRoom')}</option>
-                    {rooms.map((r) => (
-                      <option key={r.id} value={r.id}>
-                        {r.name}
-                      </option>
-                    ))}
-                  </Select>
-                  <Input
-                    type="time"
-                    size="xs"
-                    variant="muted"
-                    value={schedule.start_time}
-                    onChange={(e) => {
-                      const newSchedules = [...recurringSchedules];
-                      newSchedules[index].start_time = e.target.value;
-                      setRecurringSchedules(newSchedules);
-                    }}
-                  />
-                  <Input
-                    type="time"
-                    size="xs"
-                    variant="muted"
-                    value={schedule.end_time}
-                    onChange={(e) => {
-                      const newSchedules = [...recurringSchedules];
-                      newSchedules[index].end_time = e.target.value;
-                      setRecurringSchedules(newSchedules);
-                    }}
-                  />
+                  <div>
+                    <label className="text-[9px] font-semibold text-gray-500 uppercase">{t('common.day')}</label>
+                    <Select
+                      size="xs"
+                      variant="muted"
+                      value={schedule.day_of_week}
+                      onChange={(e) => {
+                        const newSchedules = [...recurringSchedules];
+                        newSchedules[index].day_of_week = parseInt(e.target.value);
+                        setRecurringSchedules(newSchedules);
+                      }}
+                    >
+                      {[1, 2, 3, 4, 5, 6, 0].map((day) => (
+                        <option key={day} value={day}>
+                          {t(`common.days.${day}`)}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-semibold text-gray-500 uppercase">{t('schedule.room')}</label>
+                    <Select
+                      size="xs"
+                      variant="muted"
+                      value={schedule.room_id}
+                      onChange={(e) => {
+                        const newSchedules = [...recurringSchedules];
+                        newSchedules[index].room_id = e.target.value;
+                        setRecurringSchedules(newSchedules);
+                      }}
+                    >
+                      <option value="">{t('classes.selectRoom')}</option>
+                      {rooms.map((r) => (
+                        <option key={r.id} value={r.id}>
+                          {r.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-semibold text-gray-500 uppercase">{t('common.start')}</label>
+                    <Input
+                      type="time"
+                      size="xs"
+                      variant="muted"
+                      value={schedule.start_time}
+                      onChange={(e) => {
+                        const newSchedules = [...recurringSchedules];
+                        newSchedules[index].start_time = e.target.value;
+                        setRecurringSchedules(newSchedules);
+                      }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="text-[9px] font-semibold text-gray-500 uppercase">{t('common.end')}</label>
+                    <Input
+                      type="time"
+                      size="xs"
+                      variant="muted"
+                      value={schedule.end_time}
+                      onChange={(e) => {
+                        const newSchedules = [...recurringSchedules];
+                        newSchedules[index].end_time = e.target.value;
+                        setRecurringSchedules(newSchedules);
+                      }}
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -333,19 +346,9 @@ const ClassForm: React.FC<ClassFormProps> = ({
               {enrollments.length}
             </Badge>
           </Label>
-          <Button
-            type="button"
-            variant="secondary"
-            size="xs"
-            onClick={onOpenBulkEnroll}
-            className="h-6 px-2 text-[9px]"
-          >
-            <Plus size={10} />
-            {t('common.bulkAdd')}
-          </Button>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 mb-2">
+        <div className="flex flex-col sm:flex-row gap-2 mb-3">
           <Select
             size="sm"
             variant="muted"
@@ -363,18 +366,31 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 </option>
               ))}
           </Select>
-          <Button
-            type="button"
-            onClick={() => onEnrollStudent()}
-            disabled={!selectedStudentId}
-            size="sm"
-            className="w-full sm:w-auto px-6 h-9"
-          >
-            {t('common.add')}
-          </Button>
+          <div className="flex gap-2 w-full sm:w-auto shrink-0">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onOpenBulkEnroll}
+              className="flex-1 sm:flex-none px-4 h-9 font-bold bg-white dark:bg-gray-800 shadow-sm"
+            >
+              <Plus size={14} className="mr-1" />
+              {t('common.bulkAdd')}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => onEnrollStudent()}
+              disabled={!selectedStudentId}
+              size="sm"
+              className="flex-1 sm:flex-none px-4 h-9 font-bold"
+            >
+              <Plus size={14} className="mr-1" />
+              {t('students.addClass')}
+            </Button>
+          </div>
         </div>
 
-        <Card variant="muted" scrollable={true} className="p-2 max-h-[150px] custom-scrollbar">
+        <Card variant="muted" scrollable={true} className="max-h-[180px]" bodyClassName="p-3 custom-scrollbar">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {enrollments.map((s) => (
               <div
@@ -396,9 +412,9 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   variant="ghost"
                   size="icon"
                   onClick={() => onUnenrollStudent(s.id)}
-                  className="h-6 w-6 text-gray-400 hover:text-red-500 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all"
+                  className="h-6 w-6 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
                 >
-                  <X size={10} />
+                  <X size={12} />
                 </Button>
               </div>
             ))}

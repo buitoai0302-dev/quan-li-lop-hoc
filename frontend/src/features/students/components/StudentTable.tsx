@@ -1,5 +1,5 @@
 import React from 'react';
-import type { StudentTableProps } from '@/types';
+import type {  StudentTableProps  } from '../types';
 
 const StudentTable: React.FC<StudentTableProps> = ({ 
   students, 

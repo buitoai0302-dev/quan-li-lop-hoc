@@ -26,6 +26,7 @@ interface AttendanceControlsProps {
   searchTerm: string;
   setSearchTerm: (v: string) => void;
   dateInputRef: React.RefObject<HTMLInputElement | null>;
+  headerActions?: React.ReactNode;
 }
 
 const AttendanceControls: React.FC<AttendanceControlsProps> = ({
@@ -43,26 +44,113 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
   searchTerm,
   setSearchTerm,
   dateInputRef,
+  headerActions,
 }) => {
   const { t } = useTranslation();
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800/50 shrink-0 overflow-hidden transition-all duration-300">
-      <div
-        className="flex items-center justify-between p-3 sm:p-4 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-900/10 transition-colors"
-        onClick={() => setIsControlsExpanded(!isControlsExpanded)}
-      >
-        <div className="flex items-center gap-2">
+      <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 p-3 sm:p-4 bg-gray-50/30 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800/50">
+        
+        {/* Left: Title (Clickable) */}
+        <div 
+          className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0 lg:w-[320px]"
+          onClick={() => setIsControlsExpanded(!isControlsExpanded)}
+        >
           <div className="p-1.5 bg-primary/10 text-primary rounded-lg">
             <ClipboardCheck size={14} />
           </div>
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-            {t('attendance.stats')} & {t('common.filter')}
+          <h3 className="hidden md:block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 whitespace-nowrap">
+            {t('attendance.stats')}
           </h3>
         </div>
-        <button className="p-1.5 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-lg transition-all active:scale-95">
-          {isControlsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
+
+        {/* Middle: Filters (Date + Search) */}
+        <div className="flex flex-1 flex-col xl:flex-row items-center justify-center gap-2 sm:gap-3 min-w-0" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto shrink-0">
+            <div className="flex items-center gap-1.5 flex-1 sm:flex-none sm:w-56 min-w-0">
+              <button
+                onClick={handlePrevDay}
+                className="p-1.5 sm:p-2 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700 shrink-0 text-slate-600 dark:text-slate-300"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <div
+                className="relative flex-1 group cursor-pointer min-w-0"
+                onClick={() => {
+                  const input = dateInputRef.current as any;
+                  if (input) {
+                    if ('showPicker' in input) input.showPicker();
+                    else input.click();
+                  }
+                }}
+              >
+                <input
+                  ref={dateInputRef}
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  className={`w-full pl-7 sm:pl-8 pr-1 sm:pr-2 py-1.5 sm:py-2 ${
+                    isFutureDate
+                      ? 'bg-amber-50/30 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 focus:ring-amber-500/20'
+                      : isReadOnly
+                        ? 'bg-blue-50/30 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800 focus:ring-blue-500/20'
+                        : 'bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 focus:ring-primary/20'
+                  } border rounded-lg text-[10px] sm:text-xs font-bold outline-none dark:text-white cursor-pointer truncate`}
+                />
+                <CalendarIcon
+                  size={12}
+                  className={`absolute left-2 sm:left-2.5 top-1/2 -translate-y-1/2 ${
+                    isFutureDate
+                      ? 'text-amber-500'
+                      : isReadOnly
+                        ? 'text-blue-500'
+                        : 'text-slate-500 dark:text-slate-400 group-hover:text-primary'
+                  } transition-colors`}
+                />
+              </div>
+              <button
+                onClick={handleNextDay}
+                className="p-1.5 sm:p-2 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700 shrink-0 text-slate-600 dark:text-slate-300"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+            <button
+              onClick={handleToday}
+              className="px-2 sm:px-3 py-1.5 sm:py-2 bg-primary/5 dark:bg-primary/10 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-primary rounded-lg border border-primary/10 hover:bg-primary/10 transition-all active:scale-95 shrink-0"
+            >
+              {t('common.today')}
+            </button>
+          </div>
+
+          <div className={`relative flex-1 w-full min-w-[150px] max-w-sm transition-opacity ${!selectedSession ? 'opacity-50 pointer-events-none' : ''}`}>
+            <Search
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
+              size={14}
+            />
+            <input
+              type="text"
+              placeholder={t('common.search')}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              disabled={!selectedSession}
+              className="w-full pl-8 pr-3 py-1.5 sm:py-2 bg-white dark:bg-slate-950 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-primary/20 outline-none disabled:bg-gray-100 dark:disabled:bg-slate-900 disabled:cursor-not-allowed"
+            />
+          </div>
+        </div>
+
+        {/* Right: Actions + Chevron toggle */}
+        <div className="flex items-center gap-2 shrink-0 w-full lg:w-[320px] justify-end">
+          {headerActions}
+          <button 
+            onClick={() => setIsControlsExpanded(!isControlsExpanded)}
+            className="p-1.5 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-blue-400 border border-gray-200 dark:border-slate-700 rounded-lg transition-all active:scale-95 shadow-sm shrink-0"
+          >
+            {isControlsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+          </button>
+        </div>
+
       </div>
 
       <div
@@ -100,80 +188,7 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row gap-3 items-center">
-          <div className="flex items-center gap-2 w-full md:w-auto shrink-0">
-            <div className="flex items-center gap-1.5 flex-1 md:flex-none md:w-64 min-w-0">
-              <button
-                onClick={handlePrevDay}
-                className="p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700 shadow-sm transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 shrink-0 text-slate-600 dark:text-slate-300"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <div
-                className="relative flex-1 group cursor-pointer min-w-0"
-                onClick={() => {
-                  const input = dateInputRef.current as any;
-                  if (input) {
-                    if ('showPicker' in input) input.showPicker();
-                    else input.click();
-                  }
-                }}
-              >
-                <input
-                  ref={dateInputRef}
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  className={`w-full pl-8 sm:pl-9 pr-2 sm:pr-3 py-2 ${
-                    isFutureDate
-                      ? 'bg-amber-50/30 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 focus:ring-amber-500/20'
-                      : isReadOnly
-                        ? 'bg-blue-50/30 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800 focus:ring-blue-500/20'
-                        : 'bg-gray-50 dark:bg-slate-950 border-gray-100 dark:border-slate-800 focus:ring-primary/20'
-                  } border rounded-lg text-[10px] sm:text-xs font-bold outline-none dark:text-white cursor-pointer truncate`}
-                />
-                <CalendarIcon
-                  size={12}
-                  className={`absolute left-2.5 top-1/2 -translate-y-1/2 ${
-                    isFutureDate
-                      ? 'text-amber-500'
-                      : isReadOnly
-                        ? 'text-blue-500'
-                        : 'text-slate-500 dark:text-slate-400 group-hover:text-primary'
-                  } transition-colors`}
-                />
-              </div>
-              <button
-                onClick={handleNextDay}
-                className="p-2 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-100 dark:border-slate-700 shadow-sm transition-colors hover:bg-gray-100 dark:hover:bg-slate-700 shrink-0 text-slate-600 dark:text-slate-300"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-            <button
-              onClick={handleToday}
-              className="px-3 sm:px-4 py-2 bg-primary/5 dark:bg-primary/10 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-primary rounded-lg border border-primary/10 hover:bg-primary/10 transition-all active:scale-95 shrink-0"
-            >
-              {t('common.today')}
-            </button>
-          </div>
 
-          {selectedSession && (
-            <div className="relative flex-1 w-full min-w-[200px]">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
-                size={14}
-              />
-              <input
-                type="text"
-                placeholder={t('common.search')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-gray-50 dark:bg-slate-950 border border-gray-100 dark:border-slate-800 rounded-lg text-xs font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-primary/20 outline-none"
-              />
-            </div>
-          )}
-        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import type { Session, AttendanceRecord } from '@/types';
+import type { Session, AttendanceRecord } from '@/types/schemas';
 
 export interface AttendanceStats {
   present: number;

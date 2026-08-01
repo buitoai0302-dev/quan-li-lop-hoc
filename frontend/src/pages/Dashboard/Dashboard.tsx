@@ -33,9 +33,6 @@ import {
   Area,
   BarChart,
   Bar,
-  ComposedChart,
-  Line,
-  Legend,
 } from 'recharts';
 import ShortcutButton from '@/features/dashboard/components/ShortcutButton';
 import QuickStat from '@/features/dashboard/components/QuickStat';

@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPlans, getTenant, getPlanRequestStatus, requestPlanUpgrade } from '@/services/subscriptionService';
+import { getPlans, getTenant, getPlanRequestStatus, requestPlanUpgrade } from '../api/subscription.api';
 
 export const useSubscriptionData = () => {
   return useQuery({

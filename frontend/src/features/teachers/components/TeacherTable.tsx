@@ -1,5 +1,5 @@
 import React from 'react';
-import type { TeacherTableProps } from '@/types';
+import type { TeacherTableProps } from '../types';
 
 const TeacherTable: React.FC<TeacherTableProps> = ({ teachers, onEdit, onDelete, t }) => {
   return (

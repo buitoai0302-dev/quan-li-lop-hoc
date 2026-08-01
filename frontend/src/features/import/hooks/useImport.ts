@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { bulkImportStudents, bulkImportOther } from '@/services/importService';
-import { getBranches } from '@/services/branchesService';
+import { bulkImportStudents, bulkImportOther } from '../api/import.api';
+import { getBranches } from '@/features/branches';
 import toast from 'react-hot-toast';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';

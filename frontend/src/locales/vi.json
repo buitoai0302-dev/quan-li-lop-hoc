@@ -48,8 +48,13 @@
     "end": "Kết thúc",
     "branch": "Chi nhánh",
     "days": {
-      "sunday": "Chủ Nhật",
-      "weekday": "Thứ"
+      "0": "Chủ Nhật",
+      "1": "Thứ 2",
+      "2": "Thứ 3",
+      "3": "Thứ 4",
+      "4": "Thứ 5",
+      "5": "Thứ 6",
+      "6": "Thứ 7"
     },
     "noData": "Không có dữ liệu",
     "info": "Thông tin",
@@ -718,5 +723,62 @@
     "roomNameRequired": "Tên phòng không được để trống",
     "capacityMin": "Sức chứa phải ít nhất là 1",
     "classNameRequired": "Tên lớp không được để trống"
+  },
+  "landing": {
+    "features": "Tính năng",
+    "pricing": "Bảng giá",
+    "newRelease": "Phiên bản 2.0 mới",
+    "heroTitle": "Quản lý trung tâm của bạn một cách ",
+    "heroTitleHighlight": "dễ dàng nhất",
+    "heroSubtitle": "EduSchedule là nền tảng toàn diện nhất để xếp lịch học, điểm danh và quản lý học sinh trên nhiều chi nhánh.",
+    "startFree": "Bắt đầu miễn phí",
+    "learnMore": "Tìm hiểu thêm",
+    "noCreditCard": "Không cần thẻ tín dụng",
+    "cancelAnytime": "Hủy bất cứ lúc nào",
+    "freeSupport": "Hỗ trợ 24/7",
+    "featuresLabel": "Tính năng cốt lõi",
+    "featuresHeading": "Mọi thứ bạn cần để vận hành trung tâm",
+    "featuresSubheading": "Những công cụ mạnh mẽ được thiết kế riêng cho các cơ sở giáo dục và trung tâm đào tạo.",
+    "features.schedule.title": "Xếp lịch thông minh",
+    "features.schedule.desc": "Dễ dàng tạo và quản lý các lịch học phức tạp mà không lo trùng lặp.",
+    "features.attendance.title": "Theo dõi điểm danh",
+    "features.attendance.desc": "Điểm danh học sinh và giáo viên theo thời gian thực với báo cáo chi tiết.",
+    "features.multitenant.title": "Hỗ trợ nhiều chi nhánh",
+    "features.multitenant.desc": "Quản lý nhiều cơ sở hoặc toàn bộ tổ chức từ một bảng điều khiển duy nhất.",
+    "features.analytics.title": "Phân tích chuyên sâu",
+    "features.analytics.desc": "Nắm bắt thông tin hữu ích với các thống kê và biểu đồ hiệu suất chi tiết.",
+    "features.security.title": "Bảo mật cấp doanh nghiệp",
+    "features.security.desc": "Bảo mật tối đa với kiểm soát quyền truy cập theo vai trò để bảo vệ dữ liệu của bạn.",
+    "features.speed.title": "Nhanh như chớp",
+    "features.speed.desc": "Được tối ưu hóa cho tốc độ và độ tin cậy, đảm bảo trải nghiệm mượt mà cho mọi người dùng.",
+    "pricingLabel": "Bảng giá",
+    "pricingHeading": "Bảng giá đơn giản, minh bạch",
+    "pricingSubheading": "Chọn gói phù hợp nhất với trung tâm của bạn. Không có phí ẩn.",
+    "login": "Đăng nhập",
+    "register": "Đăng ký"
+  },
+  "feedback": {
+    "title": "Gửi Phản hồi / Báo lỗi",
+    "description": "Mọi ý kiến đóng góp của bạn đều giúp chúng tôi hoàn thiện hệ thống tốt hơn.",
+    "categoryLabel": "Loại vấn đề",
+    "categories": {
+      "bug": "Báo lỗi hệ thống (Bug)",
+      "feature": "Đề xuất tính năng (Feature Request)",
+      "support": "Cần hỗ trợ (Support)",
+      "other": "Góp ý khác (Other)"
+    },
+    "priorityLabel": "Mức độ ưu tiên",
+    "priorities": {
+      "normal": "Bình thường",
+      "high": "Gấp (High)",
+      "urgent": "Cực kỳ khẩn cấp (Urgent)"
+    },
+    "messageLabel": "Nội dung chi tiết",
+    "messagePlaceholder": "Vui lòng mô tả chi tiết vấn đề bạn đang gặp phải...",
+    "send": "Gửi đi",
+    "successTitle": "Đã gửi thành công!",
+    "successDesc": "Cảm ơn bạn đã phản hồi. Đội ngũ kỹ thuật sẽ xem xét và xử lý trong thời gian sớm nhất.",
+    "toastSuccess": "Gửi phản hồi thành công!",
+    "toastError": "Gửi thất bại. Vui lòng kiểm tra lại cấu hình API Key."
   }
 }

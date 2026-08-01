@@ -97,16 +97,6 @@ const AttendancePage: React.FC = () => {
         type="danger"
       />
 
-      <AttendanceHeader
-        selectedSession={selectedSession}
-        attendance={attendance}
-        saving={saving}
-        isReadOnly={isReadOnly}
-        isFutureDate={isFutureDate}
-        handleMarkAllAsPresent={handleMarkAllAsPresent}
-        handleSave={handleSave}
-      />
-
       <AttendanceControls
         isControlsExpanded={isControlsExpanded}
         setIsControlsExpanded={setIsControlsExpanded}
@@ -122,6 +112,17 @@ const AttendancePage: React.FC = () => {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         dateInputRef={dateInputRef}
+        headerActions={
+          <AttendanceHeader
+            selectedSession={selectedSession}
+            attendance={attendance}
+            saving={saving}
+            isReadOnly={isReadOnly}
+            isFutureDate={isFutureDate}
+            handleMarkAllAsPresent={handleMarkAllAsPresent}
+            handleSave={handleSave}
+          />
+        }
       />
 
       <div className="flex-1 flex flex-col lg:flex-row gap-3 sm:gap-4 overflow-hidden min-h-0">

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { forgotPassword } from '@/services/authService';
+import { forgotPassword } from '@/features/auth';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';

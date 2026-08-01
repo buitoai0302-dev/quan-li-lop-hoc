@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Menu, Globe, Moon, Sun, Monitor, HelpCircle } from 'lucide-react';
+import { Menu, Globe, Moon, Sun, Monitor, HelpCircle, MessageSquarePlus } from 'lucide-react';
 import { getMenuItems } from '../routes';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -8,10 +8,12 @@ import { useTheme } from '../contexts/ThemeContext';
 import HelpWidget from './HelpWidget';
 import NotificationPopover from './NotificationPopover';
 import Sidebar from './Sidebar';
+import FeedbackModal from './FeedbackModal';
 
 const MainLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const { user, logout } = useAuth();
   const location = useLocation();
   const { t, i18n } = useTranslation();
@@ -94,6 +96,13 @@ const MainLayout: React.FC = () => {
           <div className="flex items-center gap-2 sm:gap-3">
             <NotificationPopover />
             <button
+              onClick={() => setIsFeedbackOpen(true)}
+              className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
+              title={t('common.feedback', 'Gửi phản hồi / Báo lỗi')}
+            >
+              <MessageSquarePlus size={18} />
+            </button>
+            <button
               onClick={() => setIsHelpOpen(true)}
               className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
               title={t('helpWidget.title')}
@@ -124,6 +133,7 @@ const MainLayout: React.FC = () => {
           <Outlet />
         </div>
         <HelpWidget isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+        <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
       </main>
     </div>
   );

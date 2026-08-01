@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { getAttendanceForSession, saveAttendance } from '@/services/attendanceService';
-import { getWeeklySchedule } from '@/services/scheduleService';
+import { getAttendanceForSession, saveAttendance } from '../api/attendance.api';
+import { getWeeklySchedule } from '@/features/schedule';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { ATTENDANCE_STATUS } from '@/utils/constants';
+import { normalizeSearchStr } from '@/utils/string';
 import type { Session, AttendanceRecord, AttendanceStats, PendingAction } from '../types';
 import { useNavigationPrompt } from '@/hooks/useNavigationPrompt';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -139,9 +140,13 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
   const filteredAttendance = useMemo(
     () =>
       localAttendance.filter(
-        (r) =>
-          r.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          (r.email && r.email.toLowerCase().includes(searchTerm.toLowerCase()))
+        (r) => {
+          const normalizedSearch = normalizeSearchStr(searchTerm);
+          return (
+            normalizeSearchStr(r.full_name).includes(normalizedSearch) ||
+            (r.email && normalizeSearchStr(r.email).includes(normalizedSearch))
+          );
+        }
       ),
     [localAttendance, searchTerm]
   );

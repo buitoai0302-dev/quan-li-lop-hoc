@@ -5,7 +5,7 @@ import Pagination from '@/components/common/Pagination';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
-import { UserCheck, Plus, Upload, Search, Users } from 'lucide-react';
+import { UserCheck, Plus, Upload, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import PageHeader from '@/components/common/PageHeader';
@@ -17,14 +17,7 @@ import type { Teacher, TeacherFormData } from '@/types';
 import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
 
-import { TeacherTable, TeacherForm } from '@/features/teachers/components';
-
-import {
-  useTeachers,
-  useCreateTeacher,
-  useUpdateTeacher,
-  useDeleteTeacher,
-} from '@/features/teachers/hooks/useTeachers';
+import { TeacherTable, TeacherForm, useTeachers, useDeleteTeacher, useCreateTeacher, useUpdateTeacher } from '@/features/teachers';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 
 const Teachers: React.FC = () => {

@@ -28,6 +28,8 @@ const AdminTenants = lazy(() => import('./pages/Admin/AdminTenants'));
 const AdminPlans = lazy(() => import('./pages/Admin/AdminPlans'));
 const AdminPlanRequests = lazy(() => import('./pages/Admin/AdminPlanRequests'));
 const ActivityLog = lazy(() => import('./pages/Admin/ActivityLog'));
+const Landing = lazy(() => import('./pages/Landing/index'));
+
 import { USER_ROLES, ROUTES } from './utils/constants';
 import {
   LayoutDashboard,
@@ -65,6 +67,10 @@ export interface MenuGroup {
 // Centralized Route Configuration
 export const appRoutes = [
   {
+    path: ROUTES.HOME,
+    element: <Landing />,
+  },
+  {
     path: ROUTES.LOGIN,
     element: <Login />,
   },
@@ -89,17 +95,12 @@ export const appRoutes = [
     element: <ResendVerification />,
   },
   {
-    path: '/',
     element: (
       <ProtectedRoute>
         <MainLayout />
       </ProtectedRoute>
     ),
     children: [
-      {
-        index: true,
-        element: <Navigate to={ROUTES.SCHEDULE} replace />,
-      },
       {
         path: ROUTES.DASHBOARD,
         element: <Dashboard />,

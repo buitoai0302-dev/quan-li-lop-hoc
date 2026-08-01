@@ -9,7 +9,7 @@ import {
   approvePlanRequest,
   rejectPlanRequest,
   getActivities,
-} from '@/services/adminService';
+} from '../api/admin.api';
 import type { Tenant, Plan } from '@/types';
 
 export const useAdminTenants = () => {

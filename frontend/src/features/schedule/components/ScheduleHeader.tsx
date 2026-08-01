@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { USER_ROLES, VIEW_MODES } from '@/utils/constants';
 import { Button, Select, Label } from '@/components/common/UI';
-import type { ScheduleHeaderProps } from '@/types';
+import type { ScheduleHeaderProps } from '../types';
 
 const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
   selectedDate,

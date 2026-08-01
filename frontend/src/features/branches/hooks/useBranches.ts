@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getBranches, createBranch, updateBranch, deleteBranch } from '@/services/branchesService';
-import type { BranchFormData } from '@/types';
+import { getBranches, createBranch, updateBranch, deleteBranch } from '../api/branches.api';
+import type { BranchFormData } from '@/types/schemas';
 
 export const useBranches = () => {
   const query = useQuery({

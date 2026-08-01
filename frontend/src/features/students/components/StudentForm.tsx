@@ -3,7 +3,8 @@ import { Mail, Calendar, Phone, PhoneCall } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { StudentFormProps, StudentFormData } from '@/types';
+import type { StudentFormProps } from '../types';
+import type { StudentFormData } from '@/types/schemas';
 import { Input, Select, Label, Button } from '@/components/common/UI';
 
 // 1. Zod Schema

@@ -48,9 +48,8 @@ const AdminTenants: React.FC = () => {
     const term = searchTerm.toLowerCase();
     return tenants.filter(
       (t) =>
-        t.domain !== SYSTEM_DOMAIN &&
-        (t.name.toLowerCase().includes(term) ||
-          (t.contact_email && t.contact_email.toLowerCase().includes(term)))
+        t.name.toLowerCase().includes(term) ||
+        (t.contact_email && t.contact_email.toLowerCase().includes(term))
     );
   }, [tenants, searchTerm]);
 
@@ -111,41 +110,41 @@ const AdminTenants: React.FC = () => {
       />
 
       <div className="flex-1 overflow-hidden flex flex-col px-1">
-        <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col space-y-4 sm:space-y-6 min-h-0 py-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 shrink-0">
+        <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col space-y-3 sm:space-y-3 min-h-0 py-2 sm:py-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 shrink-0">
             <StatCard
               label={t('admin.stats.totalTenants')}
               value={stats?.totalTenants}
-              icon={<Building size={18} />}
+              icon={<Building size={16} />}
               color="blue"
             />
             <StatCard
               label={t('admin.stats.totalUsers')}
               value={stats?.totalUsers}
-              icon={<Users size={18} />}
+              icon={<Users size={16} />}
               color="indigo"
             />
             <StatCard
               label={t('admin.stats.totalSessions')}
               value={stats?.totalSessions}
-              icon={<Calendar size={18} />}
+              icon={<Calendar size={16} />}
               color="emerald"
-              className="sm:col-span-2 lg:col-span-1"
+              className="col-span-2 md:col-span-1"
             />
           </div>
 
-          <div className="flex flex-col sm:flex-row items-center gap-4 shrink-0 bg-white dark:bg-gray-800 p-2 sm:p-3 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 bg-white dark:bg-gray-800 p-1.5 sm:p-1.5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
             <div className="relative w-full sm:max-w-md flex-1">
               <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
-                size={18}
+                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+                size={16}
               />
               <input
                 type="text"
                 placeholder={t('common.search')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-11 pr-4 py-2.5 bg-gray-50/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-xl text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                className="w-full pl-9 pr-4 py-2 bg-gray-50/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-xs sm:text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
               />
             </div>
             <div className="hidden sm:block ml-auto px-4">
@@ -160,19 +159,19 @@ const AdminTenants: React.FC = () => {
               <table className="w-full text-left">
                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 shadow-sm">
                   <tr>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="px-4 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.organization')}
                     </th>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="hidden sm:table-cell px-4 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.plan')}
                     </th>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="hidden sm:table-cell px-4 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.userCount')} / {t('admin.branchCount')}
                     </th>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="px-4 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.status')}
                     </th>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+                    <th className="px-4 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
                       {t('common.actions')}
                     </th>
                   </tr>
@@ -180,7 +179,7 @@ const AdminTenants: React.FC = () => {
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                   {filteredTenants.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500 text-sm">
+                      <td colSpan={5} className="px-4 py-6 sm:px-6 sm:py-8 text-center text-gray-500 text-sm">
                         {t('common.noResults')}
                       </td>
                     </tr>
@@ -190,37 +189,44 @@ const AdminTenants: React.FC = () => {
                         key={tenant.id}
                         className="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group"
                       >
-                        <td className="px-6 py-5">
+                        <td className="px-4 py-4 sm:px-6 sm:py-5">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 border border-gray-100 dark:border-gray-700 group-hover:scale-105 transition-transform">
+                            <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 border border-gray-100 dark:border-gray-700 group-hover:scale-105 transition-transform shrink-0">
                               <Building size={20} />
                             </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <div className="text-sm font-bold text-gray-900 dark:text-white">
+                            <div className="min-w-0">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <div className="text-sm font-bold text-gray-900 dark:text-white truncate">
                                   {tenant.name}
                                 </div>
                                 {tenant.domain === SYSTEM_DOMAIN && (
-                                  <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] font-black uppercase rounded tracking-widest border border-primary/20">
+                                  <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] font-black uppercase rounded tracking-widest border border-primary/20 shrink-0">
                                     System
                                   </span>
                                 )}
+                                <span className="sm:hidden px-1.5 py-0.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[8px] font-black uppercase rounded tracking-widest border border-blue-200 dark:border-blue-800 shrink-0">
+                                  {tenant.plan_code || 'FREE'}
+                                </span>
                               </div>
-                              <div className="text-[10px] text-gray-400 font-medium mt-0.5">
+                              <div className="text-[10px] text-gray-400 font-medium mt-0.5 truncate">
                                 {tenant.contact_email}
+                              </div>
+                              <div className="sm:hidden flex items-center gap-3 mt-1.5 text-[10px] font-bold text-gray-500">
+                                <span className="flex items-center gap-1"><Users size={10} className="text-primary" /> {tenant.user_count}</span>
+                                <span className="flex items-center gap-1"><Building size={10} className="text-primary" /> {tenant.branch_count}</span>
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-5">
+                        <td className="hidden sm:table-cell px-4 py-4 sm:px-6 sm:py-5">
                           <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 truncate uppercase tracking-tighter">
                             {t(`admin.planNames.${(tenant.plan_code || 'FREE').toUpperCase()}`, {
                               defaultValue: tenant.plan_code || 'FREE',
                             })}
                           </span>
                         </td>
-                        <td className="px-6 py-5 whitespace-nowrap text-xs font-bold text-gray-600 dark:text-gray-400">
-                          <div className="flex items-center gap-4">
+                        <td className="hidden sm:table-cell px-4 py-4 sm:px-6 sm:py-5 whitespace-nowrap text-xs font-bold text-gray-600 dark:text-gray-400">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
                             <span className="flex items-center gap-1.5">
                               <Users size={14} className="text-primary" /> {tenant.user_count}
                             </span>
@@ -229,10 +235,10 @@ const AdminTenants: React.FC = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-5">
+                        <td className="px-4 py-4 sm:px-6 sm:py-5">
                           <StatusBadge status={tenant.status} t={t} />
                         </td>
-                        <td className="px-6 py-5 text-right">
+                        <td className="px-4 py-4 sm:px-6 sm:py-5 text-right">
                           <div className="flex justify-end gap-1.5">
                             {tenant.domain === SYSTEM_DOMAIN ? (
                               <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-gray-200 dark:border-gray-700">
@@ -478,20 +484,18 @@ const StatCard: React.FC<{
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 p-6 rounded-3xl shadow-lg shadow-gray-200/20 dark:shadow-none border border-gray-100 dark:border-gray-700 transition-all hover:scale-[1.02] duration-300 ${className}`}
+      className={`bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all hover:scale-[1.02] duration-300 flex items-center gap-2.5 sm:gap-3 ${className}`}
     >
-      <div className="flex items-center justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 truncate">
-            {label}
-          </p>
-          <h3 className="text-3xl font-black text-gray-900 dark:text-white tracking-tighter truncate">
-            {value || 0}
-          </h3>
-        </div>
-        <div className={`p-4 rounded-2xl border shrink-0 ${colors[color] || colors.blue}`}>
-          {icon}
-        </div>
+      <div className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl border shrink-0 ${colors[color] || colors.blue}`}>
+        {icon}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0 sm:mb-0.5 truncate leading-tight">
+          {label}
+        </p>
+        <h3 className="text-lg sm:text-xl font-black text-gray-900 dark:text-white tracking-tighter truncate leading-none mt-0.5 sm:mt-0">
+          {value || 0}
+        </h3>
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Rocket, CheckCircle2, ArrowRight } from 'lucide-react';
-import { setupFirstBranch } from '@/services/branchesService';
-import { completeOnboarding } from '@/services/authService';
+import { setupFirstBranch } from '@/features/branches';
+import { completeOnboarding } from '@/features/auth';
 import { useAuth } from '@/contexts/AuthContext';
 import { handleApiError } from '@/utils/errorHelper';
 

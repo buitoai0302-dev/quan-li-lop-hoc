@@ -50,6 +50,22 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
     setExpandedGroups((prev) => ({ ...prev, [idx]: !prev[idx] }));
   };
 
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('sidebarCollapsed');
+      return saved ? JSON.parse(saved) : false;
+    }
+    return false;
+  });
+
+  const toggleCollapse = () => {
+    setIsCollapsed((prev: boolean) => {
+      const newState = !prev;
+      localStorage.setItem('sidebarCollapsed', JSON.stringify(newState));
+      return newState;
+    });
+  };
+
   return (
     <>
       {/* Mobile Sidebar Overlay */}
@@ -62,16 +78,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-[70] w-60 bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800 shadow-xl flex flex-col transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+        className={`fixed md:static inset-y-0 left-0 z-[70] bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800 shadow-xl flex flex-col transform transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} ${isCollapsed ? 'w-60 md:w-[68px]' : 'w-60'}`}
       >
-        <div className="p-4 sm:p-5 border-b border-gray-100 dark:border-slate-800/50 flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2 min-w-0">
+        <div className={`p-4 border-b border-gray-100 dark:border-slate-800/50 flex items-center justify-between gap-2 relative transition-all ${isCollapsed ? 'md:p-4' : 'sm:p-5'}`}>
+          <div className={`flex items-center min-w-0 overflow-hidden ${isCollapsed ? 'md:gap-0' : 'gap-2'}`}>
             <img
               src="/logo.png"
               alt="Logo"
-              className="w-9 h-9 rounded-lg shadow-md shadow-primary/10 object-cover shrink-0"
+              className="w-9 h-9 rounded-lg shadow-md shadow-primary/10 object-cover shrink-0 mx-auto"
             />
-            <div className="min-w-0">
+            <div className={`min-w-0 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'md:w-0 md:opacity-0 hidden md:block' : 'w-auto opacity-100'}`}>
               <h1 className="text-xl font-black bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent tracking-tight leading-tight truncate">
                 {t('common.appName')}
               </h1>
@@ -88,56 +104,68 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
           </button>
         </div>
 
-        <nav className="flex-1 p-3 space-y-3 overflow-y-auto custom-scrollbar">
+        <nav className={`flex-1 space-y-3 overflow-y-auto overflow-x-hidden transition-all ${isCollapsed ? 'md:px-2 md:py-3 hide-scrollbar' : 'p-2 sm:p-3 custom-scrollbar'}`}>
           {visibleGroups.map((group, groupIdx) => (
             <div key={groupIdx} className="space-y-1">
               {group.group && (
                 <button
-                  onClick={() => toggleGroup(groupIdx)}
-                  className="w-full flex items-center justify-between px-3 py-1.5 group/header"
+                  onClick={() => !isCollapsed && toggleGroup(groupIdx)}
+                  className={`w-full flex items-center ${isCollapsed ? 'md:justify-center md:px-0' : 'justify-between'} px-2 sm:px-3 py-1.5 group/header`}
+                  title={isCollapsed ? group.group : undefined}
                 >
-                  <p className="text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 group-hover/header:text-primary transition-colors">
+                  <p className={`text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 transition-colors whitespace-nowrap overflow-hidden ${isCollapsed ? 'md:hidden' : 'group-hover/header:text-primary'}`}>
                     {group.group}
                   </p>
-                  <div className="text-gray-300 dark:text-gray-600 group-hover/header:text-primary transition-colors">
-                    {expandedGroups[groupIdx] ? (
-                      <ChevronDown size={12} />
-                    ) : (
-                      <ChevronRight size={12} />
-                    )}
-                  </div>
+                  {isCollapsed ? (
+                    <div className="hidden md:block w-4 h-px bg-gray-300 dark:bg-gray-700 my-2 mx-auto" />
+                  ) : (
+                    <div className="text-gray-300 dark:text-gray-600 group-hover/header:text-primary transition-colors">
+                      {expandedGroups[groupIdx] ? (
+                        <ChevronDown size={12} />
+                      ) : (
+                        <ChevronRight size={12} />
+                      )}
+                    </div>
+                  )}
                 </button>
               )}
 
               <div
-                className={`space-y-1 transition-all duration-300 overflow-hidden ${expandedGroups[groupIdx] ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
+                className={`space-y-1 transition-all duration-300 overflow-hidden ${expandedGroups[groupIdx] || isCollapsed ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
               >
                 {group.items.map((item) => (
                   <NavLink
                     key={item.path}
                     to={item.path}
-                    onClick={onClose}
+                    onClick={() => {
+                      if (window.innerWidth < 768) {
+                        onClose();
+                      }
+                    }}
+                    title={isCollapsed ? item.label : undefined}
                     className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                      `flex items-center py-2 text-sm font-medium rounded-md transition-colors ${
                         isActive
                           ? 'bg-primary/10 text-primary dark:bg-primary/20 dark:text-blue-400'
                           : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-gray-900 dark:hover:text-gray-200'
-                      }`
+                      } ${isCollapsed ? 'md:justify-center md:px-0 md:gap-0 px-3 gap-3' : 'px-3 gap-3'}`
                     }
                   >
                     {({ isActive }) => (
                       <>
                         <div
-                          className={isActive ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}
+                          className={`shrink-0 transition-colors ${isActive ? 'text-primary' : 'text-gray-400 dark:text-gray-500'}`}
                         >
                           <item.icon size={20} />
                         </div>
-                        <span className="flex-1">{item.label}</span>
+                        <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? 'md:w-0 md:opacity-0 hidden md:block md:flex-none' : 'flex-1 w-auto opacity-100 block'}`}>
+                          {item.label}
+                        </span>
                         {item.isPremium &&
                           [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(
                             user?.role || ''
                           ) && (
-                            <div className="flex items-center justify-center px-1.5 py-0.5 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-md shadow-md shadow-orange-500/20 animate-pulse">
+                            <div className={`flex items-center justify-center bg-gradient-to-tr from-amber-400 to-orange-500 rounded-md shadow-md shadow-orange-500/20 animate-pulse transition-all duration-300 overflow-hidden ${isCollapsed ? 'md:w-0 md:h-0 md:p-0 md:opacity-0 hidden md:flex' : 'px-1.5 py-0.5'}`}>
                               <span className="text-[7px] font-black text-white uppercase tracking-tighter">
                                 PRO
                               </span>
@@ -152,25 +180,34 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
           ))}
         </nav>
 
-        <div className="p-1 border-t border-gray-200 dark:border-slate-800">
+        <div className="p-2 border-t border-gray-200 dark:border-slate-800 relative">
+          {/* Collapse Toggle Button */}
+          <button
+            onClick={toggleCollapse}
+            className="hidden md:flex absolute -right-3 top-[-16px] w-6 h-6 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full items-center justify-center text-gray-500 hover:text-primary dark:text-gray-400 dark:hover:text-blue-400 shadow-sm z-10 transition-transform"
+            title={isCollapsed ? t('common.expand') : t('common.collapse')}
+          >
+            {isCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} className="rotate-90" />}
+          </button>
+
           {isInstallable && (
-            <div className="px-2 mb-2">
+            <div className={`mb-2 transition-all duration-300 overflow-hidden ${isCollapsed ? 'md:hidden' : 'block'}`}>
               <button
                 onClick={promptInstall}
                 className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 rounded-xl transition-colors shadow-sm"
               >
-                <Download size={16} className="animate-bounce" />
-                <span className="text-sm font-bold">{t('common.installApp', 'Cài đặt App')}</span>
+                <Download size={16} className="animate-bounce shrink-0" />
+                <span className="text-sm font-bold whitespace-nowrap overflow-hidden">{t('common.installApp', 'Cài đặt App')}</span>
               </button>
             </div>
           )}
 
-          <div className="flex items-center justify-between gap-3 bg-gray-50 dark:bg-slate-900/50 p-2 rounded-xl border border-gray-100 dark:border-slate-800 mb-2">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-indigo-600 flex items-center justify-center text-white font-bold shadow-inner shrink-0 border-2 border-white dark:border-gray-800">
+          <div className={`flex items-center gap-3 bg-gray-50 dark:bg-slate-900/50 p-2 rounded-xl border border-gray-100 dark:border-slate-800 mb-1 transition-all duration-300 ${isCollapsed ? 'md:justify-center' : 'justify-between'}`}>
+            <div className={`flex items-center gap-3 overflow-hidden ${isCollapsed ? 'md:gap-0' : ''}`}>
+              <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-indigo-600 flex items-center justify-center text-white font-bold shadow-inner shrink-0 border-2 border-white dark:border-gray-800">
                 {user?.full_name ? user.full_name.substring(0, 2).toUpperCase() : 'AD'}
               </div>
-              <div className="min-w-0">
+              <div className={`min-w-0 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'md:w-0 md:opacity-0 hidden md:block' : 'w-auto opacity-100 block'}`}>
                 <p className="text-xs font-black text-gray-800 dark:text-gray-200 truncate leading-none mb-1">
                   {user?.full_name}
                 </p>
@@ -182,21 +219,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
             <button
               onClick={() => {
                 setShowLogoutConfirm(true);
-                onClose();
+                if (window.innerWidth < 768) {
+                  onClose();
+                }
               }}
-              className="p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all active:scale-90"
+              className={`p-2 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-all active:scale-90 shrink-0 ${isCollapsed ? 'md:hidden' : 'block'}`}
               title={t('auth.logout')}
             >
               <LogOut size={18} />
             </button>
-          </div>
-
-          <div className="mt-1 pt-1 border-t border-gray-100/50 dark:border-slate-800/30">
-            <div className="flex flex-col items-center opacity-50 hover:opacity-100 transition-opacity duration-500 cursor-default">
-              <p className="text-[7px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-[0.15em] leading-none">
-                © {new Date().getFullYear()} {t('common.appName')} • {t('common.premiumSaaS')}
-              </p>
-            </div>
           </div>
         </div>
       </aside>

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getCurrentUser, logout as logoutApi } from '@/services/authService';
+import { getCurrentUser, logout as logoutApi } from '@/features/auth';
 import { queryClient } from '@/utils/queryClient';
 import type { User } from '@/types';
 export type { User };

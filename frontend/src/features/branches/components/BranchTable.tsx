@@ -1,5 +1,6 @@
 import React from 'react';
-import type { Branch, BranchTableProps } from '@/types';
+import type { BranchTableProps } from '../types';
+import type { Branch } from '@/types/schemas';
 
 const BranchTable: React.FC<BranchTableProps> = ({ branches, onEdit, onDelete, t }) => {
   return (

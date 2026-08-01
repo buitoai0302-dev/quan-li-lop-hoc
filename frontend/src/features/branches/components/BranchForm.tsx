@@ -3,7 +3,7 @@ import { MapPin, Phone } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type { BranchFormProps } from '@/types';
+import type { BranchFormProps } from '../types';
 import { Input, Select, Label, Button } from '@/components/common/UI';
 
 const getBranchSchema = (t: any) =>

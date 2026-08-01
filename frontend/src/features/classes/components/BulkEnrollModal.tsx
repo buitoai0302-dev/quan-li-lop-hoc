@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 import { Modal, Button, Input } from '@/components/common/UI';
-import type { BulkEnrollModalProps } from '@/types';
+import type {  BulkEnrollModalProps  } from '../types';
 
 const BulkEnrollModal: React.FC<BulkEnrollModalProps> = ({
   isOpen,

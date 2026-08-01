@@ -5,11 +5,11 @@ import {
   updateSession,
   createSession,
   deleteSession,
-} from '@/services/scheduleService';
-import { getBranches } from '@/services/branchesService';
-import { getTeachers } from '@/services/teachersService';
-import { getClasses } from '@/services/classesService';
-import { getRooms } from '@/services/roomsService';
+} from '../api/schedule.api';
+import { getBranches } from '@/features/branches';
+import { getTeachers } from '@/features/teachers';
+import { getClasses } from '@/features/classes';
+import { getRooms } from '@/features/rooms';
 import { format, startOfWeek, addDays, startOfMonth, addMonths } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,7 +17,8 @@ import { USER_ROLES, VIEW_MODES } from '@/utils/constants';
 import { handleApiError } from '@/utils/errorHelper';
 import type { ApiErrorData } from '@/utils/errorHelper';
 import toast from 'react-hot-toast';
-import type { Session, ViewMode } from '@/types';
+import type { Session } from '@/types/schemas';
+import type { ViewMode } from '../types';
 import type { AxiosError } from 'axios';
 
 interface SessionFormState {

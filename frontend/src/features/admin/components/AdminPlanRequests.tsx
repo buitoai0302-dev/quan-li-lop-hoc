@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, X, Clock, Building, Zap, Crown, Shield, FileText } from 'lucide-react';
-import { getPlanRequests, approvePlanRequest, rejectPlanRequest } from '@/services/adminService';
+import { getPlanRequests, approvePlanRequest, rejectPlanRequest } from '@/features/admin';
 import toast from 'react-hot-toast';
 import { PLAN_REQUEST_STATUS, PLAN_REQUEST_ACTIONS } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';

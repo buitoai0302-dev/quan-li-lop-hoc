@@ -2,10 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Clock, Activity, Users, BookOpen, Calendar, ChevronRight, X } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
-import { getActivities } from '@/services/adminService';
+import { getActivities } from '@/features/admin';
 import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
-import type { ActivityItem } from '../types';
+import type { ActivityItem } from '@/features/dashboard';
 
 const NotificationPopover: React.FC = () => {
   const { t, i18n } = useTranslation();
