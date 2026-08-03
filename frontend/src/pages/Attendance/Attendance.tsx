@@ -13,7 +13,6 @@ import AttendanceHeader from '@/features/attendance/components/AttendanceHeader'
 import AttendanceControls from '@/features/attendance/components/AttendanceControls';
 import SessionList from '@/features/attendance/components/SessionList';
 import StudentList from '@/features/attendance/components/StudentList';
-import ExportMenu from '@/components/common/ExportMenu';
 import { exportToExcel, exportToPDF } from '@/utils/export';
 import type { ExportColumn } from '@/utils/export';
 import type { AttendanceRecord } from '@/features/attendance/types';

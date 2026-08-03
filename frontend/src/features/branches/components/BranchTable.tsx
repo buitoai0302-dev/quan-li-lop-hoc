@@ -8,19 +8,19 @@ const BranchTable: React.FC<BranchTableProps> = ({ branches, onEdit, onDelete, t
       <table className="w-full border-separate border-spacing-0">
         <thead className="bg-gray-50 dark:bg-slate-900 sticky top-0 z-20 transition-colors">
           <tr>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
               {t('branches.name')}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden md:table-cell px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden md:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
               {t('branches.address')}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden sm:table-cell px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
               {t('branches.phone')}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden sm:table-cell px-6 py-4 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
               {t('common.status')}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-6 py-4 text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
               {t('common.actions')}
             </th>
           </tr>
@@ -31,7 +31,7 @@ const BranchTable: React.FC<BranchTableProps> = ({ branches, onEdit, onDelete, t
               key={branch.id}
               className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors group"
             >
-              <td className="px-6 py-4">
+              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs shrink-0">
                     {branch.name.charAt(0).toUpperCase()}
@@ -46,20 +46,20 @@ const BranchTable: React.FC<BranchTableProps> = ({ branches, onEdit, onDelete, t
                   </div>
                 </div>
               </td>
-              <td className="hidden md:table-cell px-6 py-4 text-xs font-bold text-gray-600 dark:text-gray-400 truncate max-w-xs">
+              <td className="hidden md:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs font-bold text-gray-600 dark:text-gray-400 truncate max-w-xs">
                 {branch.address || '---'}
               </td>
-              <td className="hidden sm:table-cell px-6 py-4 text-xs text-gray-600 dark:text-gray-400">
+              <td className="hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
                 {branch.phone || '---'}
               </td>
-              <td className="hidden sm:table-cell px-6 py-4">
+              <td className="hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                 <span
                   className={`px-2 py-0.5 inline-flex text-[9px] font-black rounded-full uppercase tracking-tighter ${branch.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'}`}
                 >
                   {branch.is_active ? t('common.active') : t('common.inactive')}
                 </span>
               </td>
-              <td className="px-6 py-4 text-right">
+              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                 <div className="flex justify-end gap-2">
                   <button
                     onClick={() => onEdit(branch)}
