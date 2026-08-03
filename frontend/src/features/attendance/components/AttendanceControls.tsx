@@ -51,10 +51,9 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
   return (
     <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800/50 shrink-0 overflow-hidden transition-all duration-300">
       <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 p-3 sm:p-4 bg-gray-50/30 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800/50">
-        
         {/* Left: Title (Clickable) */}
-        <div 
-          className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0 lg:w-[320px]"
+        <div
+          className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0 lg:flex-1"
           onClick={() => setIsControlsExpanded(!isControlsExpanded)}
         >
           <div className="p-1.5 bg-primary/10 text-primary rounded-lg">
@@ -66,7 +65,10 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
         </div>
 
         {/* Middle: Filters (Date + Search) */}
-        <div className="flex flex-1 flex-col xl:flex-row items-center justify-center gap-2 sm:gap-3 min-w-0" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="flex flex-1 flex-col xl:flex-row items-center justify-center gap-2 sm:gap-3 min-w-0"
+          onClick={(e) => e.stopPropagation()}
+        >
           <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto shrink-0">
             <div className="flex items-center gap-1.5 flex-1 sm:flex-none sm:w-56 min-w-0">
               <button
@@ -124,7 +126,9 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
             </button>
           </div>
 
-          <div className={`relative flex-1 w-full min-w-[150px] max-w-sm transition-opacity ${!selectedSession ? 'opacity-50 pointer-events-none' : ''}`}>
+          <div
+            className={`relative flex-1 w-full min-w-[150px] max-w-sm transition-opacity ${!selectedSession ? 'opacity-50 pointer-events-none' : ''}`}
+          >
             <Search
               className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
               size={14}
@@ -141,16 +145,15 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
         </div>
 
         {/* Right: Actions + Chevron toggle */}
-        <div className="flex items-center gap-2 shrink-0 w-full lg:w-[320px] justify-end">
+        <div className="flex items-center gap-2 shrink-0 w-full lg:flex-1 justify-end">
           {headerActions}
-          <button 
+          <button
             onClick={() => setIsControlsExpanded(!isControlsExpanded)}
             className="p-1.5 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-blue-400 border border-gray-200 dark:border-slate-700 rounded-lg transition-all active:scale-95 shadow-sm shrink-0"
           >
             {isControlsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
         </div>
-
       </div>
 
       <div
@@ -187,8 +190,6 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
             </div>
           </div>
         )}
-
-
       </div>
     </div>
   );

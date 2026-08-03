@@ -155,22 +155,17 @@ const AttendancePage: React.FC = () => {
         setSearchTerm={setSearchTerm}
         dateInputRef={dateInputRef}
         headerActions={
-          <div className="flex items-center gap-2">
-            <ExportMenu
-              onExportExcel={handleExportExcel}
-              onExportPDF={handleExportPDF}
-              disabled={filteredAttendance.length === 0 || !selectedSession}
-            />
-            <AttendanceHeader
-              selectedSession={selectedSession}
-              attendance={attendance}
-              saving={saving}
-              isReadOnly={isReadOnly}
-              isFutureDate={isFutureDate}
-              handleMarkAllAsPresent={handleMarkAllAsPresent}
-              handleSave={handleSave}
-            />
-          </div>
+          <AttendanceHeader
+            selectedSession={selectedSession}
+            attendance={attendance}
+            saving={saving}
+            isReadOnly={isReadOnly}
+            isFutureDate={isFutureDate}
+            handleMarkAllAsPresent={handleMarkAllAsPresent}
+            handleSave={handleSave}
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
+          />
         }
       />
 
