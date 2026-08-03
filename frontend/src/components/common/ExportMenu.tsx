@@ -38,27 +38,25 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ onExportExcel, onExportPDF, dis
 
   return (
     <div className="relative" ref={menuRef}>
+      {/* Button — same style as other toolbar buttons */}
       <button
         onClick={() => setOpen((prev) => !prev)}
         disabled={disabled || loading !== null}
-        className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-700 transition-all shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+        className="h-9 px-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-100 dark:border-gray-700 whitespace-nowrap flex items-center justify-center gap-2 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
       >
-        {loading ? (
-          <Loader2 size={15} className="animate-spin text-primary" />
-        ) : (
-          <Download size={15} />
-        )}
+        {loading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
         <span className="hidden sm:inline">
           {loading ? t('export.exporting') : t('export.button')}
         </span>
         <ChevronDown
-          size={13}
+          size={12}
           className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
+      {/* Dropdown — high z-index to stay above sticky headers / modals */}
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-52 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+        <div className="absolute right-0 top-full mt-1.5 w-52 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-2xl z-[200] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
           <button
             onClick={() => handleExport('excel')}
             className="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
@@ -66,7 +64,7 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ onExportExcel, onExportPDF, dis
             <FileSpreadsheet size={16} className="text-emerald-500 shrink-0" />
             {t('export.excel')}
           </button>
-          <div className="h-px bg-gray-50 dark:bg-slate-700" />
+          <div className="h-px bg-gray-100 dark:bg-slate-700" />
           <button
             onClick={() => handleExport('pdf')}
             className="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-400 transition-colors"
