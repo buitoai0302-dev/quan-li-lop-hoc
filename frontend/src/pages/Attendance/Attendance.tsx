@@ -13,6 +13,10 @@ import AttendanceHeader from '@/features/attendance/components/AttendanceHeader'
 import AttendanceControls from '@/features/attendance/components/AttendanceControls';
 import SessionList from '@/features/attendance/components/SessionList';
 import StudentList from '@/features/attendance/components/StudentList';
+import ExportMenu from '@/components/common/ExportMenu';
+import { exportToExcel, exportToPDF } from '@/utils/export';
+import type { ExportColumn } from '@/utils/export';
+import type { AttendanceRecord } from '@/features/attendance/types';
 
 const AttendancePage: React.FC = () => {
   const { t } = useTranslation();
@@ -51,6 +55,44 @@ const AttendancePage: React.FC = () => {
     cancelLeave,
     fetchAttendance,
   } = useAttendance(isAttendanceEnabled);
+
+  const handleExportExcel = () => {
+    if (!filteredAttendance.length) return;
+    const columns: ExportColumn<AttendanceRecord>[] = [
+      { header: t('attendance.studentName'), accessor: 'full_name' },
+      { header: 'Email', accessor: 'email' },
+      { header: t('attendance.status'), accessor: (r) => t(`attendance.${r.status}`) },
+      {
+        header: t('attendance.markedAt'),
+        accessor: (r) => (r.marked_at ? new Date(r.marked_at).toLocaleString('vi-VN') : ''),
+      },
+    ];
+    const dateLabel = selectedDate ? new Date(selectedDate).toLocaleDateString('vi-VN') : '';
+    exportToExcel(filteredAttendance, columns, `${t('export.attendance')}_${dateLabel}`);
+  };
+
+  const handleExportPDF = () => {
+    if (!filteredAttendance.length) return;
+    const columns: ExportColumn<AttendanceRecord>[] = [
+      { header: t('attendance.studentName'), accessor: 'full_name' },
+      { header: 'Email', accessor: 'email' },
+      { header: t('attendance.status'), accessor: (r) => t(`attendance.${r.status}`) },
+      {
+        header: t('attendance.markedAt'),
+        accessor: (r) => (r.marked_at ? new Date(r.marked_at).toLocaleString('vi-VN') : ''),
+      },
+    ];
+    const dateLabel = selectedDate ? new Date(selectedDate).toLocaleDateString('vi-VN') : '';
+    const sessionLabel = selectedSession
+      ? `${selectedSession.class_name ?? ''} - ${selectedSession.start_time}`
+      : '';
+    exportToPDF(
+      filteredAttendance,
+      columns,
+      `${t('export.attendance')}_${dateLabel}`,
+      `${t('export.attendance')} | ${sessionLabel} | ${dateLabel}`
+    );
+  };
 
   if (!isAttendanceEnabled) {
     return (
@@ -113,15 +155,22 @@ const AttendancePage: React.FC = () => {
         setSearchTerm={setSearchTerm}
         dateInputRef={dateInputRef}
         headerActions={
-          <AttendanceHeader
-            selectedSession={selectedSession}
-            attendance={attendance}
-            saving={saving}
-            isReadOnly={isReadOnly}
-            isFutureDate={isFutureDate}
-            handleMarkAllAsPresent={handleMarkAllAsPresent}
-            handleSave={handleSave}
-          />
+          <div className="flex items-center gap-2">
+            <ExportMenu
+              onExportExcel={handleExportExcel}
+              onExportPDF={handleExportPDF}
+              disabled={filteredAttendance.length === 0 || !selectedSession}
+            />
+            <AttendanceHeader
+              selectedSession={selectedSession}
+              attendance={attendance}
+              saving={saving}
+              isReadOnly={isReadOnly}
+              isFutureDate={isFutureDate}
+              handleMarkAllAsPresent={handleMarkAllAsPresent}
+              handleSave={handleSave}
+            />
+          </div>
         }
       />
 

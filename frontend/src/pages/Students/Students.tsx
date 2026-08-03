@@ -19,6 +19,9 @@ import type { ApiErrorData } from '@/utils/errorHelper';
 
 import StudentTable from '@/features/students/components/StudentTable';
 import StudentForm from '@/features/students/components/StudentForm';
+import ExportMenu from '@/components/common/ExportMenu';
+import { exportToExcel, exportToPDF } from '@/utils/export';
+import type { ExportColumn } from '@/utils/export';
 
 import {
   useStudents,
@@ -182,6 +185,45 @@ const Students: React.FC = () => {
     });
   }, [selectedIds, deleteBulkStudentsMutate, t]);
 
+  const handleExportExcel = () => {
+    const columns: ExportColumn<Student>[] = [
+      { header: t('students.name'), accessor: 'full_name' },
+      { header: t('students.email'), accessor: 'email' },
+      { header: t('students.phone'), accessor: 'phone' },
+      { header: t('students.parentPhone'), accessor: 'parent_phone' },
+      { header: t('classes.branch'), accessor: 'branch_name' },
+      {
+        header: t('students.dob'),
+        accessor: (r) =>
+          r.date_of_birth ? new Date(r.date_of_birth).toLocaleDateString('vi-VN') : '',
+      },
+      {
+        header: t('common.status'),
+        accessor: (r) => (r.is_active ? t('common.active') : t('common.inactive')),
+      },
+    ];
+    exportToExcel(filteredStudents, columns, t('export.students'));
+  };
+
+  const handleExportPDF = () => {
+    const columns: ExportColumn<Student>[] = [
+      { header: t('students.name'), accessor: 'full_name' },
+      { header: t('students.email'), accessor: 'email' },
+      { header: t('students.phone'), accessor: 'phone' },
+      { header: t('classes.branch'), accessor: 'branch_name' },
+      {
+        header: t('students.dob'),
+        accessor: (r) =>
+          r.date_of_birth ? new Date(r.date_of_birth).toLocaleDateString('vi-VN') : '',
+      },
+      {
+        header: t('common.status'),
+        accessor: (r) => (r.is_active ? t('common.active') : t('common.inactive')),
+      },
+    ];
+    exportToPDF(filteredStudents, columns, t('export.students'), t('export.students'));
+  };
+
   return (
     <div className="h-full flex flex-col overflow-hidden relative">
       <PageHeader
@@ -208,6 +250,11 @@ const Students: React.FC = () => {
             >
               <Search size={16} />
             </button>
+            <ExportMenu
+              onExportExcel={handleExportExcel}
+              onExportPDF={handleExportPDF}
+              disabled={filteredStudents.length === 0}
+            />
             <button
               onClick={() => navigate('/import?type=students')}
               className="h-9 px-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-100 dark:border-gray-700 whitespace-nowrap flex items-center justify-center gap-2 active:scale-95 shadow-sm"

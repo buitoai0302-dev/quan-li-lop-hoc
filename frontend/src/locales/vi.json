@@ -781,6 +781,14 @@
     "toastSuccess": "Gửi phản hồi thành công!",
     "toastError": "Gửi thất bại. Vui lòng kiểm tra lại cấu hình API Key."
   },
+  "export": {
+    "button": "Xuất dữ liệu",
+    "excel": "Xuất Excel (.xlsx)",
+    "pdf": "Xuất PDF (.pdf)",
+    "exporting": "Đang xuất...",
+    "students": "Danh sách Học sinh",
+    "attendance": "Bảng Điểm danh"
+  },
   "pwa": {
     "title": "Cài đặt ứng dụng EduSchedule",
     "desc": "Cài đặt ứng dụng vào màn hình chính để truy cập nhanh hơn và trải nghiệm mượt mà như một ứng dụng gốc.",

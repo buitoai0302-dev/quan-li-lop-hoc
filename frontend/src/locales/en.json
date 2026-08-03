@@ -754,6 +754,14 @@
     "toastSuccess": "Feedback sent successfully!",
     "toastError": "Failed to send. Please check your API Key configuration."
   },
+  "export": {
+    "button": "Export",
+    "excel": "Export Excel (.xlsx)",
+    "pdf": "Export PDF (.pdf)",
+    "exporting": "Exporting...",
+    "students": "Student List",
+    "attendance": "Attendance Report"
+  },
   "pwa": {
     "title": "Install EduSchedule App",
     "desc": "Install the app to your home screen for faster access and a smooth native-like experience.",
