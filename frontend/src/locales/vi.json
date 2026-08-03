@@ -429,7 +429,7 @@
     "noSessionsDesc": "Không có ca học nào được xếp lịch cho ngày này. Hãy thử chọn ngày khác hoặc kiểm tra Lịch dạy.",
     "unsavedTitle": "Thay đổi chưa lưu!",
     "unsavedDesc": "Bạn có dữ liệu điểm danh chưa được lưu. Nếu rời đi bây giờ, các thay đổi của bạn sẽ bị mất.",
-    "futureSessionWarning": "Buổi học trong tương lai",
+    "futureSessionWarning": "Chưa diễn ra",
     "pastSessionWarning": "Chế độ xem"
   },
   "schedule": {
