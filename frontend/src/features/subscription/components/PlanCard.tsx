@@ -1,5 +1,6 @@
 import React from 'react';
 import { Building, Zap, Shield, Crown, Layout, Users, Check } from 'lucide-react';
+import type { TFunction } from 'i18next';
 import { PLAN_CODES } from '@/utils/constants';
 import type { Plan, PlanFeature, PlanLimit } from '@/types';
 
@@ -10,7 +11,7 @@ interface PlanCardProps {
   isSubmitting: boolean;
   pendingPlanId: string | null;
   onUpgrade: (planId: string, planName: string) => void;
-  t: any;
+  t: TFunction;
 }
 
 const PlanCard: React.FC<PlanCardProps> = ({

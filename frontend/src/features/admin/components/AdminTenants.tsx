@@ -179,7 +179,10 @@ const AdminTenants: React.FC = () => {
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
                   {filteredTenants.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-6 sm:px-6 sm:py-8 text-center text-gray-500 text-sm">
+                      <td
+                        colSpan={5}
+                        className="px-4 py-6 sm:px-6 sm:py-8 text-center text-gray-500 text-sm"
+                      >
                         {t('common.noResults')}
                       </td>
                     </tr>
@@ -212,8 +215,13 @@ const AdminTenants: React.FC = () => {
                                 {tenant.contact_email}
                               </div>
                               <div className="sm:hidden flex items-center gap-3 mt-1.5 text-[10px] font-bold text-gray-500">
-                                <span className="flex items-center gap-1"><Users size={10} className="text-primary" /> {tenant.user_count}</span>
-                                <span className="flex items-center gap-1"><Building size={10} className="text-primary" /> {tenant.branch_count}</span>
+                                <span className="flex items-center gap-1">
+                                  <Users size={10} className="text-primary" /> {tenant.user_count}
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Building size={10} className="text-primary" />{' '}
+                                  {tenant.branch_count}
+                                </span>
                               </div>
                             </div>
                           </div>
@@ -469,7 +477,7 @@ const AdminTenants: React.FC = () => {
 
 const StatCard: React.FC<{
   label: string;
-  value: any;
+  value: string | number;
   icon: React.ReactNode;
   color: string;
   className?: string;
@@ -486,7 +494,9 @@ const StatCard: React.FC<{
     <div
       className={`bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all hover:scale-[1.02] duration-300 flex items-center gap-2.5 sm:gap-3 ${className}`}
     >
-      <div className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl border shrink-0 ${colors[color] || colors.blue}`}>
+      <div
+        className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl border shrink-0 ${colors[color] || colors.blue}`}
+      >
         {icon}
       </div>
       <div className="min-w-0 flex-1">

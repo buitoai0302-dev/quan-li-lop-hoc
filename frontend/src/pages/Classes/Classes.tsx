@@ -28,7 +28,12 @@ import ClassTable from '@/features/classes/components/ClassTable';
 import ClassForm from '@/features/classes/components/ClassForm';
 import BulkEnrollModal from '@/features/classes/components/BulkEnrollModal';
 
-import { useClasses, useCreateClass, useUpdateClass, useDeleteClass } from '@/features/classes/hooks/useClasses';
+import {
+  useClasses,
+  useCreateClass,
+  useUpdateClass,
+  useDeleteClass,
+} from '@/features/classes/hooks/useClasses';
 
 const Classes: React.FC = () => {
   const { t } = useTranslation();
@@ -68,40 +73,37 @@ const Classes: React.FC = () => {
     });
   }, [classes, searchQuery, branchFilter]);
 
-  const handleOpenModal = useCallback(
-    async (cls?: ClassData) => {
-      if (cls) {
-        setEditingId(cls.id);
-        setEditingClass({
-          name: cls.name,
-          max_capacity: cls.max_capacity,
-          branch_id: cls.branch_id,
-          teacher_id: cls.teacher_id || '',
-          start_date: cls.start_date ? cls.start_date.substring(0, 10) : '',
-          end_date: cls.end_date ? cls.end_date.substring(0, 10) : '',
-        });
+  const handleOpenModal = useCallback(async (cls?: ClassData) => {
+    if (cls) {
+      setEditingId(cls.id);
+      setEditingClass({
+        name: cls.name,
+        max_capacity: cls.max_capacity,
+        branch_id: cls.branch_id,
+        teacher_id: cls.teacher_id || '',
+        start_date: cls.start_date ? cls.start_date.substring(0, 10) : '',
+        end_date: cls.end_date ? cls.end_date.substring(0, 10) : '',
+      });
 
-        // Fetch additional details for editing
-        try {
-          const [schedulesData, enrollmentsData] = await Promise.all([
-            getClassSchedules(cls.id),
-            getClassEnrollments(cls.id),
-          ]);
-          setRecurringSchedules(schedulesData);
-          setEnrollments(enrollmentsData);
-        } catch (error) {
-          console.error('Error fetching class details:', error);
-        }
-      } else {
-        setEditingId(null);
-        setEditingClass(null);
-        setRecurringSchedules([]);
-        setEnrollments([]);
+      // Fetch additional details for editing
+      try {
+        const [schedulesData, enrollmentsData] = await Promise.all([
+          getClassSchedules(cls.id),
+          getClassEnrollments(cls.id),
+        ]);
+        setRecurringSchedules(schedulesData);
+        setEnrollments(enrollmentsData);
+      } catch (error) {
+        console.error('Error fetching class details:', error);
       }
-      setIsModalOpen(true);
-    },
-    [branches]
-  );
+    } else {
+      setEditingId(null);
+      setEditingClass(null);
+      setRecurringSchedules([]);
+      setEnrollments([]);
+    }
+    setIsModalOpen(true);
+  }, []);
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
@@ -149,7 +151,15 @@ const Classes: React.FC = () => {
         });
       }
     },
-    [editingId, recurringSchedules, enrollments, t, handleCloseModal, createClassMutate, updateClassMutate]
+    [
+      editingId,
+      recurringSchedules,
+      enrollments,
+      t,
+      handleCloseModal,
+      createClassMutate,
+      updateClassMutate,
+    ]
   );
 
   const handleDelete = useCallback(() => {
@@ -321,45 +331,73 @@ const Classes: React.FC = () => {
         }
       >
         <div className="flex-1 overflow-hidden">
-        {loading ? (
-          <div className="p-4 sm:p-6">
-            <SkeletonTable columns={6} rows={5} />
-          </div>
-        ) : filteredClasses.length === 0 ? (
-          <EmptyState
-            title={searchQuery || branchFilter ? t('common.noResults') : t('classes.noClasses')}
-            description={searchQuery || branchFilter ? t('common.tryDifferentSearch') : t('classes.createFirstClass')}
-            showArrow={!(searchQuery || branchFilter)}
-            illustration={
-              <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-48 h-48 mx-auto">
-                <rect x="30" y="50" width="140" height="100" rx="12" className="fill-blue-50 dark:fill-blue-900/20 stroke-blue-200 dark:stroke-blue-800" strokeWidth="4" />
-                <path d="M70 90h60M70 110h40" className="stroke-blue-300 dark:stroke-blue-700" strokeWidth="4" strokeLinecap="round" />
-                <circle cx="130" cy="120" r="12" className="fill-blue-400 dark:fill-blue-600" />
-                <path d="M125 120l3 3 6-6" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            }
-            action={
-              !(searchQuery || branchFilter) ? (
-                <button
-                  onClick={() => handleOpenModal()}
-                  className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/25 active:scale-95"
+          {loading ? (
+            <div className="p-4 sm:p-6">
+              <SkeletonTable columns={6} rows={5} />
+            </div>
+          ) : filteredClasses.length === 0 ? (
+            <EmptyState
+              title={searchQuery || branchFilter ? t('common.noResults') : t('classes.noClasses')}
+              description={
+                searchQuery || branchFilter
+                  ? t('common.tryDifferentSearch')
+                  : t('classes.createFirstClass')
+              }
+              showArrow={!(searchQuery || branchFilter)}
+              illustration={
+                <svg
+                  viewBox="0 0 200 200"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="w-48 h-48 mx-auto"
                 >
-                  {t('classes.addClass')}
-                </button>
-              ) : undefined
-            }
-          />
-        ) : (
-          <ClassTable
-            classes={filteredClasses.slice(
-              (currentPage - 1) * itemsPerPage,
-              currentPage * itemsPerPage
-            )}
-            onEdit={handleOpenModal}
-            onDelete={setDeletingId}
-            t={t}
-          />
-        )}
+                  <rect
+                    x="30"
+                    y="50"
+                    width="140"
+                    height="100"
+                    rx="12"
+                    className="fill-blue-50 dark:fill-blue-900/20 stroke-blue-200 dark:stroke-blue-800"
+                    strokeWidth="4"
+                  />
+                  <path
+                    d="M70 90h60M70 110h40"
+                    className="stroke-blue-300 dark:stroke-blue-700"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+                  <circle cx="130" cy="120" r="12" className="fill-blue-400 dark:fill-blue-600" />
+                  <path
+                    d="M125 120l3 3 6-6"
+                    stroke="white"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              }
+              action={
+                !(searchQuery || branchFilter) ? (
+                  <button
+                    onClick={() => handleOpenModal()}
+                    className="px-6 py-2.5 bg-primary hover:bg-primary-dark text-white rounded-lg text-sm font-semibold transition-all shadow-lg shadow-primary/25 active:scale-95"
+                  >
+                    {t('classes.addClass')}
+                  </button>
+                ) : undefined
+              }
+            />
+          ) : (
+            <ClassTable
+              classes={filteredClasses.slice(
+                (currentPage - 1) * itemsPerPage,
+                currentPage * itemsPerPage
+              )}
+              onEdit={handleOpenModal}
+              onDelete={setDeletingId}
+              t={t}
+            />
+          )}
         </div>
       </Card>
 

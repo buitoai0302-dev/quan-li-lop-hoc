@@ -52,7 +52,7 @@ const Register: React.FC = () => {
       login(data.token, data.user, data.refreshToken);
       toast.success(t('auth.loginSuccess'));
       navigate('/schedule');
-    } catch (error: any) {
+    } catch (error) {
       handleApiError(error, t, 'auth.googleLoginError');
     } finally {
       setIsLoading(false);
@@ -70,7 +70,7 @@ const Register: React.FC = () => {
       await registerApi({ fullName, email, password, tenantName: `${fullName}'s Center` });
       toast.success(t('auth.registerSuccess'));
       navigate('/login');
-    } catch (error: any) {
+    } catch (error) {
       handleApiError(error, t, 'auth.registerError');
     } finally {
       setIsLoading(false);

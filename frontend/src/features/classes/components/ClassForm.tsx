@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Calendar, Clock, Plus, Search, Users, X } from 'lucide-react';
+import { Calendar, Plus, Search, Users, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -178,7 +178,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 // eslint-disable-next-line react-hooks/immutability
                 ref={(e) => {
                   startRef(e);
-                  // eslint-disable-next-line react-hooks/immutability, @typescript-eslint/no-explicit-any
+                  // eslint-disable-next-line react-hooks/immutability
                   if (startDateRef) (startDateRef as any).current = e;
                 }}
               />
@@ -198,7 +198,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 // eslint-disable-next-line react-hooks/immutability
                 ref={(e) => {
                   endRef(e);
-                  // eslint-disable-next-line react-hooks/immutability, @typescript-eslint/no-explicit-any
+                  // eslint-disable-next-line react-hooks/immutability
                   if (endDateRef) (endDateRef as any).current = e;
                 }}
               />
@@ -253,7 +253,9 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 </Button>
                 <div className="grid grid-cols-2 gap-2 mt-1">
                   <div>
-                    <label className="text-[9px] font-semibold text-gray-500 uppercase">{t('common.day')}</label>
+                    <label className="text-[9px] font-semibold text-gray-500 uppercase">
+                      {t('common.day')}
+                    </label>
                     <Select
                       size="xs"
                       variant="muted"
@@ -273,7 +275,9 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-semibold text-gray-500 uppercase">{t('schedule.room')}</label>
+                    <label className="text-[9px] font-semibold text-gray-500 uppercase">
+                      {t('schedule.room')}
+                    </label>
                     <Select
                       size="xs"
                       variant="muted"
@@ -294,7 +298,9 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-semibold text-gray-500 uppercase">{t('common.start')}</label>
+                    <label className="text-[9px] font-semibold text-gray-500 uppercase">
+                      {t('common.start')}
+                    </label>
                     <Input
                       type="time"
                       size="xs"
@@ -309,7 +315,9 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-semibold text-gray-500 uppercase">{t('common.end')}</label>
+                    <label className="text-[9px] font-semibold text-gray-500 uppercase">
+                      {t('common.end')}
+                    </label>
                     <Input
                       type="time"
                       size="xs"
@@ -390,7 +398,12 @@ const ClassForm: React.FC<ClassFormProps> = ({
           </div>
         </div>
 
-        <Card variant="muted" scrollable={true} className="max-h-[180px]" bodyClassName="p-3 custom-scrollbar">
+        <Card
+          variant="muted"
+          scrollable={true}
+          className="max-h-[180px]"
+          bodyClassName="p-3 custom-scrollbar"
+        >
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {enrollments.map((s) => (
               <div

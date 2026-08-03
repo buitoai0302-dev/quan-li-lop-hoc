@@ -752,6 +752,12 @@
     "successTitle": "Sent Successfully!",
     "successDesc": "Thank you for your feedback. Our technical team will review and process it shortly.",
     "toastSuccess": "Feedback sent successfully!",
-    "toastError": "Failed to send feedback. Please check API Key configuration."
+    "toastError": "Failed to send. Please check your API Key configuration."
+  },
+  "pwa": {
+    "title": "Install EduSchedule App",
+    "desc": "Install the app to your home screen for faster access and a smooth native-like experience.",
+    "install": "Install Now",
+    "later": "Later"
   }
 }

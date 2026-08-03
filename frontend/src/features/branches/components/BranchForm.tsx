@@ -6,7 +6,7 @@ import { z } from 'zod';
 import type { BranchFormProps } from '../types';
 import { Input, Select, Label, Button } from '@/components/common/UI';
 
-const getBranchSchema = (t: any) =>
+const getBranchSchema = (t: unknown) =>
   z.object({
     name: z.string().min(2, { message: t('validation.nameMin') }),
     address: z.string().optional(),

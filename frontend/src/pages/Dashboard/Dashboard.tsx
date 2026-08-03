@@ -309,7 +309,7 @@ const Dashboard: React.FC = () => {
                             month: string;
                             new: number;
                             active: number;
-                            [key: string]: any;
+                            [key: string]: unknown;
                           }) => ({
                             ...t,
                             monthLabel: new Date(
@@ -371,7 +371,7 @@ const Dashboard: React.FC = () => {
                     <div className="h-[300px] w-full">
                       <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart
-                          data={(stats?.revenueTrends || []).map((t: any) => ({
+                          data={(stats?.revenueTrends || []).map((t: unknown) => ({
                             ...t,
                             monthLabel: new Date(Date.parse(t.month + ' 1, 2024')).toLocaleDateString(
                               i18n.language,
@@ -404,7 +404,7 @@ const Dashboard: React.FC = () => {
                               border: 'none',
                               boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
                             }}
-                            formatter={(value: any) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value) || 0)}
+                            formatter={(value: unknown) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value) || 0)}
                           />
                           <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 'bold' }} />
                           <Area
@@ -451,7 +451,7 @@ const Dashboard: React.FC = () => {
                             <Bar dataKey="rate" radius={[4, 4, 0, 0]} barSize={20}>
                               {(stats?.attendanceTrends || []).map(
                                 (
-                                  entry: { rate: number; month: string; [key: string]: any },
+                                  entry: { rate: number; month: string; [key: string]: unknown },
                                   index: number
                                 ) => (
                                   <Cell
@@ -478,7 +478,7 @@ const Dashboard: React.FC = () => {
                         <PieChart>
                           <Pie
                             data={(stats?.classDistribution || []).map(
-                              (d: { status: string; count: number; [key: string]: any }) => ({
+                              (d: { status: string; count: number; [key: string]: unknown }) => ({
                                 ...d,
                                 label: getStatusLabel(d.status),
                               })
@@ -499,7 +499,7 @@ const Dashboard: React.FC = () => {
                       <div className="flex flex-col gap-2 shrink-0">
                         {(stats?.classDistribution || []).map(
                           (
-                            entry: { status: string; count: number; [key: string]: any },
+                            entry: { status: string; count: number; [key: string]: unknown },
                             index: number
                           ) => (
                             <div key={entry.status} className="flex items-center gap-2">
@@ -566,7 +566,7 @@ const Dashboard: React.FC = () => {
                             user: string;
                             action: string;
                             time: string;
-                            [key: string]: any;
+                            [key: string]: unknown;
                           },
                           i: number
                         ) => (

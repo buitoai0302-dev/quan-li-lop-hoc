@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { Modal } from './common/UI/Modal';
 import { Button } from './common/UI/Button';
-import { Send, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Send, CheckCircle2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 interface FeedbackModalProps {
@@ -19,13 +19,15 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
   const [formData, setFormData] = useState({
     category: 'bug',
     priority: 'normal',
-    message: ''
+    message: '',
   });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
-    setFormData(prev => ({
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    setFormData((prev) => ({
       ...prev,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     }));
   };
 
@@ -45,7 +47,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Accept': 'application/json'
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           access_key: import.meta.env.VITE_WEB3FORMS_ACCESS_KEY || '', // <-- Lấy từ biến môi trường .env
@@ -56,12 +58,12 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
           priority: formData.priority,
           message: formData.message,
           tenant_id: user?.tenant_id,
-          role: user?.role
-        })
+          role: user?.role,
+        }),
       });
 
       const result = await response.json();
-      
+
       if (response.status === 200) {
         setIsSuccess(true);
         toast.success(t('feedback.toastSuccess', 'Gửi phản hồi thành công!'));
@@ -72,12 +74,16 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
         }, 2000);
       } else {
         console.error(result);
-        toast.error(t('feedback.toastError', 'Gửi thất bại. Vui lòng kiểm tra lại cấu hình API Key.'));
+        toast.error(
+          t('feedback.toastError', 'Gửi thất bại. Vui lòng kiểm tra lại cấu hình API Key.')
+        );
         setIsSubmitting(false);
       }
     } catch (error) {
       console.error('Error submitting feedback:', error);
-      toast.error(t('feedback.toastError', 'Gửi thất bại. Vui lòng kiểm tra lại cấu hình API Key.'));
+      toast.error(
+        t('feedback.toastError', 'Gửi thất bại. Vui lòng kiểm tra lại cấu hình API Key.')
+      );
       setIsSubmitting(false);
     } finally {
       if (isSubmitting) {
@@ -98,9 +104,12 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
       {!isSuccess ? (
         <form onSubmit={handleSubmit} className="space-y-4 pt-2">
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-            {t('feedback.description', 'Mọi ý kiến đóng góp của bạn đều giúp chúng tôi hoàn thiện hệ thống tốt hơn.')}
+            {t(
+              'feedback.description',
+              'Mọi ý kiến đóng góp của bạn đều giúp chúng tôi hoàn thiện hệ thống tốt hơn.'
+            )}
           </p>
-          
+
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
               {t('feedback.categoryLabel', 'Loại vấn đề')}
@@ -112,8 +121,12 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
               className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all dark:text-white"
             >
               <option value="bug">{t('feedback.categories.bug', 'Báo lỗi hệ thống (Bug)')}</option>
-              <option value="feature">{t('feedback.categories.feature', 'Đề xuất tính năng (Feature Request)')}</option>
-              <option value="support">{t('feedback.categories.support', 'Cần hỗ trợ (Support)')}</option>
+              <option value="feature">
+                {t('feedback.categories.feature', 'Đề xuất tính năng (Feature Request)')}
+              </option>
+              <option value="support">
+                {t('feedback.categories.support', 'Cần hỗ trợ (Support)')}
+              </option>
               <option value="other">{t('feedback.categories.other', 'Góp ý khác (Other)')}</option>
             </select>
           </div>
@@ -130,13 +143,16 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
             >
               <option value="normal">{t('feedback.priorities.normal', 'Bình thường')}</option>
               <option value="high">{t('feedback.priorities.high', 'Gấp (High)')}</option>
-              <option value="urgent">{t('feedback.priorities.urgent', 'Cực kỳ khẩn cấp (Urgent)')}</option>
+              <option value="urgent">
+                {t('feedback.priorities.urgent', 'Cực kỳ khẩn cấp (Urgent)')}
+              </option>
             </select>
           </div>
 
           <div className="space-y-1">
             <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-              {t('feedback.messageLabel', 'Nội dung chi tiết')} <span className="text-rose-500">*</span>
+              {t('feedback.messageLabel', 'Nội dung chi tiết')}{' '}
+              <span className="text-rose-500">*</span>
             </label>
             <textarea
               name="message"
@@ -144,18 +160,16 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
               onChange={handleChange}
               required
               rows={4}
-              placeholder={t('feedback.messagePlaceholder', 'Vui lòng mô tả chi tiết vấn đề bạn đang gặp phải...')}
+              placeholder={t(
+                'feedback.messagePlaceholder',
+                'Vui lòng mô tả chi tiết vấn đề bạn đang gặp phải...'
+              )}
               className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all resize-none dark:text-white"
             />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               {t('common.cancel')}
             </Button>
             <Button
@@ -181,7 +195,10 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({ isOpen, onClose }) => {
             {t('feedback.successTitle', 'Đã gửi thành công!')}
           </h3>
           <p className="text-sm text-slate-500 dark:text-slate-400 max-w-xs">
-            {t('feedback.successDesc', 'Cảm ơn bạn đã phản hồi. Đội ngũ kỹ thuật sẽ xem xét và xử lý trong thời gian sớm nhất.')}
+            {t(
+              'feedback.successDesc',
+              'Cảm ơn bạn đã phản hồi. Đội ngũ kỹ thuật sẽ xem xét và xử lý trong thời gian sớm nhất.'
+            )}
           </p>
         </div>
       )}

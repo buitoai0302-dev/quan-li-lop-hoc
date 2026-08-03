@@ -37,7 +37,7 @@ const Login: React.FC = () => {
       login(data.token, data.user, data.refreshToken);
       toast.success(t('auth.loginSuccess'));
       navigate('/schedule');
-    } catch (error: any) {
+    } catch (error) {
       handleApiError(error, t, 'auth.googleLoginError');
     } finally {
       setIsLoading(false);
@@ -53,7 +53,7 @@ const Login: React.FC = () => {
       login(data.token, data.user, data.refreshToken);
       toast.success(t('auth.loginSuccess'));
       navigate('/schedule');
-    } catch (error: any) {
+    } catch (error) {
       if (error.response?.data?.code === ERROR_CODES.EMAIL_NOT_VERIFIED) {
         setEmailNotVerified(true);
       } else {

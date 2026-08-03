@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Mail, Calendar, Phone, PhoneCall } from 'lucide-react';
+import type { TFunction } from 'i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,7 +9,7 @@ import type { StudentFormData } from '@/types/schemas';
 import { Input, Select, Label, Button } from '@/components/common/UI';
 
 // 1. Zod Schema
-const getStudentSchema = (t: any) =>
+const getStudentSchema = (t: TFunction) =>
   z.object({
     full_name: z.string().min(2, { message: t('validation.nameMin') }),
     email: z.string().email({ message: t('validation.emailInvalid') }),
@@ -69,9 +70,9 @@ const StudentForm: React.FC<StudentFormProps> = ({
   const { ref: dobRef, ...dobRegisterRest } = register('date_of_birth');
 
   const handleShowPicker = () => {
-    const input = dobInputRef?.current as any;
+    const input = dobInputRef?.current as (HTMLInputElement & { showPicker?: () => void }) | null;
     if (input) {
-      if ('showPicker' in input) input.showPicker();
+      if ('showPicker' in input && input.showPicker) input.showPicker();
       else input.click();
     }
   };
@@ -106,7 +107,9 @@ const StudentForm: React.FC<StudentFormProps> = ({
             {...dobRegisterRest}
             ref={(e) => {
               dobRef(e);
-              if (dobInputRef) (dobInputRef as any).current = e;
+              if (dobInputRef) {
+                (dobInputRef as React.MutableRefObject<HTMLInputElement | null>).current = e;
+              }
             }}
           />
         </div>

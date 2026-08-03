@@ -42,7 +42,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onComplete, u
         // Cập nhật ngay trong context để modal không hiện lại
         updateUser({ onboarding_completed: true });
         onComplete();
-      } catch (error: any) {
+      } catch (error) {
         handleApiError(error, t);
         // Không đóng modal nếu lỗi để user sửa lại data (ví dụ tên chi nhánh trùng hoặc lỗi server)
       } finally {

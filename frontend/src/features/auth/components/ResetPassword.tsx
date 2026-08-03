@@ -52,7 +52,7 @@ const ResetPassword: React.FC = () => {
       await resetPassword({ token, password });
       setSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
-    } catch (error: any) {
+    } catch (error) {
       toast.error(error.response?.data?.error || t('common.error'));
     } finally {
       setIsLoading(false);

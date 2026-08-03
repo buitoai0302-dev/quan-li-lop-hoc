@@ -2,11 +2,11 @@ import React, { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import type {  RoomFormProps  } from '../types';
+import type { RoomFormProps } from '../types';
 import { ROOM_TYPES } from '@/utils/constants';
 import { Input, Select, Label, Button } from '@/components/common/UI';
 
-const getRoomSchema = (t: any) =>
+const getRoomSchema = (t: unknown) =>
   z.object({
     name: z.string().min(1, { message: t('validation.roomNameRequired') }),
     branch_id: z.string().min(1, { message: t('validation.branchRequired') }),

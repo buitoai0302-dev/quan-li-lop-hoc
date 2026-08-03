@@ -71,10 +71,10 @@ export const useSettings = () => {
         } else {
           setHasApiAccess(false);
         }
-      } catch (err) {
+      } catch {
         setHasApiAccess(false);
       }
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     } finally {
       setLoading(false);
@@ -83,6 +83,7 @@ export const useSettings = () => {
 
   useEffect(() => {
     fetchSettings();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSaveTenant = async (e: React.FormEvent) => {
@@ -92,7 +93,7 @@ export const useSettings = () => {
     try {
       await updateTenantApi({ name: centerName, contact_email: contactEmail });
       toast.success(t('common.success'));
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     } finally {
       setSaving(false);
@@ -110,7 +111,7 @@ export const useSettings = () => {
       });
       updateUser({ tenant_settings: data.settings });
       toast.success(t('common.success'));
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     } finally {
       setSaving(false);
@@ -126,7 +127,7 @@ export const useSettings = () => {
         notify_upcoming_sessions: notifySessions,
       });
       toast.success(t('common.success'));
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     } finally {
       setSaving(false);
@@ -139,7 +140,7 @@ export const useSettings = () => {
     try {
       const data = await syncAllGoogle();
       toast.success(data.message);
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     } finally {
       setSyncing(false);
@@ -152,7 +153,7 @@ export const useSettings = () => {
       const data = await generateApiKey();
       setApiKey(data.apiKey);
       toast.success(t('common.success'));
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     } finally {
       setGeneratingKey(false);

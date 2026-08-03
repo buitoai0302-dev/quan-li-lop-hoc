@@ -93,11 +93,11 @@ const Settings: React.FC = () => {
           } else {
             setHasApiAccess(false);
           }
-        } catch (err: any) {
+        } catch (err) {
           console.error('Failed to fetch API key info:', err);
           setHasApiAccess(false);
         }
-      } catch (error) {
+      } catch {
         toast.error(t('common.error'));
       }
     };
@@ -111,7 +111,7 @@ const Settings: React.FC = () => {
     try {
       await updateTenantApi({ name: centerName, contact_email: contactEmail });
       toast.success(t('common.success'));
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     } finally {
       setSaving(false);
@@ -132,7 +132,7 @@ const Settings: React.FC = () => {
       updateUser({ tenant_settings: data.settings });
 
       toast.success(t('common.success'));
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     } finally {
       setSaving(false);
@@ -148,7 +148,7 @@ const Settings: React.FC = () => {
         notify_upcoming_sessions: notifySessions,
       });
       toast.success(t('common.success'));
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     } finally {
       setSaving(false);
@@ -159,7 +159,7 @@ const Settings: React.FC = () => {
     try {
       const data = await getGoogleAuthUrl();
       window.location.href = data.url;
-    } catch (error) {
+    } catch {
       toast.error(t('settings.googleUrlError'));
     }
   };
@@ -173,7 +173,7 @@ const Settings: React.FC = () => {
           await disconnectGoogle();
           setIsGoogleConnected(false);
           toast.success(t('settings.disconnectSuccess'));
-        } catch (error) {
+        } catch {
           toast.error(t('settings.disconnectError'));
         }
       },
@@ -185,7 +185,7 @@ const Settings: React.FC = () => {
     try {
       const data = await syncAllGoogle();
       toast.success(data.message);
-    } catch (error) {
+    } catch {
       toast.error(t('common.error'));
     } finally {
       setSyncing(false);
@@ -203,7 +203,7 @@ const Settings: React.FC = () => {
             const data = await generateApiKey();
             setApiKey(data.apiKey);
             toast.success(t('common.success'));
-          } catch (error) {
+          } catch {
             toast.error(t('common.error'));
           } finally {
             setGeneratingKey(false);
@@ -218,7 +218,7 @@ const Settings: React.FC = () => {
           const data = await generateApiKey();
           setApiKey(data.apiKey);
           toast.success(t('common.success'));
-        } catch (error) {
+        } catch {
           toast.error(t('common.error'));
         } finally {
           setGeneratingKey(false);

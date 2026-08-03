@@ -31,7 +31,7 @@ export const useImport = () => {
         const data = await getBranches();
         setBranches(data);
         if (data.length > 0) setSelectedBranch(data[0].id);
-      } catch (err: any) {
+      } catch (err) {
         handleApiError(err, t);
       }
     };
@@ -41,6 +41,7 @@ export const useImport = () => {
   useEffect(() => {
     const typeFromUrl = searchParams.get('type') as ImportType;
     if (typeFromUrl && ['students', 'teachers', 'rooms', 'classes'].includes(typeFromUrl)) {
+       
       setImportType(typeFromUrl);
     }
   }, [searchParams]);
@@ -105,7 +106,7 @@ export const useImport = () => {
     if (!selectedBranch || parsedData.length === 0) return;
     setIsUploading(true);
 
-    const getValue = (row: any, possibleKeys: string[]) => {
+    const getValue = (row: unknown, possibleKeys: string[]) => {
       const rowKeys = Object.keys(row);
       for (const key of possibleKeys) {
         const matchedKey = rowKeys.find((rk) => rk.trim().toLowerCase() === key.toLowerCase());
@@ -178,7 +179,7 @@ export const useImport = () => {
       }
       handleClearFile();
       return true;
-    } catch (err: any) {
+    } catch (err) {
       handleApiError(err, t);
       return false;
     } finally {

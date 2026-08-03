@@ -780,5 +780,11 @@
     "successDesc": "Cảm ơn bạn đã phản hồi. Đội ngũ kỹ thuật sẽ xem xét và xử lý trong thời gian sớm nhất.",
     "toastSuccess": "Gửi phản hồi thành công!",
     "toastError": "Gửi thất bại. Vui lòng kiểm tra lại cấu hình API Key."
+  },
+  "pwa": {
+    "title": "Cài đặt ứng dụng EduSchedule",
+    "desc": "Cài đặt ứng dụng vào màn hình chính để truy cập nhanh hơn và trải nghiệm mượt mà như một ứng dụng gốc.",
+    "install": "Cài đặt ngay",
+    "later": "Lúc khác"
   }
 }

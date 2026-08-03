@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from './components/ErrorBoundary';
 import GlobalRouteError from './components/GlobalRouteError';
 import PageLoading from './components/common/PageLoading';
+import PWAPrompt from './components/PWAPrompt';
 import { appRoutes } from './routes';
 
 const router = createBrowserRouter([
@@ -27,6 +28,7 @@ function App() {
             },
           }}
         />
+        <PWAPrompt />
         <Suspense fallback={<PageLoading />}>
           <RouterProvider router={router} />
         </Suspense>

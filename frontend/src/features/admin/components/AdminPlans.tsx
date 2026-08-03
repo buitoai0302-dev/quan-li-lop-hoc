@@ -13,7 +13,7 @@ import { useAdminPlans, useUpdatePlan } from '../hooks/useAdmin';
 
 const AdminPlans: React.FC = () => {
   const { t } = useTranslation();
-  
+
   const { data: fetchedPlans, isLoading: loading } = useAdminPlans();
   const { mutate: updatePlanMutate } = useUpdatePlan();
 
@@ -30,7 +30,7 @@ const AdminPlans: React.FC = () => {
     planId: string,
     category: 'limits' | 'features',
     key: string,
-    value: any
+    value: unknown
   ) => {
     setPlans((prev) =>
       prev.map((p) => {
