@@ -36,9 +36,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
             <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
               {t('students.dob')}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
-              {t('common.status')}
-            </th>
+
             <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
               {t('common.actions')}
             </th>
@@ -62,8 +60,12 @@ const StudentTable: React.FC<StudentTableProps> = ({
               </td>
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 dark:from-primary/30 dark:to-primary/20 flex items-center justify-center text-primary font-bold shadow-inner">
+                  <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 dark:from-primary/30 dark:to-primary/20 flex items-center justify-center text-primary font-bold shadow-inner relative">
                     {student.full_name.charAt(0).toUpperCase()}
+                    <span
+                      className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 border-2 border-white dark:border-slate-900 rounded-full ${student.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                      title={student.is_active ? t('common.active') : t('common.inactive')}
+                    />
                   </div>
                   <div>
                     <div className="font-bold text-gray-900 dark:text-white text-sm">
@@ -94,20 +96,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
                     : '-'}
                 </div>
               </td>
-              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                <span
-                  className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-black uppercase tracking-wider shadow-sm ${
-                    student.is_active
-                      ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                      : 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400'
-                  }`}
-                >
-                  <span
-                    className={`w-1.5 h-1.5 rounded-full mr-2 ${student.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`}
-                  ></span>
-                  {student.is_active ? t('common.active') : t('common.inactive')}
-                </span>
-              </td>
+
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                 <div className="flex items-center justify-end gap-2 transition-opacity">
                   <button
