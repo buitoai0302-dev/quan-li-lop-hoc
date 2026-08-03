@@ -49,8 +49,8 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
   const { t } = useTranslation();
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800/50 shrink-0 overflow-hidden transition-all duration-300">
-      <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 p-3 sm:p-4 bg-gray-50/30 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800/50">
+    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800/50 shrink-0 transition-all duration-300 relative z-[60]">
+      <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 p-3 sm:p-4 bg-gray-50/30 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800/50 rounded-t-xl">
         {/* Left: Title (Clickable) */}
         <div
           className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0 lg:flex-1"
