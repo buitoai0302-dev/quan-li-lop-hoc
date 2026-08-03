@@ -37,6 +37,7 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
             onExportExcel={onExportExcel}
             onExportPDF={onExportPDF}
             disabled={attendance.length === 0}
+            align="responsive"
           />
         )}
         {!selectedSession ? (

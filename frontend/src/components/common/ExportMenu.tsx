@@ -6,9 +6,15 @@ interface ExportMenuProps {
   onExportExcel: () => void | Promise<void>;
   onExportPDF: () => void | Promise<void>;
   disabled?: boolean;
+  align?: 'left' | 'right' | 'responsive';
 }
 
-const ExportMenu: React.FC<ExportMenuProps> = ({ onExportExcel, onExportPDF, disabled }) => {
+const ExportMenu: React.FC<ExportMenuProps> = ({
+  onExportExcel,
+  onExportPDF,
+  disabled,
+  align = 'right',
+}) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<'excel' | 'pdf' | null>(null);
@@ -56,7 +62,15 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ onExportExcel, onExportPDF, dis
 
       {/* Dropdown — high z-index to stay above sticky headers / modals */}
       {open && (
-        <div className="absolute right-0 top-full mt-1.5 w-52 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-2xl z-[200] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150">
+        <div
+          className={`absolute top-full mt-1.5 w-52 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 rounded-xl shadow-2xl z-[200] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 ${
+            align === 'left'
+              ? 'left-0'
+              : align === 'responsive'
+                ? 'left-0 sm:auto sm:right-0'
+                : 'right-0'
+          }`}
+        >
           <button
             onClick={() => handleExport('excel')}
             className="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
