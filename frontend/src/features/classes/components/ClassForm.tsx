@@ -380,20 +380,22 @@ const ClassForm: React.FC<ClassFormProps> = ({
               variant="outline"
               size="sm"
               onClick={onOpenBulkEnroll}
-              className="flex-1 sm:flex-none px-4 h-9 font-bold bg-white dark:bg-gray-800 shadow-sm"
+              className="flex-1 sm:flex-none px-2 sm:px-4 h-9 font-bold bg-white dark:bg-gray-800 shadow-sm text-xs sm:text-sm whitespace-nowrap"
             >
-              <Plus size={14} className="mr-1" />
-              {t('common.bulkAdd')}
+              <Plus size={14} className="mr-1 shrink-0" />
+              <span className="hidden sm:inline">{t('common.bulkAdd')}</span>
+              <span className="sm:hidden">Ghi danh</span>
             </Button>
             <Button
               type="button"
               onClick={() => onEnrollStudent()}
               disabled={!selectedStudentId}
               size="sm"
-              className="flex-1 sm:flex-none px-4 h-9 font-bold"
+              className="flex-1 sm:flex-none px-2 sm:px-4 h-9 font-bold text-xs sm:text-sm whitespace-nowrap"
             >
-              <Plus size={14} className="mr-1" />
-              {t('students.addClass')}
+              <Plus size={14} className="mr-1 shrink-0" />
+              <span className="hidden sm:inline">{t('students.addClass')}</span>
+              <span className="sm:hidden">Thêm</span>
             </Button>
           </div>
         </div>
