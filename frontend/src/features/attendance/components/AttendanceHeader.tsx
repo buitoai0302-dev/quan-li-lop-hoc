@@ -31,7 +31,7 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
 
   return (
     <div className="flex flex-wrap items-center justify-between sm:justify-end gap-2 w-full animate-in fade-in slide-in-from-top-2 duration-500">
-      <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">
+      <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto pb-1 sm:pb-0">
         {selectedSession && (
           <ExportMenu
             onExportExcel={onExportExcel}

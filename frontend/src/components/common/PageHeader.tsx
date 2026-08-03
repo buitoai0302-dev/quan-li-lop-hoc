@@ -10,7 +10,7 @@ interface PageHeaderProps {
 
 const PageHeader: React.FC<PageHeaderProps> = ({ icon: Icon, actions, children }) => {
   return (
-    <div className="w-full shrink-0 py-2.5 animate-in fade-in slide-in-from-top-2 duration-500 border border-gray-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm px-4 mb-3 rounded-xl shadow-sm">
+    <div className="relative z-[60] w-full shrink-0 py-2.5 animate-in fade-in slide-in-from-top-2 duration-500 border border-gray-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm px-4 mb-3 rounded-xl shadow-sm">
       <div className="flex flex-col">
         {/* Main Row: Icon + Desktop Filters + Actions */}
         <div className="flex flex-row items-center justify-between gap-4">
