@@ -3,10 +3,16 @@ import { Suspense } from 'react';
 import { AuthProvider } from './contexts/AuthContext';
 import { Toaster } from 'react-hot-toast';
 import ErrorBoundary from './components/ErrorBoundary';
+import GlobalRouteError from './components/GlobalRouteError';
 import PageLoading from './components/common/PageLoading';
 import { appRoutes } from './routes';
 
-const router = createBrowserRouter(appRoutes);
+const router = createBrowserRouter([
+  {
+    errorElement: <GlobalRouteError />,
+    children: appRoutes,
+  },
+]);
 
 function App() {
   return (
