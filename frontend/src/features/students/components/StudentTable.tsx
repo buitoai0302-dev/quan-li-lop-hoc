@@ -78,15 +78,23 @@ const StudentTable: React.FC<StudentTableProps> = ({
                       </div>
                     )}
                     {(student.phone || student.parent_phone) && (
-                      <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 flex flex-col gap-0.5">
+                      <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
                         {student.phone && (
-                          <span className="flex items-center gap-1">
-                            <Phone size={10} /> {student.phone}
+                          <span
+                            className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded"
+                            title="Số điện thoại Học sinh"
+                          >
+                            <Phone size={10} className="text-gray-400" />
+                            <span>{student.phone}</span>
                           </span>
                         )}
                         {student.parent_phone && (
-                          <span className="flex items-center gap-1">
-                            <Users size={10} /> {student.parent_phone}
+                          <span
+                            className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded"
+                            title="Số điện thoại Phụ huynh"
+                          >
+                            <Users size={10} className="text-gray-400" />
+                            <span>{student.parent_phone}</span>
                           </span>
                         )}
                       </div>
