@@ -161,33 +161,69 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
       >
         {selectedSession && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-700/50">
-            <div className="bg-green-50/50 dark:bg-green-900/10 p-2 lg:p-3 rounded-lg border border-green-100 dark:border-green-800/30">
-              <div className="text-[8px] lg:text-[10px] font-black text-green-600/60 uppercase tracking-widest mb-0.5">
-                {t('attendance.present')}
-              </div>
-              <div className="text-base lg:text-xl font-black text-green-600">
-                {stats.present}{' '}
-                <span className="text-[10px] font-medium text-green-400">/ {stats.total}</span>
-              </div>
-            </div>
-            <div className="bg-red-50/50 dark:bg-red-900/10 p-2 lg:p-3 rounded-lg border border-red-100 dark:border-red-800/30">
-              <div className="text-[8px] lg:text-[10px] font-black text-red-600/60 uppercase tracking-widest mb-0.5">
-                {t('attendance.absent')}
-              </div>
-              <div className="text-base lg:text-xl font-black text-red-600">{stats.absent}</div>
-            </div>
-            <div className="bg-amber-50/50 dark:bg-amber-900/10 p-2 lg:p-3 rounded-lg border border-amber-100 dark:border-amber-800/30">
-              <div className="text-[8px] lg:text-[10px] font-black text-amber-600/60 uppercase tracking-widest mb-0.5">
-                {t('attendance.late')}
-              </div>
-              <div className="text-base lg:text-xl font-black text-amber-600">{stats.late}</div>
-            </div>
-            <div className="bg-blue-50/50 dark:bg-blue-900/10 p-2 lg:p-3 rounded-lg border border-blue-100 dark:border-blue-800/30">
-              <div className="text-[8px] lg:text-[10px] font-black text-blue-600/60 uppercase tracking-widest mb-0.5">
-                {t('attendance.excused')}
-              </div>
-              <div className="text-base lg:text-xl font-black text-blue-600">{stats.excused}</div>
-            </div>
+            {[
+              {
+                key: 'present',
+                bgColor: 'bg-green-50/50 dark:bg-green-900/10',
+                borderColor: 'border-green-100 dark:border-green-800/30',
+                textColor: 'text-green-600',
+                labelColor: 'text-green-600/60',
+                totalColor: 'text-green-400',
+                value: stats.present,
+                showTotal: true,
+              },
+              {
+                key: 'absent',
+                bgColor: 'bg-red-50/50 dark:bg-red-900/10',
+                borderColor: 'border-red-100 dark:border-red-800/30',
+                textColor: 'text-red-600',
+                labelColor: 'text-red-600/60',
+                value: stats.absent,
+              },
+              {
+                key: 'late',
+                bgColor: 'bg-amber-50/50 dark:bg-amber-900/10',
+                borderColor: 'border-amber-100 dark:border-amber-800/30',
+                textColor: 'text-amber-600',
+                labelColor: 'text-amber-600/60',
+                value: stats.late,
+              },
+              {
+                key: 'excused',
+                bgColor: 'bg-blue-50/50 dark:bg-blue-900/10',
+                borderColor: 'border-blue-100 dark:border-blue-800/30',
+                textColor: 'text-blue-600',
+                labelColor: 'text-blue-600/60',
+                value: stats.excused,
+              },
+            ].map(
+              ({
+                key,
+                bgColor,
+                borderColor,
+                textColor,
+                labelColor,
+                totalColor,
+                value,
+                showTotal,
+              }) => (
+                <div key={key} className={`${bgColor} ${borderColor} p-2 lg:p-3 rounded-lg border`}>
+                  <div
+                    className={`text-[8px] lg:text-[10px] font-black uppercase tracking-widest mb-0.5 ${labelColor}`}
+                  >
+                    {t(`attendance.${key}`)}
+                  </div>
+                  <div className={`text-base lg:text-xl font-black ${textColor}`}>
+                    {value}
+                    {showTotal && (
+                      <span className={`text-[10px] font-medium ml-1 ${totalColor}`}>
+                        / {stats.total}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )
+            )}
           </div>
         )}
       </div>
