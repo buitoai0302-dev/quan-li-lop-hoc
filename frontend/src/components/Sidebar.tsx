@@ -71,23 +71,29 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
       {/* Mobile Sidebar Overlay */}
       {isOpen && (
         <div
-          className="fixed inset-0 bg-gray-900/60 z-[60] md:hidden backdrop-blur-sm transition-opacity duration-300"
+          className="fixed inset-0 bg-gray-900/60 z-[90] md:hidden backdrop-blur-sm transition-opacity duration-300"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-[70] bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800 shadow-xl flex flex-col transform transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} ${isCollapsed ? 'w-60 md:w-[68px]' : 'w-60'}`}
+        className={`fixed md:static inset-y-0 left-0 z-[100] bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800 shadow-xl flex flex-col transform transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'} ${isCollapsed ? 'w-60 md:w-[68px]' : 'w-60'}`}
       >
-        <div className={`p-4 border-b border-gray-100 dark:border-slate-800/50 flex items-center justify-between gap-2 relative transition-all ${isCollapsed ? 'md:p-4' : 'sm:p-5'}`}>
-          <div className={`flex items-center min-w-0 overflow-hidden ${isCollapsed ? 'md:gap-0' : 'gap-2'}`}>
+        <div
+          className={`p-4 border-b border-gray-100 dark:border-slate-800/50 flex items-center justify-between gap-2 relative transition-all ${isCollapsed ? 'md:p-4' : 'sm:p-5'}`}
+        >
+          <div
+            className={`flex items-center min-w-0 overflow-hidden ${isCollapsed ? 'md:gap-0' : 'gap-2'}`}
+          >
             <img
               src="/logo.png"
               alt="Logo"
               className="w-9 h-9 rounded-lg shadow-md shadow-primary/10 object-cover shrink-0 mx-auto"
             />
-            <div className={`min-w-0 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'md:w-0 md:opacity-0 hidden md:block' : 'w-auto opacity-100'}`}>
+            <div
+              className={`min-w-0 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'md:w-0 md:opacity-0 hidden md:block' : 'w-auto opacity-100'}`}
+            >
               <h1 className="text-xl font-black bg-gradient-to-r from-primary to-primary-dark bg-clip-text text-transparent tracking-tight leading-tight truncate">
                 {t('common.appName')}
               </h1>
@@ -104,7 +110,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
           </button>
         </div>
 
-        <nav className={`flex-1 space-y-3 overflow-y-auto overflow-x-hidden transition-all ${isCollapsed ? 'md:px-2 md:py-3 hide-scrollbar' : 'p-2 sm:p-3 custom-scrollbar'}`}>
+        <nav
+          className={`flex-1 space-y-3 overflow-y-auto overflow-x-hidden transition-all ${isCollapsed ? 'md:px-2 md:py-3 hide-scrollbar' : 'p-2 sm:p-3 custom-scrollbar'}`}
+        >
           {visibleGroups.map((group, groupIdx) => (
             <div key={groupIdx} className="space-y-1">
               {group.group && (
@@ -113,7 +121,9 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
                   className={`w-full flex items-center ${isCollapsed ? 'md:justify-center md:px-0' : 'justify-between'} px-2 sm:px-3 py-1.5 group/header`}
                   title={isCollapsed ? group.group : undefined}
                 >
-                  <p className={`text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 transition-colors whitespace-nowrap overflow-hidden ${isCollapsed ? 'md:hidden' : 'group-hover/header:text-primary'}`}>
+                  <p
+                    className={`text-[10px] font-black uppercase tracking-[0.15em] text-gray-400 dark:text-gray-500 transition-colors whitespace-nowrap overflow-hidden ${isCollapsed ? 'md:hidden' : 'group-hover/header:text-primary'}`}
+                  >
                     {group.group}
                   </p>
                   {isCollapsed ? (
@@ -158,14 +168,18 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
                         >
                           <item.icon size={20} />
                         </div>
-                        <span className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? 'md:w-0 md:opacity-0 hidden md:block md:flex-none' : 'flex-1 w-auto opacity-100 block'}`}>
+                        <span
+                          className={`whitespace-nowrap overflow-hidden transition-all duration-300 ${isCollapsed ? 'md:w-0 md:opacity-0 hidden md:block md:flex-none' : 'flex-1 w-auto opacity-100 block'}`}
+                        >
                           {item.label}
                         </span>
                         {item.isPremium &&
                           [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(
                             user?.role || ''
                           ) && (
-                            <div className={`flex items-center justify-center bg-gradient-to-tr from-amber-400 to-orange-500 rounded-md shadow-md shadow-orange-500/20 animate-pulse transition-all duration-300 overflow-hidden ${isCollapsed ? 'md:w-0 md:h-0 md:p-0 md:opacity-0 hidden md:flex' : 'px-1.5 py-0.5'}`}>
+                            <div
+                              className={`flex items-center justify-center bg-gradient-to-tr from-amber-400 to-orange-500 rounded-md shadow-md shadow-orange-500/20 animate-pulse transition-all duration-300 overflow-hidden ${isCollapsed ? 'md:w-0 md:h-0 md:p-0 md:opacity-0 hidden md:flex' : 'px-1.5 py-0.5'}`}
+                            >
                               <span className="text-[7px] font-black text-white uppercase tracking-tighter">
                                 PRO
                               </span>
@@ -187,27 +201,41 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
             className="hidden md:flex absolute -right-3 top-[-16px] w-6 h-6 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-full items-center justify-center text-gray-500 hover:text-primary dark:text-gray-400 dark:hover:text-blue-400 shadow-sm z-10 transition-transform"
             title={isCollapsed ? t('common.expand') : t('common.collapse')}
           >
-            {isCollapsed ? <ChevronRight size={12} /> : <ChevronDown size={12} className="rotate-90" />}
+            {isCollapsed ? (
+              <ChevronRight size={12} />
+            ) : (
+              <ChevronDown size={12} className="rotate-90" />
+            )}
           </button>
 
           {isInstallable && (
-            <div className={`mb-2 transition-all duration-300 overflow-hidden ${isCollapsed ? 'md:hidden' : 'block'}`}>
+            <div
+              className={`mb-2 transition-all duration-300 overflow-hidden ${isCollapsed ? 'md:hidden' : 'block'}`}
+            >
               <button
                 onClick={promptInstall}
                 className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-indigo-50 text-indigo-600 hover:bg-indigo-100 dark:bg-indigo-900/30 dark:text-indigo-400 dark:hover:bg-indigo-900/50 rounded-xl transition-colors shadow-sm"
               >
                 <Download size={16} className="animate-bounce shrink-0" />
-                <span className="text-sm font-bold whitespace-nowrap overflow-hidden">{t('common.installApp', 'Cài đặt App')}</span>
+                <span className="text-sm font-bold whitespace-nowrap overflow-hidden">
+                  {t('common.installApp', 'Cài đặt App')}
+                </span>
               </button>
             </div>
           )}
 
-          <div className={`flex items-center gap-3 bg-gray-50 dark:bg-slate-900/50 p-2 rounded-xl border border-gray-100 dark:border-slate-800 mb-1 transition-all duration-300 ${isCollapsed ? 'md:justify-center' : 'justify-between'}`}>
-            <div className={`flex items-center gap-3 overflow-hidden ${isCollapsed ? 'md:gap-0' : ''}`}>
+          <div
+            className={`flex items-center gap-3 bg-gray-50 dark:bg-slate-900/50 p-2 rounded-xl border border-gray-100 dark:border-slate-800 mb-1 transition-all duration-300 ${isCollapsed ? 'md:justify-center' : 'justify-between'}`}
+          >
+            <div
+              className={`flex items-center gap-3 overflow-hidden ${isCollapsed ? 'md:gap-0' : ''}`}
+            >
               <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-primary to-indigo-600 flex items-center justify-center text-white font-bold shadow-inner shrink-0 border-2 border-white dark:border-gray-800">
                 {user?.full_name ? user.full_name.substring(0, 2).toUpperCase() : 'AD'}
               </div>
-              <div className={`min-w-0 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'md:w-0 md:opacity-0 hidden md:block' : 'w-auto opacity-100 block'}`}>
+              <div
+                className={`min-w-0 transition-all duration-300 overflow-hidden whitespace-nowrap ${isCollapsed ? 'md:w-0 md:opacity-0 hidden md:block' : 'w-auto opacity-100 block'}`}
+              >
                 <p className="text-xs font-black text-gray-800 dark:text-gray-200 truncate leading-none mb-1">
                   {user?.full_name}
                 </p>
