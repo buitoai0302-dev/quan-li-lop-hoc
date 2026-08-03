@@ -1,4 +1,5 @@
 import React from 'react';
+import { Phone, Users } from 'lucide-react';
 import type { StudentTableProps } from '../types';
 
 const StudentTable: React.FC<StudentTableProps> = ({
@@ -14,7 +15,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
 
   return (
     <div className="w-full overflow-x-auto">
-      <table className="w-full border-separate border-spacing-0 min-w-[800px]">
+      <table className="w-full border-separate border-spacing-0">
         <thead className="bg-gray-50 dark:bg-slate-900 sticky top-0 z-20 transition-colors">
           <tr>
             <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left w-12 border-b border-gray-100 dark:border-slate-800 shadow-sm">
@@ -74,6 +75,20 @@ const StudentTable: React.FC<StudentTableProps> = ({
                     {student.email && (
                       <div className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1 mt-0.5">
                         {student.email}
+                      </div>
+                    )}
+                    {(student.phone || student.parent_phone) && (
+                      <div className="text-[10px] text-gray-500 dark:text-gray-400 mt-1 flex flex-col gap-0.5">
+                        {student.phone && (
+                          <span className="flex items-center gap-1">
+                            <Phone size={10} /> {student.phone}
+                          </span>
+                        )}
+                        {student.parent_phone && (
+                          <span className="flex items-center gap-1">
+                            <Users size={10} /> {student.parent_phone}
+                          </span>
+                        )}
                       </div>
                     )}
                   </div>
