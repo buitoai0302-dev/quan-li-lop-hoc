@@ -404,7 +404,7 @@
     "unsavedTitle": "Unsaved Changes!",
     "unsavedDesc": "You have unsaved attendance data. If you leave now, your changes will be lost.",
     "futureSessionWarning": "Future Session",
-    "pastSessionWarning": "Attendance History (Read-only)"
+    "pastSessionWarning": "Read-only"
   },
   "schedule": {
     "title": "Schedule Management",
