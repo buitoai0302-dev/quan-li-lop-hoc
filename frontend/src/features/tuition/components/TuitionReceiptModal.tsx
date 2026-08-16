@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { X, Printer, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
-import { Tuition } from '../api/tuition.api';
+import type { Tuition } from '../api/tuition.api';
 import { useTuitionPayments } from '../hooks/useTuition';
 import { useAuth } from '@/contexts/AuthContext';
 

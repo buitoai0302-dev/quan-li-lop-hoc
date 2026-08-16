@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { useTuitions, useDeleteTuition } from '../hooks/useTuition';
 import { useClasses } from '@/features/classes/hooks/useClasses';
-import { Tuition } from '../api/tuition.api';
+import type { Tuition } from '../api/tuition.api';
 import BulkGenerateModal from './BulkGenerateModal';
 import PaymentModal from './PaymentModal';
 import TuitionReceiptModal from './TuitionReceiptModal';

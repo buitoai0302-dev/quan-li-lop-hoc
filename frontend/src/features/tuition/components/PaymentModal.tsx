@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { DollarSign, X } from 'lucide-react';
 import { useRecordPayment } from '../hooks/useTuition';
-import { RecordPaymentDto, Tuition } from '../api/tuition.api';
+import type { RecordPaymentDto, Tuition } from '../api/tuition.api';
 import { handleApiError } from '@/utils/errorHelper';
 import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';

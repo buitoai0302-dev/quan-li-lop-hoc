@@ -2,7 +2,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import { Zap, X, AlertCircle } from 'lucide-react';
 import { useBulkGenerateTuitions } from '../hooks/useTuition';
-import { BulkGenerateDto } from '../api/tuition.api';
+import type { BulkGenerateDto } from '../api/tuition.api';
 import { handleApiError } from '@/utils/errorHelper';
 import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
