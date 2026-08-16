@@ -1,5 +1,5 @@
 import { Response, NextFunction } from 'express';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
 import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ValidationError, NotFoundError } from '../utils/errors';
@@ -36,7 +36,7 @@ export const createPaymentUrl = async (req: AuthRequest, res: Response, next: Ne
     if (amount <= 0) throw new ValidationError('Gói này không yêu cầu thanh toán', 'ZERO_AMOUNT');
 
     // Tạo invoice record với status 'pending'
-    const orderId = `INV-${Date.now()}-${uuidv4().substring(0, 8).toUpperCase()}`;
+    const orderId = `INV-${Date.now()}-${crypto.randomUUID().substring(0, 8).toUpperCase()}`;
     const invoiceResult = await pool.query(
       `INSERT INTO billing_invoices (tenant_id, plan_id, amount, currency, payment_gateway, status, gateway_order_id)
        VALUES ($1, $2, $3, 'VND', $4, 'pending', $5)
