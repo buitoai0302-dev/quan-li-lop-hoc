@@ -6,7 +6,7 @@ import Pagination from '@/components/common/Pagination';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
-import { Plus, Upload, Search, Users } from 'lucide-react';
+import { Plus, Upload, Search, Users, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '@/components/common/PageHeader';
 import SkeletonTable from '@/components/common/SkeletonTable';
@@ -153,13 +153,19 @@ const Students: React.FC = () => {
 
   const handleSelectAll = useCallback(
     (checked: boolean) => {
+      const pageStudents = filteredStudents.slice(
+        (currentPage - 1) * itemsPerPage,
+        currentPage * itemsPerPage
+      );
+      const pageStudentIds = pageStudents.map((s) => s.id);
+
       if (checked) {
-        setSelectedIds(filteredStudents.map((s) => s.id));
+        setSelectedIds((prev) => Array.from(new Set([...prev, ...pageStudentIds])));
       } else {
-        setSelectedIds([]);
+        setSelectedIds((prev) => prev.filter((id) => !pageStudentIds.includes(id)));
       }
     },
-    [filteredStudents]
+    [filteredStudents, currentPage, itemsPerPage]
   );
 
   const handleSelectOne = useCallback((id: string, checked: boolean) => {
@@ -229,14 +235,18 @@ const Students: React.FC = () => {
       <PageHeader
         icon={Users}
         actions={
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             {selectedIds.length > 0 && (
               <button
                 onClick={() => setIsBulkDeleteModalOpen(true)}
                 disabled={isDeletingBulk}
-                className="h-9 px-4 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-red-200 dark:border-red-800/50 whitespace-nowrap flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+                className="h-9 px-2.5 sm:px-4 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-red-200 dark:border-red-800/50 whitespace-nowrap flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 shadow-sm"
               >
-                {t('common.delete')} ({selectedIds.length})
+                <Trash2 size={14} className="sm:hidden" />
+                <span className="hidden sm:inline">
+                  {t('common.delete')} ({selectedIds.length})
+                </span>
+                <span className="sm:hidden">({selectedIds.length})</span>
               </button>
             )}
             <button
@@ -257,14 +267,14 @@ const Students: React.FC = () => {
             />
             <button
               onClick={() => navigate('/import?type=students')}
-              className="h-9 px-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-100 dark:border-gray-700 whitespace-nowrap flex items-center justify-center gap-2 active:scale-95 shadow-sm"
+              className="h-9 w-9 sm:w-auto sm:px-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-100 dark:border-gray-700 whitespace-nowrap flex items-center justify-center gap-2 active:scale-95 shadow-sm"
             >
               <Upload size={14} />
               <span className="hidden sm:inline">{t('common.import')}</span>
             </button>
             <button
               onClick={() => handleOpenModal()}
-              className="h-9 px-4 bg-primary hover:bg-primary-dark text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/25 whitespace-nowrap flex items-center justify-center gap-2 group active:scale-95"
+              className="h-9 w-9 sm:w-auto sm:px-4 bg-primary hover:bg-primary-dark text-white rounded-lg text-[10px] font-black uppercase tracking-widest transition-all shadow-lg shadow-primary/25 whitespace-nowrap flex items-center justify-center gap-2 group active:scale-95"
             >
               <Plus size={16} />
               <span className="hidden sm:inline">{t('students.addStudent')}</span>

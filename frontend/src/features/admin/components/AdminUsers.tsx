@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';
@@ -18,6 +18,7 @@ import { Modal, Card, Button, Badge, Input, Select } from '@/components/common/U
 import { USER_ROLES } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
+import Pagination from '@/components/common/Pagination';
 
 import {
   useAdminUsers,
@@ -61,6 +62,18 @@ const AdminUsers: React.FC = () => {
     }
     return result;
   }, [users, searchTerm, roleFilter, tenantFilter]);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter, tenantFilter]);
+
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredUsers.slice(start, start + itemsPerPage);
+  }, [filteredUsers, currentPage, itemsPerPage]);
 
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -215,7 +228,22 @@ const AdminUsers: React.FC = () => {
             </div>
           </div>
 
-          <Card className="flex-1 min-h-0 overflow-hidden" scrollable={true}>
+          <Card
+            className="flex-1 min-h-0 overflow-hidden"
+            scrollable={true}
+            footer={
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredUsers.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={(limit) => {
+                  setItemsPerPage(limit);
+                  setCurrentPage(1);
+                }}
+              />
+            }
+          >
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800">
@@ -229,39 +257,45 @@ const AdminUsers: React.FC = () => {
                     <th className="hidden sm:table-cell px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.users.table.tenant')}
                     </th>
-                    <th className="px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                      {t('admin.users.table.status')}
-                    </th>
                     <th className="px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
                       {t('admin.users.table.actions')}
                     </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-50 dark:divide-gray-800">
-                  {filteredUsers.length === 0 ? (
+                  {paginatedUsers.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="px-4 py-8 text-center text-gray-500">
+                      <td colSpan={4} className="px-4 py-8 text-center text-gray-500">
                         {t('admin.users.table.empty')}
                       </td>
                     </tr>
                   ) : (
-                    filteredUsers.map((user) => (
+                    paginatedUsers.map((user) => (
                       <tr key={user.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-900/30">
                         <td className="px-3 py-3 sm:px-4 sm:py-4">
-                          <div className="flex flex-col">
-                            <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
-                              {user.full_name}
-                            </span>
-                            <span className="text-[10px] sm:text-xs text-gray-500 truncate mt-0.5">
-                              {user.email}
-                            </span>
-                            <div className="sm:hidden flex items-center gap-2 mt-1.5">
-                              <span className="px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold uppercase rounded tracking-wider shrink-0">
-                                {user.role}
+                          <div className="flex items-center gap-3">
+                            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 dark:from-primary/30 dark:to-primary/20 flex items-center justify-center text-primary font-bold shadow-inner relative shrink-0">
+                              {user.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
+                              <span
+                                className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 border-2 border-white dark:border-slate-900 rounded-full ${user.is_active ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                                title={user.is_active ? 'Đang hoạt động' : 'Đã khóa'}
+                              />
+                            </div>
+                            <div className="flex flex-col">
+                              <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+                                {user.full_name}
                               </span>
-                              <span className="text-[10px] text-gray-400 truncate flex items-center gap-1">
-                                <Building size={10} /> {user.tenant_name || 'SYSTEM'}
+                              <span className="text-[10px] sm:text-xs text-gray-500 truncate mt-0.5">
+                                {user.email}
                               </span>
+                              <div className="sm:hidden flex items-center gap-2 mt-1.5">
+                                <span className="px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 text-[8px] font-bold uppercase rounded tracking-wider shrink-0">
+                                  {user.role}
+                                </span>
+                                <span className="text-[10px] text-gray-400 truncate flex items-center gap-1">
+                                  <Building size={10} /> {user.tenant_name || 'SYSTEM'}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </td>
@@ -279,26 +313,6 @@ const AdminUsers: React.FC = () => {
                               </span>
                             )}
                           </div>
-                        </td>
-                        <td className="px-3 py-3 sm:px-4 sm:py-4">
-                          {user.is_active ? (
-                            <Badge
-                              variant="success"
-                              className="text-[8px] sm:text-[10px] gap-1 px-1.5 py-0.5 sm:px-2 whitespace-nowrap"
-                            >
-                              <CheckCircle size={10} />{' '}
-                              <span className="hidden sm:inline">Đang hoạt động</span>
-                              <span className="sm:hidden">ACTIVE</span>
-                            </Badge>
-                          ) : (
-                            <Badge
-                              variant="destructive"
-                              className="text-[8px] sm:text-[10px] gap-1 px-1.5 py-0.5 sm:px-2 whitespace-nowrap"
-                            >
-                              <Lock size={10} /> <span className="hidden sm:inline">Đã khóa</span>
-                              <span className="sm:hidden">LOCKED</span>
-                            </Badge>
-                          )}
                         </td>
                         <td className="px-3 py-3 sm:px-4 sm:py-4 text-right">
                           <div className="flex items-center justify-end gap-2">

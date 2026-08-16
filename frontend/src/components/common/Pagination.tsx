@@ -26,7 +26,7 @@ const Pagination: React.FC<PaginationProps> = ({
   if (totalItems <= 5 && currentPage === 1) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between px-2 sm:px-4 py-2 sm:py-3 mt-3 sm:mt-1 border-t border-gray-100 dark:border-gray-800/50 bg-white/40 dark:bg-slate-900/40 backdrop-blur-md rounded-xl sm:rounded-2xl gap-3 sm:gap-4 transition-all duration-300">
+    <div className="flex flex-col sm:flex-row items-center justify-between w-full gap-3 sm:gap-4 transition-all duration-300">
       <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto justify-between sm:justify-start">
         <div className="flex items-center gap-2">
           <span className="text-[9px] sm:text-[10px] font-black text-gray-400 dark:text-gray-500 uppercase tracking-widest">

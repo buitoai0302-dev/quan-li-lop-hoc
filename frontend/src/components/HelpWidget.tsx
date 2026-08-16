@@ -72,9 +72,9 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[100] p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-200">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
         {/* Header */}
-        <div className="p-6 bg-primary text-white flex justify-between items-center">
+        <div className="p-6 bg-primary text-white flex justify-between items-center shrink-0">
           <div className="flex items-center space-x-2">
             <BookOpen size={24} />
             <h2 className="text-xl font-bold">{t('helpWidget.title')}</h2>
@@ -88,7 +88,7 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Content */}
-        <div className="p-6 space-y-6">
+        <div className="p-6 space-y-6 overflow-y-auto flex-1 custom-scrollbar">
           <p className="text-gray-600 dark:text-gray-400 text-sm">{t('helpWidget.subtitle')}</p>
 
           <div className="space-y-4">
@@ -112,7 +112,7 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
         </div>
 
         {/* Footer */}
-        <div className="p-6 bg-gray-50 dark:bg-gray-700/30 flex flex-col sm:flex-row gap-3 justify-center items-center">
+        <div className="p-6 bg-gray-50 dark:bg-gray-700/30 flex flex-col sm:flex-row gap-3 justify-center items-center shrink-0">
           <button
             onClick={() => {
               onClose();

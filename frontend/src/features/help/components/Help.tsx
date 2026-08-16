@@ -12,6 +12,8 @@ import {
   X,
   Info,
   MessageSquare,
+  DollarSign,
+  FileUp,
 } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
@@ -92,6 +94,23 @@ const Help: React.FC = () => {
       steps: [t('help.categories.admin.step1'), t('help.categories.admin.step2')],
       details: t('help.categories.admin.details'),
       isPremium: true,
+    },
+    {
+      id: 'tuition',
+      icon: <DollarSign className="text-emerald-500" size={24} />,
+      title: t('help.categories.tuition.title'),
+      description: t('help.categories.tuition.desc'),
+      steps: [t('help.categories.tuition.step1'), t('help.categories.tuition.step2')],
+      details: t('help.categories.tuition.details'),
+      isPremium: true,
+    },
+    {
+      id: 'importExport',
+      icon: <FileUp className="text-cyan-500" size={24} />,
+      title: t('help.categories.importExport.title'),
+      description: t('help.categories.importExport.desc'),
+      steps: [t('help.categories.importExport.step1'), t('help.categories.importExport.step2')],
+      details: t('help.categories.importExport.details'),
     },
   ];
 

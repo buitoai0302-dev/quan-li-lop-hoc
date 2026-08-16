@@ -238,6 +238,20 @@
         "step1": "Manage Service Plans and system limits.",
         "step2": "Track overview statistics via Dashboard.",
         "details": "The Dashboard page provides an overview of the number of students, teachers, and upcoming class sessions. Super Admins have control over Service Plans to limit the number of branches or classes depending on operational needs."
+      },
+      "tuition": {
+        "title": "Tuition Management",
+        "desc": "Easily track tuition revenue and payments.",
+        "step1": "Use the Bulk Generate feature to create tuition bills for entire classes.",
+        "step2": "Record payments and print receipts for students.",
+        "details": "The Tuition feature allows you to automatically generate amounts based on the Class. You can apply discounts, track Unpaid or Paid statuses, and automate billing workflows."
+      },
+      "importExport": {
+        "title": "Data Import & Export",
+        "desc": "Automate large-scale data management.",
+        "step1": "Download Excel/CSV templates and fill in Student/Teacher lists.",
+        "step2": "Use the Export Excel/PDF button on data tables to backup information.",
+        "details": "The Import feature automatically checks for errors such as duplicate Emails before saving. For backups or reporting, simply click the Export button on any management page."
       }
     },
     "quickTips": {
@@ -816,10 +830,10 @@
     "features.multitenant.desc": "Manage multiple branches or entire organizations from a single unified dashboard.",
     "features.analytics.title": "Advanced Analytics",
     "features.analytics.desc": "Gain actionable insights with detailed statistics and performance dashboards.",
-    "features.security.title": "Enterprise Security",
-    "features.security.desc": "Bank-grade security with role-based access control to protect your data.",
-    "features.speed.title": "Lightning Fast",
-    "features.speed.desc": "Optimized for speed and reliability, ensuring a smooth experience for all users.",
+    "features.tuition.title": "Comprehensive Tuition Management",
+    "features.tuition.desc": "Automate billing generation, payment collection, discount calculation, and student debt tracking.",
+    "features.data.title": "Smart Data Import/Export",
+    "features.data.desc": "Easily synchronize and backup data with Excel/CSV. Automatic analysis prevents duplicates.",
     "pricingLabel": "Pricing Plans",
     "pricingHeading": "Simple, transparent pricing",
     "pricingSubheading": "Choose the perfect plan for your center. No hidden fees.",

@@ -240,6 +240,20 @@
         "step1": "Quản lý Gói dịch vụ và hạn mức hệ thống.",
         "step2": "Theo dõi thống kê tổng quan qua Dashboard.",
         "details": "Trang Dashboard cung cấp cái nhìn tổng thể về số lượng học sinh, giáo viên và các ca học sắp tới. Super Admin có quyền kiểm soát các Gói dịch vụ để giới hạn số lượng chi nhánh hoặc lớp học tùy theo nhu cầu vận hành."
+      },
+      "tuition": {
+        "title": "Quản lý Học phí",
+        "desc": "Theo dõi thu/chi học phí dễ dàng.",
+        "step1": "Sử dụng tính năng Tạo Hóa đơn Hàng loạt để tạo học phí cho cả lớp.",
+        "step2": "Ghi nhận thanh toán và in biên lai cho học sinh.",
+        "details": "Chức năng Học phí cho phép bạn tạo tự động số tiền dựa trên Lớp học. Bạn có thể giảm giá, theo dõi trạng thái Còn Nợ (Unpaid) hoặc Đã Thu (Paid), và tự động gửi thông báo."
+      },
+      "importExport": {
+        "title": "Nhập & Xuất Dữ liệu",
+        "desc": "Tự động hoá quản lý dữ liệu lớn.",
+        "step1": "Tải biểu mẫu Excel/CSV và điền danh sách Học sinh, Giáo viên.",
+        "step2": "Sử dụng nút Xuất Excel hoặc PDF ở các bảng để sao lưu dữ liệu.",
+        "details": "Tính năng Import sẽ tự động kiểm tra lỗi như trùng lặp Email trước khi lưu. Để sao lưu hoặc báo cáo, bạn chỉ cần bấm nút Xuất Dữ Liệu ở bất kỳ trang quản lý nào."
       }
     },
     "quickTips": {
@@ -844,10 +858,10 @@
     "features.multitenant.desc": "Quản lý nhiều cơ sở hoặc toàn bộ tổ chức từ một bảng điều khiển duy nhất.",
     "features.analytics.title": "Phân tích chuyên sâu",
     "features.analytics.desc": "Nắm bắt thông tin hữu ích với các thống kê và biểu đồ hiệu suất chi tiết.",
-    "features.security.title": "Bảo mật cấp doanh nghiệp",
-    "features.security.desc": "Bảo mật tối đa với kiểm soát quyền truy cập theo vai trò để bảo vệ dữ liệu của bạn.",
-    "features.speed.title": "Nhanh như chớp",
-    "features.speed.desc": "Được tối ưu hóa cho tốc độ và độ tin cậy, đảm bảo trải nghiệm mượt mà cho mọi người dùng.",
+    "features.tuition.title": "Quản lý Học phí Toàn diện",
+    "features.tuition.desc": "Tự động hóa quy trình tạo hóa đơn, thu tiền, tính chiết khấu và theo dõi công nợ học sinh.",
+    "features.data.title": "Nhập/Xuất Dữ liệu Thông minh",
+    "features.data.desc": "Đồng bộ và sao lưu dữ liệu dễ dàng với Excel/CSV. Phân tích tự động ngăn chặn trùng lặp.",
     "pricingLabel": "Bảng giá",
     "pricingHeading": "Bảng giá đơn giản, minh bạch",
     "pricingSubheading": "Chọn gói phù hợp nhất với trung tâm của bạn. Không có phí ẩn.",

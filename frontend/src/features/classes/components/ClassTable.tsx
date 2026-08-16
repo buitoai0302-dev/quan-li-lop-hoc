@@ -21,9 +21,6 @@ const ClassTable: React.FC<ClassTableProps> = ({ classes, onEdit, onDelete, t })
             <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
               {t('classes.capacity')}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
-              {t('common.status')}
-            </th>
             <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
               {t('common.actions')}
             </th>
@@ -37,8 +34,16 @@ const ClassTable: React.FC<ClassTableProps> = ({ classes, onEdit, onDelete, t })
             >
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs shrink-0">
+                  <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs shrink-0 relative">
                     {cls.name.charAt(0).toUpperCase()}
+                    <span
+                      className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 border-2 border-white dark:border-slate-900 rounded-full ${cls.status === CLASS_STATUS.ACTIVE ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                      title={
+                        cls.status === CLASS_STATUS.ACTIVE
+                          ? t('common.active')
+                          : t('common.inactive')
+                      }
+                    />
                   </div>
                   <div className="min-w-0 max-w-[150px] sm:max-w-[100px] lg:max-w-[200px]">
                     <div
@@ -64,29 +69,22 @@ const ClassTable: React.FC<ClassTableProps> = ({ classes, onEdit, onDelete, t })
                   {cls.max_capacity} {t('classes.students')}
                 </Badge>
               </td>
-              <td className="hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                <Badge variant={cls.status === CLASS_STATUS.ACTIVE ? 'success' : 'muted'}>
-                  {cls.status === CLASS_STATUS.ACTIVE ? t('common.active') : t('common.inactive')}
-                </Badge>
-              </td>
-              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right whitespace-nowrap">
-                <div className="flex justify-end gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
+              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
+                <div className="flex justify-end gap-1 sm:gap-2">
+                  <button
                     onClick={() => onEdit(cls)}
-                    className="text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
+                    className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all active:scale-90"
+                    title={t('common.edit')}
                   >
                     <Edit2 size={16} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                  </button>
+                  <button
                     onClick={() => onDelete(cls.id)}
-                    className="text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                    className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all active:scale-90"
+                    title={t('common.delete')}
                   >
                     <Trash2 size={16} />
-                  </Button>
+                  </button>
                 </div>
               </td>
             </tr>

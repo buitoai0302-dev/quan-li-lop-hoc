@@ -303,7 +303,7 @@ const Dashboard: React.FC = () => {
                   </div>
 
                   <div className="h-[300px] w-full">
-                    <ResponsiveContainer width="100%" height="100%">
+                    <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                       <AreaChart
                         data={(stats?.studentTrends || []).map(
                           (t: {
@@ -370,7 +370,7 @@ const Dashboard: React.FC = () => {
                     </div>
                     
                     <div className="h-[300px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                         <ComposedChart
                           data={(stats?.revenueTrends || []).map((t: unknown) => ({
                             ...t,
@@ -440,7 +440,7 @@ const Dashboard: React.FC = () => {
                         {t('dashboard.attendanceHeatmap')}
                       </h3>
                       <div className="h-[180px] w-full">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
                           <BarChart data={stats?.attendanceTrends || []}>
                             <XAxis
                               dataKey="day"
@@ -475,28 +475,30 @@ const Dashboard: React.FC = () => {
                       {t('dashboard.classDistribution')}
                     </h3>
                     <div className="h-[180px] w-full flex items-center">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={(stats?.classDistribution || []).map(
-                              (d: { status: string; count: number; [key: string]: unknown }) => ({
-                                ...d,
-                                label: getStatusLabel(d.status),
-                              })
-                            )}
-                            innerRadius={50}
-                            outerRadius={70}
-                            paddingAngle={5}
-                            dataKey="count"
-                            nameKey="label"
-                          >
-                            {(stats?.classDistribution || []).map((_: unknown, index: number) => (
-                              <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
+                      <div className="flex-1 min-w-0 h-full">
+                        <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+                          <PieChart>
+                            <Pie
+                              data={(stats?.classDistribution || []).map(
+                                (d: { status: string; count: number; [key: string]: unknown }) => ({
+                                  ...d,
+                                  label: getStatusLabel(d.status),
+                                })
+                              )}
+                              innerRadius={50}
+                              outerRadius={70}
+                              paddingAngle={5}
+                              dataKey="count"
+                              nameKey="label"
+                            >
+                              {(stats?.classDistribution || []).map((_: unknown, index: number) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                              ))}
+                            </Pie>
+                            <Tooltip />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      </div>
                       <div className="flex flex-col gap-2 shrink-0">
                         {(stats?.classDistribution || []).map(
                           (

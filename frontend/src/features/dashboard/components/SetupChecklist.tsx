@@ -107,13 +107,13 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-4">
+        <div className="flex sm:flex-wrap overflow-x-auto pb-2 sm:pb-0 gap-3 sm:gap-4 custom-scrollbar snap-x">
           {steps.map((step) => (
             <div
               key={step.id}
               onClick={() => !step.isCompleted && navigate(step.path)}
               className={`
-                flex-1 min-w-[180px] sm:min-w-[200px] relative p-5 rounded-xl border-2 transition-all duration-300
+                w-[220px] sm:w-auto flex-none sm:flex-1 min-w-[220px] sm:min-w-[200px] relative p-4 sm:p-5 rounded-xl border-2 transition-all duration-300 snap-center
                 ${
                   step.isCompleted
                     ? 'border-emerald-100 bg-emerald-50/50 dark:border-emerald-900/30 dark:bg-emerald-900/10'

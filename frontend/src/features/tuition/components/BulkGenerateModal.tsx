@@ -77,7 +77,7 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
             </label>
             <select
               {...register('class_id', { required: t('tuition.bulk.classRequired') })}
-              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
               <option value="">{t('tuition.bulk.selectClass')}</option>
               {classes.map((c: any) => (
@@ -98,7 +98,7 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
               </label>
               <select
                 {...register('billing_period', { required: t('tuition.bulk.periodRequired') })}
-                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
                 <option value="">{t('tuition.bulk.selectPeriod')}</option>
                 {periodOptions.map((p) => (
@@ -118,7 +118,7 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
               <input
                 type="date"
                 {...register('due_date', { required: t('tuition.bulk.dueDateRequired') })}
-                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               {errors.due_date && (
                 <p className="text-rose-500 text-xs mt-1">{errors.due_date.message}</p>
@@ -136,7 +136,7 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
                 min={0}
                 {...register('amount', { required: t('tuition.bulk.amountRequired'), min: 1 })}
                 placeholder="1,500,000"
-                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               {errors.amount && (
                 <p className="text-rose-500 text-xs mt-1">{errors.amount.message}</p>
@@ -151,7 +151,7 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
                 min={0}
                 {...register('discount')}
                 placeholder="0"
-                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
             </div>
           </div>
@@ -164,7 +164,7 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
               type="text"
               {...register('notes')}
               placeholder={t('tuition.bulk.notesPlaceholder')}
-              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
 
