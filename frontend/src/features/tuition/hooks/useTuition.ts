@@ -1,10 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  tuitionApi,
-  BulkGenerateDto,
-  CreateTuitionDto,
-  RecordPaymentDto,
-} from '../api/tuition.api';
+import { tuitionApi } from '../api/tuition.api';
+import type { BulkGenerateDto, CreateTuitionDto, RecordPaymentDto } from '../api/tuition.api';
 import toast from 'react-hot-toast';
 
 const KEYS = {
