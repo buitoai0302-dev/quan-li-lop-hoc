@@ -72,10 +72,12 @@ const AdminPlanRequests: React.FC = () => {
         icon={FileText}
         actions={
           <div className="bg-amber-500/10 px-3 py-1 rounded-md border border-amber-500/20">
-            <span className="text-[10px] font-black uppercase text-amber-600 flex items-center gap-2">
+            <span className="text-[10px] font-black uppercase text-amber-600 flex items-center gap-1.5 sm:gap-2">
               <Clock size={12} className="animate-pulse" />{' '}
-              {requests.filter((r) => r.status === PLAN_REQUEST_STATUS.PENDING).length}{' '}
-              {t('admin.pendingRequests')}
+              <span className="font-bold">
+                {requests.filter((r) => r.status === PLAN_REQUEST_STATUS.PENDING).length}
+              </span>{' '}
+              <span className="hidden sm:inline">{t('admin.pendingRequests')}</span>
             </span>
           </div>
         }
@@ -88,19 +90,19 @@ const AdminPlanRequests: React.FC = () => {
               <table className="w-full text-left">
                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 shadow-sm">
                   <tr>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="px-3 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.organization')}
                     </th>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="hidden sm:table-cell px-3 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.plan')}
                     </th>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="px-3 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('common.status')}
                     </th>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="hidden sm:table-cell px-3 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.createdAt')}
                     </th>
-                    <th className="px-6 py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+                    <th className="px-3 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
                       {t('common.actions')}
                     </th>
                   </tr>
@@ -122,22 +124,29 @@ const AdminPlanRequests: React.FC = () => {
                         key={req.id}
                         className="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group"
                       >
-                        <td className="px-6 py-5 whitespace-nowrap">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/30 shadow-sm">
-                              <Building size={20} />
+                        <td className="px-3 py-3 sm:px-6 sm:py-5 whitespace-nowrap">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/30 shadow-sm shrink-0">
+                              <Building size={16} className="sm:w-5 sm:h-5" />
                             </div>
-                            <div>
-                              <p className="font-black text-gray-900 dark:text-white text-sm leading-tight">
+                            <div className="min-w-0">
+                              <p className="font-black text-gray-900 dark:text-white text-xs sm:text-sm leading-tight truncate">
                                 {req.tenant_name}
                               </p>
-                              <p className="text-[10px] text-primary font-bold mt-1">
-                                {req.contact_email}
-                              </p>
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-0.5 sm:gap-2 mt-0.5 sm:mt-1">
+                                <p className="text-[10px] text-primary font-bold truncate">
+                                  {req.contact_email}
+                                </p>
+                                <span className="sm:hidden px-1.5 py-0.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[8px] font-black uppercase rounded tracking-widest border border-blue-200 dark:border-blue-800 shrink-0 w-fit">
+                                  {t(
+                                    `admin.planNames.${(req.plan_name || 'FREE').split(' ')[0].toUpperCase()}`
+                                  )}
+                                </span>
+                              </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-5">
+                        <td className="hidden sm:table-cell px-3 py-3 sm:px-6 sm:py-5">
                           <div className="flex items-center gap-3">
                             <div
                               className={`w-9 h-9 rounded-lg flex items-center justify-center shadow-sm border ${
@@ -165,10 +174,10 @@ const AdminPlanRequests: React.FC = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-5">
+                        <td className="px-3 py-3 sm:px-6 sm:py-5">
                           <RequestStatusBadge status={req.status} labelFunc={getStatusLabel} />
                         </td>
-                        <td className="px-6 py-5">
+                        <td className="hidden sm:table-cell px-3 py-3 sm:px-6 sm:py-5">
                           <div className="flex flex-col">
                             <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
                               {new Date(req.created_at).toLocaleDateString(
@@ -183,9 +192,9 @@ const AdminPlanRequests: React.FC = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="px-6 py-5 text-right">
+                        <td className="px-3 py-3 sm:px-6 sm:py-5 text-right">
                           {req.status === PLAN_REQUEST_STATUS.PENDING && (
-                            <div className="flex justify-end gap-2">
+                            <div className="flex justify-end gap-1.5 sm:gap-2">
                               <Button
                                 size="xs"
                                 variant="secondary"
@@ -196,10 +205,10 @@ const AdminPlanRequests: React.FC = () => {
                                     action: PLAN_REQUEST_ACTIONS.APPROVE,
                                   })
                                 }
-                                className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30"
-                                icon={<Check size={14} strokeWidth={4} />}
+                                className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 px-2 sm:px-3 flex items-center justify-center gap-0 sm:gap-1.5"
                               >
-                                {t('admin.approve')}
+                                <Check size={14} strokeWidth={4} />
+                                <span className="hidden sm:inline">{t('admin.approve')}</span>
                               </Button>
                               <Button
                                 size="xs"
@@ -211,10 +220,10 @@ const AdminPlanRequests: React.FC = () => {
                                     action: PLAN_REQUEST_ACTIONS.REJECT,
                                   })
                                 }
-                                className="shadow-rose-500/30"
-                                icon={<X size={14} strokeWidth={4} />}
+                                className="shadow-rose-500/30 px-2 sm:px-3 flex items-center justify-center gap-0 sm:gap-1.5"
                               >
-                                {t('admin.reject')}
+                                <X size={14} strokeWidth={4} />
+                                <span className="hidden sm:inline">{t('admin.reject')}</span>
                               </Button>
                             </div>
                           )}
@@ -293,11 +302,11 @@ const RequestStatusBadge: React.FC<{ status: string; labelFunc: (s: string) => s
   return (
     <Badge
       variant={isPending ? 'warning' : isApproved ? 'success' : 'destructive'}
-      className="gap-1.5 px-4 py-1.5 text-[10px]"
+      className="gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-4 sm:py-1.5 text-[8px] sm:text-[10px] whitespace-nowrap"
     >
-      {isPending && <Clock size={12} />}
-      {isApproved && <Check size={12} />}
-      {!isPending && !isApproved && <X size={12} />}
+      {isPending && <Clock size={10} className="sm:w-3 sm:h-3" />}
+      {isApproved && <Check size={10} className="sm:w-3 sm:h-3" />}
+      {!isPending && !isApproved && <X size={10} className="sm:w-3 sm:h-3" />}
       {labelFunc(status)}
     </Badge>
   );

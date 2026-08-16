@@ -29,8 +29,11 @@ const Tuition = lazy(() => import('./pages/Tuition/Tuition'));
 const AdminTenants = lazy(() => import('./pages/Admin/AdminTenants'));
 const AdminPlans = lazy(() => import('./pages/Admin/AdminPlans'));
 const AdminPlanRequests = lazy(() => import('./pages/Admin/AdminPlanRequests'));
+const AdminUsers = lazy(() => import('./pages/Admin/AdminUsers')); // Force TS re-check
+const AdminSettings = lazy(() => import('./features/admin/components/AdminSettings'));
 const ActivityLog = lazy(() => import('./pages/Admin/ActivityLog'));
 const Landing = lazy(() => import('./pages/Landing/index'));
+const BillingReturn = lazy(() => import('./pages/BillingReturn/BillingReturn'));
 
 import { USER_ROLES, ROUTES } from './utils/constants';
 import {
@@ -51,6 +54,7 @@ import {
   History,
   ShieldCheck,
   DollarSign,
+  UserCog,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -197,6 +201,14 @@ export const appRoutes = [
         ),
       },
       {
+        path: ROUTES.BILLING_RETURN,
+        element: (
+          <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN]}>
+            <BillingReturn />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: ROUTES.TUITION,
         element: (
           <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]}>
@@ -225,6 +237,22 @@ export const appRoutes = [
         element: (
           <ProtectedRoute roles={[USER_ROLES.SUPER_ADMIN]}>
             <AdminPlans />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.ADMIN_USERS,
+        element: (
+          <ProtectedRoute roles={[USER_ROLES.SUPER_ADMIN]}>
+            <AdminUsers />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.ADMIN_SETTINGS,
+        element: (
+          <ProtectedRoute roles={[USER_ROLES.SUPER_ADMIN]}>
+            <AdminSettings />
           </ProtectedRoute>
         ),
       },
@@ -292,13 +320,6 @@ export const getMenuItems = (t: TFunction, userRole?: string): MenuGroup[] => [
     group: t('menu.groups.management'),
     items: [
       {
-        path: ROUTES.ATTENDANCE,
-        label: t('menu.attendance'),
-        icon: ClipboardCheck,
-        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.SUPER_ADMIN],
-        isPremium: true,
-      },
-      {
         path: ROUTES.CLASSES,
         label: t('menu.classes'),
         icon: BookOpen,
@@ -321,6 +342,13 @@ export const getMenuItems = (t: TFunction, userRole?: string): MenuGroup[] => [
         label: t('menu.rooms'),
         icon: MapPin,
         roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN],
+      },
+      {
+        path: ROUTES.ATTENDANCE,
+        label: t('menu.attendance'),
+        icon: ClipboardCheck,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.SUPER_ADMIN],
+        isPremium: true,
       },
       {
         path: ROUTES.BRANCHES,
@@ -404,6 +432,18 @@ export const getMenuItems = (t: TFunction, userRole?: string): MenuGroup[] => [
         path: ROUTES.ADMIN_PLANS,
         label: t('menu.adminPlans'),
         icon: ShieldCheck,
+        roles: [USER_ROLES.SUPER_ADMIN],
+      },
+      {
+        path: ROUTES.ADMIN_USERS,
+        label: t('menu.users', 'Người dùng'),
+        icon: UserCog,
+        roles: [USER_ROLES.SUPER_ADMIN],
+      },
+      {
+        path: ROUTES.ADMIN_SETTINGS,
+        label: t('menu.systemSettings', 'Cài đặt hệ thống'),
+        icon: SettingsIcon,
         roles: [USER_ROLES.SUPER_ADMIN],
       },
     ],

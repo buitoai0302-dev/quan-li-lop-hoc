@@ -1,5 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getPlans, getTenant, getPlanRequestStatus, requestPlanUpgrade } from '../api/subscription.api';
+import {
+  getPlans,
+  getTenant,
+  getPlanRequestStatus,
+  requestPlanUpgrade,
+  createPaymentUrl,
+} from '../api/subscription.api';
 
 export const useSubscriptionData = () => {
   return useQuery({
@@ -22,5 +28,12 @@ export const useRequestPlanUpgrade = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-data'] });
     },
+  });
+};
+
+export const useCreatePaymentUrl = () => {
+  return useMutation({
+    mutationFn: (data: { plan_id: string; gateway: 'vnpay' | 'momo' | 'stripe' }) =>
+      createPaymentUrl(data),
   });
 };

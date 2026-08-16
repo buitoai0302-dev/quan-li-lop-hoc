@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS user_fcm_tokens (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token VARCHAR(512) NOT NULL UNIQUE,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    last_used_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);

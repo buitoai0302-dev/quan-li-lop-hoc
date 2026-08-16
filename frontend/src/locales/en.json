@@ -74,7 +74,9 @@
       "staff": "Staff",
       "teacher": "Teacher",
       "student": "Student"
-    }
+    },
+    "progress": "Progress",
+    "setupNow": "Setup Now"
   },
   "menu": {
     "dashboard": "Dashboard",
@@ -90,6 +92,7 @@
     "import": "Import Data",
     "help": "Guide",
     "subscription": "Subscription",
+    "tuition": "Tuition",
     "settings": "Settings",
     "adminTenants": "Tenant Management",
     "adminPlans": "Plan Config",
@@ -143,8 +146,10 @@
     "studentsLimit": "Students",
     "classesLimit": "Classes",
     "branchesLimit": "Branches",
-    "readyToTeach": "Ready for a new work day!",
-    "teacherWelcomeDesc": "Check your teaching schedule today and prepare for great lessons."
+    "readyToTeach": "Ready for a new day!",
+    "teacherWelcomeDesc": "Check your schedule today and prepare for great sessions.",
+    "setupGuide": "Setup Guide",
+    "setupGuideDesc": "Complete these steps to get your center up and running."
   },
   "import": {
     "title": "System Data Import",
@@ -344,6 +349,19 @@
     "editPlan": "Edit Service Plan",
     "plansTitle": "Plan Configuration Management",
     "savePlan": "Save Plan Config",
+    "backup": {
+      "title": "Google Drive Backup Settings",
+      "tooltip": "Google Drive Backup Settings",
+      "desc": "Automatically back up this center's data to Drive.",
+      "enable": "Enable automatic backup",
+      "enableDesc": "Backup files will be uploaded to Super Admin's Drive",
+      "cycle": "Cycle",
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "time": "Execution Time (00:00 - 23:00)",
+      "save": "Save Settings"
+    },
     "createdAt": "Created At",
     "limits": "Quota Limits",
     "features": "Extended Features",
@@ -374,6 +392,76 @@
       "PRO": "Pro Plan",
       "BUSINESS": "Business Plan",
       "ENTERPRISE": "Enterprise Plan"
+    },
+    "users": {
+      "add_user": "Add User",
+      "search_placeholder": "Search by email or name...",
+      "all_roles": "All Roles",
+      "all_tenants": "All Tenants",
+      "table": {
+        "user": "User",
+        "role": "Role",
+        "tenant": "Tenant",
+        "status": "Status",
+        "actions": "Actions",
+        "empty": "No users found",
+        "system": "System"
+      },
+      "roles": {
+        "super_admin": "Super Admin",
+        "admin": "Admin",
+        "staff": "Staff",
+        "teacher": "Teacher",
+        "student": "Student"
+      },
+      "status": {
+        "active": "Active",
+        "locked": "Locked"
+      },
+      "modal": {
+        "create_title": "Add User",
+        "reset_title": "Reset Password",
+        "success": "Success!",
+        "user_created": "Account {{email}} has been created.",
+        "password_created": "New password has been created for {{email}}.",
+        "password_label": "Password",
+        "new_password_label": "New Password",
+        "tenant": "Tenant",
+        "select_tenant": "-- Select Tenant --",
+        "new_tenant": "[+] Create New Tenant",
+        "new_tenant_name": "New Tenant Name",
+        "new_tenant_placeholder": "Enter tenant name...",
+        "plan": "Plan",
+        "role": "Role",
+        "fullname": "Full Name",
+        "fullname_placeholder": "Enter full name...",
+        "email": "Email",
+        "email_placeholder": "Enter email address...",
+        "password_placeholder": "Leave blank to auto generate",
+        "reset_notice_1": "You are resetting the password for account ",
+        "reset_notice_2": ""
+      },
+      "buttons": {
+        "copy": "Copy",
+        "close": "Close",
+        "cancel": "Cancel",
+        "create": "Create Account",
+        "reset": "Reset Password",
+        "random": "Random"
+      },
+      "messages": {
+        "create_success": "User created successfully",
+        "reset_success": "Password reset successfully",
+        "status_success": "Status updated successfully",
+        "copy_success": "Copied to clipboard",
+        "confirm_lock": "Are you sure you want to lock account {{email}}?",
+        "confirm_unlock": "Are you sure you want to unlock account {{email}}?"
+      },
+      "tooltip": {
+        "reset": "Reset Password",
+        "lock": "Lock Account",
+        "unlock": "Unlock Account"
+      }
     }
   },
   "attendance": {
@@ -460,9 +548,11 @@
     "timeline": "Timeline",
     "namePlaceholder": "Class name...",
     "scheduleNote": "Session notes...",
-    "selectRoom": "Select Room",
+    "selectRoom": "Select room",
     "selectStudent": "Select student to add...",
-    "noStudents": "No students in this class"
+    "noStudents": "No students in this class yet",
+    "createFirstClass": "Create first class",
+    "noClasses": "No classes found. Add one!"
   },
   "rooms": {
     "title": "Room Management",
@@ -476,7 +566,9 @@
     "meeting": "Meeting Room",
     "unknown": "Unknown",
     "noData": "No rooms found. Add one!",
-    "namePlaceholder": "Room name..."
+    "namePlaceholder": "Room name...",
+    "capacityPlaceholder": "Capacity...",
+    "createFirstRoom": "Add your first room"
   },
   "teachers": {
     "title": "Teacher Management",
@@ -488,8 +580,9 @@
     "specialization": "Specialization",
     "noData": "No teacher found. Add one!",
     "professional": "Professional",
-    "namePlaceholder": "Full name...",
-    "specPlaceholder": "Field of expertise..."
+    "namePlaceholder": "Teacher's full name...",
+    "specPlaceholder": "Area of expertise...",
+    "createFirstTeacher": "Add your first teacher"
   },
   "branches": {
     "title": "Branch Management",
@@ -497,11 +590,12 @@
     "editBranch": "Edit Branch",
     "name": "Branch Name",
     "address": "Address",
-    "phone": "Phone",
+    "phone": "Phone Number",
     "noData": "No branches found. Add one!",
     "location": "Location",
     "namePlaceholder": "Branch name...",
-    "addressPlaceholder": "Full address..."
+    "addressPlaceholder": "Full address...",
+    "createFirstBranch": "Add your first branch"
   },
   "auth": {
     "loginTitle": "System Login",
@@ -633,8 +727,9 @@
     "apiKeyNotCreated": "Not Created",
     "apiWarning": "Never share this API key. Anyone with it can access your data.",
     "menuConfig": "Menu & Features Configuration",
-    "menuConfigDesc": "Enable or disable menu items to customize the interface for your center's needs.",
-    "quickGuide": "Quick Guide"
+    "menuConfigDesc": "Enable or disable menu items to customize the interface for your center.",
+    "quickGuide": "Quick Guide",
+    "updateCenterInfo": "Update center info"
   },
   "onboarding": {
     "welcome": "Welcome",
@@ -660,7 +755,8 @@
     "noData": "No students found. Add one!",
     "noEnrollments": "No students enrolled in this class",
     "namePlaceholder": "Full name...",
-    "selectStudent": "Select student..."
+    "selectStudent": "Select student...",
+    "createFirstStudent": "Add your first student"
   },
   "errors": {
     "INTERNAL_ERROR": "Internal server error. Please try again later.",
@@ -767,5 +863,103 @@
     "desc": "Install the app to your home screen for faster access and a smooth native-like experience.",
     "install": "Install Now",
     "later": "Later"
+  },
+  "tuition": {
+    "title": "Tuition Management",
+    "subtitle": "Track and manage tuition fees",
+    "totalDue": "Total Due",
+    "totalPaid": "Total Paid",
+    "totalOutstanding": "Outstanding",
+    "totalReceipts": "Receipts",
+    "searchPlaceholder": "Search by student name or class...",
+    "allStatus": "All Statuses",
+    "bulkGenerate": "Bulk Generate",
+    "emptyState": "No tuition records found",
+    "student": "Student",
+    "classPeriod": "Class / Period",
+    "amount": "Amount",
+    "paid": "Paid",
+    "dueDate": "Due Date",
+    "status": "Status",
+    "actions": "Actions",
+    "discount": "Discount",
+    "remaining": "Remaining",
+    "collectMoney": "Collect Payment",
+    "viewReceipt": "View Receipt",
+    "deleteTitle": "Delete Tuition",
+    "deleteConfirm": "Are you sure you want to delete this tuition record?",
+    "statusLabels": {
+      "unpaid": "Unpaid",
+      "partial": "Partial",
+      "paid": "Paid",
+      "overdue": "Overdue",
+      "waived": "Waived"
+    },
+    "paymentMethods": {
+      "cash": "Cash",
+      "bank_transfer": "Bank Transfer",
+      "momo": "MoMo",
+      "vnpay": "VNPay",
+      "stripe": "Stripe",
+      "other": "Other"
+    },
+    "bulk": {
+      "title": "Bulk Generate Tuition",
+      "subtitle": "Generate for all students in a class",
+      "class": "Class",
+      "selectClass": "-- Select class --",
+      "classRequired": "Please select a class",
+      "period": "Tuition Period",
+      "selectPeriod": "-- Select month --",
+      "periodRequired": "Select tuition period",
+      "dueDate": "Due Date",
+      "dueDateRequired": "Select due date",
+      "amount": "Tuition Fee",
+      "amountRequired": "Enter amount",
+      "discount": "Discount",
+      "notes": "Notes",
+      "notesPlaceholder": "August 2026 Tuition...",
+      "skipExisting": "Skip students who already have tuition for this period",
+      "cancel": "Cancel",
+      "submit": "Generate",
+      "submitting": "Generating..."
+    },
+    "payment": {
+      "title": "Record Payment",
+      "amountDue": "Amount Due",
+      "amountPaid": "Previously Paid",
+      "remaining": "Remaining",
+      "amount": "Payment Amount",
+      "amountRequired": "Please enter amount",
+      "method": "Payment Method",
+      "methodRequired": "Select method",
+      "reference": "Reference / Notes",
+      "cancel": "Cancel",
+      "submit": "Save Payment",
+      "submitting": "Processing..."
+    },
+    "receipt": {
+      "title": "Tuition Receipt",
+      "print": "Print Receipt",
+      "receiptSubtitle": "Tuition Payment Receipt",
+      "printDate": "Print Date",
+      "paymentHistory": "Payment History",
+      "date": "Date",
+      "method": "Method",
+      "amount": "Amount",
+      "thanks": "Thank you for your business!"
+    }
+  },
+  "billingReturn": {
+    "processing": "Processing transaction...",
+    "wait": "Please wait a moment",
+    "successTitle": "Payment Successful",
+    "successDesc": "Thank you! Your subscription plan has been activated successfully.",
+    "homeBtn": "Return to Home",
+    "failedTitle": "Transaction Failed",
+    "failedDesc": "Your transaction failed or was cancelled. Please try again.",
+    "backBtn": "Return to Subscription",
+    "payVnpay": "Pay with VNPay",
+    "payMomo": "Pay with MoMo"
   }
 }

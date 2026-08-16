@@ -17,7 +17,14 @@ import type { Teacher, TeacherFormData } from '@/types';
 import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
 
-import { TeacherTable, TeacherForm, useTeachers, useDeleteTeacher, useCreateTeacher, useUpdateTeacher } from '@/features/teachers';
+import {
+  TeacherTable,
+  TeacherForm,
+  useTeachers,
+  useDeleteTeacher,
+  useCreateTeacher,
+  useUpdateTeacher,
+} from '@/features/teachers';
 import { useBranches } from '@/features/branches/hooks/useBranches';
 
 const Teachers: React.FC = () => {
@@ -216,34 +223,7 @@ const Teachers: React.FC = () => {
                 : t('teachers.createFirstTeacher', 'Thêm giáo viên đầu tiên của bạn')
             }
             showArrow={!(searchTerm || branchFilter)}
-            illustration={
-              <svg
-                viewBox="0 0 200 200"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-48 h-48 mx-auto"
-              >
-                <rect
-                  x="40"
-                  y="50"
-                  width="120"
-                  height="90"
-                  rx="8"
-                  className="fill-emerald-50 dark:fill-emerald-900/20 stroke-emerald-200 dark:stroke-emerald-800"
-                  strokeWidth="4"
-                />
-                <path
-                  d="M100 80c-8.3 0-15 6.7-15 15s6.7 15 15 15 15-6.7 15-15-6.7-15-15-15zm0 35c-11.3 0-33.8 5.6-33.8 16.9V140h67.5v-8.1C133.8 120.6 111.3 115 100 115z"
-                  className="fill-emerald-300 dark:fill-emerald-700"
-                />
-                <path
-                  d="M40 140h120"
-                  className="stroke-emerald-200 dark:stroke-emerald-800"
-                  strokeWidth="4"
-                  strokeLinecap="round"
-                />
-              </svg>
-            }
+            icon={UserCheck}
             action={
               !(searchTerm || branchFilter) ? (
                 <button

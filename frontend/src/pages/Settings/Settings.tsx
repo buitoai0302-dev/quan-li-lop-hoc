@@ -51,7 +51,9 @@ const Settings: React.FC = () => {
     teachers: true,
     rooms: true,
     branches: true,
+    tuition: true,
     import: true,
+    subscription: true,
   });
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean;
@@ -66,19 +68,20 @@ const Settings: React.FC = () => {
 
         setCenterName(tenantData.name || '');
         setContactEmail(tenantData.contact_email || '');
-        setMenuSettings(
-          tenantData.settings?.menu || {
-            dashboard: true,
-            schedule: true,
-            classes: true,
-            attendance: true,
-            students: true,
-            teachers: true,
-            rooms: true,
-            branches: true,
-            import: true,
-          }
-        );
+        setMenuSettings({
+          dashboard: true,
+          schedule: true,
+          classes: true,
+          attendance: true,
+          students: true,
+          teachers: true,
+          rooms: true,
+          branches: true,
+          tuition: true,
+          import: true,
+          subscription: true,
+          ...(tenantData.settings?.menu || {}),
+        });
 
         setFullName(userData.full_name || '');
         setNotifySessions(userData.notify_upcoming_sessions);

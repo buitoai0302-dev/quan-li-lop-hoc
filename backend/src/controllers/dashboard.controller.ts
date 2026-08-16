@@ -30,6 +30,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
         ]);
 
       return res.json({
+        totalClasses: parseInt(classesRes.rows[0].count, 10),
         activeClasses: parseInt(classesRes.rows[0].count, 10),
         teachers: parseInt(teachersRes.rows[0].count, 10),
         students: parseInt(studentsRes.rows[0].count, 10),
@@ -132,6 +133,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
     // Default for admin/staff
     const period = (req.query.period as string) === 'yearly' ? 12 : 6;
     const [
+      totalClassesRes,
       classesRes,
       teachersRes,
       studentsRes,
@@ -146,6 +148,9 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
       prevClassesRes,
       upcomingRes,
     ] = await Promise.all([
+      pool.query(`SELECT COUNT(*) FROM classes WHERE tenant_id = $1 AND is_deleted = false`, [
+        tenantId,
+      ]),
       pool.query(
         `SELECT COUNT(*) FROM classes WHERE tenant_id = $1 AND status = 'active' AND is_deleted = false`,
         [tenantId]
@@ -276,6 +281,7 @@ export const getDashboardStats = async (req: AuthRequest, res: Response, next: N
     };
 
     res.json({
+      totalClasses: parseInt(totalClassesRes.rows[0].count, 10),
       activeClasses: currentClasses,
       teachers: parseInt(teachersRes.rows[0].count, 10),
       students: currentStudents,

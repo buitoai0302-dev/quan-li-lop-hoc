@@ -17,11 +17,13 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "archiver": "^8.0.0",
     "axios": "^1.16.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "firebase-admin": "^14.2.0",
     "google-auth-library": "^10.6.2",
     "googleapis": "^171.4.0",
     "ioredis": "^5.10.1",
@@ -32,6 +34,7 @@
     "pg": "^8.20.0"
   },
   "devDependencies": {
+    "@types/archiver": "^8.0.0",
     "@types/bcrypt": "^6.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",

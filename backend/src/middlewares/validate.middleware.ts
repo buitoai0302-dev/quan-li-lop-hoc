@@ -1,8 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { ValidationError } from '../utils/errors';
 
-// UUID v4 regex pattern
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+// Relaxed UUID regex to allow all valid UUID formats, including manually created mock data (e.g. 11111111-0000-0000-0000-000000000001)
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
  * Validates that specified route params are valid UUIDs.

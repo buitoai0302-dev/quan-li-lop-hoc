@@ -22,7 +22,10 @@ import planRoutes from './routes/plan.routes';
 import attendanceRoutes from './routes/attendance.routes';
 import tuitionRoutes from './routes/tuition.routes';
 import billingRoutes from './routes/billing.routes';
+import systemRoutes from './routes/system.routes';
+import notificationRoutes from './routes/notification.routes';
 import { initCronJobs } from './cron/notification.cron';
+import { startBackupCronJob } from './cron/backup.cron';
 
 import { errorMiddleware } from './middlewares/error.middleware';
 import { NotFoundError } from './utils/errors';
@@ -74,11 +77,14 @@ protectedRoutes.use('/admin', adminRoutes);
 protectedRoutes.use('/plans', planRoutes);
 protectedRoutes.use('/attendance', attendanceRoutes);
 protectedRoutes.use('/tuitions', tuitionRoutes);
+protectedRoutes.use('/system', systemRoutes);
+protectedRoutes.use('/notifications', notificationRoutes);
 
 app.use('/api', protectedRoutes);
 
 // Initialize background jobs
 initCronJobs();
+startBackupCronJob();
 
 // Health check
 app.get('/health', (req, res) => {

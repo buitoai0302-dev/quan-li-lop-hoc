@@ -227,7 +227,6 @@ const Login: React.FC = () => {
                 shape="pill"
                 size="large"
                 text="continue_with"
-                width="100%"
               />
             </div>
           </div>

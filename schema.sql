@@ -45,6 +45,17 @@ CREATE TABLE plan_features (
 );
 
 -- ============================================================
+-- SYSTEM SETTINGS (Global Configuration)
+-- ============================================================
+
+CREATE TABLE system_settings (
+    setting_key VARCHAR(100) PRIMARY KEY,
+    setting_value TEXT NOT NULL,
+    description TEXT,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ============================================================
 -- TENANT (SaaS CORE)
 -- ============================================================
 
@@ -366,6 +377,17 @@ CREATE TRIGGER trg_recurring_schedules_updated_at BEFORE UPDATE ON class_recurri
 -- SEED DATA
 -- ============================================================
 
+-- 0. Insert System Settings
+INSERT INTO system_settings (setting_key, setting_value, description) VALUES 
+    ('SYSTEM_NAME', 'EduSchedule', 'Tên hệ thống'),
+    ('CONTACT_EMAIL', 'contact@eduschedule.com', 'Email liên hệ'),
+    ('CONTACT_PHONE', '0901234567', 'Số điện thoại hotline'),
+    ('CONTACT_ZALO', 'https://zalo.me/0901234567', 'Đường dẫn Zalo liên hệ'),
+    ('CONTACT_ADDRESS', '123 Đường ABC, Quận XYZ, TP.HCM', 'Địa chỉ trụ sở'),
+    ('TAX_CODE', '0123456789', 'Mã số thuế doanh nghiệp'),
+    ('POSTAL_CODE', '700000', 'Mã bưu chính (Zip code)')
+ON CONFLICT (setting_key) DO NOTHING;
+
 -- 1. Insert Plans
 INSERT INTO plan_definitions (id, code, name, price_vnd, price_usd, sort_order) VALUES 
     ('ffffffff-0000-0000-0000-000000000001', 'FREE', 'Free', 0, 0, 1),
@@ -440,3 +462,195 @@ INSERT INTO branches (id, tenant_id, name, address, phone) VALUES
 INSERT INTO users (id, tenant_id, branch_id, email, password_hash, full_name, role) VALUES
     ('22222222-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', NULL, 'admin@premium-edu.com', '$2b$10$tEfz1SbXlnQgoItiSSbapew27RHf7IwqjSNjWmzOoE1nScWQiq.qO', 'Admin User', 'admin'),
     ('22222222-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', NULL, 'admin@local-math.com', '$2b$10$tEfz1SbXlnQgoItiSSbapew27RHf7IwqjSNjWmzOoE1nScWQiq.qO', 'Admin Tutor', 'admin');
+
+
+-- Migration: create_tuitions_payments
+-- Quản lý học phí nội bộ của các Trung tâm
+
+-- 1. Bảng Học phí (Tuitions)
+CREATE TABLE IF NOT EXISTS tuitions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+  class_id UUID REFERENCES classes(id) ON DELETE SET NULL,
+  
+  -- Chu kỳ thanh toán: 'monthly' | 'per_session' | 'per_course'
+  billing_cycle VARCHAR(20) NOT NULL DEFAULT 'monthly',
+  -- Dùng cho monthly: 'YYYY-MM', cho per_course: NULL
+  billing_period VARCHAR(7),
+  
+  amount NUMERIC(15,2) NOT NULL DEFAULT 0,
+  discount NUMERIC(15,2) NOT NULL DEFAULT 0,  -- Số tiền giảm giá
+  amount_due NUMERIC(15,2) GENERATED ALWAYS AS (amount - discount) STORED, -- Số tiền phải trả
+  amount_paid NUMERIC(15,2) NOT NULL DEFAULT 0,  -- Đã thu được
+  
+  due_date DATE NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'unpaid', -- unpaid | partial | paid | overdue | waived
+  
+  notes TEXT,
+  created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 2. Bảng Lịch sử thanh toán học phí (Payments)
+CREATE TABLE IF NOT EXISTS payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  tuition_id UUID NOT NULL REFERENCES tuitions(id) ON DELETE CASCADE,
+  
+  amount_paid NUMERIC(15,2) NOT NULL,
+  payment_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  payment_method VARCHAR(30) NOT NULL DEFAULT 'cash', -- cash | bank_transfer | momo | vnpay | stripe | other
+  reference_code VARCHAR(200), -- Mã giao dịch ngân hàng hoặc ví điện tử
+  gateway_response JSONB, -- Dữ liệu phản hồi từ cổng thanh toán (nếu có)
+  
+  received_by UUID REFERENCES users(id) ON DELETE SET NULL,
+  notes TEXT,
+  
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 3. Indexes
+CREATE INDEX IF NOT EXISTS idx_tuitions_tenant_id ON tuitions(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_tuitions_student_id ON tuitions(student_id);
+CREATE INDEX IF NOT EXISTS idx_tuitions_class_id ON tuitions(class_id);
+CREATE INDEX IF NOT EXISTS idx_tuitions_status ON tuitions(status);
+CREATE INDEX IF NOT EXISTS idx_tuitions_due_date ON tuitions(due_date);
+CREATE INDEX IF NOT EXISTS idx_payments_tuition_id ON payments(tuition_id);
+CREATE INDEX IF NOT EXISTS idx_payments_tenant_id ON payments(tenant_id);
+
+-- 4. Trigger tự động cập nhật updated_at
+CREATE OR REPLACE FUNCTION update_tuition_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS tuitions_updated_at ON tuitions;
+CREATE TRIGGER tuitions_updated_at
+  BEFORE UPDATE ON tuitions
+  FOR EACH ROW EXECUTE FUNCTION update_tuition_updated_at();
+
+-- 5. Trigger tự động cập nhật amount_paid và status trong tuitions khi có payment mới
+CREATE OR REPLACE FUNCTION sync_tuition_payment_status()
+RETURNS TRIGGER AS $$
+DECLARE
+  total_paid NUMERIC;
+  tuition_amount_due NUMERIC;
+BEGIN
+  -- Tính tổng đã thu cho tuition này
+  SELECT COALESCE(SUM(amount_paid), 0)
+  INTO total_paid
+  FROM payments
+  WHERE tuition_id = COALESCE(NEW.tuition_id, OLD.tuition_id);
+
+  -- Lấy số tiền phải thu
+  SELECT amount_due INTO tuition_amount_due
+  FROM tuitions
+  WHERE id = COALESCE(NEW.tuition_id, OLD.tuition_id);
+
+  -- Cập nhật tuition
+  UPDATE tuitions
+  SET
+    amount_paid = total_paid,
+    status = CASE
+      WHEN total_paid <= 0 THEN 'unpaid'
+      WHEN total_paid >= tuition_amount_due THEN 'paid'
+      ELSE 'partial'
+    END,
+    updated_at = NOW()
+  WHERE id = COALESCE(NEW.tuition_id, OLD.tuition_id);
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS payments_sync_tuition ON payments;
+CREATE TRIGGER payments_sync_tuition
+  AFTER INSERT OR UPDATE OR DELETE ON payments
+  FOR EACH ROW EXECUTE FUNCTION sync_tuition_payment_status();
+
+
+-- Migration: create_billing_invoices
+-- Quản lý hóa đơn SaaS (thu tiền gói cước từ Tenant)
+
+-- 1. Cập nhật bảng plan_definitions: thêm billing_mode nếu chưa có
+ALTER TABLE plan_definitions 
+  ADD COLUMN IF NOT EXISTS billing_mode VARCHAR(20) NOT NULL DEFAULT 'manual',  -- manual | auto_monthly | auto_one_time
+  ADD COLUMN IF NOT EXISTS stripe_price_id VARCHAR(200),  -- Stripe Price ID cho recurring
+  ADD COLUMN IF NOT EXISTS price_monthly NUMERIC(15,2);   -- Giá tháng (dùng cho VNPay/MoMo)
+
+-- 2. Bảng Hóa đơn SaaS (Billing Invoices)
+CREATE TABLE IF NOT EXISTS billing_invoices (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
+  plan_id UUID NOT NULL REFERENCES plan_definitions(id),
+  
+  amount NUMERIC(15,2) NOT NULL,
+  currency VARCHAR(3) NOT NULL DEFAULT 'VND',
+  
+  -- Cổng thanh toán: manual | vnpay | momo | stripe
+  payment_gateway VARCHAR(20) NOT NULL DEFAULT 'manual',
+  
+  -- Trạng thái: pending | paid | failed | refunded | cancelled
+  status VARCHAR(20) NOT NULL DEFAULT 'pending',
+  
+  -- Dữ liệu từ cổng thanh toán
+  gateway_order_id VARCHAR(200) UNIQUE,     -- ID đơn hàng gửi lên gateway
+  gateway_transaction_id VARCHAR(200),      -- ID giao dịch từ gateway trả về
+  gateway_response JSONB,                   -- Raw response để audit
+  
+  -- Chu kỳ (cho recurring monthly)
+  billing_period_start DATE,
+  billing_period_end DATE,
+  
+  -- Timestamps
+  paid_at TIMESTAMPTZ,
+  expires_at TIMESTAMPTZ,  -- Khi nào gói hết hạn
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 3. Indexes
+CREATE INDEX IF NOT EXISTS idx_billing_invoices_tenant_id ON billing_invoices(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_billing_invoices_status ON billing_invoices(status);
+CREATE INDEX IF NOT EXISTS idx_billing_invoices_gateway_order_id ON billing_invoices(gateway_order_id);
+
+-- 4. Thêm cột billing vào tenants nếu chưa có
+ALTER TABLE tenants
+  ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMPTZ,          -- Khi nào gói hiện tại hết hạn
+  ADD COLUMN IF NOT EXISTS stripe_customer_id VARCHAR(200),      -- Stripe Customer ID
+  ADD COLUMN IF NOT EXISTS stripe_subscription_id VARCHAR(200);  -- Stripe Subscription ID (recurring)
+
+-- 5. Auto-update trigger
+CREATE OR REPLACE FUNCTION update_billing_invoice_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS billing_invoices_updated_at ON billing_invoices;
+CREATE TRIGGER billing_invoices_updated_at
+  BEFORE UPDATE ON billing_invoices
+  FOR EACH ROW EXECUTE FUNCTION update_billing_invoice_updated_at();
+
+
+-- Migration: Create refresh_tokens table for JWT refresh token mechanism
+CREATE TABLE IF NOT EXISTS refresh_tokens (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token       VARCHAR(512) NOT NULL UNIQUE,
+    expires_at  TIMESTAMPTZ NOT NULL,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON refresh_tokens(token);
+
+-- Auto-cleanup: remove expired tokens (optional, can also be done via cron)
+-- Tokens are cleaned up when user logs out or when they expire

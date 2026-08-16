@@ -1,5 +1,6 @@
 import { google } from 'googleapis';
 import pool from '../db';
+import fs from 'fs';
 
 import { config } from '../utils/config';
 
@@ -12,7 +13,10 @@ const oauth2Client = new google.auth.OAuth2(
 export const getAuthUrl = (state: string) => {
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
-    scope: ['https://www.googleapis.com/auth/calendar.events'],
+    scope: [
+      'https://www.googleapis.com/auth/calendar.events',
+      'https://www.googleapis.com/auth/drive.file',
+    ],
     state: state,
     prompt: 'consent', // Để luôn trả về refresh_token
   });
@@ -266,4 +270,76 @@ export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) 
   }
 
   return successCount;
+};
+
+export const uploadBackupToDrive = async (
+  userId: string,
+  folderName: string,
+  filePath: string,
+  fileName: string
+) => {
+  const result = await pool.query(
+    'SELECT google_access_token, google_refresh_token FROM users WHERE id = $1',
+    [userId]
+  );
+
+  const user = result.rows[0];
+  if (!user || (!user.google_access_token && !user.google_refresh_token)) {
+    throw new Error('Google Drive not connected');
+  }
+
+  const client = new google.auth.OAuth2(config.google.clientId(), config.google.clientSecret());
+  client.setCredentials({
+    access_token: user.google_access_token,
+    refresh_token: user.google_refresh_token,
+  });
+
+  const drive = google.drive({ version: 'v3', auth: client });
+
+  // Find or create folder
+  let folderId = null;
+  try {
+    const res = await drive.files.list({
+      q: `mimeType='application/vnd.google-apps.folder' and name='${folderName}' and trashed=false`,
+      fields: 'files(id, name)',
+      spaces: 'drive',
+    });
+    if (res.data.files && res.data.files.length > 0) {
+      folderId = res.data.files[0].id;
+    } else {
+      const folderRes = await drive.files.create({
+        requestBody: {
+          name: folderName,
+          mimeType: 'application/vnd.google-apps.folder',
+        },
+        fields: 'id',
+      });
+      folderId = folderRes.data.id;
+    }
+  } catch (err) {
+    console.error('Error finding/creating folder:', err);
+    throw err;
+  }
+
+  // Upload file
+  try {
+    const fileMetadata = {
+      name: fileName,
+      parents: folderId ? [folderId] : [],
+    };
+    const media = {
+      mimeType: 'application/zip',
+      body: fs.createReadStream(filePath),
+    };
+
+    const file = await drive.files.create({
+      requestBody: fileMetadata,
+      media: media,
+      fields: 'id',
+    });
+    return file.data.id;
+  } catch (err) {
+    console.error('Error uploading file to Drive:', err);
+    throw err;
+  }
 };

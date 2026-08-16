@@ -9,8 +9,10 @@ import HelpWidget from './HelpWidget';
 import NotificationPopover from './NotificationPopover';
 import Sidebar from './Sidebar';
 import FeedbackModal from './FeedbackModal';
+import { useFCM } from '@/features/notifications/hooks/useFCM';
 
 const MainLayout: React.FC = () => {
+  useFCM(); // Initialize FCM notifications
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);

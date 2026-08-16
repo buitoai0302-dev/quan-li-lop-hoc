@@ -9,12 +9,14 @@ import {
   CheckCircle2,
   Circle,
   ArrowRight,
+  UserSquare2,
 } from 'lucide-react';
 
 interface SetupChecklistProps {
   hasCenterInfo?: boolean;
   hasBranches: boolean;
   hasRooms: boolean;
+  hasTeachers: boolean;
   hasClasses: boolean;
 }
 
@@ -22,6 +24,7 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({
   hasCenterInfo = true,
   hasBranches,
   hasRooms,
+  hasTeachers,
   hasClasses,
 }) => {
   const { t } = useTranslation();
@@ -30,7 +33,7 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({
   const steps = [
     {
       id: 'centerInfo',
-      title: t('settings.updateCenterInfo', 'Cập nhật thông tin trung tâm'),
+      title: t('settings.updateCenterInfo', 'Thông tin trung tâm'),
       isCompleted: hasCenterInfo,
       icon: <Settings size={16} />,
       path: '/settings',
@@ -48,6 +51,13 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({
       isCompleted: hasRooms,
       icon: <DoorOpen size={16} />,
       path: '/rooms',
+    },
+    {
+      id: 'teachers',
+      title: t('teachers.addTeacher', 'Thêm giáo viên'),
+      isCompleted: hasTeachers,
+      icon: <UserSquare2 size={16} />,
+      path: '/teachers',
     },
     {
       id: 'classes',
@@ -97,13 +107,13 @@ const SetupChecklist: React.FC<SetupChecklistProps> = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex flex-wrap gap-4">
           {steps.map((step) => (
             <div
               key={step.id}
               onClick={() => !step.isCompleted && navigate(step.path)}
               className={`
-                relative p-5 rounded-xl border-2 transition-all duration-300
+                flex-1 min-w-[180px] sm:min-w-[200px] relative p-5 rounded-xl border-2 transition-all duration-300
                 ${
                   step.isCompleted
                     ? 'border-emerald-100 bg-emerald-50/50 dark:border-emerald-900/30 dark:bg-emerald-900/10'

@@ -39,7 +39,7 @@ export const createPlanRequest = async (req: Request, res: Response) => {
     }
 
     const result = await pool.query(
-      'INSERT INTO plan_requests (tenant_id, plan_id, notes) VALUES ($1, $2, $3) RETURNING *',
+      'INSERT INTO plan_requests (tenant_id, requested_plan_id, notes) VALUES ($1, $2, $3) RETURNING *',
       [tenantId, planId, notes || null]
     );
 
@@ -56,7 +56,7 @@ export const getPlanRequests = async (req: Request, res: Response) => {
       SELECT pr.*, t.name as tenant_name, t.contact_email, pd.name as plan_name 
       FROM plan_requests pr
       JOIN tenants t ON pr.tenant_id = t.id
-      JOIN plan_definitions pd ON pr.plan_id = pd.id
+      JOIN plan_definitions pd ON pr.requested_plan_id = pd.id
       ORDER BY pr.created_at DESC
     `);
     res.json(result.rows);
@@ -84,7 +84,7 @@ export const approvePlanRequest = async (req: Request, res: Response) => {
 
     // Update tenant plan
     await client.query('UPDATE tenants SET plan_id = $1 WHERE id = $2', [
-      request.plan_id,
+      request.requested_plan_id,
       request.tenant_id,
     ]);
 
@@ -139,7 +139,7 @@ export const getPlanRequestStatus = async (req: Request, res: Response) => {
 
   try {
     const result = await pool.query(
-      'SELECT status, plan_id FROM plan_requests WHERE tenant_id = $1 AND status = $2 ORDER BY created_at DESC LIMIT 1',
+      'SELECT status, requested_plan_id as plan_id FROM plan_requests WHERE tenant_id = $1 AND status = $2 ORDER BY created_at DESC LIMIT 1',
       [tenantId, 'pending']
     );
 

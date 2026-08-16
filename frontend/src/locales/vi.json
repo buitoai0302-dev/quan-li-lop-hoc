@@ -76,7 +76,9 @@
       "staff": "Nhân viên",
       "teacher": "Giáo viên",
       "student": "Học sinh"
-    }
+    },
+    "progress": "Tiến độ",
+    "setupNow": "Thiết lập ngay"
   },
   "menu": {
     "dashboard": "Tổng quan",
@@ -92,6 +94,7 @@
     "import": "Nhập dữ liệu",
     "help": "Hướng dẫn",
     "subscription": "Gói dịch vụ",
+    "tuition": "Học phí",
     "settings": "Cài đặt",
     "adminTenants": "Quản lý đối tác",
     "adminPlans": "Cấu hình gói",
@@ -103,7 +106,7 @@
       "management": "Quản lý",
       "tools": "Công cụ",
       "system": "Hệ thống",
-      "admin": "Quản trị tối cao"
+      "admin": "Quản trị hệ thống"
     }
   },
   "dashboard": {
@@ -146,7 +149,9 @@
     "classesLimit": "Lớp học",
     "branchesLimit": "Chi nhánh",
     "readyToTeach": "Sẵn sàng cho ngày làm việc mới!",
-    "teacherWelcomeDesc": "Kiểm tra lịch dạy của bạn hôm nay và chuẩn bị cho các buổi học tuyệt vời."
+    "teacherWelcomeDesc": "Kiểm tra lịch dạy của bạn hôm nay và chuẩn bị cho các buổi học tuyệt vời.",
+    "setupGuide": "Hướng dẫn thiết lập",
+    "setupGuideDesc": "Hoàn thành các bước sau để sẵn sàng sử dụng."
   },
   "import": {
     "title": "Nhập dữ liệu hệ thống",
@@ -352,6 +357,7 @@
     "rejectConfirm": "Bạn có chắc chắn muốn từ chối yêu cầu này? Hành động này không thể hoàn tác.",
     "suspendConfirm": "Trung tâm này sẽ bị tạm dừng truy cập hệ thống cho đến khi được kích hoạt lại.",
     "approve": "Phê duyệt nâng cấp",
+    "approveTenant": "Phê duyệt",
     "reject": "Từ chối",
     "confirm": "Xác nhận",
     "deactivate": "Tạm dừng",
@@ -370,6 +376,19 @@
     "editPlan": "Chỉnh sửa cấu hình gói",
     "plansTitle": "Quản lý cấu hình Gói dịch vụ",
     "savePlan": "Lưu cấu hình gói",
+    "backup": {
+      "title": "Cấu hình Sao lưu Google Drive",
+      "tooltip": "Cấu hình Sao lưu Google Drive",
+      "desc": "Tự động sao lưu dữ liệu trung tâm này lên Drive.",
+      "enable": "Bật tự động sao lưu",
+      "enableDesc": "File backup sẽ được đẩy lên Drive của Super Admin",
+      "cycle": "Chu kỳ",
+      "daily": "Hàng ngày",
+      "weekly": "Hàng tuần",
+      "monthly": "Hàng tháng",
+      "time": "Giờ chạy (00:00 - 23:00)",
+      "save": "Lưu Cấu Hình"
+    },
     "createdAt": "Ngày tạo",
     "limits": "Hạn mức (Quota)",
     "features": "Tính năng mở rộng",
@@ -400,6 +419,76 @@
       "PRO": "Gói Chuyên nghiệp",
       "BUSINESS": "Gói Doanh nghiệp",
       "ENTERPRISE": "Gói Cao cấp"
+    },
+    "users": {
+      "add_user": "Thêm Người dùng",
+      "search_placeholder": "Tìm theo email hoặc tên...",
+      "all_roles": "Tất cả Quyền",
+      "all_tenants": "Tất cả Trung tâm",
+      "table": {
+        "user": "Người dùng",
+        "role": "Quyền",
+        "tenant": "Trung tâm",
+        "status": "Trạng thái",
+        "actions": "Hành động",
+        "empty": "Không tìm thấy người dùng nào",
+        "system": "Hệ thống"
+      },
+      "roles": {
+        "super_admin": "Super Admin (Toàn quyền hệ thống)",
+        "admin": "Admin (Chủ trung tâm)",
+        "staff": "Nhân viên",
+        "teacher": "Giáo viên",
+        "student": "Học viên"
+      },
+      "status": {
+        "active": "Đang hoạt động",
+        "locked": "Đã khóa"
+      },
+      "modal": {
+        "create_title": "Thêm Người Dùng",
+        "reset_title": "Cấp lại Mật khẩu",
+        "success": "Thành công!",
+        "user_created": "Tài khoản {{email}} đã được tạo.",
+        "password_created": "Mật khẩu mới đã được tạo cho {{email}}.",
+        "password_label": "Mật khẩu",
+        "new_password_label": "Mật khẩu mới",
+        "tenant": "Trung tâm (Tenant)",
+        "select_tenant": "-- Chọn Trung tâm --",
+        "new_tenant": "[+] Tạo Trung tâm mới",
+        "new_tenant_name": "Tên Trung tâm mới",
+        "new_tenant_placeholder": "Nhập tên trung tâm...",
+        "plan": "Gói cước (Plan)",
+        "role": "Quyền",
+        "fullname": "Họ tên",
+        "fullname_placeholder": "Nhập họ và tên...",
+        "email": "Email",
+        "email_placeholder": "Nhập địa chỉ email...",
+        "password_placeholder": "Để trống để tự tạo ngẫu nhiên",
+        "reset_notice_1": "Bạn đang cấp lại mật khẩu cho tài khoản ",
+        "reset_notice_2": ""
+      },
+      "buttons": {
+        "copy": "Copy",
+        "close": "Đóng",
+        "cancel": "Hủy",
+        "create": "Tạo Tài khoản",
+        "reset": "Cấp lại Mật khẩu",
+        "random": "Ngẫu nhiên"
+      },
+      "messages": {
+        "create_success": "Tạo người dùng thành công",
+        "reset_success": "Đã cấp lại mật khẩu",
+        "status_success": "Cập nhật trạng thái thành công",
+        "copy_success": "Đã sao chép vào khay nhớ tạm",
+        "confirm_lock": "Bạn có chắc muốn khóa tài khoản {{email}}?",
+        "confirm_unlock": "Bạn có chắc muốn mở khóa tài khoản {{email}}?"
+      },
+      "tooltip": {
+        "reset": "Cấp lại mật khẩu",
+        "lock": "Khóa tài khoản",
+        "unlock": "Mở khóa"
+      }
     }
   },
   "attendance": {
@@ -488,7 +577,9 @@
     "scheduleNote": "Ghi chú buổi học...",
     "selectRoom": "Chọn phòng",
     "selectStudent": "Chọn học sinh để thêm...",
-    "noStudents": "Chưa có học sinh trong lớp"
+    "noStudents": "Chưa có học sinh trong lớp",
+    "createFirstClass": "Tạo lớp học đầu tiên",
+    "noClasses": "Chưa có lớp học nào"
   },
   "rooms": {
     "title": "Quản lý Phòng học",
@@ -502,7 +593,9 @@
     "meeting": "Phòng họp",
     "unknown": "Chưa xác định",
     "noData": "Chưa có phòng học nào",
-    "namePlaceholder": "Tên phòng..."
+    "namePlaceholder": "Tên phòng...",
+    "capacityPlaceholder": "Sức chứa...",
+    "createFirstRoom": "Thêm phòng học đầu tiên của bạn"
   },
   "teachers": {
     "title": "Quản lý Giáo viên",
@@ -515,7 +608,8 @@
     "noData": "Chưa có giáo viên nào",
     "professional": "Chuyên môn",
     "namePlaceholder": "Họ và tên giáo viên...",
-    "specPlaceholder": "Lĩnh vực chuyên môn..."
+    "specPlaceholder": "Lĩnh vực chuyên môn...",
+    "createFirstTeacher": "Thêm giáo viên đầu tiên của bạn"
   },
   "branches": {
     "title": "Quản lý Chi nhánh",
@@ -527,7 +621,8 @@
     "noData": "Chưa có chi nhánh nào",
     "location": "Địa điểm",
     "namePlaceholder": "Tên chi nhánh...",
-    "addressPlaceholder": "Địa chỉ đầy đủ..."
+    "addressPlaceholder": "Địa chỉ đầy đủ...",
+    "createFirstBranch": "Thêm chi nhánh đầu tiên của bạn"
   },
   "auth": {
     "loginTitle": "Đăng nhập hệ thống",
@@ -660,7 +755,8 @@
     "apiWarning": "Tuyệt đối không chia sẻ API Key này. Bất kỳ ai có mã này đều có quyền truy cập dữ liệu của bạn.",
     "menuConfig": "Cấu hình Menu & Tính năng",
     "menuConfigDesc": "Bật hoặc tắt các mục trong menu để tinh chỉnh giao diện cho phù hợp với nhu cầu của trung tâm bạn.",
-    "quickGuide": "Hướng dẫn nhanh"
+    "quickGuide": "Hướng dẫn nhanh",
+    "updateCenterInfo": "Thông tin trung tâm"
   },
   "onboarding": {
     "welcome": "Chào mừng",
@@ -686,7 +782,8 @@
     "noData": "Chưa có học sinh nào. Hãy thêm mới!",
     "noEnrollments": "Chưa có học sinh nào trong lớp này",
     "namePlaceholder": "Họ và tên...",
-    "selectStudent": "Chọn học sinh..."
+    "selectStudent": "Chọn học sinh...",
+    "createFirstStudent": "Thêm học viên đầu tiên của bạn"
   },
   "errors": {
     "INTERNAL_ERROR": "Lỗi hệ thống. Vui lòng thử lại sau.",
@@ -794,5 +891,103 @@
     "desc": "Cài đặt ứng dụng vào màn hình chính để truy cập nhanh hơn và trải nghiệm mượt mà như một ứng dụng gốc.",
     "install": "Cài đặt ngay",
     "later": "Lúc khác"
+  },
+  "tuition": {
+    "title": "Quản lý Học phí",
+    "subtitle": "Theo dõi và quản lý thu học phí",
+    "totalDue": "Tổng phải thu",
+    "totalPaid": "Đã thu",
+    "totalOutstanding": "Còn nợ",
+    "totalReceipts": "Số phiếu",
+    "searchPlaceholder": "Tìm theo tên học sinh hoặc lớp...",
+    "allStatus": "Tất cả trạng thái",
+    "bulkGenerate": "Tạo hàng loạt",
+    "emptyState": "Chưa có khoản học phí nào",
+    "student": "Học sinh",
+    "classPeriod": "Lớp / Kỳ",
+    "amount": "Số tiền",
+    "paid": "Đã thu",
+    "dueDate": "Hạn thu",
+    "status": "Trạng thái",
+    "actions": "Thao tác",
+    "discount": "Giảm giá",
+    "remaining": "Còn lại",
+    "collectMoney": "Thu tiền",
+    "viewReceipt": "Xem biên lai",
+    "deleteTitle": "Xóa khoản học phí",
+    "deleteConfirm": "Bạn có chắc chắn muốn xóa khoản học phí này?",
+    "statusLabels": {
+      "unpaid": "Chưa thu",
+      "partial": "Còn thiếu",
+      "paid": "Đã thu đủ",
+      "overdue": "Quá hạn",
+      "waived": "Miễn giảm"
+    },
+    "paymentMethods": {
+      "cash": "Tiền mặt",
+      "bank_transfer": "Chuyển khoản",
+      "momo": "MoMo",
+      "vnpay": "VNPay",
+      "stripe": "Stripe",
+      "other": "Khác"
+    },
+    "bulk": {
+      "title": "Tạo học phí hàng loạt",
+      "subtitle": "Tạo cho toàn bộ học sinh trong lớp",
+      "class": "Lớp học",
+      "selectClass": "-- Chọn lớp học --",
+      "classRequired": "Vui lòng chọn lớp",
+      "period": "Kỳ học phí",
+      "selectPeriod": "-- Chọn tháng --",
+      "periodRequired": "Chọn kỳ học phí",
+      "dueDate": "Hạn thu tiền",
+      "dueDateRequired": "Chọn hạn thu",
+      "amount": "Học phí (VNĐ)",
+      "amountRequired": "Nhập số tiền",
+      "discount": "Giảm giá (VNĐ)",
+      "notes": "Ghi chú",
+      "notesPlaceholder": "Học phí tháng 8/2026...",
+      "skipExisting": "Bỏ qua học sinh đã có học phí trong kỳ này",
+      "cancel": "Hủy",
+      "submit": "Tạo học phí",
+      "submitting": "Đang tạo..."
+    },
+    "payment": {
+      "title": "Ghi nhận thanh toán",
+      "amountDue": "Số tiền cần thu",
+      "amountPaid": "Đã thu trước đó",
+      "remaining": "Còn lại phải thu",
+      "amount": "Số tiền thanh toán",
+      "amountRequired": "Vui lòng nhập số tiền",
+      "method": "Hình thức thanh toán",
+      "methodRequired": "Chọn hình thức",
+      "reference": "Mã giao dịch / Ghi chú",
+      "cancel": "Hủy",
+      "submit": "Lưu thanh toán",
+      "submitting": "Đang xử lý..."
+    },
+    "receipt": {
+      "title": "Biên lai học phí",
+      "print": "In biên lai",
+      "receiptSubtitle": "Biên lai thu học phí",
+      "printDate": "Ngày in",
+      "paymentHistory": "Lịch sử thanh toán",
+      "date": "Ngày",
+      "method": "Hình thức",
+      "amount": "Số tiền",
+      "thanks": "Cảm ơn bạn đã tin tưởng sử dụng dịch vụ!"
+    }
+  },
+  "billingReturn": {
+    "processing": "Đang xử lý kết quả...",
+    "wait": "Vui lòng đợi trong giây lát",
+    "successTitle": "Thanh toán thành công",
+    "successDesc": "Cảm ơn bạn! Gói dịch vụ của bạn đã được kích hoạt thành công.",
+    "homeBtn": "Về trang chủ",
+    "failedTitle": "Giao dịch thất bại",
+    "failedDesc": "Giao dịch của bạn không thành công hoặc đã bị hủy. Vui lòng thử lại.",
+    "backBtn": "Quay lại quản lý gói",
+    "payVnpay": "Thanh toán qua VNPay",
+    "payMomo": "Thanh toán qua MoMo"
   }
 }

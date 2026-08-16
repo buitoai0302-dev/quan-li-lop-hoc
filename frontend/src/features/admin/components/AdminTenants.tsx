@@ -13,6 +13,9 @@ import {
   Clock,
   Crown,
   Search,
+  LogIn,
+  Cloud,
+  Save,
 } from 'lucide-react';
 import { Modal, Card, Button, Badge } from '@/components/common/UI';
 import { TENANT_STATUS, PLAN_CODES, TENANT_ACTIONS, SYSTEM_DOMAIN } from '@/utils/constants';
@@ -37,6 +40,13 @@ const AdminTenants: React.FC = () => {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [newPlanId, setNewPlanId] = useState('');
+
+  const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
+  const [backupSettings, setBackupSettings] = useState({
+    enabled: false,
+    cycle: 'daily',
+    time: '02:00',
+  });
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -92,6 +102,34 @@ const AdminTenants: React.FC = () => {
     );
   };
 
+  const handleOpenBackupModal = (tenant: Tenant) => {
+    setSelectedTenant(tenant);
+    setBackupSettings({
+      enabled: tenant.settings?.backup?.enabled || false,
+      cycle: tenant.settings?.backup?.cycle || 'daily',
+      time: tenant.settings?.backup?.time || '02:00',
+    });
+    setIsBackupModalOpen(true);
+  };
+
+  const handleUpdateBackup = () => {
+    if (!selectedTenant) return;
+    const newSettings = {
+      ...(selectedTenant.settings || {}),
+      backup: backupSettings,
+    };
+    updateTenantMutate(
+      { id: selectedTenant.id, data: { settings: newSettings } as any },
+      {
+        onSuccess: () => {
+          toast.success(t('common.success'));
+          setIsBackupModalOpen(false);
+        },
+        onError: (error: any) => handleApiError(error, t),
+      }
+    );
+  };
+
   if (loading) return <PageLoading />;
 
   return (
@@ -115,19 +153,19 @@ const AdminTenants: React.FC = () => {
             <StatCard
               label={t('admin.stats.totalTenants')}
               value={stats?.totalTenants}
-              icon={<Building size={16} />}
+              icon={<Building size={14} className="sm:w-[16px] sm:h-[16px]" />}
               color="blue"
             />
             <StatCard
               label={t('admin.stats.totalUsers')}
               value={stats?.totalUsers}
-              icon={<Users size={16} />}
+              icon={<Users size={14} className="sm:w-[16px] sm:h-[16px]" />}
               color="indigo"
             />
             <StatCard
               label={t('admin.stats.totalSessions')}
               value={stats?.totalSessions}
-              icon={<Calendar size={16} />}
+              icon={<Calendar size={14} className="sm:w-[16px] sm:h-[16px]" />}
               color="emerald"
               className="col-span-2 md:col-span-1"
             />
@@ -159,19 +197,19 @@ const AdminTenants: React.FC = () => {
               <table className="w-full text-left">
                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 shadow-sm">
                   <tr>
-                    <th className="px-4 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.organization')}
                     </th>
-                    <th className="hidden sm:table-cell px-4 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="hidden sm:table-cell px-2 py-2 sm:px-4 sm:py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.plan')}
                     </th>
-                    <th className="hidden sm:table-cell px-4 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="hidden sm:table-cell px-2 py-2 sm:px-4 sm:py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.userCount')} / {t('admin.branchCount')}
                     </th>
-                    <th className="px-4 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.status')}
                     </th>
-                    <th className="px-4 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
                       {t('common.actions')}
                     </th>
                   </tr>
@@ -192,9 +230,9 @@ const AdminTenants: React.FC = () => {
                         key={tenant.id}
                         className="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group"
                       >
-                        <td className="px-4 py-4 sm:px-6 sm:py-5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 border border-gray-100 dark:border-gray-700 group-hover:scale-105 transition-transform shrink-0">
+                        <td className="px-2 py-2.5 sm:px-4 sm:py-4">
+                          <div className="flex items-center gap-2 sm:gap-3">
+                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-gray-50 dark:bg-gray-800 flex items-center justify-center text-gray-400 border border-gray-100 dark:border-gray-700 group-hover:scale-105 transition-transform shrink-0">
                               <Building size={20} />
                             </div>
                             <div className="min-w-0">
@@ -226,14 +264,14 @@ const AdminTenants: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="hidden sm:table-cell px-4 py-4 sm:px-6 sm:py-5">
+                        <td className="hidden sm:table-cell px-2 py-2.5 sm:px-4 sm:py-4">
                           <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 truncate uppercase tracking-tighter">
                             {t(`admin.planNames.${(tenant.plan_code || 'FREE').toUpperCase()}`, {
                               defaultValue: tenant.plan_code || 'FREE',
                             })}
                           </span>
                         </td>
-                        <td className="hidden sm:table-cell px-4 py-4 sm:px-6 sm:py-5 whitespace-nowrap text-xs font-bold text-gray-600 dark:text-gray-400">
+                        <td className="hidden sm:table-cell px-2 py-2.5 sm:px-4 sm:py-4 whitespace-nowrap text-xs font-bold text-gray-600 dark:text-gray-400">
                           <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4">
                             <span className="flex items-center gap-1.5">
                               <Users size={14} className="text-primary" /> {tenant.user_count}
@@ -243,14 +281,18 @@ const AdminTenants: React.FC = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="px-4 py-4 sm:px-6 sm:py-5">
+                        <td className="px-2 py-2.5 sm:px-4 sm:py-4">
                           <StatusBadge status={tenant.status} t={t} />
                         </td>
-                        <td className="px-4 py-4 sm:px-6 sm:py-5 text-right">
+                        <td className="px-2 py-2.5 sm:px-4 sm:py-4 text-right">
                           <div className="flex justify-end gap-1.5">
                             {tenant.domain === SYSTEM_DOMAIN ? (
-                              <div className="flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg text-[10px] font-black uppercase tracking-widest border border-gray-200 dark:border-gray-700">
-                                <Shield size={14} /> {t('common.roles.super_admin')}
+                              <div className="flex items-center gap-1 sm:gap-2 px-2 py-1 bg-gray-100 dark:bg-gray-800 text-gray-400 rounded-lg text-[8px] sm:text-[10px] font-black uppercase tracking-widest border border-gray-200 dark:border-gray-700">
+                                <Shield size={12} className="sm:w-[14px] sm:h-[14px]" />{' '}
+                                <span className="hidden sm:inline">
+                                  {t('common.roles.super_admin')}
+                                </span>
+                                <span className="sm:hidden">SYSTEM</span>
                               </div>
                             ) : (
                               <>
@@ -260,12 +302,12 @@ const AdminTenants: React.FC = () => {
                                       setConfirmModal({
                                         isOpen: true,
                                         tenant,
-                                        action: TENANT_ACTIONS.APPROVE,
+                                        action: TENANT_ACTIONS.ACTIVATE,
                                       })
                                     }
-                                    className="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
+                                    className="px-2 py-1.5 sm:px-4 sm:py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
                                   >
-                                    {t('admin.approve')}
+                                    {t('admin.activate', 'Duyệt')}
                                   </button>
                                 )}
                                 {tenant.status === TENANT_STATUS.ACTIVE && (
@@ -275,20 +317,32 @@ const AdminTenants: React.FC = () => {
                                       localStorage.setItem('impersonatedTenantName', tenant.name);
                                       window.location.href = '/';
                                     }}
-                                    className="px-3 h-9 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/20 flex items-center justify-center"
-                                    title={t('admin.manageTenant', 'Quản lý Center')}
+                                    className="px-2 sm:px-3 h-8 sm:h-9 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/20 flex items-center justify-center"
+                                    title={t('admin.loginAsTenant', 'Đăng nhập với quyền đối tác')}
                                   >
-                                    {t('admin.manage', 'Quản lý')}
+                                    <LogIn size={14} className="mr-0 sm:mr-1.5" />
+                                    <span className="hidden sm:inline">
+                                      {t('admin.login', 'Đăng nhập')}
+                                    </span>
                                   </button>
                                 )}
                                 {tenant.status !== TENANT_STATUS.PENDING && (
-                                  <button
-                                    onClick={() => handleOpenPlanModal(tenant)}
-                                    className="w-9 h-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg transition-all"
-                                    title={t('admin.changePlan')}
-                                  >
-                                    <Zap size={18} />
-                                  </button>
+                                  <>
+                                    <button
+                                      onClick={() => handleOpenPlanModal(tenant)}
+                                      className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg transition-all shrink-0"
+                                      title={t('admin.changePlan')}
+                                    >
+                                      <Zap size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                    </button>
+                                    <button
+                                      onClick={() => handleOpenBackupModal(tenant)}
+                                      className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-all shrink-0"
+                                      title={t('admin.backup.tooltip')}
+                                    >
+                                      <Cloud size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                    </button>
+                                  </>
                                 )}
                                 <button
                                   onClick={() =>
@@ -302,7 +356,7 @@ const AdminTenants: React.FC = () => {
                                           : TENANT_ACTIONS.ACTIVATE,
                                     })
                                   }
-                                  className={`w-9 h-9 flex items-center justify-center rounded-lg transition-all ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
+                                  className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg transition-all shrink-0 ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
                                   title={
                                     tenant.status === TENANT_STATUS.ACTIVE ||
                                     tenant.status === TENANT_STATUS.PENDING
@@ -471,6 +525,97 @@ const AdminTenants: React.FC = () => {
           </div>
         </div>
       </Modal>
+      {/* Backup Settings Modal */}
+      <Modal
+        isOpen={isBackupModalOpen}
+        onClose={() => setIsBackupModalOpen(false)}
+        title={t('admin.backup.title')}
+      >
+        <div className="p-4 space-y-6">
+          <div className="flex items-center gap-4 p-5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
+            <div className="w-12 h-12 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-600 shadow-sm border border-blue-500/10">
+              <Cloud size={24} />
+            </div>
+            <div>
+              <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mb-0.5">
+                {t('admin.tenantName')}
+              </p>
+              <p className="text-lg font-black text-gray-900 dark:text-white leading-tight truncate">
+                {selectedTenant?.name}
+              </p>
+              <p className="text-[10px] text-blue-600 mt-1 font-medium">{t('admin.backup.desc')}</p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <label className="flex items-center gap-3 p-4 border border-gray-200 dark:border-gray-700 rounded-xl cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+              <input
+                type="checkbox"
+                checked={backupSettings.enabled}
+                onChange={(e) =>
+                  setBackupSettings({ ...backupSettings, enabled: e.target.checked })
+                }
+                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+              />
+              <div>
+                <div className="font-bold text-gray-900 dark:text-white text-sm">
+                  {t('admin.backup.enable')}
+                </div>
+                <div className="text-xs text-gray-500">{t('admin.backup.enableDesc')}</div>
+              </div>
+            </label>
+
+            {backupSettings.enabled && (
+              <div className="grid grid-cols-2 gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900/50">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                    {t('admin.backup.cycle')}
+                  </label>
+                  <select
+                    value={backupSettings.cycle}
+                    onChange={(e) =>
+                      setBackupSettings({ ...backupSettings, cycle: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                  >
+                    <option value="daily">{t('admin.backup.daily')}</option>
+                    <option value="weekly">{t('admin.backup.weekly')}</option>
+                    <option value="monthly">{t('admin.backup.monthly')}</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                    {t('admin.backup.time')}
+                  </label>
+                  <input
+                    type="time"
+                    step="3600"
+                    value={backupSettings.time}
+                    onChange={(e) => setBackupSettings({ ...backupSettings, time: e.target.value })}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setIsBackupModalOpen(false)}
+              className="flex-1 uppercase tracking-widest text-xs"
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button
+              onClick={handleUpdateBackup}
+              className="flex-1 uppercase tracking-widest text-xs bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Save size={16} className="mr-2" /> {t('admin.backup.save')}
+            </Button>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -492,18 +637,18 @@ const StatCard: React.FC<{
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 p-3 sm:p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all hover:scale-[1.02] duration-300 flex items-center gap-2.5 sm:gap-3 ${className}`}
+      className={`bg-white dark:bg-gray-800 p-2.5 sm:p-4 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 transition-all hover:scale-[1.02] duration-300 flex items-center gap-2 sm:gap-3 ${className}`}
     >
       <div
-        className={`p-2 sm:p-2.5 rounded-lg sm:rounded-xl border shrink-0 ${colors[color] || colors.blue}`}
+        className={`p-1.5 sm:p-2.5 rounded-lg sm:rounded-xl border shrink-0 ${colors[color] || colors.blue}`}
       >
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[9px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0 sm:mb-0.5 truncate leading-tight">
+        <p className="text-[8px] sm:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0 sm:mb-0.5 truncate leading-tight">
           {label}
         </p>
-        <h3 className="text-lg sm:text-xl font-black text-gray-900 dark:text-white tracking-tighter truncate leading-none mt-0.5 sm:mt-0">
+        <h3 className="text-base sm:text-xl font-black text-gray-900 dark:text-white tracking-tighter truncate leading-none mt-0.5 sm:mt-0">
           {value || 0}
         </h3>
       </div>
@@ -514,21 +659,32 @@ const StatCard: React.FC<{
 const StatusBadge: React.FC<{ status: string; t: any }> = ({ status, t }) => {
   if (status === TENANT_STATUS.ACTIVE) {
     return (
-      <Badge variant="success" className="gap-1.5 px-3 py-1 text-[10px]">
-        <CheckCircle size={12} /> {t('admin.statusActive')}
+      <Badge
+        variant="success"
+        className="gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1 text-[8px] sm:text-[10px] whitespace-nowrap"
+      >
+        <CheckCircle size={10} className="sm:w-3 sm:h-3" /> {t('admin.statusActive')}
       </Badge>
     );
   }
   if (status === TENANT_STATUS.PENDING) {
     return (
-      <Badge variant="warning" className="gap-1.5 px-3 py-1 text-[10px]">
-        <Clock size={12} /> {t('common.pending')}
+      <Badge
+        variant="warning"
+        className="gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1 text-[8px] sm:text-[10px] whitespace-nowrap"
+      >
+        <Clock size={10} className="sm:w-3 sm:h-3" />{' '}
+        <span className="hidden sm:inline">{t('admin.statusPending', 'Chờ xác thực Email')}</span>
+        <span className="sm:hidden">CHỜ DUYỆT</span>
       </Badge>
     );
   }
   return (
-    <Badge variant="destructive" className="gap-1.5 px-3 py-1 text-[10px]">
-      <XCircle size={12} /> {t('admin.statusDisabled')}
+    <Badge
+      variant="destructive"
+      className="gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1 text-[8px] sm:text-[10px] whitespace-nowrap"
+    >
+      <XCircle size={10} className="sm:w-3 sm:h-3" /> {t('admin.statusDisabled')}
     </Badge>
   );
 };

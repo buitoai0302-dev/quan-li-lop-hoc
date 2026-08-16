@@ -11,6 +11,7 @@ interface PlanCardProps {
   isSubmitting: boolean;
   pendingPlanId: string | null;
   onUpgrade: (planId: string, planName: string) => void;
+  onPayment?: (planId: string, gateway: 'vnpay' | 'momo') => void;
   t: TFunction;
 }
 
@@ -21,6 +22,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
   isSubmitting,
   pendingPlanId,
   onUpgrade,
+  onPayment,
   t,
 }) => {
   const isFree = plan.code === PLAN_CODES.FREE;
@@ -166,25 +168,51 @@ const PlanCard: React.FC<PlanCardProps> = ({
         </ul>
       </div>
 
-      <button
-        disabled={isCurrent || isSubmitting || plan.id === pendingPlanId}
-        onClick={() => onUpgrade(plan.id, plan.name)}
-        className={`w-full py-4 px-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl ${
-          isCurrent || isSubmitting || plan.id === pendingPlanId
-            ? 'bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-default shadow-none'
-            : 'bg-primary text-white hover:bg-primary-dark hover:scale-[1.02] active:scale-95 shadow-primary/20'
-        }`}
-      >
-        {isSubmitting
-          ? t('common.sending')
-          : plan.id === pendingPlanId
-            ? t('subscription.pending')
-            : isCurrent
-              ? t('subscription.current')
-              : isFree
-                ? t('subscription.downgrade')
-                : t('subscription.upgrade')}
-      </button>
+      {isSubmitting || plan.id === pendingPlanId || isCurrent ? (
+        <button
+          disabled
+          className={`w-full py-4 px-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-default shadow-none`}
+        >
+          {isSubmitting
+            ? t('common.sending')
+            : plan.id === pendingPlanId
+              ? t('subscription.pending')
+              : t('subscription.current')}
+        </button>
+      ) : isFree ? (
+        <button
+          onClick={() => onUpgrade(plan.id, plan.name)}
+          className="w-full py-4 px-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl bg-primary text-white hover:bg-primary-dark hover:scale-[1.02] active:scale-95 shadow-primary/20"
+        >
+          {t('subscription.downgrade')}
+        </button>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {onPayment ? (
+            <>
+              <button
+                onClick={() => onPayment(plan.id, 'vnpay')}
+                className="w-full py-3 px-4 rounded-xl font-bold text-xs transition-all bg-[#005BAA] text-white hover:bg-[#004a8a] active:scale-95 flex items-center justify-center gap-2"
+              >
+                {t('billingReturn.payVnpay')}
+              </button>
+              <button
+                onClick={() => onPayment(plan.id, 'momo')}
+                className="w-full py-3 px-4 rounded-xl font-bold text-xs transition-all bg-[#A50064] text-white hover:bg-[#850050] active:scale-95 flex items-center justify-center gap-2"
+              >
+                {t('billingReturn.payMomo')}
+              </button>
+            </>
+          ) : (
+            <button
+              onClick={() => onUpgrade(plan.id, plan.name)}
+              className="w-full py-4 px-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl bg-primary text-white hover:bg-primary-dark hover:scale-[1.02] active:scale-95 shadow-primary/20"
+            >
+              {t('subscription.upgrade')}
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 };

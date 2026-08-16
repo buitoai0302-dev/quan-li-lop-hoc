@@ -6,7 +6,8 @@ export const getAdminTenants = () => api.get<Tenant[]>('/admin/tenants').then((r
 export const getAdminPlans = () => api.get<Plan[]>('/admin/plans').then((res) => res.data);
 export const getAdminStats = () => api.get<AdminStats>('/admin/stats').then((res) => res.data);
 
-export const updateTenant = (id: string, data: Partial<Tenant>) => api.patch(`/admin/tenants/${id}`, data);
+export const updateTenant = (id: string, data: Partial<Tenant>) =>
+  api.patch(`/admin/tenants/${id}`, data);
 export const updatePlan = (id: string, data: Partial<Plan>) => api.put(`/admin/plans/${id}`, data);
 
 export const getPlanRequests = () =>
@@ -26,3 +27,28 @@ export const getActivities = (page: number, limit: number = 20) =>
       };
     }>(`/dashboard/activities?page=${page}&limit=${limit}`)
     .then((res) => res.data);
+
+// ─── User Management ────────────────────────────────────────────────────────
+export interface AdminUser {
+  id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  is_active: boolean;
+  is_email_verified: boolean;
+  created_at: string;
+  tenant_id: string;
+  tenant_name: string;
+}
+
+export const getAdminUsers = (params?: { search?: string; role?: string; tenant_id?: string }) =>
+  api.get<AdminUser[]>('/admin/users', { params }).then((res) => res.data);
+
+export const createAdminUser = (data: any) =>
+  api.post('/admin/users', data).then((res) => res.data);
+
+export const resetAdminUserPassword = (id: string, data: any) =>
+  api.post(`/admin/users/${id}/reset-password`, data).then((res) => res.data);
+
+export const toggleAdminUserStatus = (id: string) =>
+  api.patch(`/admin/users/${id}/status`).then((res) => res.data);

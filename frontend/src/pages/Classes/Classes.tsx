@@ -344,38 +344,7 @@ const Classes: React.FC = () => {
                   : t('classes.createFirstClass')
               }
               showArrow={!(searchQuery || branchFilter)}
-              illustration={
-                <svg
-                  viewBox="0 0 200 200"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="w-48 h-48 mx-auto"
-                >
-                  <rect
-                    x="30"
-                    y="50"
-                    width="140"
-                    height="100"
-                    rx="12"
-                    className="fill-blue-50 dark:fill-blue-900/20 stroke-blue-200 dark:stroke-blue-800"
-                    strokeWidth="4"
-                  />
-                  <path
-                    d="M70 90h60M70 110h40"
-                    className="stroke-blue-300 dark:stroke-blue-700"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                  />
-                  <circle cx="130" cy="120" r="12" className="fill-blue-400 dark:fill-blue-600" />
-                  <path
-                    d="M125 120l3 3 6-6"
-                    stroke="white"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              }
+              icon={BookOpen}
               action={
                 !(searchQuery || branchFilter) ? (
                   <button

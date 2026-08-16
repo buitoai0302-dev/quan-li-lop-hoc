@@ -321,26 +321,7 @@ const Students: React.FC = () => {
                 : t('students.createFirstStudent', 'Thêm học viên đầu tiên của bạn')
             }
             showArrow={!(searchQuery || branchFilter)}
-            illustration={
-              <svg
-                viewBox="0 0 200 200"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-48 h-48 mx-auto"
-              >
-                <circle
-                  cx="100"
-                  cy="100"
-                  r="60"
-                  className="fill-indigo-50 dark:fill-indigo-900/20 stroke-indigo-200 dark:stroke-indigo-800"
-                  strokeWidth="4"
-                />
-                <path
-                  d="M100 70c-11 0-20 9-20 20s9 20 20 20 20-9 20-20-9-20-20-20zm0 45c-15 0-45 7.5-45 22.5V145h90v-7.5c0-15-30-22.5-45-22.5z"
-                  className="fill-indigo-300 dark:fill-indigo-700"
-                />
-              </svg>
-            }
+            icon={Users}
             action={
               !(searchQuery || branchFilter) ? (
                 <button

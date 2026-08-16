@@ -3,6 +3,7 @@ import { X, Printer, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 import type { Tuition } from '../api/tuition.api';
 import { useTuitionPayments } from '../hooks/useTuition';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   tuition: Tuition;
@@ -12,17 +13,18 @@ interface Props {
 const formatCurrency = (amount: number | string) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount));
 
-const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  cash: 'Tiền mặt',
-  bank_transfer: 'Chuyển khoản',
-  momo: 'MoMo',
-  vnpay: 'VNPay',
-  stripe: 'Stripe',
-  other: 'Khác',
-};
+const getPaymentMethodLabels = (t: any) => ({
+  cash: t('tuition.paymentMethods.cash'),
+  bank_transfer: t('tuition.paymentMethods.bank_transfer'),
+  momo: t('tuition.paymentMethods.momo'),
+  vnpay: t('tuition.paymentMethods.vnpay'),
+  stripe: t('tuition.paymentMethods.stripe'),
+  other: t('tuition.paymentMethods.other'),
+});
 
 const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
   const { user } = useAuth();
+  const { t } = useTranslation();
   const receiptRef = useRef<HTMLDivElement>(null);
   const { data: payments = [] } = useTuitionPayments(tuition.id);
 
@@ -35,7 +37,7 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
     win.document.write(`
       <html>
       <head>
-        <title>Biên lai học phí - ${tuition.student_name}</title>
+        <title>${t('tuition.receipt.title')} - ${tuition.student_name}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { font-family: 'Arial', sans-serif; padding: 20px; color: #1a1a1a; }
@@ -82,11 +84,11 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
 
   const statusLabel =
     {
-      paid: 'Đã thu đủ',
-      partial: 'Còn thiếu',
-      unpaid: 'Chưa thu',
-      overdue: 'Quá hạn',
-      waived: 'Miễn giảm',
+      paid: t('tuition.statusLabels.paid'),
+      partial: t('tuition.statusLabels.partial'),
+      unpaid: t('tuition.statusLabels.unpaid'),
+      overdue: t('tuition.statusLabels.overdue'),
+      waived: t('tuition.statusLabels.waived'),
     }[tuition.status] || tuition.status;
 
   return (
@@ -95,13 +97,15 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
       <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg border border-gray-100 dark:border-slate-700 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-slate-800 shrink-0">
-          <h2 className="text-base font-black text-gray-900 dark:text-white">Biên lai học phí</h2>
+          <h2 className="text-base font-black text-gray-900 dark:text-white">
+            {t('tuition.receipt.title')}
+          </h2>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
               className="flex items-center gap-1.5 px-3 py-2 bg-primary/10 text-primary font-bold text-sm rounded-xl hover:bg-primary/20 transition-colors"
             >
-              <Printer size={16} /> In biên lai
+              <Printer size={16} /> {t('tuition.receipt.print')}
             </button>
             <button
               onClick={onClose}
@@ -120,19 +124,19 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
               <h1 className="text-xl font-black text-blue-700">
                 {user?.tenant_name || 'EduSchedule'}
               </h1>
-              <p className="text-xs text-gray-500 mt-1">Biên lai thu học phí</p>
+              <p className="text-xs text-gray-500 mt-1">{t('tuition.receipt.receiptSubtitle')}</p>
               <p className="text-xs text-gray-400">
-                Ngày in: {new Date().toLocaleDateString('vi-VN')}
+                {t('tuition.receipt.printDate')}: {new Date().toLocaleDateString('vi-VN')}
               </p>
             </div>
 
             {/* Student Info */}
             <div className="space-y-2 mb-4">
               {[
-                ['Học sinh', tuition.student_name],
-                ['Lớp học', tuition.class_name || '—'],
-                ['Kỳ học phí', tuition.billing_period || '—'],
-                ['Hạn thu', new Date(tuition.due_date).toLocaleDateString('vi-VN')],
+                [t('tuition.student'), tuition.student_name],
+                [t('tuition.bulk.class'), tuition.class_name || '—'],
+                [t('tuition.bulk.period'), tuition.billing_period || '—'],
+                [t('tuition.dueDate'), new Date(tuition.due_date).toLocaleDateString('vi-VN')],
               ].map(([label, value]) => (
                 <div key={label} className="flex justify-between text-sm">
                   <span className="text-gray-500">{label}</span>
@@ -146,30 +150,30 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
             {/* Amount */}
             <div className="bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 rounded-xl p-4 mb-4">
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-gray-500">Học phí</span>
+                <span className="text-gray-500">{t('tuition.amount')}</span>
                 <span className="font-semibold">{formatCurrency(tuition.amount)}</span>
               </div>
               {tuition.discount > 0 && (
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-gray-500">Giảm giá</span>
+                  <span className="text-gray-500">{t('tuition.discount')}</span>
                   <span className="font-semibold text-emerald-600">
                     -{formatCurrency(tuition.discount)}
                   </span>
                 </div>
               )}
               <div className="flex justify-between font-black text-lg text-emerald-700 border-t border-emerald-200 pt-2 mt-2">
-                <span>Phải thu</span>
+                <span>{t('tuition.payment.amountDue')}</span>
                 <span>{formatCurrency(tuition.amount_due)}</span>
               </div>
               <div className="flex justify-between text-sm mt-1">
-                <span className="text-gray-500">Đã thu</span>
+                <span className="text-gray-500">{t('tuition.payment.amountPaid')}</span>
                 <span className="font-bold text-emerald-600">
                   {formatCurrency(tuition.amount_paid)}
                 </span>
               </div>
               {remaining > 0 && (
                 <div className="flex justify-between text-sm mt-1">
-                  <span className="text-gray-500">Còn lại</span>
+                  <span className="text-gray-500">{t('tuition.payment.remaining')}</span>
                   <span className="font-bold text-rose-500">{formatCurrency(remaining)}</span>
                 </div>
               )}
@@ -190,17 +194,19 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
               <>
                 <div className="border-t border-dashed border-gray-200 my-4" />
                 <div className="text-xs font-black text-gray-500 uppercase tracking-wider mb-3">
-                  Lịch sử thanh toán
+                  {t('tuition.receipt.paymentHistory')}
                 </div>
                 <table className="payment-table w-full text-sm">
                   <thead>
                     <tr className="bg-gray-50 dark:bg-slate-800">
-                      <th className="px-2 py-2 text-left text-xs font-bold text-gray-500">Ngày</th>
                       <th className="px-2 py-2 text-left text-xs font-bold text-gray-500">
-                        Hình thức
+                        {t('tuition.receipt.date')}
+                      </th>
+                      <th className="px-2 py-2 text-left text-xs font-bold text-gray-500">
+                        {t('tuition.receipt.method')}
                       </th>
                       <th className="px-2 py-2 text-right text-xs font-bold text-gray-500">
-                        Số tiền
+                        {t('tuition.receipt.amount')}
                       </th>
                     </tr>
                   </thead>
@@ -211,7 +217,9 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
                           {new Date(p.payment_date).toLocaleDateString('vi-VN')}
                         </td>
                         <td className="px-2 py-2 text-xs">
-                          {PAYMENT_METHOD_LABELS[p.payment_method] || p.payment_method}
+                          {(getPaymentMethodLabels(t) as Record<string, string>)[
+                            p.payment_method
+                          ] || p.payment_method}
                         </td>
                         <td className="px-2 py-2 text-xs text-right font-bold text-emerald-600">
                           {formatCurrency(p.amount_paid)}
@@ -224,7 +232,7 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
             )}
 
             <div className="footer text-center mt-6 pt-4 border-t border-gray-100 text-xs text-gray-400">
-              <p>Cảm ơn bạn đã tin tưởng sử dụng dịch vụ!</p>
+              <p>{t('tuition.receipt.thanks')}</p>
               <p className="mt-1">Powered by EduSchedule</p>
             </div>
           </div>

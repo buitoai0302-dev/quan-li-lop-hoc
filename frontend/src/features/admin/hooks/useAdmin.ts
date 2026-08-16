@@ -9,6 +9,10 @@ import {
   approvePlanRequest,
   rejectPlanRequest,
   getActivities,
+  getAdminUsers,
+  createAdminUser,
+  resetAdminUserPassword,
+  toggleAdminUserStatus,
 } from '../api/admin.api';
 import type { Tenant, Plan } from '@/types';
 
@@ -84,6 +88,40 @@ export const useRejectPlanRequest = () => {
     mutationFn: (id: string) => rejectPlanRequest(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-plan-requests'] });
+    },
+  });
+};
+
+export const useAdminUsers = (params?: { search?: string; role?: string; tenant_id?: string }) => {
+  return useQuery({
+    queryKey: ['admin-users', params],
+    queryFn: () => getAdminUsers(params),
+  });
+};
+
+export const useCreateAdminUser = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createAdminUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-tenants'] });
+    },
+  });
+};
+
+export const useResetAdminUserPassword = () => {
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: any }) => resetAdminUserPassword(id, data),
+  });
+};
+
+export const useToggleAdminUserStatus = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => toggleAdminUserStatus(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
     },
   });
 };

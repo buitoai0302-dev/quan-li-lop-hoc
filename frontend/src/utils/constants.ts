@@ -24,6 +24,8 @@ export const ROUTES = {
   ADMIN_TENANTS: '/admin/tenants',
   ADMIN_PLANS: '/admin/plans',
   ADMIN_REQUESTS: '/admin/requests',
+  ADMIN_USERS: '/admin/users',
+  ADMIN_SETTINGS: '/admin/settings',
   TUITION: '/tuition',
   BILLING_RETURN: '/billing/return',
 };

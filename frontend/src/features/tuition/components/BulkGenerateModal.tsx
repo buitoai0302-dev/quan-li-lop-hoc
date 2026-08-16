@@ -15,7 +15,7 @@ interface Props {
 
 const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
   const { t } = useTranslation();
-  const { data: classes = [] } = useClasses();
+  const { classes } = useClasses();
   const { mutate, isPending } = useBulkGenerateTuitions();
 
   const {
@@ -56,9 +56,9 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
             </div>
             <div>
               <h2 className="text-lg font-black text-gray-900 dark:text-white">
-                Tạo học phí hàng loạt
+                {t('tuition.bulk.title')}
               </h2>
-              <p className="text-xs text-gray-500">Tạo cho toàn bộ học sinh trong lớp</p>
+              <p className="text-xs text-gray-500">{t('tuition.bulk.subtitle')}</p>
             </div>
           </div>
           <button
@@ -73,13 +73,13 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-4">
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-              Lớp học *
+              {t('tuition.bulk.class')} *
             </label>
             <select
-              {...register('class_id', { required: 'Vui lòng chọn lớp' })}
+              {...register('class_id', { required: t('tuition.bulk.classRequired') })}
               className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
-              <option value="">-- Chọn lớp học --</option>
+              <option value="">{t('tuition.bulk.selectClass')}</option>
               {classes.map((c: any) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
@@ -94,13 +94,13 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                Kỳ học phí *
+                {t('tuition.bulk.period')} *
               </label>
               <select
-                {...register('billing_period', { required: 'Chọn kỳ học phí' })}
+                {...register('billing_period', { required: t('tuition.bulk.periodRequired') })}
                 className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
               >
-                <option value="">-- Chọn tháng --</option>
+                <option value="">{t('tuition.bulk.selectPeriod')}</option>
                 {periodOptions.map((p) => (
                   <option key={p} value={p}>
                     {p}
@@ -113,11 +113,11 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                Hạn thu tiền *
+                {t('tuition.bulk.dueDate')} *
               </label>
               <input
                 type="date"
-                {...register('due_date', { required: 'Chọn hạn thu' })}
+                {...register('due_date', { required: t('tuition.bulk.dueDateRequired') })}
                 className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
               {errors.due_date && (
@@ -129,12 +129,12 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                Học phí (VNĐ) *
+                {t('tuition.bulk.amount')} *
               </label>
               <input
                 type="number"
                 min={0}
-                {...register('amount', { required: 'Nhập số tiền', min: 1 })}
+                {...register('amount', { required: t('tuition.bulk.amountRequired'), min: 1 })}
                 placeholder="1,500,000"
                 className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
               />
@@ -144,7 +144,7 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                Giảm giá (VNĐ)
+                {t('tuition.bulk.discount')}
               </label>
               <input
                 type="number"
@@ -158,42 +158,40 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
 
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-              Ghi chú
+              {t('tuition.bulk.notes')}
             </label>
-            <textarea
+            <input
+              type="text"
               {...register('notes')}
-              rows={2}
-              placeholder="Học phí tháng 8/2026..."
-              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
+              placeholder={t('tuition.bulk.notesPlaceholder')}
+              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 rounded-xl cursor-pointer">
             <input
               type="checkbox"
               {...register('skip_existing')}
-              className="w-4 h-4 text-primary rounded"
+              className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary"
             />
-            <span className="text-sm text-gray-600 dark:text-gray-400">
-              Bỏ qua học sinh đã có học phí trong kỳ này
-            </span>
+            <span className="text-sm font-medium">{t('tuition.bulk.skipExisting')}</span>
           </label>
 
-          <div className="flex gap-3 pt-2">
+          {/* Actions */}
+          <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-800">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold text-sm rounded-xl hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
+              className="flex-1 py-2.5 px-4 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-700 transition-colors"
             >
-              Hủy
+              {t('tuition.bulk.cancel')}
             </button>
             <button
               type="submit"
               disabled={isPending}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white font-bold text-sm rounded-xl hover:bg-primary/90 transition-all active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed shadow-sm shadow-primary/20"
+              className="flex-1 py-2.5 px-4 bg-primary text-white rounded-xl font-bold hover:bg-primary-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              <Zap size={16} />
-              {isPending ? 'Đang tạo...' : 'Tạo học phí'}
+              {isPending ? t('tuition.bulk.submitting') : t('tuition.bulk.submit')}
             </button>
           </div>
         </form>

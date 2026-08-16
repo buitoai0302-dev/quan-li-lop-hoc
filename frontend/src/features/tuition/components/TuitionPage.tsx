@@ -6,16 +6,11 @@ import {
   CheckCircle2,
   Clock,
   TrendingDown,
-  Plus,
-  Zap,
-  Download,
   Search,
-  Filter,
-  ChevronDown,
   Receipt,
+  CreditCard,
 } from 'lucide-react';
 import { useTuitions, useDeleteTuition } from '../hooks/useTuition';
-import { useClasses } from '@/features/classes/hooks/useClasses';
 import type { Tuition } from '../api/tuition.api';
 import BulkGenerateModal from './BulkGenerateModal';
 import PaymentModal from './PaymentModal';
@@ -23,46 +18,31 @@ import TuitionReceiptModal from './TuitionReceiptModal';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
 import ConfirmModal from '@/components/common/ConfirmModal';
-import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';
 import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
 
-const STATUS_CONFIG = {
+const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
   unpaid: {
-    label: 'Chưa thu',
     color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
     icon: Clock,
   },
   partial: {
-    label: 'Còn thiếu',
     color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
     icon: AlertCircle,
   },
   paid: {
-    label: 'Đã thu đủ',
     color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
     icon: CheckCircle2,
   },
   overdue: {
-    label: 'Quá hạn',
     color: 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400',
     icon: TrendingDown,
   },
   waived: {
-    label: 'Miễn giảm',
     color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
     icon: CheckCircle2,
   },
-};
-
-const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  cash: 'Tiền mặt',
-  bank_transfer: 'Chuyển khoản',
-  momo: 'MoMo',
-  vnpay: 'VNPay',
-  stripe: 'Stripe',
-  other: 'Khác',
 };
 
 const formatCurrency = (amount: number | string) =>
@@ -104,31 +84,42 @@ const TuitionPage: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <PageHeader icon={DollarSign} />
+      <PageHeader
+        icon={DollarSign}
+        actions={
+          <button
+            onClick={() => setShowBulkGenerate(true)}
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all font-bold text-[10px] sm:text-xs shadow-md shadow-primary/20 active:scale-95 uppercase tracking-wider"
+          >
+            <CreditCard size={14} />
+            {t('tuition.bulkGenerate')}
+          </button>
+        }
+      />
 
-      <div className="flex-1 overflow-auto custom-scrollbar p-1">
+      <div className="flex-1 overflow-auto custom-scrollbar p-1 sm:p-2">
         {/* Summary Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 mb-4 sm:mb-6">
           <SummaryCard
-            label="Tổng phải thu"
+            label={t('tuition.totalDue')}
             value={formatCurrency(summary?.total_amount_due || 0)}
             color="blue"
             icon={DollarSign}
           />
           <SummaryCard
-            label="Đã thu"
+            label={t('tuition.totalPaid')}
             value={formatCurrency(summary?.total_paid || 0)}
             color="emerald"
             icon={CheckCircle2}
           />
           <SummaryCard
-            label="Còn nợ"
+            label={t('tuition.totalOutstanding')}
             value={formatCurrency(summary?.total_outstanding || 0)}
             color="rose"
             icon={AlertCircle}
           />
           <SummaryCard
-            label="Số phiếu"
+            label={t('tuition.totalReceipts')}
             value={String(summary?.total_count || 0)}
             color="slate"
             icon={Receipt}
@@ -136,56 +127,52 @@ const TuitionPage: React.FC = () => {
         </div>
 
         {/* Actions Bar */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
-          <div className="flex-1 relative w-full">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <div className="flex flex-row items-center gap-2 sm:gap-3 mb-4">
+          <div className="flex-1 relative">
+            <Search
+              size={14}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <input
               type="text"
-              placeholder="Tìm theo tên học sinh hoặc lớp..."
+              placeholder={t('tuition.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="w-full pl-8 pr-3 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
           <select
             value={filters.status || ''}
             onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
-            className="text-sm bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="flex-none w-[110px] sm:w-auto text-xs sm:text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg sm:rounded-xl px-2 sm:px-3 py-2 sm:py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
-            <option value="">Tất cả trạng thái</option>
-            {Object.entries(STATUS_CONFIG).map(([key, val]) => (
+            <option value="">{t('tuition.allStatus')}</option>
+            {Object.keys(STATUS_CONFIG).map((key) => (
               <option key={key} value={key}>
-                {val.label}
+                {t(`tuition.statusLabels.${key}`)}
               </option>
             ))}
           </select>
-          <button
-            onClick={() => setShowBulkGenerate(true)}
-            className="flex items-center gap-2 px-4 py-2.5 bg-primary text-white rounded-xl font-semibold text-sm hover:bg-primary/90 transition-all active:scale-95 shadow-sm shadow-primary/20"
-          >
-            <Zap size={16} />
-            Tạo hàng loạt
-          </button>
         </div>
 
         {/* Table */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full border-separate border-spacing-0 min-w-[700px]">
+            <table className="w-full border-separate border-spacing-0 sm:min-w-[700px] min-w-full">
               <thead className="bg-gray-50 dark:bg-slate-800 sticky top-0 z-10">
                 <tr>
                   {[
-                    'Học sinh',
-                    'Lớp / Kỳ',
-                    'Số tiền',
-                    'Đã thu',
-                    'Hạn thu',
-                    'Trạng thái',
-                    'Thao tác',
-                  ].map((h) => (
+                    t('tuition.student'),
+                    t('tuition.classPeriod'),
+                    t('tuition.amount'),
+                    t('tuition.paid'),
+                    t('tuition.dueDate'),
+                    t('tuition.status'),
+                    t('tuition.actions'),
+                  ].map((h, i) => (
                     <th
                       key={h}
-                      className="px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700"
+                      className={`px-3 sm:px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700 ${[1, 3, 4].includes(i) ? 'hidden sm:table-cell' : ''}`}
                     >
                       {h}
                     </th>
@@ -197,7 +184,7 @@ const TuitionPage: React.FC = () => {
                   <tr>
                     <td colSpan={7} className="text-center py-16 text-gray-400 text-sm">
                       <DollarSign size={40} className="mx-auto mb-3 opacity-30" />
-                      Chưa có khoản học phí nào
+                      {t('tuition.emptyState')}
                     </td>
                   </tr>
                 )}
@@ -211,7 +198,7 @@ const TuitionPage: React.FC = () => {
                       key={tuition.id}
                       className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors group"
                     >
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
                         <div className="font-semibold text-sm text-gray-900 dark:text-white">
                           {tuition.student_name}
                         </div>
@@ -219,7 +206,7 @@ const TuitionPage: React.FC = () => {
                           <div className="text-[10px] text-gray-400">{tuition.parent_phone}</div>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
                         <div className="text-sm text-gray-700 dark:text-gray-300">
                           {tuition.class_name || '—'}
                         </div>
@@ -227,7 +214,7 @@ const TuitionPage: React.FC = () => {
                           <div className="text-[10px] text-gray-400">{tuition.billing_period}</div>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
                         <div className="font-bold text-sm text-gray-900 dark:text-white">
                           {formatCurrency(tuition.amount_due)}
                         </div>
@@ -237,46 +224,46 @@ const TuitionPage: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
                         <div className="font-semibold text-sm text-emerald-600">
                           {formatCurrency(tuition.amount_paid)}
                         </div>
                         {tuition.amount_due > tuition.amount_paid && (
                           <div className="text-[10px] text-rose-500">
-                            Còn:{' '}
+                            {t('tuition.remaining')}:{' '}
                             {formatCurrency(
                               Number(tuition.amount_due) - Number(tuition.amount_paid)
                             )}
                           </div>
                         )}
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
                         <span
                           className={`text-sm font-medium ${isOverdue && tuition.status !== 'paid' ? 'text-rose-500 font-bold' : 'text-gray-600 dark:text-gray-400'}`}
                         >
                           {new Date(tuition.due_date).toLocaleDateString('vi-VN')}
                         </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${statusCfg.color}`}
+                          className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${StatusIcon ? statusCfg.color : 'bg-gray-100 text-gray-700'}`}
                         >
-                          <StatusIcon size={10} />
-                          {statusCfg.label}
+                          {StatusIcon && <StatusIcon size={12} strokeWidth={3} />}
+                          {t(`tuition.statusLabels.${tuition.status}`)}
                         </span>
                       </td>
-                      <td className="px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center gap-1">
-                          {tuition.status !== 'paid' && (
+                          {tuition.status !== 'paid' && tuition.status !== 'waived' && (
                             <button
                               onClick={() => {
                                 setSelectedTuition(tuition);
                                 setShowPaymentModal(true);
                               }}
-                              className="p-1.5 text-xs font-bold text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 rounded-lg transition-colors"
-                              title="Thu tiền"
+                              className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1.5"
                             >
-                              <DollarSign size={15} />
+                              <DollarSign size={14} />
+                              <span className="hidden sm:inline">{t('tuition.collectMoney')}</span>
                             </button>
                           )}
                           <button
@@ -284,10 +271,10 @@ const TuitionPage: React.FC = () => {
                               setSelectedTuition(tuition);
                               setShowReceiptModal(true);
                             }}
-                            className="p-1.5 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-                            title="Xem biên lai"
+                            className="px-3 py-1.5 bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg font-bold text-xs transition-colors flex items-center gap-1.5"
                           >
-                            <Receipt size={15} />
+                            <Receipt size={14} />
+                            <span className="hidden sm:inline">{t('tuition.viewReceipt')}</span>
                           </button>
                           <button
                             onClick={() => setDeleteId(tuition.id)}
@@ -343,10 +330,10 @@ const TuitionPage: React.FC = () => {
         isOpen={!!deleteId}
         onClose={() => setDeleteId(null)}
         onConfirm={handleDelete}
-        title="Xóa khoản học phí"
-        message="Bạn có chắc chắn muốn xóa khoản học phí này?"
-        confirmText="Xóa"
+        title={t('tuition.deleteTitle')}
+        message={t('tuition.deleteConfirm')}
         type="danger"
+        isLoading={isDeleting}
       />
     </div>
   );
@@ -372,14 +359,17 @@ const SummaryCard: React.FC<{
   };
   return (
     <div
-      className={`bg-gradient-to-br ${colorMap[color]} border rounded-2xl p-4 flex flex-col gap-2`}
+      className={`bg-gradient-to-br ${colorMap[color]} border rounded-xl sm:rounded-2xl p-2.5 sm:p-4 flex flex-col gap-1 sm:gap-2`}
     >
       <div
-        className={`flex items-center gap-2 text-xs font-bold uppercase tracking-wider ${iconColorMap[color]}`}
+        className={`flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider ${iconColorMap[color]}`}
       >
-        <Icon size={14} /> {label}
+        <Icon size={12} className="sm:w-[14px] sm:h-[14px]" />{' '}
+        <span className="truncate">{label}</span>
       </div>
-      <div className="text-lg font-black text-gray-900 dark:text-white truncate">{value}</div>
+      <div className="text-sm sm:text-lg font-black text-gray-900 dark:text-white truncate">
+        {value}
+      </div>
     </div>
   );
 };

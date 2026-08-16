@@ -43,8 +43,6 @@ export interface User {
   };
 }
 
-
-
 export interface HelpCategory {
   id: string;
   icon: React.ReactNode;
@@ -72,7 +70,13 @@ export interface Tenant {
   max_students: number;
   created_at: string;
   settings?: {
-    menu: Record<string, boolean>;
+    menu?: Record<string, boolean>;
+    backup?: {
+      enabled: boolean;
+      cycle: string;
+      time: string;
+      last_backup_at?: string;
+    };
   };
 }
 
@@ -113,8 +117,6 @@ export interface SubscriptionHistory {
   created_at: string;
 }
 
-
-
 export interface PlanLimit {
   limit_key: string;
   limit_value: number;
@@ -133,8 +135,6 @@ export interface AdminStats {
   totalSessions: number;
 }
 
-
-
 // ---------------------------------------------------------------------------
 // Component Props Interfaces
 // ---------------------------------------------------------------------------
@@ -144,24 +144,3 @@ export interface BaseTableProps<T> {
   onEdit: (item: T) => void;
   onDelete: (id: string) => void;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

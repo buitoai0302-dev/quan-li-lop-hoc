@@ -50,9 +50,9 @@ const AdminPlans: React.FC = () => {
         id: plan.id,
         data: {
           name: plan.name,
-          price_vnd: plan.price_vnd,
-          price_usd: plan.price_usd,
-          is_active: plan.is_active,
+          priceVnd: plan.price_vnd,
+          priceUsd: plan.price_usd,
+          isActive: plan.is_active,
           limits: plan.limits,
           features: plan.features,
         },

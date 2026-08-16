@@ -13,12 +13,12 @@ interface Props {
   onClose: () => void;
 }
 
-const PAYMENT_METHODS = [
-  { value: 'cash', label: '💵 Tiền mặt' },
-  { value: 'bank_transfer', label: '🏦 Chuyển khoản ngân hàng' },
-  { value: 'momo', label: '📱 Ví MoMo' },
-  { value: 'vnpay', label: '💳 VNPay' },
-  { value: 'other', label: '🔧 Khác' },
+const getPaymentMethods = (t: any) => [
+  { value: 'cash', label: `💵 ${t('tuition.paymentMethods.cash')}` },
+  { value: 'bank_transfer', label: `🏦 ${t('tuition.paymentMethods.bank_transfer')}` },
+  { value: 'momo', label: `📱 ${t('tuition.paymentMethods.momo')}` },
+  { value: 'vnpay', label: `💳 ${t('tuition.paymentMethods.vnpay')}` },
+  { value: 'other', label: `🔧 ${t('tuition.paymentMethods.other')}` },
 ];
 
 const formatCurrency = (amount: number | string) =>
@@ -63,7 +63,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
             </div>
             <div>
               <h2 className="text-base font-black text-gray-900 dark:text-white">
-                Ghi nhận thu tiền
+                {t('tuition.payment.title')}
               </h2>
               <p className="text-xs text-gray-500">{tuition.student_name}</p>
             </div>
@@ -79,19 +79,25 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
         {/* Info */}
         <div className="mx-5 mt-4 p-3 bg-gray-50 dark:bg-slate-800 rounded-xl grid grid-cols-3 gap-3 text-center">
           <div>
-            <div className="text-[10px] text-gray-400 uppercase font-bold">Phải thu</div>
+            <div className="text-[10px] text-gray-400 uppercase font-bold">
+              {t('tuition.payment.amountDue')}
+            </div>
             <div className="text-sm font-black text-gray-900 dark:text-white">
               {formatCurrency(tuition.amount_due)}
             </div>
           </div>
           <div>
-            <div className="text-[10px] text-gray-400 uppercase font-bold">Đã thu</div>
+            <div className="text-[10px] text-gray-400 uppercase font-bold">
+              {t('tuition.payment.amountPaid')}
+            </div>
             <div className="text-sm font-black text-emerald-600">
               {formatCurrency(tuition.amount_paid)}
             </div>
           </div>
           <div>
-            <div className="text-[10px] text-gray-400 uppercase font-bold">Còn lại</div>
+            <div className="text-[10px] text-gray-400 uppercase font-bold">
+              {t('tuition.payment.remaining')}
+            </div>
             <div className="text-sm font-black text-rose-500">{formatCurrency(remaining)}</div>
           </div>
         </div>
@@ -100,14 +106,14 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
         <form onSubmit={handleSubmit(onSubmit)} className="p-5 space-y-4">
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-              Số tiền thu (VNĐ) *
+              {t('tuition.payment.amount')} *
             </label>
             <input
               type="number"
               min={1}
               max={remaining}
               {...register('amount_paid', {
-                required: 'Nhập số tiền',
+                required: t('tuition.payment.amountRequired'),
                 min: { value: 1, message: 'Tối thiểu 1 VNĐ' },
               })}
               className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
@@ -120,7 +126,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                Ngày thu
+                {t('tuition.receipt.date')}
               </label>
               <input
                 type="date"
@@ -130,13 +136,13 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
             </div>
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                Hình thức
+                {t('tuition.payment.method')}
               </label>
               <select
                 {...register('payment_method')}
                 className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
               >
-                {PAYMENT_METHODS.map((m) => (
+                {getPaymentMethods(t).map((m) => (
                   <option key={m.value} value={m.value}>
                     {m.label}
                   </option>
@@ -150,7 +156,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
             paymentMethod === 'momo') && (
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-                Mã giao dịch
+                {t('tuition.payment.reference')}
               </label>
               <input
                 type="text"
@@ -163,12 +169,12 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
 
           <div>
             <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-              Ghi chú
+              {t('tuition.bulk.notes')}
             </label>
             <input
               type="text"
               {...register('notes')}
-              placeholder="Nhập ghi chú nếu cần..."
+              placeholder={t('tuition.bulk.notesPlaceholder')}
               className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
             />
           </div>
@@ -179,7 +185,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
               onClick={onClose}
               className="flex-1 px-4 py-2.5 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-300 font-semibold text-sm rounded-xl hover:bg-gray-200 transition-colors"
             >
-              Hủy
+              {t('tuition.payment.cancel')}
             </button>
             <button
               type="submit"
@@ -187,7 +193,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
               className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 transition-all active:scale-95 disabled:opacity-60 shadow-sm shadow-emerald-600/20"
             >
               <DollarSign size={16} />
-              {isPending ? 'Đang lưu...' : 'Xác nhận thu tiền'}
+              {isPending ? t('tuition.payment.submitting') : t('tuition.payment.submit')}
             </button>
           </div>
         </form>

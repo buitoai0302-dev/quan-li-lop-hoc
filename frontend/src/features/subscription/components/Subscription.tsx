@@ -11,23 +11,32 @@ import { PLAN_REQUEST_STATUS } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
 
-
 import PlanCard from './PlanCard';
 
-import { useSubscriptionData, useRequestPlanUpgrade } from '../hooks/useSubscription';
+import {
+  useSubscriptionData,
+  useRequestPlanUpgrade,
+  useCreatePaymentUrl,
+} from '../hooks/useSubscription';
+import { usePublicSettings } from '@/features/admin/hooks/useSystemSettings';
 
 const Subscription: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
 
   const { data, isLoading: loading } = useSubscriptionData();
-  const { mutate: requestUpgradeMutate, isPending: isSubmitting } = useRequestPlanUpgrade();
+  const { mutate: requestUpgradeMutate, isPending: isSubmittingRequest } = useRequestPlanUpgrade();
+  const { mutate: createPaymentUrlMutate, isPending: isCreatingPaymentUrl } = useCreatePaymentUrl();
+  const { data: settings } = usePublicSettings();
+
+  const isSubmitting = isSubmittingRequest || isCreatingPaymentUrl;
 
   const plans = data?.plans || [];
   const currentTenantPlanId = data?.tenant?.plan_id || null;
-  const initialPendingId = data?.requestStatus?.status === PLAN_REQUEST_STATUS.PENDING 
-    ? data?.requestStatus?.requested_plan_id 
-    : null;
+  const initialPendingId =
+    data?.requestStatus?.status === PLAN_REQUEST_STATUS.PENDING
+      ? data?.requestStatus?.requested_plan_id
+      : null;
 
   const isVi = i18n.language === 'vi';
 
@@ -41,15 +50,34 @@ const Subscription: React.FC = () => {
       },
       onError: (err: unknown) => {
         handleApiError(err as AxiosError<ApiErrorData>, t);
-      }
+      },
     });
   };
 
+  const handlePayment = (planId: string, gateway: 'vnpay' | 'momo') => {
+    createPaymentUrlMutate(
+      { plan_id: planId, gateway },
+      {
+        onSuccess: (res) => {
+          window.location.href = res.paymentUrl;
+        },
+        onError: (err: unknown) => {
+          handleApiError(err as AxiosError<ApiErrorData>, t);
+        },
+      }
+    );
+  };
+
   const handleContactSales = () => {
-    const supportEmail = import.meta.env.VITE_SUPPORT_EMAIL || 'support@eduschedule.com';
-    const subject = encodeURIComponent(t('subscription.consultSubject'));
-    const body = encodeURIComponent(t('subscription.consultBody', { email: user?.email }));
-    window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
+    const zaloLink = settings?.CONTACT_ZALO;
+    if (zaloLink) {
+      window.open(zaloLink, '_blank');
+    } else {
+      const supportEmail = settings?.CONTACT_EMAIL || 'support@eduschedule.com';
+      const subject = encodeURIComponent(t('subscription.consultSubject'));
+      const body = encodeURIComponent(t('subscription.consultBody', { email: user?.email }));
+      window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
+    }
   };
 
   if (loading) return <PageLoading />;
@@ -73,29 +101,31 @@ const Subscription: React.FC = () => {
                   isSubmitting={isSubmitting}
                   pendingPlanId={pendingPlanId}
                   onUpgrade={handleRequestUpgrade}
+                  onPayment={handlePayment}
                   t={t}
                 />
               ))}
           </div>
 
           {/* Support CTA */}
-          <div className="bg-gradient-to-br from-indigo-950 via-blue-900 to-indigo-900 rounded-[3rem] p-10 md:p-20 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20 mx-2">
+          <div className="bg-gradient-to-br from-indigo-950 via-blue-900 to-indigo-900 rounded-[2.5rem] p-8 md:p-12 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20 mx-2">
             <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-12">
-              <div className="space-y-6 text-center xl:text-left max-w-2xl">
-                <h2 className="text-4xl md:text-5xl font-black leading-tight tracking-tighter uppercase italic">
+              <div className="space-y-4 text-center xl:text-left max-w-2xl">
+                <h2 className="text-2xl md:text-4xl font-black leading-tight tracking-tight uppercase italic">
                   {t('subscription.customTitle')}
                   <br />
                   <span className="text-primary">{t('subscription.customSubtitle')}</span>
                 </h2>
-                <p className="text-indigo-100/80 text-lg font-medium leading-relaxed">
+                <p className="text-indigo-100/80 text-base md:text-lg font-medium leading-relaxed">
                   {t('subscription.customDesc')}
                 </p>
               </div>
               <button
                 onClick={handleContactSales}
-                className="flex items-center gap-4 px-12 py-6 bg-white text-indigo-950 rounded-2xl font-black text-xl hover:bg-primary hover:text-white transition-all shadow-2xl active:scale-95 uppercase tracking-widest shrink-0"
+                className="flex items-center gap-3 px-8 py-4 bg-white text-indigo-950 rounded-xl font-bold text-base md:text-lg hover:bg-primary hover:text-white transition-all shadow-xl active:scale-95 uppercase tracking-wide shrink-0"
               >
-                <MessageSquare /> {t('subscription.contactSales')} <ArrowRight />
+                <MessageSquare size={20} /> {t('subscription.contactSales')}{' '}
+                <ArrowRight size={20} />
               </button>
             </div>
 

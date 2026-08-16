@@ -24,7 +24,6 @@ export const useDashboard = () => {
   const statsQuery = useQuery({
     queryKey: ['dashboard-stats', chartPeriod],
     queryFn: () => getDashboardStats(chartPeriod),
-    staleTime: 5 * 60 * 1000,
     select: (data) => {
       // Inject mock revenue trends based on student trends
       if (data && data.studentTrends) {

@@ -232,7 +232,6 @@ const Register: React.FC = () => {
                 shape="pill"
                 size="large"
                 text="signup_with"
-                width="100%"
               />
             </div>
           </div>

@@ -9,6 +9,7 @@ import { getMenuItems } from '../routes';
 import type { MenuGroup, MenuItem } from '../routes';
 import { USER_ROLES } from '../utils/constants';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { usePublicSettings } from '@/features/admin/hooks/useSystemSettings';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -21,6 +22,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
   const { t } = useTranslation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { isInstallable, promptInstall } = usePWAInstall();
+  const { data: settings } = usePublicSettings();
+  const systemName = settings?.SYSTEM_NAME || t('common.appName');
 
   const menuItems = getMenuItems(t, user?.role);
 
@@ -256,6 +259,15 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
             >
               <LogOut size={18} />
             </button>
+          </div>
+
+          {/* License / Copyright Info */}
+          <div
+            className={`mt-2 text-center transition-all duration-300 ${isCollapsed ? 'md:hidden' : 'block'}`}
+          >
+            <p className="text-[8px] text-gray-400 dark:text-gray-500 font-medium uppercase tracking-widest truncate px-1">
+              © {new Date().getFullYear()} {systemName}. All rights reserved.
+            </p>
           </div>
         </div>
       </aside>

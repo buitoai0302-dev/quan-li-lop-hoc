@@ -2,6 +2,7 @@ import { Response, NextFunction } from 'express';
 import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ValidationError, NotFoundError } from '../utils/errors';
+import bcrypt from 'bcrypt';
 
 // ─── System Stats ────────────────────────────────────────────────────────────
 
@@ -29,7 +30,7 @@ export const getSystemStats = async (req: AuthRequest, res: Response, next: Next
 export const getAllTenants = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const result = await pool.query(
-      `SELECT t.id, t.name, t.domain, t.contact_email, t.plan_id, t.is_active, t.status, t.created_at,
+      `SELECT t.id, t.name, t.domain, t.contact_email, t.plan_id, t.is_active, t.status, t.created_at, t.settings,
               p.name as plan_name, p.code as plan_code,
               (SELECT COUNT(*) FROM users WHERE tenant_id = t.id) as user_count,
               (SELECT COUNT(*) FROM branches WHERE tenant_id = t.id) as branch_count
@@ -47,11 +48,11 @@ export const getAllTenants = async (req: AuthRequest, res: Response, next: NextF
 export const updateTenant = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { planId, isActive, status } = req.body;
+    const { planId, isActive, status, settings } = req.body;
 
-    if (!planId && isActive === undefined && !status) {
+    if (!planId && isActive === undefined && !status && !settings) {
       throw new ValidationError(
-        'At least one field is required (planId, isActive, or status)',
+        'At least one field is required (planId, isActive, status, or settings)',
         'MISSING_REQUIRED_FIELDS'
       );
     }
@@ -78,6 +79,11 @@ export const updateTenant = async (req: AuthRequest, res: Response, next: NextFu
       } else {
         updates.push(`is_active = false`);
       }
+    }
+
+    if (settings) {
+      params.push(settings);
+      updates.push(`settings = $${params.length}`);
     }
 
     params.push(id);
@@ -207,6 +213,159 @@ export const updatePlanDetails = async (req: AuthRequest, res: Response, next: N
     res.json({ success: true, message: 'Plan updated successfully' });
   } catch (error) {
     await pool.query('ROLLBACK');
+    next(error);
+  }
+};
+
+// ─── User Management ──────────────────────────────────────────────────────────
+
+export const getAllUsers = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { search, role, tenant_id } = req.query;
+
+    let query = `
+      SELECT u.id, u.email, u.full_name, u.role, u.is_active, u.is_email_verified, u.created_at,
+             t.id as tenant_id, t.name as tenant_name
+      FROM users u
+      LEFT JOIN tenants t ON u.tenant_id = t.id
+      WHERE 1=1
+    `;
+    const params: any[] = [];
+
+    if (search) {
+      params.push(`%${search}%`);
+      query += ` AND (u.email ILIKE $${params.length} OR u.full_name ILIKE $${params.length})`;
+    }
+    if (role) {
+      params.push(role);
+      query += ` AND u.role = $${params.length}`;
+    }
+    if (tenant_id) {
+      params.push(tenant_id);
+      query += ` AND u.tenant_id = $${params.length}`;
+    }
+
+    query += ' ORDER BY u.created_at DESC';
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const generateRandomPassword = (length = 10) => {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  let pass = '';
+  for (let i = 0; i < length; i++) {
+    pass += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return pass;
+};
+
+export const createUser = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { email, role, full_name, tenant_id, new_tenant_name, plan_id, password } = req.body;
+
+    if (!email || !role || !full_name || !tenant_id) {
+      throw new ValidationError('Thiếu thông tin bắt buộc (email, role, full_name, tenant_id)');
+    }
+
+    const finalPassword = password || generateRandomPassword();
+    const passwordHash = await bcrypt.hash(finalPassword, 10);
+
+    let targetTenantId = tenant_id;
+
+    await pool.query('BEGIN');
+
+    // Check if email exists
+    const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
+    if (existing.rowCount && existing.rowCount > 0) {
+      throw new ValidationError('Email này đã được sử dụng trong hệ thống');
+    }
+
+    if (tenant_id === 'NEW') {
+      if (!new_tenant_name) {
+        throw new ValidationError('Tên trung tâm mới không được để trống');
+      }
+
+      const defaultPlanId = plan_id || 'ffffffff-0000-0000-0000-000000000001';
+      // Create new tenant
+      const tenantResult = await pool.query(
+        `INSERT INTO tenants (name, domain, plan_id, status, is_active) 
+         VALUES ($1, $2, $3, 'active', true) RETURNING id`,
+        [new_tenant_name, `tenant-${Date.now()}`, defaultPlanId]
+      );
+      targetTenantId = tenantResult.rows[0].id;
+    }
+
+    const userResult = await pool.query(
+      `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_email_verified, is_active)
+       VALUES ($1, $2, $3, $4, $5, true, true) RETURNING id, email, full_name, role, tenant_id`,
+      [targetTenantId, email, passwordHash, full_name, role]
+    );
+
+    await pool.query('COMMIT');
+
+    res.status(201).json({
+      success: true,
+      user: userResult.rows[0],
+      rawPassword: finalPassword, // Trả về password gốc để hiển thị 1 lần
+      message: 'Người dùng đã được tạo thành công',
+    });
+  } catch (error) {
+    await pool.query('ROLLBACK');
+    next(error);
+  }
+};
+
+export const resetUserPassword = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    const finalPassword = password || generateRandomPassword();
+    const passwordHash = await bcrypt.hash(finalPassword, 10);
+
+    const result = await pool.query(
+      'UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, email',
+      [passwordHash, id]
+    );
+
+    if (result.rowCount === 0) {
+      throw new NotFoundError('Không tìm thấy người dùng');
+    }
+
+    res.json({
+      success: true,
+      rawPassword: finalPassword,
+      message: 'Cấp lại mật khẩu thành công',
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const toggleUserStatus = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+
+    // Toggle the is_active status
+    const result = await pool.query(
+      'UPDATE users SET is_active = NOT is_active WHERE id = $1 RETURNING id, is_active',
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      throw new NotFoundError('Không tìm thấy người dùng');
+    }
+
+    res.json({
+      success: true,
+      is_active: result.rows[0].is_active,
+      message: 'Đã cập nhật trạng thái hoạt động',
+    });
+  } catch (error) {
     next(error);
   }
 };
