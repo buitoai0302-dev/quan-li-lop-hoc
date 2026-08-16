@@ -25,6 +25,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const ImportData = lazy(() => import('./pages/ImportData'));
 const Help = lazy(() => import('./pages/Help'));
 const Subscription = lazy(() => import('./pages/Subscription'));
+const Tuition = lazy(() => import('./pages/Tuition/Tuition'));
 const AdminTenants = lazy(() => import('./pages/Admin/AdminTenants'));
 const AdminPlans = lazy(() => import('./pages/Admin/AdminPlans'));
 const AdminPlanRequests = lazy(() => import('./pages/Admin/AdminPlanRequests'));
@@ -49,6 +50,7 @@ import {
   Settings as SettingsIcon,
   History,
   ShieldCheck,
+  DollarSign,
 } from 'lucide-react';
 
 export interface MenuItem {
@@ -195,6 +197,14 @@ export const appRoutes = [
         ),
       },
       {
+        path: ROUTES.TUITION,
+        element: (
+          <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]}>
+            <Tuition />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: ROUTES.ADMIN_TENANTS,
         element: (
           <ProtectedRoute roles={[USER_ROLES.SUPER_ADMIN]}>
@@ -317,6 +327,13 @@ export const getMenuItems = (t: TFunction, userRole?: string): MenuGroup[] => [
         label: t('menu.branches'),
         icon: GitBranch,
         roles: [USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN],
+        isPremium: true,
+      },
+      {
+        path: ROUTES.TUITION,
+        label: t('menu.tuition', 'Học phí'),
+        icon: DollarSign,
+        roles: [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN],
         isPremium: true,
       },
     ],

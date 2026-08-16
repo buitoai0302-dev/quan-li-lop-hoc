@@ -20,6 +20,8 @@ import googleRoutes from './routes/google.routes';
 import adminRoutes from './routes/admin.routes';
 import planRoutes from './routes/plan.routes';
 import attendanceRoutes from './routes/attendance.routes';
+import tuitionRoutes from './routes/tuition.routes';
+import billingRoutes from './routes/billing.routes';
 import { initCronJobs } from './cron/notification.cron';
 
 import { errorMiddleware } from './middlewares/error.middleware';
@@ -52,6 +54,7 @@ app.use((req, res, next) => {
 // 1. Public routes (No authentication or tenant context needed)
 app.use('/api/auth', authRoutes);
 app.use('/api/google', googleRoutes);
+app.use('/api/billing', billingRoutes); // Includes public webhook endpoints
 app.use('/health', (req, res) => res.json({ status: 'ok' }));
 
 // 2. Protected routes - Core Business Logic (Auth & Tenant required)
@@ -70,6 +73,7 @@ protectedRoutes.use('/import', importRoutes);
 protectedRoutes.use('/admin', adminRoutes);
 protectedRoutes.use('/plans', planRoutes);
 protectedRoutes.use('/attendance', attendanceRoutes);
+protectedRoutes.use('/tuitions', tuitionRoutes);
 
 app.use('/api', protectedRoutes);
 
