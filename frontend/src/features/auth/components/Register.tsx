@@ -49,7 +49,7 @@ const Register: React.FC = () => {
     try {
       const { credential } = credentialResponse;
       const data = await googleLogin(credential);
-      login(data.token, data.user, data.refreshToken);
+      login(data.token, data.user);
       toast.success(t('auth.loginSuccess'));
       navigate('/schedule');
     } catch (error) {

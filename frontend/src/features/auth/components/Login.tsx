@@ -34,7 +34,7 @@ const Login: React.FC = () => {
     try {
       const { credential } = credentialResponse;
       const data = await googleLogin(credential);
-      login(data.token, data.user, data.refreshToken);
+      login(data.token, data.user);
       toast.success(t('auth.loginSuccess'));
       navigate('/schedule');
     } catch (error) {
@@ -50,7 +50,7 @@ const Login: React.FC = () => {
     setEmailNotVerified(false);
     try {
       const data = await loginApi({ email, password });
-      login(data.token, data.user, data.refreshToken);
+      login(data.token, data.user);
       toast.success(t('auth.loginSuccess'));
       navigate('/schedule');
     } catch (error) {

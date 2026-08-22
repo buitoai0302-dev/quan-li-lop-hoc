@@ -5,6 +5,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Gửi kèm httpOnly cookie trong mọi request
 });
 
 // Request interceptor: gắn access token vào mọi request
@@ -14,7 +15,7 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`;
   }
 
-  // Inject impersonated tenant ID if Super Admin is impersonating a center
+  // Inject impersonated tenant ID nếu Super Admin đang impersonate
   const impersonatedTenantId = localStorage.getItem('impersonatedTenantId');
   if (impersonatedTenantId) {
     config.headers['x-tenant-id'] = impersonatedTenantId;
@@ -42,18 +43,13 @@ api.interceptors.response.use(
 
     // Nếu 401 và chưa retry, thử refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
-      const refreshToken = localStorage.getItem('refreshToken');
-
-      // Nếu không có refresh token → logout
-      if (!refreshToken) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
+      // Kiểm tra xem có access token không, nếu không thì logout luon
+      if (!localStorage.getItem('token')) {
         window.location.href = '/login';
         return Promise.reject(error);
       }
 
       if (isRefreshing) {
-        // Nếu đang refresh, xếp hàng đợi
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -68,16 +64,15 @@ api.interceptors.response.use(
       isRefreshing = true;
 
       try {
+        // Gọi refresh không cần gửi body — cookie tự được gửi kèm (withCredentials: true)
         const { data } = await axios.post(
           `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh`,
-          { refreshToken }
+          {},
+          { withCredentials: true }
         );
 
         const newToken = data.token;
         localStorage.setItem('token', newToken);
-        if (data.refreshToken) {
-          localStorage.setItem('refreshToken', data.refreshToken);
-        }
 
         api.defaults.headers.common.Authorization = `Bearer ${newToken}`;
         processQueue(null, newToken);
@@ -87,7 +82,6 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
         window.location.href = '/login';
         return Promise.reject(refreshError);
       } finally {

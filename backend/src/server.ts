@@ -4,6 +4,7 @@ dotenv.config();
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import cookieParser from 'cookie-parser';
 import path from 'path';
 import { tenantMiddleware } from './middlewares/tenant.middleware';
 import { authMiddleware } from './middlewares/auth.middleware';
@@ -25,8 +26,9 @@ import tuitionRoutes from './routes/tuition.routes';
 import billingRoutes from './routes/billing.routes';
 import systemRoutes from './routes/system.routes';
 import notificationRoutes from './routes/notification.routes';
-import { initCronJobs } from './cron/notification.cron';
-import { startBackupCronJob } from './cron/backup.cron';
+import { initNotificationJobs } from './cron/notification.cron';
+import { initBackupJobs } from './cron/backup.cron';
+import boss from './cron/queue';
 
 import { errorMiddleware } from './middlewares/error.middleware';
 import { NotFoundError } from './utils/errors';
@@ -72,6 +74,7 @@ app.use(
   })
 );
 app.use(express.json({ limit: '2mb' }));
+app.use(cookieParser()); // Parse httpOnly cookies
 
 // 1. Public routes (No authentication or tenant context needed)
 app.use('/api/auth', authRoutes);
@@ -101,9 +104,17 @@ protectedRoutes.use('/notifications', notificationRoutes);
 
 app.use('/api', protectedRoutes);
 
-// Initialize background jobs
-initCronJobs();
-startBackupCronJob();
+// Initialize pg-boss queue and background jobs
+boss
+  .start()
+  .then(async () => {
+    console.log('[pg-boss] Queue started successfully');
+    await initNotificationJobs();
+    await initBackupJobs();
+  })
+  .catch((err: Error) => {
+    console.error('[pg-boss] Failed to start queue:', err);
+  });
 
 // Health check
 app.get('/health', (req, res) => {

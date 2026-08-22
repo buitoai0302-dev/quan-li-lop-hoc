@@ -57,6 +57,17 @@ const issueTokens = async (user: any) => {
   return { accessToken, refreshToken };
 };
 
+// Helper: gắn refresh token vào httpOnly cookie
+const setRefreshCookie = (res: Response, token: string) => {
+  res.cookie('refreshToken', token, {
+    httpOnly: true, // Không thể đọc bằng JavaScript (chống XSS)
+    secure: process.env.NODE_ENV === 'production', // Chỉ HTTPS trên production
+    sameSite: 'lax', // Chống CSRF cơ bản
+    maxAge: 30 * 24 * 60 * 60 * 1000, // 30 ngày
+    path: '/',
+  });
+};
+
 // ─── Login ───────────────────────────────────────────────────────────────────
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
@@ -120,7 +131,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const { accessToken, refreshToken } = await issueTokens(user);
     const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } =
       user;
-    res.json({ token: accessToken, refreshToken, user: userWithoutSensitive });
+
+    // Refresh token → httpOnly cookie (chống XSS)
+    setRefreshCookie(res, refreshToken);
+    // Access token → response body (localStorage, sống 15 phút)
+    res.json({ token: accessToken, user: userWithoutSensitive });
   } catch (error) {
     next(error);
   }
@@ -214,7 +229,9 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     const { accessToken, refreshToken } = await issueTokens(user);
     const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } =
       user;
-    res.json({ token: accessToken, refreshToken, user: userWithoutSensitive });
+    // Refresh token → httpOnly cookie
+    setRefreshCookie(res, refreshToken);
+    res.json({ token: accessToken, user: userWithoutSensitive });
   } catch (error) {
     next(error);
   }
@@ -532,11 +549,11 @@ export const completeOnboarding = async (req: Request, res: Response, next: Next
 // ─── Refresh Token ────────────────────────────────────────────────────────────
 
 export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
-  const { refreshToken: token } = req.body;
+  // Ưu tiên lấy từ httpOnly cookie, fallback sang body (tương thích ngược)
+  const token = req.cookies?.refreshToken || req.body?.refreshToken;
   if (!token) return next(new ValidationError('Refresh token required', 'MISSING_REQUIRED_FIELDS'));
 
   try {
-    // Tìm refresh token trong DB, kiểm tra còn hạn
     const result = await pool.query(
       `SELECT rt.user_id, u.tenant_id, u.branch_id, u.role
        FROM refresh_tokens rt
@@ -553,10 +570,9 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 
     const user = result.rows[0];
 
-    // Xóa token cũ (rotation: mỗi lần refresh tạo token mới)
+    // Xoá token cũ (rotation)
     await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [token]);
 
-    // Phát token mới
     const { accessToken, refreshToken: newRefreshToken } = await issueTokens({
       id: user.user_id,
       tenant_id: user.tenant_id,
@@ -564,7 +580,9 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
       role: user.role,
     });
 
-    res.json({ token: accessToken, refreshToken: newRefreshToken });
+    // Cập nhật cookie mới
+    setRefreshCookie(res, newRefreshToken);
+    res.json({ token: accessToken });
   } catch (error) {
     next(error);
   }
@@ -573,11 +591,13 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 // ─── Logout ───────────────────────────────────────────────────────────────────
 
 export const logout = async (req: Request, res: Response, next: NextFunction) => {
-  const { refreshToken: token } = req.body;
+  const token = req.cookies?.refreshToken || req.body?.refreshToken;
   try {
     if (token) {
       await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [token]);
     }
+    // Xóa httpOnly cookie
+    res.clearCookie('refreshToken', { path: '/' });
     res.json({ success: true });
   } catch (error) {
     next(error);

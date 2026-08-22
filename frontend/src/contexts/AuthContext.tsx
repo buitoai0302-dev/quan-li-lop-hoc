@@ -7,7 +7,7 @@ export type { User };
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (token: string, userData: User, refresh?: string) => void;
+  login: (token: string, userData: User) => void;
   logout: () => void;
   updateUser: (updates: Partial<User>) => void;
 }
@@ -37,28 +37,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
-  const login = (token: string, userData: User, refresh?: string) => {
+  // Access token lưu localStorage (ngắn hạn, ~15 phút)
+  // Refresh token nằm trong httpOnly cookie — không cần lưu thủ công
+  const login = (token: string, userData: User) => {
     localStorage.setItem('token', token);
-    if (refresh) localStorage.setItem('refreshToken', refresh);
     setUser(userData);
   };
 
   const logout = () => {
-    const refreshToken = localStorage.getItem('refreshToken');
-    // Thu hồi refresh token phía server (non-blocking)
-    if (refreshToken) {
-      logoutApi().catch(() => {});
-    }
+    // Thu hồi refresh token phía server (xoá khỏi DB + xoá cookie)
+    logoutApi().catch(() => {});
 
-    // 1. Xóa thông tin xác thực trong localStorage
+    // Xoá access token
     localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
 
-    // 2. Xóa sạch cache của TanStack Query để tránh lộ dữ liệu người dùng cũ
+    // Xoá sạch cache TanStack Query
     queryClient.clear();
 
-    // 3. Chuyển hướng về trang login và buộc tải lại trang
-    // Việc này sẽ xóa sạch toàn bộ State trong React
+    // Reload về trang login
     window.location.href = '/login';
   };
 
