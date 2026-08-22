@@ -55,7 +55,7 @@ export class NotificationService {
         tokens,
       };
 
-      const response = await messaging.sendMulticast(message);
+      const response = await messaging.sendEachForMulticast(message);
 
       // Handle invalid tokens
       if (response.failureCount > 0) {
@@ -114,7 +114,7 @@ export class NotificationService {
         tokens,
       };
 
-      const response = await messaging.sendMulticast(message);
+      const response = await messaging.sendEachForMulticast(message);
       // Handle failures similarly...
     } catch (error) {
       logger.error(error, 'Error sending message to users:');
