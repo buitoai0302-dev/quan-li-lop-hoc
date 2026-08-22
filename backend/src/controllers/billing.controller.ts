@@ -157,7 +157,13 @@ async function activateInvoice(orderId: string, transactionId: string, gatewayRe
       throw new Error(`Invoice not found for orderId: ${orderId}`);
     const invoice = invoiceResult.rows[0];
 
-    // Tính ngày hết hạn (mặc định 30 ngày)
+    // Idempotency guard: nếu đã thanh toán rồi thì bỏ qua, không xử lý lại
+    if (invoice.status === 'paid') {
+      await client.query('COMMIT');
+      console.log(`[Billing] Invoice ${invoice.id} already paid — skipping duplicate webhook.`);
+      return;
+    }
+
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
 
     // Cập nhật invoice

@@ -14,7 +14,7 @@ import {
   Unlock,
   Zap,
 } from 'lucide-react';
-import { Modal, Card, Button, Badge, Input, Select } from '@/components/common/UI';
+import { Modal, Card, Button, Input, Select } from '@/components/common/UI';
 import { USER_ROLES } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';

@@ -3,6 +3,7 @@ dotenv.config();
 
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import path from 'path';
 import { tenantMiddleware } from './middlewares/tenant.middleware';
 import { authMiddleware } from './middlewares/auth.middleware';
@@ -37,22 +38,40 @@ import { apiKeyMiddleware } from './middlewares/api.middleware';
 const app = express();
 const port = process.env.PORT || 5000;
 
+// Security Headers (helmet)
+app.use(
+  helmet({
+    // Cho phép Google OAuth popup hoạt động
+    crossOriginOpenerPolicy: false,
+    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: false, // Tắt CSP — cần cấu hình riêng nếu bật
+  })
+);
+
+// CORS — chỉ cho phép các domain đã xác định
+const ALLOWED_ORIGINS = [
+  process.env.FRONTEND_URL || 'http://localhost:5173',
+  'http://localhost:5174',
+  'http://localhost:3000',
+  'https://eduschedule.vercel.app',
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: true, // Cho phép tất cả các origin gửi yêu cầu (phù hợp khi deploy đa nền tảng)
+    origin: (origin, callback) => {
+      // Cho phép request không có origin (server-to-server, Postman, mobile app)
+      if (!origin || ALLOWED_ORIGINS.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: Origin '${origin}' not allowed`));
+      }
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-tenant-id', 'x-api-key'],
   })
 );
 app.use(express.json({ limit: '2mb' }));
-
-// 0. Security Headers for Google Login
-app.use((req, res, next) => {
-  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
-  res.setHeader('Cross-Origin-Embedder-Policy', 'unsafe-none');
-  next();
-});
 
 // 1. Public routes (No authentication or tenant context needed)
 app.use('/api/auth', authRoutes);

@@ -47,7 +47,19 @@ export const getTuitions = async (req: AuthRequest, res: Response, next: NextFun
 
     const result = await pool.query(query, params);
 
-    // Tổng kết tài chính
+    // Tổng kết tài chính — dùng parameterized query để tránh SQL injection
+    const summaryParams: any[] = [tenantId];
+    let summaryWhere = '';
+    if (status) {
+      summaryWhere += ` AND status = $${summaryParams.push(status)}`;
+    }
+    if (class_id) {
+      summaryWhere += ` AND class_id = $${summaryParams.push(class_id)}`;
+    }
+    if (billing_period) {
+      summaryWhere += ` AND billing_period = $${summaryParams.push(billing_period)}`;
+    }
+
     const summaryResult = await pool.query(
       `SELECT
         COUNT(*) AS total_count,
@@ -55,12 +67,8 @@ export const getTuitions = async (req: AuthRequest, res: Response, next: NextFun
         COALESCE(SUM(amount_paid), 0) AS total_paid,
         COALESCE(SUM(amount_due - amount_paid), 0) AS total_outstanding
       FROM tuitions
-      WHERE tenant_id = $1
-        ${status ? `AND status = '${status}'` : ''}
-        ${class_id ? `AND class_id = '${class_id}'` : ''}
-        ${billing_period ? `AND billing_period = '${billing_period}'` : ''}
-      `,
-      [tenantId]
+      WHERE tenant_id = $1${summaryWhere}`,
+      summaryParams
     );
 
     res.json({
