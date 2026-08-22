@@ -66,11 +66,13 @@ const AttendancePage: React.FC = () => {
         accessor: (r) => (r.marked_at ? new Date(r.marked_at).toLocaleString('vi-VN') : ''),
       },
     ];
-    const dateLabel = selectedDate ? new Date(selectedDate).toLocaleDateString('vi-VN') : '';
+    const dateLabel = selectedDate
+      ? new Date(selectedDate).toLocaleDateString('vi-VN').replace(/\//g, '-')
+      : '';
     exportToExcel(filteredAttendance, columns, `${t('export.attendance')}_${dateLabel}`);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     if (!filteredAttendance.length) return;
     const columns: ExportColumn<AttendanceRecord>[] = [
       { header: t('attendance.studentName'), accessor: 'full_name' },
@@ -81,11 +83,13 @@ const AttendancePage: React.FC = () => {
         accessor: (r) => (r.marked_at ? new Date(r.marked_at).toLocaleString('vi-VN') : ''),
       },
     ];
-    const dateLabel = selectedDate ? new Date(selectedDate).toLocaleDateString('vi-VN') : '';
+    const dateLabel = selectedDate
+      ? new Date(selectedDate).toLocaleDateString('vi-VN').replace(/\//g, '-')
+      : '';
     const sessionLabel = selectedSession
       ? `${selectedSession.class_name ?? ''} - ${selectedSession.start_time}`
       : '';
-    exportToPDF(
+    await exportToPDF(
       filteredAttendance,
       columns,
       `${t('export.attendance')}_${dateLabel}`,

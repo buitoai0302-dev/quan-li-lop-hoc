@@ -208,10 +208,11 @@ const Students: React.FC = () => {
         accessor: (r) => (r.is_active ? t('common.active') : t('common.inactive')),
       },
     ];
-    exportToExcel(filteredStudents, columns, t('export.students'));
+    const dateLabel = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
+    exportToExcel(filteredStudents, columns, `${t('export.students')}_${dateLabel}`);
   };
 
-  const handleExportPDF = () => {
+  const handleExportPDF = async () => {
     const columns: ExportColumn<Student>[] = [
       { header: t('students.name'), accessor: 'full_name' },
       { header: t('students.email'), accessor: 'email' },
@@ -227,7 +228,14 @@ const Students: React.FC = () => {
         accessor: (r) => (r.is_active ? t('common.active') : t('common.inactive')),
       },
     ];
-    exportToPDF(filteredStudents, columns, t('export.students'), t('export.students'));
+
+    const dateLabel = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
+    await exportToPDF(
+      filteredStudents,
+      columns,
+      `${t('export.students')}_${dateLabel}`,
+      `${t('export.students')} - ${dateLabel}`
+    );
   };
 
   return (

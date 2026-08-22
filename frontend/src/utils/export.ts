@@ -37,12 +37,12 @@ export function exportToExcel<T>(data: T[], columns: ExportColumn<T>[], filename
 // ---------------------------------------------------------------------------
 // Export to PDF (Landscape, A4)
 // ---------------------------------------------------------------------------
-export function exportToPDF<T>(
+export async function exportToPDF<T>(
   data: T[],
   columns: ExportColumn<T>[],
   filename: string,
   title: string
-): void {
+): Promise<void> {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
   // Title
@@ -52,10 +52,26 @@ export function exportToPDF<T>(
 
   // Subtitle: date
   doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
   doc.setTextColor(120);
   doc.text(`Exported: ${new Date().toLocaleDateString('vi-VN')}`, 14, 25);
   doc.setTextColor(0);
+
+  try {
+    const fontUrl =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.66/fonts/Roboto/Roboto-Regular.ttf';
+    const res = await fetch(fontUrl);
+    const blob = await res.blob();
+    const base64 = await new Promise<string>((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve((reader.result as string).split(',')[1]);
+      reader.readAsDataURL(blob);
+    });
+    doc.addFileToVFS('Roboto-Regular.ttf', base64);
+    doc.addFont('Roboto-Regular.ttf', 'Roboto', 'normal');
+    doc.setFont('Roboto', 'normal');
+  } catch (error) {
+    console.warn('Failed to load font for PDF', error);
+  }
 
   const head = [columns.map((col) => col.header)];
   const body = data.map((row) => columns.map((col) => getCellValue(row, col.accessor)));

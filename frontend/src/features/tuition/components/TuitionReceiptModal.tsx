@@ -1,5 +1,5 @@
 import React, { useRef } from 'react';
-import { X, Printer, CheckCircle2, Clock, AlertCircle } from 'lucide-react';
+import { X, Printer, CheckCircle2, Clock } from 'lucide-react';
 import type { Tuition } from '../api/tuition.api';
 import { useTuitionPayments } from '../hooks/useTuition';
 import { useAuth } from '@/contexts/AuthContext';
@@ -32,8 +32,14 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
 
   const handlePrint = () => {
     const printContent = receiptRef.current?.innerHTML || '';
-    const win = window.open('', '_blank');
-    if (!win) return;
+    const iframe = document.createElement('iframe');
+    iframe.style.display = 'none';
+    document.body.appendChild(iframe);
+    const win = iframe.contentWindow;
+    if (!win) {
+      document.body.removeChild(iframe);
+      return;
+    }
     win.document.write(`
       <html>
       <head>
@@ -67,9 +73,14 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
     `);
     win.document.close();
     win.focus();
+
+    // Some browsers need a slight delay to render
     setTimeout(() => {
       win.print();
-      win.close();
+      // Remove the iframe after a delay to ensure print dialog opened
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
     }, 250);
   };
 

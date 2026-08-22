@@ -58,6 +58,7 @@ const TuitionPage: React.FC = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const { data, isLoading } = useTuitions(filters);
   const { mutate: deleteTuition, isPending: isDeleting } = useDeleteTuition();
@@ -77,6 +78,76 @@ const TuitionPage: React.FC = () => {
     deleteTuition(deleteId, {
       onSuccess: () => setDeleteId(null),
       onError: (err) => handleApiError(err as AxiosError<ApiErrorData>, t),
+    });
+  };
+
+  const handleToggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.checked) {
+      setSelectedIds(filtered.map((t) => t.id));
+    } else {
+      setSelectedIds([]);
+    }
+  };
+
+  const handleToggleSelect = (id: string) => {
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+  };
+
+  const handleExportSelected = () => {
+    import('@/utils/export').then(({ exportToExcel }) => {
+      const selected = filtered.filter((t) => selectedIds.includes(t.id));
+      const columns = [
+        { header: t('tuition.student'), accessor: 'student_name' as const },
+        {
+          header: t('tuition.classPeriod'),
+          accessor: (r: Tuition) => `${r.class_name || ''} ${r.billing_period || ''}`,
+        },
+        { header: t('tuition.amount'), accessor: 'amount_due' as const },
+        { header: t('tuition.paid'), accessor: 'amount_paid' as const },
+        {
+          header: t('tuition.dueDate'),
+          accessor: (r: Tuition) => new Date(r.due_date).toLocaleDateString('vi-VN'),
+        },
+        {
+          header: t('tuition.status'),
+          accessor: (r: Tuition) => t(`tuition.statusLabels.${r.status}`),
+        },
+      ];
+      exportToExcel(
+        selected,
+        columns,
+        `${t('tuition.title', 'Học phí')}_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}`
+      );
+    });
+  };
+
+  const handleExportPDFSelected = () => {
+    import('@/utils/export').then(async ({ exportToPDF }) => {
+      const selected = filtered.filter((t) => selectedIds.includes(t.id));
+      const columns = [
+        { header: t('tuition.student'), accessor: 'student_name' as const },
+        {
+          header: t('tuition.classPeriod'),
+          accessor: (r: Tuition) => `${r.class_name || ''} ${r.billing_period || ''}`,
+        },
+        { header: t('tuition.amount'), accessor: 'amount_due' as const },
+        { header: t('tuition.paid'), accessor: 'amount_paid' as const },
+        {
+          header: t('tuition.dueDate'),
+          accessor: (r: Tuition) => new Date(r.due_date).toLocaleDateString('vi-VN'),
+        },
+        {
+          header: t('tuition.status'),
+          accessor: (r: Tuition) => t(`tuition.statusLabels.${r.status}`),
+        },
+      ];
+      const dateLabel = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
+      await exportToPDF(
+        selected,
+        columns,
+        `${t('tuition.title', 'Học phí')}_${dateLabel}`,
+        `${t('tuition.title', 'Học phí')} - ${dateLabel}`
+      );
     });
   };
 
@@ -161,6 +232,14 @@ const TuitionPage: React.FC = () => {
             <table className="w-full border-separate border-spacing-0 sm:min-w-[700px] min-w-full">
               <thead className="bg-gray-50 dark:bg-slate-800 sticky top-0 z-10">
                 <tr>
+                  <th className="px-3 sm:px-4 py-3 border-b border-gray-100 dark:border-slate-700 w-10">
+                    <input
+                      type="checkbox"
+                      className="rounded border-gray-300 text-primary focus:ring-primary"
+                      checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                      onChange={handleToggleSelectAll}
+                    />
+                  </th>
                   {[
                     t('tuition.student'),
                     t('tuition.classPeriod'),
@@ -196,8 +275,16 @@ const TuitionPage: React.FC = () => {
                   return (
                     <tr
                       key={tuition.id}
-                      className="hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors group"
+                      className={`hover:bg-gray-50/50 dark:hover:bg-slate-800/50 transition-colors group ${selectedIds.includes(tuition.id) ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
                     >
+                      <td className="px-3 sm:px-4 py-3">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300 text-primary focus:ring-primary"
+                          checked={selectedIds.includes(tuition.id)}
+                          onChange={() => handleToggleSelect(tuition.id)}
+                        />
+                      </td>
                       <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
                         <div className="font-semibold text-sm text-gray-900 dark:text-white">
                           {tuition.student_name}
@@ -305,6 +392,34 @@ const TuitionPage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Bulk Actions */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <div className="bg-slate-900 dark:bg-slate-800 text-white px-4 sm:px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 sm:gap-4">
+            <span className="font-bold text-sm">Đã chọn {selectedIds.length}</span>
+            <div className="w-px h-6 bg-slate-700" />
+            <div className="flex gap-2">
+              <button
+                onClick={handleExportSelected}
+                className="px-3 sm:px-4 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-bold text-xs sm:text-sm transition-colors flex items-center gap-2"
+              >
+                <Receipt size={16} />
+                <span className="hidden sm:inline">Xuất Excel</span>
+                <span className="sm:hidden">Excel</span>
+              </button>
+              <button
+                onClick={handleExportPDFSelected}
+                className="px-3 sm:px-4 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-bold text-xs sm:text-sm transition-colors flex items-center gap-2"
+              >
+                <Receipt size={16} />
+                <span className="hidden sm:inline">Xuất PDF</span>
+                <span className="sm:hidden">PDF</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Modals */}
       {showBulkGenerate && <BulkGenerateModal onClose={() => setShowBulkGenerate(false)} />}

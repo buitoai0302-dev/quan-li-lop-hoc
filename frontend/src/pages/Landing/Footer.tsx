@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Globe, Mail, MapPin } from 'lucide-react';
+import { Phone, Mail, MapPin } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { usePublicSettings } from '@/features/admin/hooks/useSystemSettings';
 
