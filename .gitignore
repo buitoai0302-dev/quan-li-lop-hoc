@@ -5,6 +5,10 @@ frontend/node_modules/
 
 # Environment Variables
 .env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 backend/.env
 frontend/.env
 
@@ -12,13 +16,46 @@ frontend/.env
 dist/
 backend/dist/
 frontend/dist/
+build/
+out/
+.next/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Testing
+coverage/
+
+# Caches and Tools
+.eslintcache
+.tsbuildinfo
+.prettiercache
+.cache/
 
 # OS generated files
 .DS_Store
 Thumbs.db
+Desktop.ini
 
 # IDE / Editor
 .vscode/
 .idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
+# Security / Secrets
 recovery-codes.txt
+*.pem
+*.key
+*.cert
+
+ROADMAP_IMPROVEMENT.md

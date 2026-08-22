@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { messaging, isFirebaseInitialized } from '../config/firebase';
 import pool from '../db';
 
@@ -40,7 +41,7 @@ export class NotificationService {
     if (tokens.length === 0) return;
 
     if (!isFirebaseInitialized() || !messaging) {
-      console.log(`[MOCK NOTIFICATION] To User ${userId}: ${title} - ${body}`);
+      logger.info(`[MOCK NOTIFICATION] To User ${userId}: ${title} - ${body}`);
       return;
     }
 
@@ -59,7 +60,7 @@ export class NotificationService {
       // Handle invalid tokens
       if (response.failureCount > 0) {
         const failedTokens: string[] = [];
-        response.responses.forEach((resp, idx) => {
+        response.responses.forEach((resp: any, idx: number) => {
           if (!resp.success) {
             if (
               resp.error?.code === 'messaging/invalid-registration-token' ||
@@ -75,7 +76,7 @@ export class NotificationService {
         }
       }
     } catch (error) {
-      console.error('Error sending message to user:', error);
+      logger.error(error, 'Error sending message to user:');
     }
   }
 
@@ -99,7 +100,7 @@ export class NotificationService {
     if (tokens.length === 0) return;
 
     if (!isFirebaseInitialized() || !messaging) {
-      console.log(`[MOCK NOTIFICATION] To Users ${userIds.join(', ')}: ${title} - ${body}`);
+      logger.info(`[MOCK NOTIFICATION] To Users ${userIds.join(', ')}: ${title} - ${body}`);
       return;
     }
 
@@ -116,7 +117,7 @@ export class NotificationService {
       const response = await messaging.sendMulticast(message);
       // Handle failures similarly...
     } catch (error) {
-      console.error('Error sending message to users:', error);
+      logger.error(error, 'Error sending message to users:');
     }
   }
 }

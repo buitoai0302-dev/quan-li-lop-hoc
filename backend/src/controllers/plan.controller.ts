@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Request, Response } from 'express';
 import { cache as planCache } from '../services/feature-flag.service';
 import pool from '../db';
@@ -18,13 +19,13 @@ export const getPlans = async (req: Request, res: Response) => {
 
     res.json(plans);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
 
 export const createPlanRequest = async (req: Request, res: Response) => {
-  const { planId, notes } = req.body;
+  const { planId, notes, billingCycle } = req.body;
   const tenantId = (req as any).user.tenantId;
 
   try {
@@ -39,13 +40,13 @@ export const createPlanRequest = async (req: Request, res: Response) => {
     }
 
     const result = await pool.query(
-      'INSERT INTO plan_requests (tenant_id, requested_plan_id, notes) VALUES ($1, $2, $3) RETURNING *',
-      [tenantId, planId, notes || null]
+      'INSERT INTO plan_requests (tenant_id, requested_plan_id, notes, billing_cycle) VALUES ($1, $2, $3, $4) RETURNING *',
+      [tenantId, planId, notes || null, billingCycle || 'MONTHLY']
     );
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
-    console.error('Error in createPlanRequest:', err);
+    logger.error(err, 'Error in createPlanRequest:');
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -61,7 +62,7 @@ export const getPlanRequests = async (req: Request, res: Response) => {
     `);
     res.json(result.rows);
   } catch (err) {
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -102,7 +103,7 @@ export const approvePlanRequest = async (req: Request, res: Response) => {
     res.json({ message: 'Plan request approved and tenant updated successfully' });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Internal server error' });
   } finally {
     client.release();
@@ -127,7 +128,7 @@ export const rejectPlanRequest = async (req: Request, res: Response) => {
     res.json({ message: 'Plan request rejected' });
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error(err);
+    logger.error(err);
     res.status(500).json({ error: 'Internal server error' });
   } finally {
     client.release();
@@ -150,7 +151,7 @@ export const getPlanRequestStatus = async (req: Request, res: Response) => {
     // Return with 'requested_plan_id' key so frontend doesn't need to change
     res.json({ ...result.rows[0], requested_plan_id: result.rows[0].plan_id });
   } catch (err) {
-    console.error('Error in getPlanRequestStatus:', err);
+    logger.error(err, 'Error in getPlanRequestStatus:');
     res.status(500).json({ error: 'Internal server error' });
   }
 };

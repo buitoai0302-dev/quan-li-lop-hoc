@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Response, NextFunction } from 'express';
 import pool from '../db';
 import { AuthRequest } from './auth.middleware';
@@ -33,7 +34,7 @@ export const apiKeyMiddleware = async (req: AuthRequest, res: Response, next: Ne
 
     next();
   } catch (error) {
-    console.error('API Key Middleware Error:', error);
+    logger.error(error, 'API Key Middleware Error:');
     res.status(500).json({ error: 'Internal server error' });
   }
 };

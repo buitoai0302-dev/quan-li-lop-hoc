@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Response, NextFunction } from 'express';
 import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
@@ -148,7 +149,7 @@ export const recordAttendance = async (req: AuthRequest, res: Response, next: Ne
     res.json({ success: true, count: results.length });
   } catch (error: any) {
     if (client) await client.query('ROLLBACK');
-    console.error('Record attendance error:', error);
+    logger.error(error, 'Record attendance error:');
     res.status(error.status || 500).json({
       error: error.message || 'Internal Server Error',
       code: error.code || 'ATTENDANCE_ERROR',

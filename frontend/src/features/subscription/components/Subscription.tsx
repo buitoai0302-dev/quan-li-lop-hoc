@@ -1,35 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, ArrowRight, Info, CreditCard } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
-import toast from 'react-hot-toast';
-import { handleApiError } from '@/utils/errorHelper';
-import type { ApiErrorData } from '@/utils/errorHelper';
-import type { AxiosError } from 'axios';
 import { PLAN_REQUEST_STATUS } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
 
 import PlanCard from './PlanCard';
 
-import {
-  useSubscriptionData,
-  useRequestPlanUpgrade,
-  useCreatePaymentUrl,
-} from '../hooks/useSubscription';
+import { useSubscriptionData } from '../hooks/useSubscription';
 import { usePublicSettings } from '@/features/admin/hooks/useSystemSettings';
+import { useNavigate } from 'react-router-dom';
 
 const Subscription: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
 
   const { data, isLoading: loading } = useSubscriptionData();
-  const { mutate: requestUpgradeMutate, isPending: isSubmittingRequest } = useRequestPlanUpgrade();
-  const { mutate: createPaymentUrlMutate, isPending: isCreatingPaymentUrl } = useCreatePaymentUrl();
   const { data: settings } = usePublicSettings();
+  const navigate = useNavigate();
 
-  const isSubmitting = isSubmittingRequest || isCreatingPaymentUrl;
+  const isSubmitting = false; // No longer submitting directly here
 
   const plans = data?.plans || [];
   const currentTenantPlanId = data?.tenant?.plan_id || null;
@@ -40,32 +32,26 @@ const Subscription: React.FC = () => {
 
   const isVi = i18n.language === 'vi';
 
-  const [pendingPlanId, setPendingPlanId] = useState<string | null>(initialPendingId || null);
+  const pendingPlanId = initialPendingId || null;
+  const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'YEARLY'>('YEARLY');
 
-  const handleRequestUpgrade = (planId: string, planName: string) => {
-    requestUpgradeMutate(planId, {
-      onSuccess: () => {
-        toast.success(t('subscription.requestSent', { planName }));
-        setPendingPlanId(planId);
-      },
-      onError: (err: unknown) => {
-        handleApiError(err as AxiosError<ApiErrorData>, t);
-      },
-    });
-  };
-
-  const handlePayment = (planId: string, gateway: 'vnpay' | 'momo') => {
-    createPaymentUrlMutate(
-      { plan_id: planId, gateway },
-      {
-        onSuccess: (res) => {
-          window.location.href = res.paymentUrl;
-        },
-        onError: (err: unknown) => {
-          handleApiError(err as AxiosError<ApiErrorData>, t);
-        },
+  const maxSavingsPercent = useMemo(() => {
+    if (!plans || plans.length === 0) return 0;
+    return plans.reduce((max, p) => {
+      const priceMonth = isVi ? Number(p.price_vnd) : Number(p.price_usd);
+      const priceYear = isVi ? Number(p.yearly_price_vnd) : Number(p.yearly_price_usd);
+      if (priceMonth > 0 && priceYear > 0) {
+        const costIfMonthly = priceMonth * 12;
+        const savings = costIfMonthly - priceYear;
+        const percent = Math.round((savings / costIfMonthly) * 100);
+        return percent > max ? percent : max;
       }
-    );
+      return max;
+    }, 0);
+  }, [plans, isVi]);
+
+  const handleUpgradeClick = (planId: string, planName: string) => {
+    navigate('/checkout', { state: { planId, planName, billingCycle } });
   };
 
   const handleContactSales = () => {
@@ -84,10 +70,51 @@ const Subscription: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <PageHeader icon={CreditCard} />
+      <PageHeader
+        icon={CreditCard}
+        actions={
+          <div className="relative flex bg-gray-100 dark:bg-gray-800 rounded-full p-1 border border-gray-200/50 dark:border-gray-700/50 w-[310px] sm:w-[350px]">
+            <div
+              className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white dark:bg-gray-700 rounded-full shadow-sm transition-all duration-300 ease-out border border-gray-200/50 dark:border-gray-600/50 ${billingCycle === 'YEARLY' ? 'left-1/2 ml-[2px]' : 'left-1'}`}
+            />
+            <button
+              onClick={() => setBillingCycle('MONTHLY')}
+              className={`relative z-10 flex-1 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-black transition-colors uppercase tracking-wider flex items-center justify-center ${
+                billingCycle === 'MONTHLY'
+                  ? 'text-gray-900 dark:text-white'
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              {t('subscription.monthlyBilling')}
+            </button>
+
+            <button
+              onClick={() => setBillingCycle('YEARLY')}
+              className={`relative z-10 flex-1 py-1 rounded-full text-[10px] sm:text-xs font-black transition-colors uppercase tracking-wider flex flex-col items-center justify-center gap-0.5 ${
+                billingCycle === 'YEARLY'
+                  ? 'text-gray-900 dark:text-white'
+                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+              }`}
+            >
+              <span className="leading-none mt-0.5">{t('subscription.yearlyBilling')}</span>
+              {maxSavingsPercent > 0 && (
+                <span
+                  className={`text-[8px] px-1.5 py-[2px] rounded-full font-bold whitespace-nowrap transition-colors leading-none ${
+                    billingCycle === 'YEARLY'
+                      ? 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400'
+                      : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                  }`}
+                >
+                  {t('subscription.saveUpTo', { percent: maxSavingsPercent })}
+                </span>
+              )}
+            </button>
+          </div>
+        }
+      />
 
       <div className="flex-1 overflow-auto custom-scrollbar px-1 pt-4">
-        <div className="max-w-7xl mx-auto space-y-12">
+        <div className="max-w-7xl mx-auto space-y-8">
           {/* Pricing Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 px-2">
             {plans
@@ -100,8 +127,8 @@ const Subscription: React.FC = () => {
                   isVi={isVi}
                   isSubmitting={isSubmitting}
                   pendingPlanId={pendingPlanId}
-                  onUpgrade={handleRequestUpgrade}
-                  onPayment={handlePayment}
+                  billingCycle={billingCycle}
+                  onUpgrade={handleUpgradeClick}
                   t={t}
                 />
               ))}

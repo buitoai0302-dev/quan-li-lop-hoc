@@ -131,3 +131,9 @@ export const THEMES = {
 export const STORAGE_KEYS = {
   THEME: 'app-theme',
 } as const;
+
+export const PREMIUM_FEATURES = {
+  ATTENDANCE: 'attendance',
+  BRANCHES: 'branches',
+  TUITION: 'tuition',
+} as const;

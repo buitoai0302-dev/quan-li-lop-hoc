@@ -6,6 +6,8 @@ import cors from 'cors';
 import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import path from 'path';
+import pinoHttp from 'pino-http';
+import { logger } from './utils/logger';
 import { tenantMiddleware } from './middlewares/tenant.middleware';
 import { authMiddleware } from './middlewares/auth.middleware';
 import authRoutes from './routes/auth.routes';
@@ -21,6 +23,8 @@ import importRoutes from './routes/import.routes';
 import googleRoutes from './routes/google.routes';
 import adminRoutes from './routes/admin.routes';
 import planRoutes from './routes/plan.routes';
+import { getPlans } from './controllers/plan.controller';
+import { getPublicSettings } from './controllers/system.controller';
 import attendanceRoutes from './routes/attendance.routes';
 import tuitionRoutes from './routes/tuition.routes';
 import billingRoutes from './routes/billing.routes';
@@ -75,12 +79,15 @@ app.use(
 );
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser()); // Parse httpOnly cookies
+app.use(pinoHttp({ logger }));
 
 // 1. Public routes (No authentication or tenant context needed)
 app.use('/api/auth', authRoutes);
 app.use('/api/google', googleRoutes);
 app.use('/api/billing', billingRoutes); // Includes public webhook endpoints
-app.use('/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/api/plans', getPlans); // Make plans public
+app.get('/api/system/settings/public', getPublicSettings); // Make system settings public
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
 
 // 2. Protected routes - Core Business Logic (Auth & Tenant required)
 const protectedRoutes = express.Router();
@@ -108,12 +115,12 @@ app.use('/api', protectedRoutes);
 boss
   .start()
   .then(async () => {
-    console.log('[pg-boss] Queue started successfully');
+    logger.info('[pg-boss] Queue started successfully');
     await initNotificationJobs();
     await initBackupJobs();
   })
   .catch((err: Error) => {
-    console.error('[pg-boss] Failed to start queue:', err);
+    logger.error(err, '[pg-boss] Failed to start queue:');
   });
 
 // Health check
@@ -131,7 +138,7 @@ app.get('/*path', (req, res, next) => {
   if (!req.path.startsWith('/api/')) {
     res.sendFile(path.join(frontendDistPath, 'index.html'), (err) => {
       if (err) {
-        console.error('Error sending index.html:', err);
+        logger.error(err, 'Error sending index.html:');
         next(new NotFoundError('Frontend build not found or path incorrect'));
       }
     });
@@ -144,5 +151,5 @@ app.get('/*path', (req, res, next) => {
 app.use(errorMiddleware);
 
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
+  logger.info(`Server is running on port ${port}`);
 });

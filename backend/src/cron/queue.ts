@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 /**
  * pg-boss Job Queue — thay thế node-cron
  * Lưu job vào PostgreSQL, đảm bảo không bỏ lỡ khi server restart
@@ -15,12 +16,10 @@ const boss = new PgBoss({
   // Tự dọn dẹp job cũ sau 7 ngày
   archiveCompletedAfterSeconds: 60 * 60 * 24 * 7,
   deleteAfterSeconds: 60 * 60 * 24 * 14,
-  // Không log quá nhiều ở production
-  noScheduledJobs: false,
 });
 
 boss.on('error', (error) => {
-  console.error('[pg-boss] Queue error:', error);
+  logger.error(error, '[pg-boss] Queue error:');
 });
 
 export default boss;

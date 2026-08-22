@@ -35,6 +35,8 @@ export interface User {
   full_name: string;
   role: string;
   tenant_name: string;
+  plan_code?: string;
+  plan_features?: Record<string, boolean>;
   onboarding_completed: boolean;
   notify_upcoming_sessions: boolean;
   is_google_connected: boolean;
@@ -84,11 +86,10 @@ export interface Plan {
   id: string;
   name: string;
   code: string;
-  price_vnd?: string | number;
-  price_usd?: string | number;
-  price?: number;
-  max_users?: number;
-  max_students?: number;
+  price_vnd: number;
+  price_usd: number;
+  yearly_price_vnd: number;
+  yearly_price_usd: number;
   is_active: boolean;
   limits: Record<string, number> | PlanLimit[];
   features: Record<string, boolean> | string[] | PlanFeature[];
@@ -102,7 +103,8 @@ export interface PlanRequest {
   contact_email?: string;
   requested_plan?: string;
   plan_name?: string;
-  status: string;
+  status: 'pending' | 'approved' | 'rejected';
+  billing_cycle: 'MONTHLY' | 'YEARLY';
   notes?: string;
   created_at: string;
 }

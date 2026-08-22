@@ -4,7 +4,11 @@ import type { Plan, Tenant } from '@/types';
 export const getPlans = () => api.get<Plan[]>('/plans').then((res) => res.data);
 export const getTenant = () => api.get<Tenant>('/tenant').then((res) => res.data);
 export const getPlanRequestStatus = () => api.get('/plans/request/status').then((res) => res.data);
-export const requestPlanUpgrade = (planId: string) => api.post('/plans/request', { planId });
+export const requestPlanUpgrade = (data: {
+  planId: string;
+  billingCycle: string;
+  notes?: string;
+}) => api.post('/plans/request', data);
 
 export interface CreatePaymentDto {
   plan_id: string;

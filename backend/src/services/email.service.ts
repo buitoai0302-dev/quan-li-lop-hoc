@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import nodemailer from 'nodemailer';
 
 // Escape user-controlled strings before injecting into HTML templates
@@ -23,7 +24,7 @@ const logPreviewUrl = (info: any) => {
   if (!process.env.SMTP_USER || process.env.SMTP_HOST === 'smtp.ethereal.email') {
     const previewUrl = nodemailer.getTestMessageUrl(info);
     if (previewUrl) {
-      console.log('\n📧 EMAIL PREVIEW URL (dev only):', previewUrl, '\n');
+      logger.info('\n📧 EMAIL PREVIEW URL (dev only):', previewUrl, '\n');
     }
   }
 };
@@ -115,7 +116,7 @@ export const sendVerificationEmail = async (to: string, token: string) => {
     });
     logPreviewUrl(info);
   } catch (error) {
-    console.error('Error sending verification email:', error);
+    logger.error(error, 'Error sending verification email:');
     throw error;
   }
 };
@@ -170,7 +171,7 @@ export const sendTeacherWelcomeEmail = async (to: string, token: string, fullNam
     });
     logPreviewUrl(info);
   } catch (error) {
-    console.error('Error sending teacher welcome email:', error);
+    logger.error(error, 'Error sending teacher welcome email:');
     throw error;
   }
 };
@@ -209,7 +210,7 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
     });
     logPreviewUrl(info);
   } catch (error) {
-    console.error('Error sending password reset email:', error);
+    logger.error(error, 'Error sending password reset email:');
     throw error;
   }
 };
@@ -256,7 +257,7 @@ export const sendNewUserPasswordEmail = async (to: string, fullName: string, pas
     });
     logPreviewUrl(info);
   } catch (error) {
-    console.error('Error sending new user password email:', error);
+    logger.error(error, 'Error sending new user password email:');
     // Không throw — việc tạo user đã thành công, email lỗi chỉ là warning
   }
 };
@@ -326,7 +327,7 @@ export const sendReminderEmail = async (to: string, sessionDetails: any) => {
     logPreviewUrl(info);
     return true;
   } catch (error) {
-    console.error('Error sending reminder email:', error);
+    logger.error(error, 'Error sending reminder email:');
     return false;
   }
 };

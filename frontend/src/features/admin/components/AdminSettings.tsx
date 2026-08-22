@@ -53,7 +53,7 @@ const AdminSettings: React.FC = () => {
         icon={Settings}
         actions={
           <Button onClick={handleSave} loading={isSaving} className="gap-2">
-            <Save size={16} /> Lưu thay đổi
+            <Save size={16} /> {t('admin.settings.save')}
           </Button>
         }
       ></PageHeader>
@@ -70,18 +70,16 @@ const AdminSettings: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-gray-900 dark:text-white">
-                      Thông tin doanh nghiệp
+                      {t('admin.settings.businessInfoTitle')}
                     </h3>
-                    <p className="text-xs text-gray-500">
-                      Tên thương hiệu, mã số thuế và định danh
-                    </p>
+                    <p className="text-xs text-gray-500">{t('admin.settings.businessInfoDesc')}</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Tên hệ thống
+                      {t('admin.settings.systemName')}
                     </label>
                     <Input
                       value={formData.SYSTEM_NAME || ''}
@@ -93,7 +91,7 @@ const AdminSettings: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Mã số thuế
+                      {t('admin.settings.taxCode')}
                     </label>
                     <Input
                       value={formData.TAX_CODE || ''}
@@ -105,7 +103,7 @@ const AdminSettings: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Mã bưu chính (Postal Code)
+                      {t('admin.settings.postalCode')}
                     </label>
                     <Input
                       value={formData.POSTAL_CODE || ''}
@@ -127,18 +125,16 @@ const AdminSettings: React.FC = () => {
                   </div>
                   <div>
                     <h3 className="text-lg font-black text-gray-900 dark:text-white">
-                      Thông tin liên hệ
+                      {t('admin.settings.contactInfoTitle')}
                     </h3>
-                    <p className="text-xs text-gray-500">
-                      Đường dây nóng, hỗ trợ kỹ thuật và kinh doanh
-                    </p>
+                    <p className="text-xs text-gray-500">{t('admin.settings.contactInfoDesc')}</p>
                   </div>
                 </div>
 
                 <div className="space-y-4">
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Điện thoại Hotline
+                      {t('admin.settings.hotline')}
                     </label>
                     <Input
                       value={formData.CONTACT_PHONE || ''}
@@ -150,7 +146,7 @@ const AdminSettings: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Email liên hệ
+                      {t('admin.settings.email')}
                     </label>
                     <Input
                       type="email"
@@ -163,7 +159,7 @@ const AdminSettings: React.FC = () => {
 
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Link Zalo (Liên hệ kinh doanh)
+                      {t('admin.settings.zaloLink')}
                     </label>
                     <Input
                       value={formData.CONTACT_ZALO || ''}
@@ -171,15 +167,12 @@ const AdminSettings: React.FC = () => {
                       placeholder="VD: https://zalo.me/0901234567"
                       icon={<Globe size={16} />}
                     />
-                    <p className="text-[11px] text-gray-500 mt-1">
-                      Đường dẫn này sẽ được mở khi khách hàng bấm nút "Liên hệ kinh doanh" ở trang
-                      Gói dịch vụ.
-                    </p>
+                    <p className="text-[11px] text-gray-500 mt-1">{t('admin.settings.zaloDesc')}</p>
                   </div>
 
                   <div>
                     <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
-                      Địa chỉ
+                      {t('admin.settings.address')}
                     </label>
                     <Input
                       value={formData.CONTACT_ADDRESS || ''}
@@ -191,17 +184,85 @@ const AdminSettings: React.FC = () => {
                 </div>
               </div>
             </Card>
+
+            {/* Payment Info Card */}
+            <Card className="h-full md:col-span-2">
+              <div className="p-5 sm:p-6 space-y-6">
+                <div className="flex items-center gap-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 flex items-center justify-center">
+                    <Building size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-gray-900 dark:text-white">
+                      {t('admin.settings.paymentInfoTitle')}
+                    </h3>
+                    <p className="text-xs text-gray-500">{t('admin.settings.paymentInfoDesc')}</p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                      {t('admin.settings.bankId')}
+                    </label>
+                    <Input
+                      value={formData.PAYMENT_BANK_ID || ''}
+                      onChange={(e) => handleChange('PAYMENT_BANK_ID', e.target.value)}
+                      placeholder="VD: techcombank, vcb, 970415"
+                      icon={<Hash size={16} />}
+                    />
+                    <p className="text-[11px] text-gray-500 mt-1">
+                      {t('admin.settings.bankIdDesc')}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                      {t('admin.settings.bankName')}
+                    </label>
+                    <Input
+                      value={formData.PAYMENT_BANK_NAME || ''}
+                      onChange={(e) => handleChange('PAYMENT_BANK_NAME', e.target.value)}
+                      placeholder="VD: Techcombank"
+                      icon={<Building size={16} />}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                      {t('admin.settings.accountNumber')}
+                    </label>
+                    <Input
+                      value={formData.PAYMENT_ACCOUNT_NUMBER || ''}
+                      onChange={(e) => handleChange('PAYMENT_ACCOUNT_NUMBER', e.target.value)}
+                      placeholder="VD: 1903 1234 567 890"
+                      icon={<Hash size={16} />}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-bold text-gray-700 dark:text-gray-300 mb-1.5">
+                      {t('admin.settings.accountName')}
+                    </label>
+                    <Input
+                      value={formData.PAYMENT_ACCOUNT_NAME || ''}
+                      onChange={(e) => handleChange('PAYMENT_ACCOUNT_NAME', e.target.value)}
+                      placeholder="VD: CONG TY TNHH EDU SCHEDULE"
+                    />
+                  </div>
+                </div>
+              </div>
+            </Card>
           </div>
 
           <div className="bg-emerald-50 dark:bg-emerald-900/20 rounded-xl p-4 flex items-start gap-3 border border-emerald-100 dark:border-emerald-800/50">
             <CheckCircle className="text-emerald-500 shrink-0 mt-0.5" size={20} />
             <div>
               <h4 className="text-sm font-bold text-emerald-800 dark:text-emerald-400">
-                Đồng bộ tự động
+                {t('admin.settings.autoSyncTitle')}
               </h4>
               <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">
-                Các thông tin cấu hình tại đây sẽ tự động cập nhật trên toàn hệ thống, bao gồm nút
-                Liên hệ trên giao diện người dùng, footer, và các email thông báo tự động.
+                {t('admin.settings.autoSyncDesc')}
               </p>
             </div>
           </div>

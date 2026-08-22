@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Response, NextFunction } from 'express';
 import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
@@ -154,7 +155,8 @@ export const getPlans = async (req: AuthRequest, res: Response, next: NextFuncti
 export const updatePlanDetails = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
-    const { name, priceVnd, priceUsd, isActive, limits, features } = req.body;
+    const { name, priceVnd, priceUsd, yearlyPriceVnd, yearlyPriceUsd, isActive, limits, features } =
+      req.body;
 
     await pool.query('BEGIN');
 
@@ -176,6 +178,14 @@ export const updatePlanDetails = async (req: AuthRequest, res: Response, next: N
       if (isActive !== undefined) {
         params.push(isActive);
         updates.push(`is_active = $${params.length}`);
+      }
+      if (yearlyPriceVnd !== undefined) {
+        params.push(yearlyPriceVnd);
+        updates.push(`yearly_price_vnd = $${params.length}`);
+      }
+      if (yearlyPriceUsd !== undefined) {
+        params.push(yearlyPriceUsd);
+        updates.push(`yearly_price_usd = $${params.length}`);
       }
       params.push(id);
       await pool.query(
@@ -320,7 +330,7 @@ export const createUser = async (req: AuthRequest, res: Response, next: NextFunc
 
     // Gửi mật khẩu qua email thay vì trả về trong response (bảo mật hơn)
     sendNewUserPasswordEmail(email, full_name, finalPassword).catch((err) =>
-      console.error('[Admin] Failed to send new user password email:', err)
+      logger.error(err, '[Admin] Failed to send new user password email:')
     );
 
     res.status(201).json({
@@ -357,7 +367,7 @@ export const resetUserPassword = async (req: AuthRequest, res: Response, next: N
 
     // Gửi mật khẩu qua email thay vì trả về trong response
     sendNewUserPasswordEmail(userEmail, userFullName, finalPassword).catch((err) =>
-      console.error('[Admin] Failed to send reset password email:', err)
+      logger.error(err, '[Admin] Failed to send reset password email:')
     );
 
     res.json({

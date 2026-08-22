@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { google } from 'googleapis';
 import pool from '../db';
 import fs from 'fs';
@@ -140,7 +141,7 @@ export const syncEventToGoogle = async (userId: string, sessionData: any) => {
       }
     }
   } catch (error) {
-    console.error('Error syncing to Google Calendar:', error);
+    logger.error(error, 'Error syncing to Google Calendar:');
   }
 };
 
@@ -166,7 +167,7 @@ export const deleteEventFromGoogle = async (userId: string, sessionId: string) =
       ]);
     }
   } catch (error) {
-    console.error('Error deleting from Google Calendar:', error);
+    logger.error(error, 'Error deleting from Google Calendar:');
   }
 };
 
@@ -207,7 +208,7 @@ export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) 
   const result = await pool.query(query, role === 'teacher' ? [userId, userEmail] : [userId]);
 
   const sessions = result.rows;
-  console.log(
+  logger.info(
     `[GoogleSync] Found ${sessions.length} sessions in DB. Raw rows:`,
     JSON.stringify(sessions)
   );
@@ -265,7 +266,7 @@ export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) 
       }
       successCount++;
     } catch (err) {
-      console.error(`Failed to sync session ${sessionData.id}:`, err);
+      logger.error(`Failed to sync session ${sessionData.id}:`, err);
     }
   }
 
@@ -317,7 +318,7 @@ export const uploadBackupToDrive = async (
       folderId = folderRes.data.id;
     }
   } catch (err) {
-    console.error('Error finding/creating folder:', err);
+    logger.error(err, 'Error finding/creating folder:');
     throw err;
   }
 
@@ -339,7 +340,7 @@ export const uploadBackupToDrive = async (
     });
     return file.data.id;
   } catch (err) {
-    console.error('Error uploading file to Drive:', err);
+    logger.error(err, 'Error uploading file to Drive:');
     throw err;
   }
 };

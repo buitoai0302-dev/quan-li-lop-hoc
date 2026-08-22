@@ -10,8 +10,8 @@ interface PlanCardProps {
   isVi: boolean;
   isSubmitting: boolean;
   pendingPlanId: string | null;
+  billingCycle: 'MONTHLY' | 'YEARLY';
   onUpgrade: (planId: string, planName: string) => void;
-  onPayment?: (planId: string, gateway: 'vnpay' | 'momo') => void;
   t: TFunction;
 }
 
@@ -21,8 +21,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
   isVi,
   isSubmitting,
   pendingPlanId,
+  billingCycle,
   onUpgrade,
-  onPayment,
   t,
 }) => {
   const isFree = plan.code === PLAN_CODES.FREE;
@@ -41,6 +41,25 @@ const PlanCard: React.FC<PlanCardProps> = ({
     if (!Array.isArray(plan.features)) return false;
     return (plan.features as PlanFeature[]).find((f) => f.feature_key === key)?.is_enabled || false;
   };
+
+  const monthlyPrice = isVi ? Number(plan.price_vnd) || 0 : Number(plan.price_usd) || 0;
+  const yearlyPrice = isVi
+    ? Number(plan.yearly_price_vnd) || 0
+    : Number(plan.yearly_price_usd) || 0;
+  const isYearly = billingCycle === 'YEARLY';
+  const displayPrice = isYearly ? yearlyPrice : monthlyPrice;
+
+  // Tự động tính toán mức tiết kiệm
+  let discountPercentage = 0;
+  if (isYearly && monthlyPrice > 0 && yearlyPrice > 0) {
+    const totalMonthlyCost = monthlyPrice * 12;
+    if (totalMonthlyCost > yearlyPrice) {
+      discountPercentage = Math.round(((totalMonthlyCost - yearlyPrice) / totalMonthlyCost) * 100);
+    }
+  }
+
+  // Giá hiển thị phụ nếu là năm thì chia 12 ra để so sánh
+  const monthlyEquivalent = isYearly && yearlyPrice > 0 ? Math.round(yearlyPrice / 12) : 0;
 
   return (
     <div
@@ -81,15 +100,26 @@ const PlanCard: React.FC<PlanCardProps> = ({
       </div>
 
       <div className="mb-8">
-        <h3 className="text-xl font-black text-gray-900 dark:text-white mb-2 tracking-tight uppercase">
-          {plan.name}
-        </h3>
+        <div className="flex justify-between items-end mb-2">
+          <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+            {plan.name}
+          </h3>
+          {discountPercentage > 0 && (
+            <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-black">
+              -{discountPercentage}%
+            </span>
+          )}
+        </div>
         <div className="flex flex-col">
-          <div className="flex items-baseline gap-1 whitespace-nowrap flex-nowrap">
-            <span className="text-4xl font-black text-gray-900 dark:text-white tracking-tighter shrink-0">
+          <div className="flex items-baseline gap-1 whitespace-nowrap flex-nowrap overflow-hidden">
+            <span className="text-3xl xl:text-4xl font-black text-gray-900 dark:text-white tracking-tighter shrink-0 truncate">
               {isVi
-                ? new Intl.NumberFormat('vi-VN').format(Number(plan.price_vnd) || 0)
-                : plan.price_usd}
+                ? new Intl.NumberFormat('vi-VN').format(
+                    isYearly && yearlyPrice > 0 ? monthlyEquivalent : displayPrice
+                  )
+                : isYearly && yearlyPrice > 0
+                  ? (yearlyPrice / 12).toFixed(2)
+                  : displayPrice}
             </span>
             <span className="text-lg font-black text-gray-900 dark:text-white shrink-0">
               {isVi ? 'đ' : '$'}
@@ -98,6 +128,16 @@ const PlanCard: React.FC<PlanCardProps> = ({
               /{t('common.month')}
             </span>
           </div>
+          {isYearly && monthlyPrice > 0 && (
+            <div className="text-[11px] text-gray-400 font-medium mt-1 flex items-center gap-1">
+              Thanh toán{' '}
+              <span className="font-bold text-gray-600 dark:text-gray-300">
+                {isVi ? new Intl.NumberFormat('vi-VN').format(yearlyPrice) : yearlyPrice}
+                {isVi ? 'đ' : '$'}
+              </span>{' '}
+              / năm
+            </div>
+          )}
         </div>
       </div>
 
@@ -187,31 +227,12 @@ const PlanCard: React.FC<PlanCardProps> = ({
           {t('subscription.downgrade')}
         </button>
       ) : (
-        <div className="flex flex-col gap-2">
-          {onPayment ? (
-            <>
-              <button
-                onClick={() => onPayment(plan.id, 'vnpay')}
-                className="w-full py-3 px-4 rounded-xl font-bold text-xs transition-all bg-[#005BAA] text-white hover:bg-[#004a8a] active:scale-95 flex items-center justify-center gap-2"
-              >
-                {t('billingReturn.payVnpay')}
-              </button>
-              <button
-                onClick={() => onPayment(plan.id, 'momo')}
-                className="w-full py-3 px-4 rounded-xl font-bold text-xs transition-all bg-[#A50064] text-white hover:bg-[#850050] active:scale-95 flex items-center justify-center gap-2"
-              >
-                {t('billingReturn.payMomo')}
-              </button>
-            </>
-          ) : (
-            <button
-              onClick={() => onUpgrade(plan.id, plan.name)}
-              className="w-full py-4 px-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl bg-primary text-white hover:bg-primary-dark hover:scale-[1.02] active:scale-95 shadow-primary/20"
-            >
-              {t('subscription.upgrade')}
-            </button>
-          )}
-        </div>
+        <button
+          onClick={() => onUpgrade(plan.id, plan.name)}
+          className="w-full py-4 px-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl bg-primary text-white hover:bg-primary-dark hover:scale-[1.02] active:scale-95 shadow-primary/20"
+        >
+          {t('subscription.upgrade')}
+        </button>
       )}
     </div>
   );

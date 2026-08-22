@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Response } from 'express';
 import crypto from 'crypto';
 import pool from '../db';
@@ -26,7 +27,7 @@ export const getApiKey = async (req: AuthRequest, res: Response): Promise<void> 
     const result = await pool.query('SELECT api_key FROM tenants WHERE id = $1', [tenantId]);
     res.json({ hasAccess: true, apiKey: result.rows[0]?.api_key });
   } catch (error) {
-    console.error('Error in getApiKey:', error);
+    logger.error(error, 'Error in getApiKey:');
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -56,7 +57,7 @@ export const generateApiKey = async (req: AuthRequest, res: Response): Promise<v
 
     res.json({ apiKey: newKey });
   } catch (error) {
-    console.error('Error in generateApiKey:', error);
+    logger.error(error, 'Error in generateApiKey:');
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -81,7 +82,7 @@ export const getTenant = async (req: AuthRequest, res: Response): Promise<void> 
 
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error in getTenant:', error);
+    logger.error(error, 'Error in getTenant:');
     res.status(500).json({ error: 'Internal server error' });
   }
 };
@@ -116,7 +117,7 @@ export const updateTenant = async (req: AuthRequest, res: Response): Promise<voi
 
     res.json(result.rows[0]);
   } catch (error) {
-    console.error('Error in updateTenant:', error);
+    logger.error(error, 'Error in updateTenant:');
     res.status(500).json({ error: 'Internal server error' });
   }
 };

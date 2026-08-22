@@ -14,7 +14,8 @@ import {
   resetAdminUserPassword,
   toggleAdminUserStatus,
 } from '../api/admin.api';
-import type { Tenant, Plan } from '@/types';
+import type { UpdatePlanPayload } from '../api/admin.api';
+import type { Tenant } from '@/types';
 
 export const useAdminTenants = () => {
   return useQuery({
@@ -64,7 +65,7 @@ export const useUpdateTenant = () => {
 export const useUpdatePlan = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Plan> }) => updatePlan(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdatePlanPayload }) => updatePlan(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
     },

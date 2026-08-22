@@ -24,7 +24,8 @@ export const useSubscriptionData = () => {
 export const useRequestPlanUpgrade = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (planId: string) => requestPlanUpgrade(planId),
+    mutationFn: (data: { planId: string; billingCycle: string; notes?: string }) =>
+      requestPlanUpgrade(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['subscription-data'] });
     },

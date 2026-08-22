@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import pool from '../db';
@@ -160,7 +161,7 @@ async function activateInvoice(orderId: string, transactionId: string, gatewayRe
     // Idempotency guard: nếu đã thanh toán rồi thì bỏ qua, không xử lý lại
     if (invoice.status === 'paid') {
       await client.query('COMMIT');
-      console.log(`[Billing] Invoice ${invoice.id} already paid — skipping duplicate webhook.`);
+      logger.info(`[Billing] Invoice ${invoice.id} already paid — skipping duplicate webhook.`);
       return;
     }
 
@@ -193,12 +194,12 @@ async function activateInvoice(orderId: string, transactionId: string, gatewayRe
     );
 
     await client.query('COMMIT');
-    console.log(
+    logger.info(
       `[Billing] Invoice ${invoice.id} paid. Tenant ${invoice.tenant_id} upgraded to plan ${invoice.plan_id}`
     );
   } catch (err) {
     await client.query('ROLLBACK');
-    console.error('[Billing] activateInvoice error:', err);
+    logger.error(err, '[Billing] activateInvoice error:');
     throw err;
   } finally {
     client.release();

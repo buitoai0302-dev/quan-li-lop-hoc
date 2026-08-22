@@ -8,6 +8,10 @@ export type SystemSettings = {
   CONTACT_ADDRESS?: string;
   TAX_CODE?: string;
   POSTAL_CODE?: string;
+  PAYMENT_BANK_ID?: string;
+  PAYMENT_BANK_NAME?: string;
+  PAYMENT_ACCOUNT_NUMBER?: string;
+  PAYMENT_ACCOUNT_NAME?: string;
   [key: string]: string | undefined;
 };
 

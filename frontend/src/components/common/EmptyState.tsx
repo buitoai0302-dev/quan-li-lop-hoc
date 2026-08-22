@@ -43,7 +43,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       {action && (
         <div className="relative animate-in slide-in-from-bottom-2 duration-700">
           {showArrow && (
-            <div className="absolute -top-8 -right-10 hidden sm:block animate-bounce text-primary/50">
+            <div className="absolute -top-8 right-15 hidden sm:block animate-bounce text-primary/40">
               <CornerRightDown size={32} strokeWidth={2.5} />
             </div>
           )}

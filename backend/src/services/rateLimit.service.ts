@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import NodeCache from 'node-cache';
 import Redis from 'ioredis';
 
@@ -16,14 +17,14 @@ if (process.env.REDIS_URL) {
     });
 
     redisClient.on('connect', () => {
-      console.log('[Redis] Rate Limit Service connected successfully.');
+      logger.info('[Redis] Rate Limit Service connected successfully.');
     });
   } catch (err) {
     console.warn('[Redis] Failed to initialize, falling back to in-memory cache.');
     redisClient = null;
   }
 } else {
-  console.log(
+  logger.info(
     '[RateLimit] No REDIS_URL provided. Using in-memory node-cache. (Not recommended for multi-instance deployments)'
   );
 }

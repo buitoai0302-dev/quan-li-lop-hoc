@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Request, Response, NextFunction } from 'express';
 import { AppError } from '../utils/errors';
 
@@ -18,7 +19,7 @@ export const errorMiddleware = (err: any, req: Request, res: Response, next: Nex
   }
 
   if (!err.isOperational && process.env.NODE_ENV !== 'development') {
-    console.error('ERROR 💥', err);
+    logger.error(err, 'ERROR 💥');
     return res.status(500).json({
       status: 'error',
       message: 'Something went very wrong!',

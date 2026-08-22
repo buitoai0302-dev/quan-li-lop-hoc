@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 /**
  * Backup Jobs — dùng pg-boss thay thế node-cron
  * Chạy mỗi giờ, lưu vào DB để không bỏ lỡ khi server restart
@@ -13,14 +14,14 @@ const JOB_NAME = 'run-tenant-backups';
 
 // ─── Handler: chạy backup cho tất cả tenant ─────────────────────────────────
 async function runTenantBackups() {
-  console.log('[Jobs] Bắt đầu quét các thiết lập backup của trung tâm...');
+  logger.info('[Jobs] Bắt đầu quét các thiết lập backup của trung tâm...');
 
   try {
     const saResult = await pool.query("SELECT id FROM users WHERE role = 'super_admin' LIMIT 1");
     const superAdminId = saResult.rows[0]?.id;
 
     if (!superAdminId) {
-      console.log('[Jobs] Không tìm thấy Super Admin, bỏ qua sao lưu.');
+      logger.info('[Jobs] Không tìm thấy Super Admin, bỏ qua sao lưu.');
       return;
     }
 
@@ -50,7 +51,7 @@ async function runTenantBackups() {
           }
 
           if (shouldRun) {
-            console.log(`[Jobs] Bắt đầu sao lưu cho trung tâm: ${tenant.name} (${tenant.email})`);
+            logger.info(`[Jobs] Bắt đầu sao lưu cho trung tâm: ${tenant.name} (${tenant.email})`);
             const timestamp =
               new Date().toISOString().replace(/[-:T]/g, '').replace(/\..+/, '') +
               '_' +
@@ -74,9 +75,9 @@ async function runTenantBackups() {
                 tenant.id,
               ]);
 
-              console.log(`[Jobs] Sao lưu thành công cho trung tâm: ${tenant.name}`);
+              logger.info(`[Jobs] Sao lưu thành công cho trung tâm: ${tenant.name}`);
             } catch (err) {
-              console.error(`[Jobs] Lỗi sao lưu cho trung tâm ${tenant.name}:`, err);
+              logger.error(`[Jobs] Lỗi sao lưu cho trung tâm ${tenant.name}:`, err);
               if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
               throw err; // pg-boss sẽ retry
             }
@@ -85,7 +86,7 @@ async function runTenantBackups() {
       }
     }
   } catch (error) {
-    console.error('[Jobs] Backup job error:', error);
+    logger.error(error, '[Jobs] Backup job error:');
     throw error;
   }
 }
@@ -106,5 +107,5 @@ export const initBackupJobs = async () => {
     }
   );
 
-  console.log('[Jobs] Backup job scheduled (every hour, persistent)');
+  logger.info('[Jobs] Backup job scheduled (every hour, persistent)');
 };

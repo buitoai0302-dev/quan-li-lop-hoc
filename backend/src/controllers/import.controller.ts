@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Response, NextFunction } from 'express';
 import pool from '../db';
 import bcrypt from 'bcrypt';
@@ -105,7 +106,7 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
               await client.query('COMMIT');
               // Send welcome email outside transaction
               await sendTeacherWelcomeEmail(email, verificationToken, full_name).catch((err) =>
-                console.error(`Error sending email to ${email}:`, err)
+                logger.error(`Error sending email to ${email}:`, err)
               );
             } else {
               await client.query('COMMIT');

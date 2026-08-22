@@ -1,3 +1,4 @@
+import { logger } from './utils/logger';
 import { Pool } from 'pg';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
@@ -30,17 +31,17 @@ async function setup() {
       [tenantId, email, hashedPassword, 'System Super Admin', 'super_admin', true]
     );
 
-    console.log('--- Super Admin Account Created ---');
-    console.log(`Email: ${email}`);
+    logger.info('--- Super Admin Account Created ---');
+    logger.info(`Email: ${email}`);
     if (process.env.NODE_ENV === 'development' || !process.env.SUPERADMIN_PASSWORD) {
-      console.log(`Password: ${password}`);
+      logger.info(`Password: ${password}`);
     } else {
-      console.log(`Password: ******** (set via ENV)`);
+      logger.info(`Password: ******** (set via ENV)`);
     }
-    console.log('-----------------------------------');
+    logger.info('-----------------------------------');
     process.exit(0);
   } catch (err) {
-    console.error('Error creating super admin:', err);
+    logger.error(err, 'Error creating super admin:');
     process.exit(1);
   }
 }

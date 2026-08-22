@@ -8,7 +8,20 @@ export const getAdminStats = () => api.get<AdminStats>('/admin/stats').then((res
 
 export const updateTenant = (id: string, data: Partial<Tenant>) =>
   api.patch(`/admin/tenants/${id}`, data);
-export const updatePlan = (id: string, data: Partial<Plan>) => api.put(`/admin/plans/${id}`, data);
+
+export interface UpdatePlanPayload {
+  name?: string;
+  priceVnd?: number;
+  priceUsd?: number;
+  yearlyPriceVnd?: number;
+  yearlyPriceUsd?: number;
+  isActive?: boolean;
+  limits?: any;
+  features?: any;
+}
+
+export const updatePlan = (id: string, data: UpdatePlanPayload) =>
+  api.put(`/admin/plans/${id}`, data);
 
 export const getPlanRequests = () =>
   api.get<PlanRequest[]>('/plans/requests').then((res) => res.data);

@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { authMiddleware, requireRole } from '../middlewares/auth.middleware';
+import { validateBody } from '../middlewares/zod.middleware';
+import { CreateTuitionSchema, RecordPaymentSchema } from '../validators/tuition.validator';
 import {
   getTuitions,
   getOverdueTuitions,
@@ -21,13 +23,23 @@ router.get('/', getTuitions);
 router.get('/overdue', getOverdueTuitions);
 
 // CRUD học phí
-router.post('/', requireRole(['admin', 'staff', 'super_admin']), createTuition);
+router.post(
+  '/',
+  requireRole(['super_admin', 'center_admin', 'manager']),
+  validateBody(CreateTuitionSchema),
+  createTuition
+);
 router.post('/bulk-generate', requireRole(['admin', 'staff', 'super_admin']), bulkGenerateTuitions);
 router.patch('/:id', requireRole(['admin', 'staff', 'super_admin']), updateTuition);
 router.delete('/:id', requireRole(['admin', 'super_admin']), deleteTuition);
 
 // Thanh toán học phí
 router.get('/:id/payments', getTuitionPayments);
-router.post('/:id/payments', requireRole(['admin', 'staff', 'super_admin']), recordPayment);
+router.post(
+  '/:id/payments',
+  requireRole(['super_admin', 'center_admin', 'manager', 'accountant']),
+  validateBody(RecordPaymentSchema),
+  recordPayment
+);
 
 export default router;

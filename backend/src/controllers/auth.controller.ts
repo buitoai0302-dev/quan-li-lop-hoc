@@ -90,9 +90,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
 
   try {
     const result = await pool.query(
-      `SELECT u.*, t.name as tenant_name, t.plan_id, t.is_active as tenant_active, t.settings as tenant_settings
+      `SELECT u.*, t.name as tenant_name, t.plan_id, t.is_active as tenant_active, t.settings as tenant_settings, pd.code as plan_code,
+              (SELECT COALESCE(json_object_agg(feature_key, is_enabled), '{}'::json) FROM plan_features WHERE plan_id = t.plan_id) as plan_features
        FROM users u 
        JOIN tenants t ON u.tenant_id = t.id 
+       JOIN plan_definitions pd ON t.plan_id = pd.id
        WHERE u.email = $1 AND u.is_active = true`,
       [email]
     );
@@ -162,9 +164,11 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     const fullName = payload.name || email.split('@')[0];
 
     const result = await pool.query(
-      `SELECT u.*, t.name as tenant_name, t.plan_id, t.is_active as tenant_active
+      `SELECT u.*, t.name as tenant_name, t.plan_id, t.is_active as tenant_active, t.settings as tenant_settings, pd.code as plan_code,
+              (SELECT COALESCE(json_object_agg(feature_key, is_enabled), '{}'::json) FROM plan_features WHERE plan_id = t.plan_id) as plan_features
        FROM users u 
        JOIN tenants t ON u.tenant_id = t.id 
+       JOIN plan_definitions pd ON t.plan_id = pd.id
        WHERE u.email = $1`,
       [email]
     );
@@ -178,10 +182,12 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
         await client.query('BEGIN');
 
         // Default plan
-        const planResult = await client.query(`SELECT id FROM plan_definitions WHERE code = $1`, [
-          PLAN_CODES.FREE,
-        ]);
+        const planResult = await client.query(
+          `SELECT id, code FROM plan_definitions WHERE code = $1`,
+          [PLAN_CODES.FREE]
+        );
         const planId = planResult.rows[0]?.id || DEFAULT_FREE_PLAN_ID;
+        const planCode = planResult.rows[0]?.code || 'FREE';
 
         // Create ACTIVE tenant for Google login
         const tenantResult = await client.query(
@@ -197,7 +203,15 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
            VALUES ($1, $2, $3, $4, 'admin', true) RETURNING *`,
           [newTenant.id, email, dummyPassword, fullName]
         );
-        user = { ...userResult.rows[0], ...newTenant };
+        user = {
+          ...userResult.rows[0],
+          tenant_name: newTenant.tenant_name,
+          plan_id: newTenant.plan_id,
+          tenant_active: newTenant.tenant_active,
+          tenant_settings: newTenant.tenant_settings,
+          plan_code: planCode,
+          plan_features: {}, // will be empty for FREE initially, or can fetch properly, but default FREE is fine
+        };
 
         // Create default branch
         await client.query(`INSERT INTO branches (tenant_id, name) VALUES ($1, $2)`, [
@@ -497,9 +511,12 @@ export const getMe = async (req: Request, res: Response, next: NextFunction) => 
               u.notify_upcoming_sessions,
               (u.google_refresh_token IS NOT NULL) as is_google_connected,
               t.name as tenant_name,
-              t.settings as tenant_settings 
+              t.settings as tenant_settings,
+              pd.code as plan_code,
+              (SELECT COALESCE(json_object_agg(feature_key, is_enabled), '{}'::json) FROM plan_features WHERE plan_id = t.plan_id) as plan_features
        FROM users u 
        JOIN tenants t ON u.tenant_id = t.id 
+       JOIN plan_definitions pd ON t.plan_id = pd.id
        WHERE u.id = $1`,
       [userId]
     );

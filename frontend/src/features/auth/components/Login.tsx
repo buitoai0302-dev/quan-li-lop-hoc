@@ -23,7 +23,7 @@ const Login: React.FC = () => {
   const { theme: currentTheme } = useTheme();
 
   if (loading) return null;
-  if (user) return <Navigate to="/schedule" replace />;
+  if (user) return <Navigate to="/dashboard" replace />;
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language.startsWith('en') ? 'vi' : 'en');
@@ -36,7 +36,7 @@ const Login: React.FC = () => {
       const data = await googleLogin(credential);
       login(data.token, data.user);
       toast.success(t('auth.loginSuccess'));
-      navigate('/schedule');
+      navigate('/dashboard');
     } catch (error) {
       handleApiError(error, t, 'auth.googleLoginError');
     } finally {
@@ -52,7 +52,7 @@ const Login: React.FC = () => {
       const data = await loginApi({ email, password });
       login(data.token, data.user);
       toast.success(t('auth.loginSuccess'));
-      navigate('/schedule');
+      navigate('/dashboard');
     } catch (error) {
       if (error.response?.data?.code === ERROR_CODES.EMAIL_NOT_VERIFIED) {
         setEmailNotVerified(true);

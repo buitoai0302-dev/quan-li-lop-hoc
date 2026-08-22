@@ -1,3 +1,4 @@
+import { logger } from './utils/logger';
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
 import path from 'path';
@@ -12,7 +13,7 @@ const pool = new Pool({
 const email = process.argv[2];
 
 if (!email) {
-  console.error('Please provide an email: npm run promote -- your-email@example.com');
+  logger.error('Please provide an email: npm run promote -- your-email@example.com');
   process.exit(1);
 }
 
@@ -24,14 +25,14 @@ async function promote() {
     );
 
     if (result.rowCount === 0) {
-      console.error(`User with email ${email} not found.`);
+      logger.error(`User with email ${email} not found.`);
       process.exit(1);
     }
 
-    console.log(`Success! User ${result.rows[0].full_name} is now a Super Admin.`);
+    logger.info(`Success! User ${result.rows[0].full_name} is now a Super Admin.`);
     process.exit(0);
   } catch (err) {
-    console.error('Failed to promote user:', err);
+    logger.error(err, 'Failed to promote user:');
     process.exit(1);
   }
 }

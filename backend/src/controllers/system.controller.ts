@@ -5,12 +5,27 @@ import { AuthRequest } from '../middlewares/auth.middleware';
 export const getPublicSettings = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const result = await pool.query('SELECT setting_key, setting_value FROM system_settings');
+    const publicKeys = [
+      'SYSTEM_NAME',
+      'CONTACT_EMAIL',
+      'CONTACT_PHONE',
+      'CONTACT_ZALO',
+      'CONTACT_ADDRESS',
+      'TAX_CODE',
+      'POSTAL_CODE',
+      'PAYMENT_BANK_ID',
+      'PAYMENT_BANK_NAME',
+      'PAYMENT_ACCOUNT_NUMBER',
+      'PAYMENT_ACCOUNT_NAME',
+    ];
+
     const settings = result.rows.reduce((acc: any, row: any) => {
-      acc[row.setting_key] = row.setting_value;
+      if (publicKeys.includes(row.setting_key)) {
+        acc[row.setting_key] = row.setting_value;
+      }
       return acc;
     }, {});
 
-    // We send all of them as public for now since they are just branding/contact info
     res.json(settings);
   } catch (error) {
     next(error);

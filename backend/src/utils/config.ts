@@ -1,7 +1,8 @@
+import { logger } from '../utils/logger';
 export const getEnv = (key: string, defaultValue?: string): string => {
   const value = process.env[key] || defaultValue;
   if (!value) {
-    console.error(`FATAL: Environment variable ${key} is missing!`);
+    logger.error(`FATAL: Environment variable ${key} is missing!`);
     process.exit(1);
   }
   return value;

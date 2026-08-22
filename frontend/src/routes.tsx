@@ -13,7 +13,7 @@ const VerifyEmail = lazy(() => import('./pages/Auth/VerifyEmail'));
 const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/Auth/ResetPassword'));
 const ResendVerification = lazy(() => import('./pages/Auth/ResendVerification'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
+const Dashboard = lazy(() => import('./features/dashboard/Dashboard'));
 const Schedule = lazy(() => import('./pages/Schedule'));
 const Classes = lazy(() => import('./pages/Classes'));
 const Attendance = lazy(() => import('./pages/Attendance'));
@@ -25,6 +25,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const ImportData = lazy(() => import('./pages/ImportData'));
 const Help = lazy(() => import('./pages/Help'));
 const Subscription = lazy(() => import('./pages/Subscription'));
+const Checkout = lazy(() => import('./features/subscription/components/Checkout'));
 const Tuition = lazy(() => import('./pages/Tuition/Tuition'));
 const AdminTenants = lazy(() => import('./pages/Admin/AdminTenants'));
 const AdminPlans = lazy(() => import('./pages/Admin/AdminPlans'));
@@ -35,7 +36,7 @@ const ActivityLog = lazy(() => import('./pages/Admin/ActivityLog'));
 const Landing = lazy(() => import('./pages/Landing/index'));
 const BillingReturn = lazy(() => import('./pages/BillingReturn/BillingReturn'));
 
-import { USER_ROLES, ROUTES } from './utils/constants';
+import { USER_ROLES, ROUTES, PREMIUM_FEATURES } from './utils/constants';
 import {
   LayoutDashboard,
   Calendar,
@@ -131,6 +132,8 @@ export const appRoutes = [
         element: (
           <ProtectedRoute
             roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.TEACHER, USER_ROLES.SUPER_ADMIN]}
+            requirePremium={true}
+            featureKey={PREMIUM_FEATURES.ATTENDANCE}
           >
             <Attendance />
           </ProtectedRoute>
@@ -163,7 +166,11 @@ export const appRoutes = [
       {
         path: ROUTES.BRANCHES,
         element: (
-          <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN]}>
+          <ProtectedRoute
+            roles={[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN]}
+            requirePremium={true}
+            featureKey={PREMIUM_FEATURES.BRANCHES}
+          >
             <Branches />
           </ProtectedRoute>
         ),
@@ -201,6 +208,14 @@ export const appRoutes = [
         ),
       },
       {
+        path: '/checkout',
+        element: (
+          <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN]}>
+            <Checkout />
+          </ProtectedRoute>
+        ),
+      },
+      {
         path: ROUTES.BILLING_RETURN,
         element: (
           <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN]}>
@@ -211,7 +226,11 @@ export const appRoutes = [
       {
         path: ROUTES.TUITION,
         element: (
-          <ProtectedRoute roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]}>
+          <ProtectedRoute
+            roles={[USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN]}
+            requirePremium={true}
+            featureKey={PREMIUM_FEATURES.TUITION}
+          >
             <Tuition />
           </ProtectedRoute>
         ),

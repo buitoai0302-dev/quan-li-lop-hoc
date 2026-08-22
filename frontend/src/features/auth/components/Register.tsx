@@ -51,7 +51,7 @@ const Register: React.FC = () => {
       const data = await googleLogin(credential);
       login(data.token, data.user);
       toast.success(t('auth.loginSuccess'));
-      navigate('/schedule');
+      navigate('/dashboard');
     } catch (error) {
       handleApiError(error, t, 'auth.googleLoginError');
     } finally {

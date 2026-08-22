@@ -52,6 +52,8 @@ const AdminPlans: React.FC = () => {
           name: plan.name,
           priceVnd: plan.price_vnd,
           priceUsd: plan.price_usd,
+          yearlyPriceVnd: plan.yearly_price_vnd,
+          yearlyPriceUsd: plan.yearly_price_usd,
           isActive: plan.is_active,
           limits: plan.limits,
           features: plan.features,
@@ -78,7 +80,7 @@ const AdminPlans: React.FC = () => {
 
       <div className="flex-1 overflow-auto custom-scrollbar px-1">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {plans.map((plan) => (
               <Card
                 key={plan.id}
@@ -151,40 +153,83 @@ const AdminPlans: React.FC = () => {
               >
                 <div className="flex flex-col h-full">
                   {/* Pricing Section */}
-                  <div className="p-5 bg-white dark:bg-gray-800 grid grid-cols-2 gap-4 border-b border-gray-50 dark:border-gray-700/50">
-                    <div className="space-y-1.5">
-                      <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block truncate">
-                        VND / {t('common.month')}
-                      </span>
-                      <Input
-                        type="number"
-                        value={plan.price_vnd}
-                        onChange={(e) =>
-                          setPlans((prev) =>
-                            prev.map((p) =>
-                              p.id === plan.id ? { ...p, price_vnd: e.target.value } : p
+                  <div className="p-5 bg-white dark:bg-gray-800 flex flex-col gap-4 border-b border-gray-50 dark:border-gray-700/50">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block truncate">
+                          VND / {t('common.month')}
+                        </span>
+                        <Input
+                          type="number"
+                          value={plan.price_vnd}
+                          onChange={(e) =>
+                            setPlans((prev) =>
+                              prev.map((p) =>
+                                p.id === plan.id ? { ...p, price_vnd: Number(e.target.value) } : p
+                              )
                             )
-                          )
-                        }
-                        size="sm"
-                      />
+                          }
+                          size="sm"
+                        />
+                      </div>
+                      <div className="space-y-1.5 border-l border-gray-50 dark:border-gray-700/50 pl-4">
+                        <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block truncate">
+                          USD / {t('common.month')}
+                        </span>
+                        <Input
+                          type="number"
+                          value={plan.price_usd}
+                          onChange={(e) =>
+                            setPlans((prev) =>
+                              prev.map((p) =>
+                                p.id === plan.id ? { ...p, price_usd: Number(e.target.value) } : p
+                              )
+                            )
+                          }
+                          size="sm"
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1.5 border-l border-gray-50 dark:border-gray-700/50 pl-4">
-                      <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block truncate">
-                        USD / {t('common.month')}
-                      </span>
-                      <Input
-                        type="number"
-                        value={plan.price_usd}
-                        onChange={(e) =>
-                          setPlans((prev) =>
-                            prev.map((p) =>
-                              p.id === plan.id ? { ...p, price_usd: e.target.value } : p
+
+                    <div className="grid grid-cols-2 gap-4 border-t border-gray-50 dark:border-gray-700/50 pt-4">
+                      <div className="space-y-1.5">
+                        <span className="text-[10px] text-emerald-500 uppercase font-black tracking-widest block truncate">
+                          VND / {t('common.year')}
+                        </span>
+                        <Input
+                          type="number"
+                          value={plan.yearly_price_vnd || 0}
+                          onChange={(e) =>
+                            setPlans((prev) =>
+                              prev.map((p) =>
+                                p.id === plan.id
+                                  ? { ...p, yearly_price_vnd: Number(e.target.value) }
+                                  : p
+                              )
                             )
-                          )
-                        }
-                        size="sm"
-                      />
+                          }
+                          size="sm"
+                        />
+                      </div>
+                      <div className="space-y-1.5 border-l border-gray-50 dark:border-gray-700/50 pl-4">
+                        <span className="text-[10px] text-emerald-500 uppercase font-black tracking-widest block truncate">
+                          USD / {t('common.year')}
+                        </span>
+                        <Input
+                          type="number"
+                          value={plan.yearly_price_usd || 0}
+                          onChange={(e) =>
+                            setPlans((prev) =>
+                              prev.map((p) =>
+                                p.id === plan.id
+                                  ? { ...p, yearly_price_usd: Number(e.target.value) }
+                                  : p
+                              )
+                            )
+                          }
+                          size="sm"
+                        />
+                      </div>
                     </div>
                   </div>
 

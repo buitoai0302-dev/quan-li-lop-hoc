@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 import { Request, Response } from 'express';
 import { getAuthUrl, handleCallback, syncAllSessionsToGoogle } from '../services/google.service';
 import pool from '../db';
@@ -34,7 +35,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     const frontendUrl = config.frontendUrl();
     res.redirect(`${frontendUrl}/settings?google_sync=success`);
   } catch (error) {
-    console.error('Google callback error:', error);
+    logger.error(error, 'Google callback error:');
     res.status(500).send('Lỗi khi kết nối Google Calendar');
   }
 };
@@ -59,7 +60,7 @@ export const syncAll = async (req: Request, res: Response) => {
   const tenantId = (req as any).user?.tenantId;
   const userRole = (req as any).user?.role;
 
-  console.log(`[GoogleSync] Request from user ${userId}, role: ${userRole}, tenantId: ${tenantId}`);
+  logger.info(`[GoogleSync] Request from user ${userId}, role: ${userRole}, tenantId: ${tenantId}`);
 
   if (!userId || !tenantId) return res.status(401).json({ error: 'Unauthorized' });
 
@@ -67,7 +68,7 @@ export const syncAll = async (req: Request, res: Response) => {
     const count = await syncAllSessionsToGoogle(userId, tenantId);
     res.json({ message: `Đã đồng bộ thành công ${count} buổi học lên Google Calendar`, count });
   } catch (error: any) {
-    console.error('Sync all error:', error);
+    logger.error(error, 'Sync all error:');
     res.status(500).json({ error: error.message || 'Lỗi khi đồng bộ dữ liệu' });
   }
 };

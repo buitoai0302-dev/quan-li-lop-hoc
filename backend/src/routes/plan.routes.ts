@@ -11,8 +11,8 @@ import { authMiddleware, requireRole } from '../middlewares/auth.middleware';
 
 const router = Router();
 
-// Publicly available (for logged in users) to see plans
-router.get('/', authMiddleware, getPlans);
+// Publicly available to see plans
+router.get('/', getPlans);
 router.get('/request/status', authMiddleware, getPlanRequestStatus);
 
 // Request upgrade (Admin of tenant)

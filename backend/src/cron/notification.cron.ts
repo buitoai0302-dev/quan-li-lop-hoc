@@ -1,3 +1,4 @@
+import { logger } from '../utils/logger';
 /**
  * Notification Jobs — dùng pg-boss thay thế node-cron
  * Job được lưu vào DB, tự động chạy lại nếu server restart
@@ -10,7 +11,7 @@ const JOB_NAME = 'send-session-reminders';
 
 // ─── Handler: gửi email nhắc nhở buổi học ───────────────────────────────────
 async function sendSessionReminders() {
-  console.log('[Jobs] Checking for upcoming sessions to notify...');
+  logger.info('[Jobs] Checking for upcoming sessions to notify...');
 
   try {
     const now = new Date();
@@ -43,7 +44,7 @@ async function sendSessionReminders() {
     const result = await pool.query(sql, [targetDate, targetTimeStart, targetTimeEnd]);
 
     if (result.rows.length === 0) {
-      console.log('[Jobs] No sessions to notify.');
+      logger.info('[Jobs] No sessions to notify.');
       return;
     }
 
@@ -69,7 +70,7 @@ async function sendSessionReminders() {
           `[Jobs] Failed to send reminder to ${recipient.recipient_email} for session ${sessionId}`
         );
       } else {
-        console.log(
+        logger.info(
           `[Jobs] Sent reminder to ${recipient.recipient_email} for session ${sessionId}`
         );
       }
@@ -83,7 +84,7 @@ async function sendSessionReminders() {
       await pool.query(`UPDATE schedule_sessions SET is_notified = true WHERE id = ANY($1)`, [
         fullyNotifiedIds,
       ]);
-      console.log(`[Jobs] Marked ${fullyNotifiedIds.length} session(s) as notified.`);
+      logger.info(`[Jobs] Marked ${fullyNotifiedIds.length} session(s) as notified.`);
     }
 
     const failedCount = sessionSuccess.size - fullyNotifiedIds.length;
@@ -91,7 +92,7 @@ async function sendSessionReminders() {
       console.warn(`[Jobs] ${failedCount} session(s) had email failures and will retry next run.`);
     }
   } catch (error) {
-    console.error('[Jobs] Error running notification job:', error);
+    logger.error(error, '[Jobs] Error running notification job:');
     throw error; // pg-boss sẽ retry tự động
   }
 }
@@ -114,5 +115,5 @@ export const initNotificationJobs = async () => {
     }
   );
 
-  console.log('[Jobs] Notification job scheduled (every 15 minutes, persistent)');
+  logger.info('[Jobs] Notification job scheduled (every 15 minutes, persistent)');
 };
