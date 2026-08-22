@@ -10,6 +10,8 @@ declare global {
   }
 }
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const tenantMiddleware = async (
   req: Request,
   res: Response,
@@ -20,12 +22,19 @@ export const tenantMiddleware = async (
   const userRole = (req as any).user?.role;
 
   if (!tenantId && userRole !== 'super_admin') {
-    res
-      .status(401)
-      .json({
-        success: false,
-        message: 'Tenant ID is required (Missing token or x-tenant-id header)',
-      });
+    res.status(401).json({
+      success: false,
+      message: 'Tenant ID is required (Missing token or x-tenant-id header)',
+    });
+    return;
+  }
+
+  // Validate UUID format nếu có tenantId (tránh injection qua header)
+  if (tenantId && !UUID_REGEX.test(tenantId)) {
+    res.status(400).json({
+      success: false,
+      message: 'Invalid Tenant ID format',
+    });
     return;
   }
 

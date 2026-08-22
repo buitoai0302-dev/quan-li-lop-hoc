@@ -3,6 +3,7 @@ import pool from '../db';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import bcrypt from 'bcrypt';
+import { sendNewUserPasswordEmail } from '../services/email.service';
 
 // ─── System Stats ────────────────────────────────────────────────────────────
 
@@ -108,31 +109,41 @@ export const getPlans = async (req: AuthRequest, res: Response, next: NextFuncti
     const plansResult = await pool.query('SELECT * FROM plan_definitions ORDER BY sort_order');
     const plans = plansResult.rows;
 
-    // Fetch limits and features for each plan
-    const plansWithDetails = await Promise.all(
-      plans.map(async (plan) => {
-        const [limitsRes, featuresRes] = await Promise.all([
-          pool.query('SELECT limit_key, limit_value FROM plan_limits WHERE plan_id = $1', [
-            plan.id,
-          ]),
-          pool.query('SELECT feature_key, is_enabled FROM plan_features WHERE plan_id = $1', [
-            plan.id,
-          ]),
-        ]);
+    if (plans.length === 0) return res.json([]);
 
-        return {
-          ...plan,
-          limits: limitsRes.rows.reduce(
-            (acc: any, row: any) => ({ ...acc, [row.limit_key]: row.limit_value }),
-            {}
-          ),
-          features: featuresRes.rows.reduce(
-            (acc: any, row: any) => ({ ...acc, [row.feature_key]: row.is_enabled }),
-            {}
-          ),
-        };
-      })
-    );
+    // Fix N+1: Lấy tất cả limits và features bằng 2 query IN thay vì N*2 query
+    const planIds = plans.map((p) => p.id);
+    const placeholders = planIds.map((_: any, i: number) => `$${i + 1}`).join(', ');
+
+    const [limitsRes, featuresRes] = await Promise.all([
+      pool.query(
+        `SELECT plan_id, limit_key, limit_value FROM plan_limits WHERE plan_id IN (${placeholders})`,
+        planIds
+      ),
+      pool.query(
+        `SELECT plan_id, feature_key, is_enabled FROM plan_features WHERE plan_id IN (${placeholders})`,
+        planIds
+      ),
+    ]);
+
+    // Group results theo plan_id
+    const limitsMap: Record<string, Record<string, any>> = {};
+    const featuresMap: Record<string, Record<string, any>> = {};
+
+    for (const row of limitsRes.rows) {
+      if (!limitsMap[row.plan_id]) limitsMap[row.plan_id] = {};
+      limitsMap[row.plan_id][row.limit_key] = row.limit_value;
+    }
+    for (const row of featuresRes.rows) {
+      if (!featuresMap[row.plan_id]) featuresMap[row.plan_id] = {};
+      featuresMap[row.plan_id][row.feature_key] = row.is_enabled;
+    }
+
+    const plansWithDetails = plans.map((plan: any) => ({
+      ...plan,
+      limits: limitsMap[plan.id] || {},
+      features: featuresMap[plan.id] || {},
+    }));
 
     res.json(plansWithDetails);
   } catch (error) {
@@ -307,11 +318,15 @@ export const createUser = async (req: AuthRequest, res: Response, next: NextFunc
 
     await pool.query('COMMIT');
 
+    // Gửi mật khẩu qua email thay vì trả về trong response (bảo mật hơn)
+    sendNewUserPasswordEmail(email, full_name, finalPassword).catch((err) =>
+      console.error('[Admin] Failed to send new user password email:', err)
+    );
+
     res.status(201).json({
       success: true,
       user: userResult.rows[0],
-      rawPassword: finalPassword, // Trả về password gốc để hiển thị 1 lần
-      message: 'Người dùng đã được tạo thành công',
+      message: 'Người dùng đã được tạo thành công. Mật khẩu đã được gửi qua email.',
     });
   } catch (error) {
     await pool.query('ROLLBACK');
@@ -328,7 +343,7 @@ export const resetUserPassword = async (req: AuthRequest, res: Response, next: N
     const passwordHash = await bcrypt.hash(finalPassword, 10);
 
     const result = await pool.query(
-      'UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, email',
+      'UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, email, full_name',
       [passwordHash, id]
     );
 
@@ -336,10 +351,18 @@ export const resetUserPassword = async (req: AuthRequest, res: Response, next: N
       throw new NotFoundError('Không tìm thấy người dùng');
     }
 
+    // Lấy email của user để gửi email thông báo
+    const userEmail = result.rows[0].email;
+    const userFullName = result.rows[0].full_name || userEmail;
+
+    // Gửi mật khẩu qua email thay vì trả về trong response
+    sendNewUserPasswordEmail(userEmail, userFullName, finalPassword).catch((err) =>
+      console.error('[Admin] Failed to send reset password email:', err)
+    );
+
     res.json({
       success: true,
-      rawPassword: finalPassword,
-      message: 'Cấp lại mật khẩu thành công',
+      message: 'Cấp lại mật khẩu thành công. Mật khẩu mới đã được gửi qua email.',
     });
   } catch (error) {
     next(error);

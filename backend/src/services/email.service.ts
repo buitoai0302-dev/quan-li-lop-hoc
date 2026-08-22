@@ -214,6 +214,53 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
   }
 };
 
+// ─── Send New User Password Email (Admin tạo tài khoản) ───────────────────────────────────────
+
+export const sendNewUserPasswordEmail = async (to: string, fullName: string, password: string) => {
+  const loginLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
+
+  const body = `
+    <!-- VI -->
+    <h2 style="margin:0 0 8px;color:#1e293b;font-size:20px;">🔐 Tài khoản của bạn đã được tạo</h2>
+    <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 12px;">
+      Xin chào <strong>${escapeHtml(fullName)}</strong>, tài khoản của bạn trên <strong>EduSchedule</strong> đã được tạo bởi quản trị viên. Dưới đây là thông tin đăng nhập tạm thời:
+    </p>
+    <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
+      <p style="margin:0 0 8px;font-size:14px;"><strong>📧 Email:</strong> ${escapeHtml(to)}</p>
+      <p style="margin:0;font-size:14px;"><strong>🔑 Mật khẩu tạm thời:</strong> <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;">${escapeHtml(password)}</code></p>
+    </div>
+    <p style="color:#ef4444;font-size:13px;margin:0 0 20px;">⚠️ <strong>Lưu ý:</strong> Đây là mật khẩu tạm thời. Vui lòng đổi mật khẩu ngay sau khi đăng nhập lần đầu.</p>
+
+    ${divider}
+
+    <!-- EN -->
+    <h2 style="margin:0 0 8px;color:#1e293b;font-size:20px;">🔐 Your account has been created</h2>
+    <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 12px;">
+      Hello <strong>${escapeHtml(fullName)}</strong>, your account on <strong>EduSchedule</strong> has been created by an administrator. Here are your temporary login credentials:
+    </p>
+    <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
+      <p style="margin:0 0 8px;font-size:14px;"><strong>📧 Email:</strong> ${escapeHtml(to)}</p>
+      <p style="margin:0;font-size:14px;"><strong>🔑 Temporary Password:</strong> <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;">${escapeHtml(password)}</code></p>
+    </div>
+    <p style="color:#ef4444;font-size:13px;margin:0 0 20px;">⚠️ <strong>Note:</strong> This is a temporary password. Please change it immediately after your first login.</p>
+
+    ${button(loginLink, 'Đăng Nhập Ngay', 'Login Now')}
+  `;
+
+  try {
+    const info = await transporter.sendMail({
+      from: `"EduSchedule" <${process.env.SMTP_USER || 'no-reply@eduschedule.com'}>`,
+      to,
+      subject: '[EduSchedule] Thông tin tài khoản mới · Your new account credentials',
+      html: emailWrapper(body),
+    });
+    logPreviewUrl(info);
+  } catch (error) {
+    console.error('Error sending new user password email:', error);
+    // Không throw — việc tạo user đã thành công, email lỗi chỉ là warning
+  }
+};
+
 // ─── Send Reminder Email ──────────────────────────────────────────────────────
 
 export const sendReminderEmail = async (to: string, sessionDetails: any) => {
