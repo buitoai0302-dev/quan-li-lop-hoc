@@ -60,6 +60,7 @@ const ALLOWED_ORIGINS = [
   'http://localhost:5174',
   'http://localhost:3000',
   'https://eduschedule.vercel.app',
+  'https://quan-li-lop-hoc-beta.vercel.app',
 ].filter(Boolean);
 
 app.use(
