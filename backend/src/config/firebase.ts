@@ -1,5 +1,6 @@
 import { logger } from '../utils/logger';
-import * as admin from 'firebase-admin';
+import { initializeApp, cert, applicationDefault } from 'firebase-admin/app';
+import { getMessaging } from 'firebase-admin/messaging';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -13,8 +14,8 @@ try {
     process.env.FIREBASE_PRIVATE_KEY &&
     process.env.FIREBASE_CLIENT_EMAIL
   ) {
-    admin.initializeApp({
-      credential: admin.credential.cert({
+    initializeApp({
+      credential: cert({
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
         privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
@@ -23,8 +24,8 @@ try {
     firebaseInitialized = true;
     logger.info('Firebase Admin SDK initialized successfully.');
   } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
+    initializeApp({
+      credential: applicationDefault(),
     });
     firebaseInitialized = true;
     logger.info('Firebase Admin SDK initialized using default credentials.');
@@ -36,4 +37,4 @@ try {
 }
 
 export const isFirebaseInitialized = () => firebaseInitialized;
-export const messaging = firebaseInitialized ? admin.messaging() : null;
+export const messaging = firebaseInitialized ? getMessaging() : null;

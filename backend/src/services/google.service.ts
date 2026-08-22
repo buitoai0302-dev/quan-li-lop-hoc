@@ -208,10 +208,7 @@ export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) 
   const result = await pool.query(query, role === 'teacher' ? [userId, userEmail] : [userId]);
 
   const sessions = result.rows;
-  logger.info(
-    `[GoogleSync] Found ${sessions.length} sessions in DB. Raw rows:`,
-    JSON.stringify(sessions)
-  );
+  logger.info({ sessions }, `[GoogleSync] Found ${sessions.length} sessions in DB.`);
   let successCount = 0;
 
   for (const sessionData of sessions) {
@@ -266,7 +263,7 @@ export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) 
       }
       successCount++;
     } catch (err) {
-      logger.error(`Failed to sync session ${sessionData.id}:`, err);
+      logger.error(err, `Failed to sync session ${sessionData.id}:`);
     }
   }
 

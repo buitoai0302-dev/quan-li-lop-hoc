@@ -24,7 +24,7 @@ const logPreviewUrl = (info: any) => {
   if (!process.env.SMTP_USER || process.env.SMTP_HOST === 'smtp.ethereal.email') {
     const previewUrl = nodemailer.getTestMessageUrl(info);
     if (previewUrl) {
-      logger.info('\n📧 EMAIL PREVIEW URL (dev only):', previewUrl, '\n');
+      logger.info(`\n📧 EMAIL PREVIEW URL (dev only): ${previewUrl}\n`);
     }
   }
 };

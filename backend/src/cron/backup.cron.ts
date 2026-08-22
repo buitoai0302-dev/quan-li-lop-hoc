@@ -77,7 +77,7 @@ async function runTenantBackups() {
 
               logger.info(`[Jobs] Sao lưu thành công cho trung tâm: ${tenant.name}`);
             } catch (err) {
-              logger.error(`[Jobs] Lỗi sao lưu cho trung tâm ${tenant.name}:`, err);
+              logger.error(err, `[Jobs] Lỗi sao lưu cho trung tâm ${tenant.name}:`);
               if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
               throw err; // pg-boss sẽ retry
             }
