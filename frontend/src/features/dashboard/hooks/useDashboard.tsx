@@ -3,11 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { getDashboardStats } from '../api/dashboard.api';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
-import { TENANT_STATUS, ACTIVITY_TYPES } from '@/utils/constants';
+import { TENANT_STATUS, ACTIVITY_TYPES, USER_ROLES } from '@/utils/constants';
 import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
 
 import { Users, BookOpen, Calendar, Activity, UserCheck } from 'lucide-react';
+
+const ROLES_WITHOUT_ONBOARDING = [USER_ROLES.TEACHER, USER_ROLES.STUDENT, USER_ROLES.STAFF];
 
 export const useDashboard = () => {
   const { t, i18n } = useTranslation();
@@ -16,7 +18,7 @@ export const useDashboard = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    if (user && !user.onboarding_completed) {
+    if (user && !user.onboarding_completed && !ROLES_WITHOUT_ONBOARDING.includes(user.role)) {
       setShowOnboarding(true);
     }
   }, [user]);

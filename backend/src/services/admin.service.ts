@@ -3,6 +3,7 @@ import { ValidationError, NotFoundError } from '../utils/errors';
 import bcrypt from 'bcrypt';
 import { sendNewUserPasswordEmail } from './email.service';
 import { logger } from '../utils/logger';
+import { ROLES, DEFAULT_FREE_PLAN_ID } from '../utils/constants';
 
 const generateRandomPassword = (length = 10) => {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
@@ -277,7 +278,7 @@ export class AdminService {
           throw new ValidationError('Tên trung tâm mới không được để trống');
         }
 
-        const defaultPlanId = plan_id || 'ffffffff-0000-0000-0000-000000000001';
+        const defaultPlanId = plan_id || DEFAULT_FREE_PLAN_ID;
         const tenantResult = await client.query(
           `INSERT INTO tenants (name, domain, plan_id, status, is_active) 
            VALUES ($1, $2, $3, 'active', true) RETURNING id`,
@@ -396,6 +397,30 @@ export class AdminService {
         );
 
         if (result.rowCount && result.rowCount > 0) {
+          // Create profile if role is teacher or student
+          if (role === ROLES.TEACHER) {
+            // Find a default branch for the tenant if exists, or pass null if nullable
+            const branchRes = await client.query(
+              'SELECT id FROM branches WHERE tenant_id = $1 LIMIT 1',
+              [tenant_id]
+            );
+            const branchId = branchRes.rows.length > 0 ? branchRes.rows[0].id : null;
+            await client.query(
+              `INSERT INTO teachers (tenant_id, branch_id, full_name, email) VALUES ($1, $2, $3, $4)`,
+              [tenant_id, branchId, full_name, email]
+            );
+          } else if (role === ROLES.STUDENT) {
+            const branchRes = await client.query(
+              'SELECT id FROM branches WHERE tenant_id = $1 LIMIT 1',
+              [tenant_id]
+            );
+            const branchId = branchRes.rows.length > 0 ? branchRes.rows[0].id : null;
+            await client.query(
+              `INSERT INTO students (tenant_id, branch_id, full_name, email) VALUES ($1, $2, $3, $4)`,
+              [tenant_id, branchId, full_name, email]
+            );
+          }
+
           await client.query('COMMIT');
           successCount++;
         } else {

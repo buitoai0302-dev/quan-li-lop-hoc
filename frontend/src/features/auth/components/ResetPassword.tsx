@@ -90,15 +90,17 @@ const ResetPassword: React.FC = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <div className="flex justify-center mb-4">
-          <div className="w-12 h-12 bg-primary rounded-[1rem] shadow-2xl shadow-primary/20 flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-500">
-            <span className="text-white font-black text-xl">E</span>
-          </div>
+          <img
+            src="/logo.png"
+            alt="EduSchedule Logo"
+            className="w-16 h-16 rounded-xl shadow-2xl shadow-primary/20 transition-all duration-500 object-cover"
+          />
         </div>
         <h2 className="text-center text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
           {t('auth.resetPasswordTitle')}
         </h2>
         <p className="mt-1.5 text-center text-[9px] sm:text-xs font-black uppercase tracking-[0.3em] text-slate-400 dark:text-gray-500">
-          EduSchedule Security
+          {t('auth.security')}
         </p>
       </div>
 
@@ -215,7 +217,7 @@ const ResetPassword: React.FC = () => {
 
       <div className="mt-8 text-center opacity-30 select-none">
         <p className="text-[9px] font-black uppercase tracking-[0.5em] text-slate-400">
-          Powered by EduSchedule Cloud
+          {t('auth.poweredBy')}
         </p>
       </div>
     </div>

@@ -37,6 +37,7 @@ export class AuthService {
       tenantId: user.tenant_id,
       branchId: user.branch_id,
       role: user.role,
+      email: user.email,
     };
 
     const accessToken = jwt.sign(payload, config.jwtSecret(), {

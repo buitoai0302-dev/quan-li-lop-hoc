@@ -18,7 +18,7 @@ import { z } from 'zod';
 const UpdateAdminTenantSchema = z.object({
   body: z
     .object({
-      planId: z.string().uuid().optional(),
+      planId: z.string().uuid().nullable().optional(),
       isActive: z.boolean().optional(),
       status: z.enum(['active', 'pending', 'suspended']).optional(),
       settings: z.any().optional(),

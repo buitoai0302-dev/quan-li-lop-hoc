@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { Menu, Globe, Moon, Sun, Monitor, HelpCircle, MessageSquarePlus } from 'lucide-react';
 import { getMenuItems } from '../routes';
@@ -20,6 +20,12 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
+
+  useEffect(() => {
+    const handleOpenFeedback = () => setIsFeedbackOpen(true);
+    window.addEventListener('open-feedback-modal', handleOpenFeedback);
+    return () => window.removeEventListener('open-feedback-modal', handleOpenFeedback);
+  }, []);
 
   const handleLogout = () => {
     logout();

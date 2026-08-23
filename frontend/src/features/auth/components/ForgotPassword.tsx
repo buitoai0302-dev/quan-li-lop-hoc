@@ -35,9 +35,11 @@ const ForgotPassword: React.FC = () => {
 
       <div className="sm:mx-auto sm:w-full sm:max-w-md relative z-10">
         <div className="flex justify-center mb-4">
-          <div className="w-12 h-12 bg-primary rounded-[1rem] shadow-2xl shadow-primary/20 flex items-center justify-center transform rotate-3 hover:rotate-0 transition-transform duration-500">
-            <span className="text-white font-black text-xl">E</span>
-          </div>
+          <img
+            src="/logo.png"
+            alt="EduSchedule Logo"
+            className="w-16 h-16 rounded-xl shadow-2xl shadow-primary/20 transition-all duration-500 object-cover"
+          />
         </div>
         <h2 className="text-center text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight">
           {t('auth.forgotPasswordTitle')}

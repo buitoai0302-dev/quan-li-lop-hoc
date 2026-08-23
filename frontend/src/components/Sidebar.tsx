@@ -185,9 +185,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
                           {item.label}
                         </span>
                         {item.isPremium &&
-                          [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].includes(
-                            user?.role || ''
-                          ) && (
+                          [
+                            USER_ROLES.ADMIN,
+                            USER_ROLES.STAFF,
+                            USER_ROLES.SUPER_ADMIN,
+                            USER_ROLES.TEACHER,
+                          ].includes(user?.role || '') && (
                             <div
                               className={`flex items-center justify-center bg-gradient-to-tr from-amber-400 to-orange-500 rounded-md shadow-md shadow-orange-500/20 animate-pulse transition-all duration-300 overflow-hidden ${isCollapsed ? 'md:w-0 md:h-0 md:p-0 md:opacity-0 hidden md:flex' : 'px-1.5 py-0.5'}`}
                             >

@@ -123,9 +123,7 @@ const Help: React.FC = () => {
   });
 
   const handleContactSupport = () => {
-    const subject = encodeURIComponent(t('help.supportSubject'));
-    const body = encodeURIComponent(t('help.supportBody'));
-    window.location.href = `mailto:support@eduschedule.com?subject=${subject}&body=${body}`;
+    window.dispatchEvent(new CustomEvent('open-feedback-modal'));
   };
 
   const renderContent = (text: string) => {

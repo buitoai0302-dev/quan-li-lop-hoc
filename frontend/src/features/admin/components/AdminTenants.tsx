@@ -92,7 +92,7 @@ const AdminTenants: React.FC = () => {
   const handleUpdatePlan = () => {
     if (!selectedTenant) return;
     updateTenantMutate(
-      { id: selectedTenant.id, data: { plan_id: newPlanId } },
+      { id: selectedTenant.id, data: { planId: newPlanId } as any },
       {
         onSuccess: () => {
           toast.success(t('common.success'));
@@ -139,6 +139,11 @@ const AdminTenants: React.FC = () => {
         icon={Shield}
         actions={
           <div className="flex items-center gap-2">
+            <div className="hidden sm:block">
+              <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest px-2">
+                {filteredTenants.length} {t('admin.organization')}
+              </span>
+            </div>
             <div className="bg-primary/10 px-3 py-1 rounded-md border border-primary/20">
               <span className="text-[10px] font-black uppercase text-primary flex items-center gap-1">
                 <Shield size={12} /> {t('common.roles.super_admin')}
@@ -146,7 +151,18 @@ const AdminTenants: React.FC = () => {
             </div>
           </div>
         }
-      />
+      >
+        <div className="relative w-full sm:max-w-md">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+          <input
+            type="text"
+            placeholder={t('common.search')}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-9 pr-4 py-2 bg-gray-50/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+          />
+        </div>
+      </PageHeader>
 
       <div className="flex-1 overflow-hidden flex flex-col px-1">
         <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col space-y-3 sm:space-y-3 min-h-0 py-2 sm:py-2">
@@ -170,27 +186,6 @@ const AdminTenants: React.FC = () => {
               color="emerald"
               className="col-span-2 md:col-span-1"
             />
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0 bg-white dark:bg-gray-800 p-1.5 sm:p-1.5 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
-            <div className="relative w-full sm:max-w-md flex-1">
-              <Search
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
-                size={16}
-              />
-              <input
-                type="text"
-                placeholder={t('common.search')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-gray-50/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-xs sm:text-sm font-medium text-gray-900 dark:text-white placeholder-gray-400 focus:bg-white dark:focus:bg-gray-900 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-              />
-            </div>
-            <div className="hidden sm:block ml-auto px-4">
-              <span className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                {filteredTenants.length} {t('admin.organization')}
-              </span>
-            </div>
           </div>
 
           <Card className="flex-1 min-h-0 overflow-hidden" scrollable={true}>
@@ -243,7 +238,7 @@ const AdminTenants: React.FC = () => {
                                 </div>
                                 {tenant.domain === SYSTEM_DOMAIN && (
                                   <span className="px-1.5 py-0.5 bg-primary/10 text-primary text-[8px] font-black uppercase rounded tracking-widest border border-primary/20 shrink-0">
-                                    System
+                                    {t('admin.system', 'System')}
                                   </span>
                                 )}
                                 <span className="sm:hidden px-1.5 py-0.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[8px] font-black uppercase rounded tracking-widest border border-blue-200 dark:border-blue-800 shrink-0">
@@ -293,7 +288,9 @@ const AdminTenants: React.FC = () => {
                                 <span className="hidden sm:inline">
                                   {t('common.roles.super_admin')}
                                 </span>
-                                <span className="sm:hidden">SYSTEM</span>
+                                <span className="sm:hidden">
+                                  {t('admin.systemShort', 'SYSTEM')}
+                                </span>
                               </div>
                             ) : (
                               <>
@@ -544,7 +541,9 @@ const AdminTenants: React.FC = () => {
               <p className="text-lg font-black text-gray-900 dark:text-white leading-tight truncate">
                 {selectedTenant?.name}
               </p>
-              <p className="text-[10px] text-blue-600 mt-1 font-medium">{t('admin.backup.desc')}</p>
+              <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1 font-medium">
+                {t('admin.backup.desc')}
+              </p>
             </div>
           </div>
 
@@ -562,7 +561,9 @@ const AdminTenants: React.FC = () => {
                 <div className="font-bold text-gray-900 dark:text-white text-sm">
                   {t('admin.backup.enable')}
                 </div>
-                <div className="text-xs text-gray-500">{t('admin.backup.enableDesc')}</div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {t('admin.backup.enableDesc')}
+                </div>
               </div>
             </label>
 
@@ -577,7 +578,7 @@ const AdminTenants: React.FC = () => {
                     onChange={(e) =>
                       setBackupSettings({ ...backupSettings, cycle: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
                   >
                     <option value={BACKUP_CYCLES.DAILY}>{t('admin.backup.daily')}</option>
                     <option value={BACKUP_CYCLES.WEEKLY}>{t('admin.backup.weekly')}</option>
@@ -593,7 +594,7 @@ const AdminTenants: React.FC = () => {
                     step="3600"
                     value={backupSettings.time}
                     onChange={(e) => setBackupSettings({ ...backupSettings, time: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none"
                   />
                 </div>
               </div>
@@ -676,7 +677,7 @@ const StatusBadge: React.FC<{ status: string; t: any }> = ({ status, t }) => {
       >
         <Clock size={10} className="sm:w-3 sm:h-3" />{' '}
         <span className="hidden sm:inline">{t('admin.statusPending', 'Chờ xác thực Email')}</span>
-        <span className="sm:hidden">CHỜ DUYỆT</span>
+        <span className="sm:hidden">{t('admin.statusPendingShort', 'CHỜ DUYỆT')}</span>
       </Badge>
     );
   }

@@ -324,7 +324,7 @@ const Classes: React.FC = () => {
             isExportDisabled={filteredClasses.length === 0}
             onImport={() => navigate('/import?type=classes')}
             onAdd={() => handleOpenModal()}
-            addLabel={t('classes.addClass')}
+            addLabel={t('common.add')}
           />
         }
       >

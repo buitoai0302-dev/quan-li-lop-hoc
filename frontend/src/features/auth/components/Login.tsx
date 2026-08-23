@@ -140,16 +140,10 @@ const Login: React.FC = () => {
             </div>
 
             <div className="space-y-1.5">
-              <div className="flex items-center justify-between ml-1">
+              <div className="flex items-center ml-1">
                 <Label className="text-[9px] text-slate-400 dark:text-gray-500 mb-0">
                   {t('auth.password')}
                 </Label>
-                <Link
-                  to="/forgot-password"
-                  className="text-[9px] font-black text-primary hover:text-primary-dark uppercase tracking-wider transition-colors"
-                >
-                  {t('auth.forgotPassword')}
-                </Link>
               </div>
               <div className="relative group">
                 <Input
@@ -174,7 +168,7 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center ml-1">
+            <div className="flex items-center justify-between ml-1">
               <label className="flex items-center gap-3 cursor-pointer group">
                 <div className="relative flex items-center justify-center">
                   <input type="checkbox" className="peer sr-only" />
@@ -195,6 +189,12 @@ const Login: React.FC = () => {
                   {t('auth.rememberMe')}
                 </span>
               </label>
+              <Link
+                to="/forgot-password"
+                className="text-[9px] font-black text-primary hover:text-primary-dark uppercase tracking-wider transition-colors"
+              >
+                {t('auth.forgotPassword')}
+              </Link>
             </div>
 
             <Button

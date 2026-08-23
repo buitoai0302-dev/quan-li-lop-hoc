@@ -202,8 +202,8 @@ const ScheduleBoard: React.FC = () => {
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
         >
-          {viewMode === 'month' && (
-            <div className="grid grid-cols-7 border-b border-border dark:border-gray-600 bg-gray-50 dark:bg-gray-900 sticky top-0 z-20 min-w-[800px] sm:min-w-[1000px] xl:min-w-full">
+          {viewMode === VIEW_MODES.MONTH && (
+            <div className="grid grid-cols-7 border-b border-border dark:border-gray-600 sticky top-0 z-20 min-w-[800px] sm:min-w-[1000px] xl:min-w-full shadow-sm">
               {[
                 t('schedule.days.mon'),
                 t('schedule.days.tue'),
@@ -215,7 +215,11 @@ const ScheduleBoard: React.FC = () => {
               ].map((d, i) => (
                 <div
                   key={i}
-                  className="p-2 text-center text-xs sm:text-sm font-semibold text-gray-600 dark:text-gray-300 border-r border-border dark:border-gray-600 last:border-r-0"
+                  className={`p-2.5 sm:p-3 text-center text-xs sm:text-sm font-bold uppercase tracking-wider ${
+                    i === 6
+                      ? 'bg-red-50/80 text-red-600 dark:bg-red-900/40 dark:text-red-400'
+                      : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
+                  } border-r border-border dark:border-gray-600 last:border-r-0`}
                 >
                   {d}
                 </div>
@@ -223,43 +227,44 @@ const ScheduleBoard: React.FC = () => {
             </div>
           )}
           <div
-            className={`grid ${viewMode === 'day' ? 'grid-cols-1' : 'grid-cols-7 min-w-[800px] sm:min-w-[1000px] xl:min-w-full'} border-l border-t border-border dark:border-gray-700`}
+            className={`grid ${viewMode === VIEW_MODES.DAY ? 'grid-cols-1' : 'grid-cols-7 min-w-[800px] sm:min-w-[1000px] xl:min-w-full'} border-l border-t border-border dark:border-gray-700`}
           >
             {daysToShow.map((day, idx) => {
               const dateStr = format(day, 'yyyy-MM-dd');
               const isToday = isSameDay(day, new Date());
               const isCurrentMonth =
-                viewMode === 'month' ? day.getMonth() === selectedDate.getMonth() : true;
+                viewMode === VIEW_MODES.MONTH ? day.getMonth() === selectedDate.getMonth() : true;
+              const isSunday = day.getDay() === 0;
 
               return (
                 <div
                   key={idx}
-                  className={`flex flex-col border-r border-b border-border dark:border-gray-700 ${viewMode === 'month' ? 'min-h-[120px] sm:min-h-[160px]' : 'min-h-[300px]'} ${!isCurrentMonth ? 'bg-gray-50/80 dark:bg-gray-900/50' : ''}`}
+                  className={`flex flex-col border-r border-b border-border dark:border-gray-700 ${viewMode === VIEW_MODES.MONTH ? 'min-h-[120px] sm:min-h-[160px]' : 'min-h-[300px]'} ${!isCurrentMonth ? 'bg-gray-50/80 dark:bg-gray-900/50' : isSunday ? 'bg-red-50/30 dark:bg-red-900/10' : ''}`}
                 >
-                  {viewMode !== 'month' ? (
+                  {viewMode !== VIEW_MODES.MONTH ? (
                     <div
-                      className={`p-1 sm:p-3 text-center border-b border-border dark:border-gray-600 ${isToday ? 'bg-primary/5 dark:bg-primary/10' : 'bg-white/60 dark:bg-gray-800/40'} backdrop-blur-md sticky top-0 z-10`}
+                      className={`p-2 sm:p-3 text-center border-b border-border dark:border-gray-600 ${isToday ? 'bg-primary/10 dark:bg-primary/20' : isSunday ? 'bg-red-50/80 dark:bg-red-900/20' : 'bg-slate-50 dark:bg-slate-800/80'} backdrop-blur-md sticky top-0 z-10 shadow-sm`}
                     >
                       <div
-                        className={`font-black uppercase tracking-widest ${isToday ? 'text-primary dark:text-blue-300' : 'text-gray-400 dark:text-gray-500'} text-[10px] sm:text-[11px]`}
+                        className={`font-black uppercase tracking-widest ${isToday ? 'text-primary dark:text-blue-400' : isSunday ? 'text-red-500 dark:text-red-400' : 'text-slate-500 dark:text-slate-400'} text-[10px] sm:text-[11px] mb-0.5`}
                       >
                         {format(day, 'EEEE', { locale: currentLocale })}
                       </div>
                       <div
-                        className={`text-sm sm:text-base mt-1 ${isToday ? 'text-primary font-black dark:text-blue-300' : 'text-gray-900 dark:text-white font-bold'}`}
+                        className={`text-sm sm:text-lg ${isToday ? 'text-primary font-black dark:text-blue-400' : isSunday ? 'text-red-600 font-bold dark:text-red-400' : 'text-slate-700 dark:text-slate-200 font-bold'}`}
                       >
                         {format(day, 'dd/MM')}
                       </div>
                       {isToday && (
-                        <div className="absolute bottom-0 left-1/4 right-1/4 h-0.5 bg-primary rounded-full" />
+                        <div className="absolute bottom-0 left-0 right-0 h-1 bg-primary rounded-t-md" />
                       )}
                     </div>
                   ) : (
                     <div
-                      className={`p-1 text-right ${isToday ? 'bg-blue-50 dark:bg-blue-900/40 text-primary dark:text-blue-300 font-bold' : 'text-gray-600 dark:text-gray-400 font-medium'} text-xs sm:text-sm`}
+                      className={`p-1.5 text-right ${isToday ? 'bg-primary/10 dark:bg-primary/20 text-primary dark:text-blue-400 font-bold' : isSunday ? 'text-red-500 dark:text-red-400 font-semibold' : 'text-slate-600 dark:text-slate-400 font-medium'} text-xs sm:text-sm border-b border-gray-100 dark:border-gray-800`}
                     >
                       <span
-                        className={`inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full ${isToday ? 'bg-primary text-white' : ''}`}
+                        className={`inline-flex items-center justify-center w-6 h-6 sm:w-7 sm:h-7 rounded-full ${isToday ? 'bg-primary text-white shadow-md' : ''}`}
                       >
                         {format(day, 'd')}
                       </span>
@@ -268,13 +273,13 @@ const ScheduleBoard: React.FC = () => {
                   <DroppableDaySlot
                     id={dateStr}
                     className={
-                      viewMode === 'day'
+                      viewMode === VIEW_MODES.DAY
                         ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 content-start p-3 sm:p-4'
                         : 'flex flex-col gap-2'
                     }
                   >
                     {(sessionsByDate[dateStr] || []).map((session) => (
-                      <div key={session.id} className={viewMode === 'day' ? 'h-full' : ''}>
+                      <div key={session.id} className={viewMode === VIEW_MODES.DAY ? 'h-full' : ''}>
                         <DraggableSessionCard
                           session={session}
                           onEdit={canEdit ? handleOpenModal : undefined}

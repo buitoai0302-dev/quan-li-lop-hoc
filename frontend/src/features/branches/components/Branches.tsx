@@ -185,7 +185,7 @@ const Branches: React.FC = () => {
             onExportPDF={handleExportPDF}
             isExportDisabled={filteredBranches.length === 0}
             onAdd={() => handleOpenModal()}
-            addLabel={t('branches.addBranch')}
+            addLabel={t('common.add')}
           />
         }
       >

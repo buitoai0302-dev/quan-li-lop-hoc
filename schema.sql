@@ -390,66 +390,66 @@ ON CONFLICT (setting_key) DO NOTHING;
 
 -- 1. Insert Plans
 INSERT INTO plan_definitions (id, code, name, price_vnd, price_usd, sort_order) VALUES 
-    ('ffffffff-0000-0000-0000-000000000001', 'FREE', 'Free', 0, 0, 1),
-    ('ffffffff-0000-0000-0000-000000000002', 'PRO', 'Pro', 499000, 19.99, 2),
-    ('ffffffff-0000-0000-0000-000000000003', 'BUSINESS', 'Business', 1499000, 59.99, 3),
-    ('ffffffff-0000-0000-0000-000000000004', 'ENTERPRISE', 'Enterprise', 4999000, 199.99, 4);
+    ('1c0fd778-0f94-44c1-86da-19bdafb1d9b3', 'FREE', 'Free', 0, 0, 1),
+    ('b56efeae-e067-45e7-87b0-fb65e718058b', 'PRO', 'Pro', 499000, 19.99, 2),
+    ('4f340839-a9bb-48c1-829a-6e6d01253c05', 'BUSINESS', 'Business', 1499000, 59.99, 3),
+    ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'ENTERPRISE', 'Enterprise', 4999000, 199.99, 4);
 
 -- 2. Insert Plan Limits
 -- FREE
 INSERT INTO plan_limits (plan_id, limit_key, limit_value) VALUES 
-    ('ffffffff-0000-0000-0000-000000000001', 'max_branches', 1),
-    ('ffffffff-0000-0000-0000-000000000001', 'max_classes', 30),
-    ('ffffffff-0000-0000-0000-000000000001', 'max_students', 50),
-    ('ffffffff-0000-0000-0000-000000000001', 'max_teachers', 5),
-    ('ffffffff-0000-0000-0000-000000000001', 'max_rooms', 10);
+    ('1c0fd778-0f94-44c1-86da-19bdafb1d9b3', 'max_branches', 1),
+    ('1c0fd778-0f94-44c1-86da-19bdafb1d9b3', 'max_classes', 30),
+    ('1c0fd778-0f94-44c1-86da-19bdafb1d9b3', 'max_students', 50),
+    ('1c0fd778-0f94-44c1-86da-19bdafb1d9b3', 'max_teachers', 5),
+    ('1c0fd778-0f94-44c1-86da-19bdafb1d9b3', 'max_rooms', 10);
 -- PRO
 INSERT INTO plan_limits (plan_id, limit_key, limit_value) VALUES 
-    ('ffffffff-0000-0000-0000-000000000002', 'max_branches', 3),
-    ('ffffffff-0000-0000-0000-000000000002', 'max_classes', 150),
-    ('ffffffff-0000-0000-0000-000000000002', 'max_students', 500),
-    ('ffffffff-0000-0000-0000-000000000002', 'max_teachers', 50),
-    ('ffffffff-0000-0000-0000-000000000002', 'max_rooms', 50);
+    ('b56efeae-e067-45e7-87b0-fb65e718058b', 'max_branches', 3),
+    ('b56efeae-e067-45e7-87b0-fb65e718058b', 'max_classes', 150),
+    ('b56efeae-e067-45e7-87b0-fb65e718058b', 'max_students', 500),
+    ('b56efeae-e067-45e7-87b0-fb65e718058b', 'max_teachers', 50),
+    ('b56efeae-e067-45e7-87b0-fb65e718058b', 'max_rooms', 50);
 -- BUSINESS
 INSERT INTO plan_limits (plan_id, limit_key, limit_value) VALUES 
-    ('ffffffff-0000-0000-0000-000000000003', 'max_branches', 10),
-    ('ffffffff-0000-0000-0000-000000000003', 'max_classes', -1),
-    ('ffffffff-0000-0000-0000-000000000003', 'max_students', -1),
-    ('ffffffff-0000-0000-0000-000000000003', 'max_teachers', -1),
-    ('ffffffff-0000-0000-0000-000000000003', 'max_rooms', -1);
+    ('4f340839-a9bb-48c1-829a-6e6d01253c05', 'max_branches', 10),
+    ('4f340839-a9bb-48c1-829a-6e6d01253c05', 'max_classes', -1),
+    ('4f340839-a9bb-48c1-829a-6e6d01253c05', 'max_students', -1),
+    ('4f340839-a9bb-48c1-829a-6e6d01253c05', 'max_teachers', -1),
+    ('4f340839-a9bb-48c1-829a-6e6d01253c05', 'max_rooms', -1);
 -- ENTERPRISE
 INSERT INTO plan_limits (plan_id, limit_key, limit_value) VALUES 
-    ('ffffffff-0000-0000-0000-000000000004', 'max_branches', -1),
-    ('ffffffff-0000-0000-0000-000000000004', 'max_classes', -1),
-    ('ffffffff-0000-0000-0000-000000000004', 'max_students', -1),
-    ('ffffffff-0000-0000-0000-000000000004', 'max_teachers', -1),
-    ('ffffffff-0000-0000-0000-000000000004', 'max_rooms', -1);
+    ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'max_branches', -1),
+    ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'max_classes', -1),
+    ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'max_students', -1),
+    ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'max_teachers', -1),
+    ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'max_rooms', -1);
 
 -- 3. Insert Plan Features
 -- FREE (no advanced features)
 -- PRO
 INSERT INTO plan_features (plan_id, feature_key, is_enabled) VALUES 
-    ('ffffffff-0000-0000-0000-000000000002', 'multi_branch', TRUE);
+    ('b56efeae-e067-45e7-87b0-fb65e718058b', 'multi_branch', TRUE);
 -- BUSINESS
 INSERT INTO plan_features (plan_id, feature_key, is_enabled) VALUES 
-    ('ffffffff-0000-0000-0000-000000000003', 'multi_branch', TRUE),
-    ('ffffffff-0000-0000-0000-000000000003', 'advanced_reports', TRUE),
-    ('ffffffff-0000-0000-0000-000000000003', 'api_access', TRUE);
+    ('4f340839-a9bb-48c1-829a-6e6d01253c05', 'multi_branch', TRUE),
+    ('4f340839-a9bb-48c1-829a-6e6d01253c05', 'advanced_reports', TRUE),
+    ('4f340839-a9bb-48c1-829a-6e6d01253c05', 'api_access', TRUE);
 -- ENTERPRISE
 INSERT INTO plan_features (plan_id, feature_key, is_enabled) VALUES 
-    ('ffffffff-0000-0000-0000-000000000004', 'multi_branch', TRUE),
-    ('ffffffff-0000-0000-0000-000000000004', 'advanced_reports', TRUE),
-    ('ffffffff-0000-0000-0000-000000000004', 'api_access', TRUE),
-    ('ffffffff-0000-0000-0000-000000000004', 'sso_saml', TRUE);
+    ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'multi_branch', TRUE),
+    ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'advanced_reports', TRUE),
+    ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'api_access', TRUE),
+    ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'sso_saml', TRUE);
 
 -- 4. Insert Tenants
 -- Tenant 1: Enterprise
 INSERT INTO tenants (id, plan_id, name, domain) 
-VALUES ('00000000-0000-0000-0000-000000000001', 'ffffffff-0000-0000-0000-000000000004', 'Premium Education Center', 'premium-edu');
+VALUES ('00000000-0000-0000-0000-000000000001', '64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'Premium Education Center', 'premium-edu');
 
 -- Tenant 2: Free
 INSERT INTO tenants (id, plan_id, name, domain) 
-VALUES ('00000000-0000-0000-0000-000000000002', 'ffffffff-0000-0000-0000-000000000001', 'Local Math Tutor', 'local-math');
+VALUES ('00000000-0000-0000-0000-000000000002', '1c0fd778-0f94-44c1-86da-19bdafb1d9b3', 'Local Math Tutor', 'local-math');
 
 -- 5. Insert Branches
 INSERT INTO branches (id, tenant_id, name, address, phone) VALUES

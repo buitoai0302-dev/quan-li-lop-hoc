@@ -204,7 +204,7 @@ const Rooms: React.FC = () => {
             isExportDisabled={filteredRooms.length === 0}
             onImport={() => navigate('/import?type=rooms')}
             onAdd={() => handleOpenModal()}
-            addLabel={t('rooms.addRoom')}
+            addLabel={t('common.add')}
           />
         }
       >

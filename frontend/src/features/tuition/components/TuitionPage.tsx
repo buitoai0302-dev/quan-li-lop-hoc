@@ -170,7 +170,35 @@ const TuitionPage: React.FC = () => {
             {t('tuition.bulkGenerate')}
           </Button>
         }
-      />
+      >
+        <div className="flex flex-row items-center gap-2 sm:gap-3 w-full">
+          <div className="flex-1 relative">
+            <Search
+              size={14}
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
+            />
+            <input
+              type="text"
+              placeholder={t('tuition.searchPlaceholder')}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-8 pr-3 py-1.5 sm:py-2 text-[10px] sm:text-xs text-gray-900 dark:text-white bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30"
+            />
+          </div>
+          <select
+            value={filters.status || ''}
+            onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
+            className="flex-none w-[110px] sm:w-[130px] text-[10px] sm:text-xs text-gray-900 dark:text-white bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-lg sm:rounded-xl px-2 sm:px-3 py-1.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+          >
+            <option value="">{t('tuition.allStatus')}</option>
+            {Object.keys(STATUS_CONFIG).map((key) => (
+              <option key={key} value={key}>
+                {t(`tuition.statusLabels.${key}`)}
+              </option>
+            ))}
+          </select>
+        </div>
+      </PageHeader>
 
       <div className="flex-1 overflow-auto custom-scrollbar p-1 sm:p-2">
         {/* Summary Cards */}
@@ -199,35 +227,6 @@ const TuitionPage: React.FC = () => {
             color="slate"
             icon={Receipt}
           />
-        </div>
-
-        {/* Actions Bar */}
-        <div className="flex flex-row items-center gap-2 sm:gap-3 mb-4">
-          <div className="flex-1 relative">
-            <Search
-              size={14}
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
-            />
-            <input
-              type="text"
-              placeholder={t('tuition.searchPlaceholder')}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-2 sm:py-2.5 text-xs sm:text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30"
-            />
-          </div>
-          <select
-            value={filters.status || ''}
-            onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
-            className="flex-none w-[110px] sm:w-auto text-xs sm:text-sm text-gray-900 dark:text-white bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg sm:rounded-xl px-2 sm:px-3 py-2 sm:py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/30"
-          >
-            <option value="">{t('tuition.allStatus')}</option>
-            {Object.keys(STATUS_CONFIG).map((key) => (
-              <option key={key} value={key}>
-                {t(`tuition.statusLabels.${key}`)}
-              </option>
-            ))}
-          </select>
         </div>
 
         {/* Table */}
@@ -265,7 +264,7 @@ const TuitionPage: React.FC = () => {
               <tbody className="divide-y divide-gray-50 dark:divide-slate-800">
                 {filtered.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="text-center py-16 text-gray-400 text-sm">
+                    <td colSpan={8} className="text-center py-16 text-gray-400 text-sm">
                       <DollarSign size={40} className="mx-auto mb-3 opacity-30" />
                       {t('tuition.emptyState')}
                     </td>

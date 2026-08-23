@@ -234,7 +234,7 @@ const Students: React.FC = () => {
             isExportDisabled={filteredStudents.length === 0}
             onImport={() => navigate('/import?type=students')}
             onAdd={() => handleOpenModal()}
-            addLabel={t('students.addStudent')}
+            addLabel={t('common.add')}
           />
         }
       >

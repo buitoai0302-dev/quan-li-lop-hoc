@@ -35,7 +35,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       </h3>
 
       {description && (
-        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-8 font-medium leading-relaxed">
+        <p className="text-sm text-gray-500 dark:text-gray-400 max-w-sm mx-auto mb-10 font-medium leading-relaxed">
           {description}
         </p>
       )}
@@ -43,7 +43,7 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       {action && (
         <div className="relative animate-in slide-in-from-bottom-2 duration-700">
           {showArrow && (
-            <div className="absolute -top-8 right-15 hidden sm:block animate-bounce text-primary/40">
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 hidden sm:block animate-bounce text-primary/40">
               <CornerRightDown size={32} strokeWidth={2.5} />
             </div>
           )}

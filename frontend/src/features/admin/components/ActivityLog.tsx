@@ -2,29 +2,22 @@ import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
-import {
-  Activity,
-  Users,
-  BookOpen,
-  Calendar,
-  Clock,
-  ChevronLeft,
-  ChevronRight,
-  UserCheck,
-} from 'lucide-react';
+import { Activity, Users, BookOpen, Calendar, Clock, UserCheck } from 'lucide-react';
 import PageHeader from '@/components/common/PageHeader';
 import EmptyState from '@/components/common/EmptyState';
+import Pagination from '@/components/common/Pagination';
 
 import { useActivities } from '../hooks/useAdmin';
 
 const ActivityLog: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
 
-  const { data, isLoading: loading } = useActivities(page, 20);
+  const { data, isLoading: loading } = useActivities(page, limit);
 
   const activities = data?.activities || [];
-  const pagination = data?.pagination || { page: 1, totalPages: 1 };
+  const pagination = data?.pagination || { page: 1, totalPages: 1, total: 0, limit: 20 };
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -75,7 +68,8 @@ const ActivityLog: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                       <p className="text-sm font-bold text-gray-900 dark:text-white leading-tight break-words">
-                        <span className="text-primary">{act.user}</span> {act.action}{' '}
+                        <span className="text-primary">{act.user}</span>{' '}
+                        {t(`activity.${act.action}`)}{' '}
                         <span className="text-gray-400">{act.target}</span>
                       </p>
                       <div className="flex items-center gap-1 text-[9px] text-gray-400 uppercase font-black shrink-0">
@@ -93,26 +87,17 @@ const ActivityLog: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between shrink-0">
-              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">
-                {t('common.page')} {pagination.page} / {pagination.totalPages}
-              </p>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => setPage(pagination.page - 1)}
-                  disabled={pagination.page <= 1 || loading}
-                  className="p-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm active:scale-95"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <button
-                  onClick={() => setPage(pagination.page + 1)}
-                  disabled={pagination.page >= pagination.totalPages || loading}
-                  className="p-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm active:scale-95"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+            <div className="p-2 sm:p-3 border-t border-gray-100 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50">
+              <Pagination
+                currentPage={pagination.page}
+                totalItems={pagination.total}
+                itemsPerPage={pagination.limit}
+                onPageChange={setPage}
+                onItemsPerPageChange={(newLimit) => {
+                  setLimit(newLimit);
+                  setPage(1);
+                }}
+              />
             </div>
           </>
         ) : (

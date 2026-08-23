@@ -560,6 +560,7 @@
   "schedule": {
     "title": "Schedule Management",
     "manageSchedule": "Manage teaching & learning schedule",
+    "time": "Time",
     "addSession": "Add Session",
     "editSession": "Edit Session",
     "sessionDetails": "Session Details",
@@ -681,6 +682,8 @@
     "emailNotVerifiedTitle": "Email not verified",
     "emailNotVerifiedDesc": "Please check your inbox or",
     "emailNotVerifiedLink": "resend verification email",
+    "security": "EduSchedule Security",
+    "poweredBy": "Powered by EduSchedule Cloud",
     "registerTitle": "Create New Account",
     "registerSubtitle": "Join EduSchedule today",
     "fullName": "Full Name",
@@ -1072,5 +1075,12 @@
     "IMPORT_SUCCESS": "Success: {{students}} students, {{classes}} classes.",
     "TUITION_BULK_GENERATED": "Created {{created}} tuitions{{skip_text}}",
     "TUITION_BULK_GENERATED_SKIPPED": ", skipped {{skipped}} existing"
+  },
+  "activity": {
+    "STUDENT_JOINED_CLASS": "added student to class",
+    "CLASS_ASSIGNED": "was assigned to class",
+    "STUDENT_REGISTERED": "registered into the system",
+    "CLASS_CREATED": "created a class",
+    "TEACHER_JOINED": "joined the system"
   }
 }

@@ -2,6 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
+import PageLoading from '@/components/common/PageLoading';
 import OnboardingModal from '@/components/OnboardingModal';
 import {
   Users,
@@ -66,16 +67,7 @@ const Dashboard: React.FC = () => {
   const displayPlan = planCode;
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-full min-h-[400px]">
-        <div className="relative">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-primary/20 border-t-primary"></div>
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Zap size={24} className="text-primary animate-pulse" />
-          </div>
-        </div>
-      </div>
-    );
+    return <PageLoading />;
   }
 
   return (

@@ -54,7 +54,7 @@ export const PLAN_CODES = {
   ENTERPRISE: 'ENTERPRISE',
 };
 
-export const DEFAULT_FREE_PLAN_ID = 'ffffffff-0000-0000-0000-000000000001';
+export const DEFAULT_FREE_PLAN_ID = '1c0fd778-0f94-44c1-86da-19bdafb1d9b3';
 
 export const PLAN_REQUEST_STATUS = {
   PENDING: 'pending',

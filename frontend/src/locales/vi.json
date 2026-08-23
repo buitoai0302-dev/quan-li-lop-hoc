@@ -588,6 +588,7 @@
   "schedule": {
     "title": "Quản lý Lịch học",
     "manageSchedule": "Quản lý lịch dạy & học của trung tâm",
+    "time": "Thời gian",
     "addSession": "Thêm ca học",
     "editSession": "Sửa ca học",
     "sessionDetails": "Chi tiết ca học",
@@ -709,6 +710,8 @@
     "emailNotVerifiedTitle": "Email chưa được xác thực",
     "emailNotVerifiedDesc": "Vui lòng kiểm tra hòm thư của bạn hoặc",
     "emailNotVerifiedLink": "gửi lại email xác thực",
+    "security": "Bảo mật EduSchedule",
+    "poweredBy": "Được cung cấp bởi EduSchedule Cloud",
     "registerTitle": "Đăng ký tài khoản mới",
     "registerSubtitle": "Tham gia EduSchedule ngay hôm nay",
     "fullName": "Họ và tên",
@@ -1100,5 +1103,12 @@
     "IMPORT_SUCCESS": "Thành công: {{students}} học sinh, {{classes}} lớp học.",
     "TUITION_BULK_GENERATED": "Đã tạo {{created}} khoản học phí{{skip_text}}",
     "TUITION_BULK_GENERATED_SKIPPED": ", bỏ qua {{skipped}} đã tồn tại"
+  },
+  "activity": {
+    "STUDENT_JOINED_CLASS": "đã thêm học sinh vào lớp",
+    "CLASS_ASSIGNED": "đã được phân công lớp",
+    "STUDENT_REGISTERED": "đã đăng ký vào hệ thống",
+    "CLASS_CREATED": "đã tạo lớp học",
+    "TEACHER_JOINED": "đã tham gia hệ thống"
   }
 }

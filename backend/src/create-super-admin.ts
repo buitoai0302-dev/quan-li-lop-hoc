@@ -13,9 +13,15 @@ const pool = new Pool({
 
 async function setup() {
   try {
+    const planResult = await pool.query(
+      "SELECT id FROM plan_definitions WHERE code = 'ENTERPRISE'"
+    );
+    const enterprisePlanId = planResult.rows[0]?.id || '64d77ca0-65b0-4bd9-9a2a-91322f50d2b8';
+
     // 1. Create a System Tenant if not exists
     const tenantResult = await pool.query(
-      "INSERT INTO tenants (name, plan_id, domain) VALUES ('System Administration', 'ffffffff-0000-0000-0000-000000000004', 'system') ON CONFLICT (domain) DO UPDATE SET name = 'System Administration' RETURNING id"
+      "INSERT INTO tenants (name, plan_id, domain) VALUES ('System Administration', $1, 'system') ON CONFLICT (domain) DO UPDATE SET name = 'System Administration' RETURNING id",
+      [enterprisePlanId]
     );
     const tenantId = tenantResult.rows[0].id;
 
