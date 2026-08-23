@@ -1,5 +1,5 @@
 import React from 'react';
-import { Phone, Users, Edit2, Trash2 } from 'lucide-react';
+import { Phone, Users, Edit2, Trash2, Calendar } from 'lucide-react';
 import type { StudentTableProps } from '../types';
 
 const StudentTable: React.FC<StudentTableProps> = ({
@@ -111,7 +111,8 @@ const StudentTable: React.FC<StudentTableProps> = ({
                         </span>
                       )}
                       {student.date_of_birth && (
-                        <span className="text-[9px] text-gray-500 dark:text-gray-400">
+                        <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[9px] font-bold rounded flex items-center gap-1">
+                          <Calendar size={10} className="text-slate-400" />
                           {new Date(student.date_of_birth).toLocaleDateString('vi-VN')}
                         </span>
                       )}
@@ -130,11 +131,14 @@ const StudentTable: React.FC<StudentTableProps> = ({
                 )}
               </td>
               <td className="hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                <div className="text-[10px] sm:text-xs font-medium text-gray-600 dark:text-gray-400">
-                  {student.date_of_birth
-                    ? new Date(student.date_of_birth).toLocaleDateString('vi-VN')
-                    : '-'}
-                </div>
+                {student.date_of_birth ? (
+                  <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-100 dark:border-sky-500/20 shadow-sm text-xs font-bold">
+                    <Calendar size={12} className="opacity-70" />
+                    {new Date(student.date_of_birth).toLocaleDateString('vi-VN')}
+                  </div>
+                ) : (
+                  <span className="text-gray-400 text-sm">-</span>
+                )}
               </td>
 
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">

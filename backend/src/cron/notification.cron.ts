@@ -66,7 +66,7 @@ async function sendSessionReminders() {
 
       if (!sent) {
         sessionSuccess.set(sessionId, false);
-        console.warn(
+        logger.warn(
           `[Jobs] Failed to send reminder to ${recipient.recipient_email} for session ${sessionId}`
         );
       } else {
@@ -89,7 +89,7 @@ async function sendSessionReminders() {
 
     const failedCount = sessionSuccess.size - fullyNotifiedIds.length;
     if (failedCount > 0) {
-      console.warn(`[Jobs] ${failedCount} session(s) had email failures and will retry next run.`);
+      logger.warn(`[Jobs] ${failedCount} session(s) had email failures and will retry next run.`);
     }
   } catch (error) {
     logger.error(error, '[Jobs] Error running notification job:');

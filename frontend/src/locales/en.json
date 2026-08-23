@@ -1,6 +1,10 @@
 {
   "common": {
     "appName": "EduSchedule",
+    "managingTenant": "Managing Center: ",
+    "exit": "Exit",
+    "feedback": "Send Feedback / Report Bug",
+    "unknown": "Unknown",
     "premiumEdition": "Premium Edition",
     "premiumSaaS": "Premium SaaS",
     "search": "Search...",
@@ -150,7 +154,15 @@
     "readyToTeach": "Ready for a new day!",
     "teacherWelcomeDesc": "Check your schedule today and prepare for great sessions.",
     "setupGuide": "Setup Guide",
-    "setupGuideDesc": "Complete these steps to get your center up and running."
+    "setupGuideDesc": "Complete these steps to get your center up and running.",
+    "activities": {
+      "STUDENT_REGISTERED": "just registered",
+      "TENANT_JOINED": "just joined the system",
+      "CLASS_CREATED": "was just created",
+      "STUDENT_JOINED_CLASS": "just joined your class",
+      "CLASS_ASSIGNED": "was just assigned to you",
+      "TEACHER_JOINED": "just joined the team"
+    }
   },
   "import": {
     "title": "System Data Import",
@@ -810,17 +822,17 @@
     "createFirstStudent": "Add your first student"
   },
   "errors": {
-    "INTERNAL_ERROR": "Internal server error. Please try again later.",
-    "UNAUTHORIZED": "You need to login to perform this action.",
-    "FORBIDDEN": "You do not have permission to perform this action.",
+    "INTERNAL_ERROR": "Internal server error",
+    "UNAUTHORIZED": "Unauthorized",
+    "FORBIDDEN": "Forbidden",
     "NOT_FOUND": "Data not found.",
     "LIMIT_EXCEEDED": "You have reached the maximum limit for this plan.",
     "VALIDATION_ERROR": "Invalid data.",
-    "MISSING_REQUIRED_FIELDS": "Please fill in all required fields.",
-    "EMAIL_ALREADY_EXISTS": "This email already exists in the system.",
+    "MISSING_REQUIRED_FIELDS": "Please fill in all required fields",
+    "EMAIL_ALREADY_EXISTS": "Email already exists in the system",
     "TEACHER_NOT_FOUND": "Teacher/Staff not found.",
-    "STUDENT_NOT_FOUND": "Student not found.",
-    "CLASS_NOT_FOUND": "Class not found.",
+    "STUDENT_NOT_FOUND": "Student not found",
+    "CLASS_NOT_FOUND": "Class not found",
     "BRANCH_NOT_FOUND": "Branch not found.",
     "ROOM_NOT_FOUND": "Room not found.",
     "EMAIL_NOT_VERIFIED": "Email is not verified.",
@@ -835,7 +847,15 @@
     "SCHEDULE_CONFLICT": "Schedule Conflict",
     "TEACHER_CONFLICT": "Teacher already has a session at this time",
     "ROOM_CONFLICT": "Room is already booked at this time",
-    "CLASS_CONFLICT": "Class already has a session at this time"
+    "CLASS_CONFLICT": "Class already has a session at this time",
+    "INVALID_DATA": "Invalid data provided",
+    "CAPACITY_EXCEEDED": "Class capacity exceeded",
+    "TUITION_NOT_FOUND": "Tuition not found",
+    "HAS_PAYMENTS": "Cannot delete tuition with payment history",
+    "INVALID_AMOUNT": "Payment amount must be greater than 0",
+    "ALREADY_PAID": "This tuition is already fully paid",
+    "NO_STUDENTS_FOUND": "No students found in this class",
+    "GOOGLE_LOGIN_FAILED": "Google Login Failed"
   },
   "validation": {
     "nameMin": "Name must be at least 2 characters",
@@ -1043,5 +1063,14 @@
     "processing": "Processing...",
     "needHelp": "Need Help?",
     "contactSupport": "Contact us through the following channels for quick support:"
+  },
+  "success": {
+    "CLASS_DELETED_SUCCESS": "Class deleted successfully",
+    "STUDENT_DELETED_SUCCESS": "Student deleted successfully",
+    "PAYMENT_RECORDED_SUCCESS": "Payment recorded successfully!",
+    "TUITION_DELETED_SUCCESS": "Tuition deleted successfully",
+    "IMPORT_SUCCESS": "Success: {{students}} students, {{classes}} classes.",
+    "TUITION_BULK_GENERATED": "Created {{created}} tuitions{{skip_text}}",
+    "TUITION_BULK_GENERATED_SKIPPED": ", skipped {{skipped}} existing"
   }
 }

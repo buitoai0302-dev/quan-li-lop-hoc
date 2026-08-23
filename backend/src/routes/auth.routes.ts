@@ -14,15 +14,15 @@ import {
   logout,
 } from '../controllers/auth.controller';
 import { authMiddleware } from '../middlewares/auth.middleware';
-import { validateBody } from '../middlewares/zod.middleware';
+import { validate } from '../middlewares/validate.middleware';
 import { LoginSchema, RegisterSchema } from '../validators/auth.validator';
 
 const router = Router();
 
 // Public routes
-router.post('/login', validateBody(LoginSchema), login);
+router.post('/login', validate(LoginSchema), login);
 router.post('/google', googleLogin);
-router.post('/register', validateBody(RegisterSchema), register);
+router.post('/register', validate(RegisterSchema), register);
 router.get('/verify-email', verifyEmail);
 router.post('/resend-verification', resendVerification);
 router.post('/forgot-password', forgotPassword);

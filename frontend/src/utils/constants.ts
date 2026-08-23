@@ -137,3 +137,58 @@ export const PREMIUM_FEATURES = {
   BRANCHES: 'branches',
   TUITION: 'tuition',
 } as const;
+
+export const TUITION_STATUS = {
+  UNPAID: 'unpaid',
+  PARTIAL: 'partial',
+  PAID: 'paid',
+  OVERDUE: 'overdue',
+  WAIVED: 'waived',
+} as const;
+
+export type TuitionStatus = (typeof TUITION_STATUS)[keyof typeof TUITION_STATUS];
+
+export const PAYMENT_METHODS = {
+  CASH: 'cash',
+  BANK_TRANSFER: 'bank_transfer',
+  MOMO: 'momo',
+  VNPAY: 'vnpay',
+  STRIPE: 'stripe',
+  OTHER: 'other',
+} as const;
+
+export type PaymentMethod = (typeof PAYMENT_METHODS)[keyof typeof PAYMENT_METHODS];
+
+export const BILLING_CYCLE = {
+  MONTHLY: 'monthly',
+  PER_SESSION: 'per_session',
+  PER_COURSE: 'per_course',
+} as const;
+
+export const BACKUP_CYCLES = {
+  DAILY: 'daily',
+  WEEKLY: 'weekly',
+  MONTHLY: 'monthly',
+} as const;
+
+export const PLAN_FIELDS = {
+  LIMITS: 'limits',
+  FEATURES: 'features',
+} as const;
+
+export const MENU_KEYS = {
+  DASHBOARD: 'dashboard',
+  SETTINGS: 'settings',
+  SUBSCRIPTION: 'subscription',
+  HELP: 'help',
+  ACTIVITIES: 'activities',
+} as const;
+
+export const PLAN_BILLING_CYCLE = {
+  MONTHLY: 'MONTHLY',
+  YEARLY: 'YEARLY',
+} as const;
+
+export const QUERY_KEYS = {
+  SUBSCRIPTION_DATA: 'subscription-data',
+} as const;

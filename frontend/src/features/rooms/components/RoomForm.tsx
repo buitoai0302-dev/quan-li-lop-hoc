@@ -6,7 +6,7 @@ import type { RoomFormProps } from '../types';
 import { ROOM_TYPES } from '@/utils/constants';
 import { Input, Select, Label, Button } from '@/components/common/UI';
 
-const getRoomSchema = (t: unknown) =>
+const getRoomSchema = (t: any) =>
   z.object({
     name: z.string().min(1, { message: t('validation.roomNameRequired') }),
     branch_id: z.string().min(1, { message: t('validation.branchRequired') }),
@@ -58,7 +58,7 @@ const RoomForm: React.FC<RoomFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="sm:col-span-2">
-          <Label required ml-1>
+          <Label required className="ml-1">
             {t('rooms.name')}
           </Label>
           <Input
@@ -72,7 +72,7 @@ const RoomForm: React.FC<RoomFormProps> = ({
           )}
         </div>
         <div>
-          <Label required ml-1>
+          <Label required className="ml-1">
             {t('classes.branch')}
           </Label>
           <Select
@@ -96,7 +96,7 @@ const RoomForm: React.FC<RoomFormProps> = ({
           )}
         </div>
         <div>
-          <Label ml-1>{t('rooms.type')}</Label>
+          <Label className="ml-1">{t('rooms.type')}</Label>
           <Select variant="muted" {...register('room_type')}>
             <option value={ROOM_TYPES.CLASSROOM}>{t('rooms.classroom')}</option>
             <option value={ROOM_TYPES.LAB}>{t('rooms.lab')}</option>
@@ -108,7 +108,7 @@ const RoomForm: React.FC<RoomFormProps> = ({
       <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-5">
         <div className="grid grid-cols-2 gap-5">
           <div>
-            <Label ml-1>{t('rooms.capacity')}</Label>
+            <Label className="ml-1">{t('rooms.capacity')}</Label>
             <Input
               type="number"
               min="1"
@@ -123,7 +123,7 @@ const RoomForm: React.FC<RoomFormProps> = ({
             )}
           </div>
           <div className="flex flex-col">
-            <Label ml-1>{t('common.status')}</Label>
+            <Label className="ml-1">{t('common.status')}</Label>
             <Select
               variant="white"
               {...register('is_active', { setValueAs: (v) => v === 'true' || v === true })}

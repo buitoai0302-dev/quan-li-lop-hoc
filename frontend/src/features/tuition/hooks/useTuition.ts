@@ -2,10 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { tuitionApi } from '../api/tuition.api';
 import type { BulkGenerateDto, CreateTuitionDto, RecordPaymentDto } from '../api/tuition.api';
 import toast from 'react-hot-toast';
+import { t } from 'i18next';
+import { TUITION_STATUS } from '@/utils/constants';
 
 const KEYS = {
   list: (params?: Record<string, string>) => ['tuitions', params],
-  overdue: () => ['tuitions', 'overdue'],
+  overdue: () => ['tuitions', TUITION_STATUS.OVERDUE],
   payments: (id: string) => ['tuitions', id, 'payments'],
 };
 
@@ -38,7 +40,12 @@ export const useBulkGenerateTuitions = () => {
     onSuccess: (data) => {
       qc.invalidateQueries({ queryKey: ['tuitions'] });
       toast.success(
-        `Đã tạo ${data.created} khoản học phí${data.skipped ? `, bỏ qua ${data.skipped} đã tồn tại` : ''}`
+        t('success.TUITION_BULK_GENERATED', {
+          created: data.created,
+          skip_text: data.skipped
+            ? t('success.TUITION_BULK_GENERATED_SKIPPED', { skipped: data.skipped })
+            : '',
+        })
       );
     },
   });
@@ -61,7 +68,7 @@ export const useDeleteTuition = () => {
     mutationFn: (id: string) => tuitionApi.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tuitions'] });
-      toast.success('Đã xóa khoản học phí');
+      toast.success(t('success.TUITION_DELETED_SUCCESS'));
     },
   });
 };
@@ -80,7 +87,7 @@ export const useRecordPayment = (tuitionId: string) => {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tuitions'] });
       qc.invalidateQueries({ queryKey: KEYS.payments(tuitionId) });
-      toast.success('Đã ghi nhận thanh toán thành công!');
+      toast.success(t('success.PAYMENT_RECORDED_SUCCESS'));
     },
   });
 };

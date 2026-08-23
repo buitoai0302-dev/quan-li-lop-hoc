@@ -6,6 +6,7 @@ import { ROUTES } from '../utils/constants';
 import { Crown, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { USER_ROLES } from '@/utils/constants';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -43,7 +44,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   // Check premium access
   if (requirePremium && featureKey) {
     const isEnabled = user.plan_features?.[featureKey] === true;
-    if (user.role !== 'super_admin' && !isEnabled) {
+    if (user.role !== USER_ROLES.SUPER_ADMIN && !isEnabled) {
       return (
         <div className="h-full min-h-[70vh] flex flex-col items-center justify-center p-6 text-center animate-in fade-in zoom-in-95 duration-500">
           <div className="w-24 h-24 bg-gradient-to-tr from-amber-100 to-orange-100 dark:from-amber-900/30 dark:to-orange-900/30 rounded-3xl flex items-center justify-center mb-6 shadow-xl shadow-orange-500/10 border border-orange-200/50 dark:border-orange-500/20">

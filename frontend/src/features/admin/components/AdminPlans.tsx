@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';
 import { Save, Info, Building, Zap, Shield, Crown, Settings } from 'lucide-react';
-import { PLAN_CODES } from '@/utils/constants';
+import { PLAN_CODES, PLAN_FIELDS } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
 import { Card, Button, Input } from '@/components/common/UI';
@@ -28,7 +28,7 @@ const AdminPlans: React.FC = () => {
 
   const handleUpdateField = (
     planId: string,
-    category: 'limits' | 'features',
+    category: typeof PLAN_FIELDS.LIMITS | typeof PLAN_FIELDS.FEATURES,
     key: string,
     value: unknown
   ) => {
@@ -55,8 +55,8 @@ const AdminPlans: React.FC = () => {
           yearlyPriceVnd: plan.yearly_price_vnd,
           yearlyPriceUsd: plan.yearly_price_usd,
           isActive: plan.is_active,
-          limits: plan.limits,
-          features: plan.features,
+          limits: plan.limits as any,
+          features: plan.features as any,
         },
       },
       {
@@ -253,7 +253,7 @@ const AdminPlans: React.FC = () => {
                                   onChange={(e) =>
                                     handleUpdateField(
                                       plan.id,
-                                      'limits',
+                                      PLAN_FIELDS.LIMITS,
                                       key,
                                       parseInt(e.target.value, 10)
                                     )
@@ -287,7 +287,9 @@ const AdminPlans: React.FC = () => {
                                 {t(`admin.featureLabels.${key}`, key)}
                               </span>
                               <button
-                                onClick={() => handleUpdateField(plan.id, 'features', key, !value)}
+                                onClick={() =>
+                                  handleUpdateField(plan.id, PLAN_FIELDS.FEATURES, key, !value)
+                                }
                                 className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-all duration-300 focus:outline-none ${value ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-gray-300 dark:bg-gray-700'}`}
                               >
                                 <span

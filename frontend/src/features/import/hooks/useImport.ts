@@ -7,6 +7,8 @@ import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
+import type { ApiErrorData } from '@/utils/errorHelper';
+import type { AxiosError } from 'axios';
 import type { Branch } from '@/types';
 
 export type ImportType = 'students' | 'teachers' | 'rooms' | 'classes';
@@ -20,7 +22,7 @@ export const useImport = () => {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
-  const [parsedData, setParsedData] = useState<Record<string, any>[]>([]);
+  const [parsedData, setParsedData] = useState<Record<string, unknown>[]>([]);
   const [headers, setHeaders] = useState<string[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -32,7 +34,7 @@ export const useImport = () => {
         setBranches(data);
         if (data.length > 0) setSelectedBranch(data[0].id);
       } catch (err) {
-        handleApiError(err, t);
+        handleApiError(err as AxiosError<ApiErrorData>, t);
       }
     };
     fetchBranches();
@@ -41,7 +43,6 @@ export const useImport = () => {
   useEffect(() => {
     const typeFromUrl = searchParams.get('type') as ImportType;
     if (typeFromUrl && ['students', 'teachers', 'rooms', 'classes'].includes(typeFromUrl)) {
-       
       setImportType(typeFromUrl);
     }
   }, [searchParams]);
@@ -65,7 +66,7 @@ export const useImport = () => {
         skipEmptyLines: true,
         complete: (results) => {
           if (results.meta.fields) setHeaders(results.meta.fields);
-          setParsedData(results.data as any);
+          setParsedData(results.data as Record<string, unknown>[]);
           setIsProcessing(false);
         },
         error: (error) => {
@@ -84,7 +85,7 @@ export const useImport = () => {
           const json = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
           if (json.length > 0) {
             setHeaders(Object.keys(json[0] as object));
-            setParsedData(json as any);
+            setParsedData(json as Record<string, unknown>[]);
           }
           setIsProcessing(false);
         } catch (err) {
@@ -106,7 +107,7 @@ export const useImport = () => {
     if (!selectedBranch || parsedData.length === 0) return;
     setIsUploading(true);
 
-    const getValue = (row: unknown, possibleKeys: string[]) => {
+    const getValue = (row: Record<string, unknown>, possibleKeys: string[]) => {
       const rowKeys = Object.keys(row);
       for (const key of possibleKeys) {
         const matchedKey = rowKeys.find((rk) => rk.trim().toLowerCase() === key.toLowerCase());
@@ -164,15 +165,21 @@ export const useImport = () => {
     });
 
     const validData = mappedData.filter(
-      (d: any) =>
-        (importType === 'rooms' ? d.name : d.full_name || d.name) &&
-        (importType === 'classes' ? d.teacher_email : true)
+      (d: Record<string, unknown>) =>
+        Object.fromEntries(
+          importType === 'rooms' ? [['name', d.name]] : [['full_name', d.full_name || d.name]]
+        ) && (importType === 'classes' ? d.teacher_email : true)
     );
 
     try {
       if (importType === 'students') {
         const data = await bulkImportStudents(validData, selectedBranch);
-        toast.success(`Success: ${data.students_count} students, ${data.classes_count} classes.`);
+        toast.success(
+          t('success.IMPORT_SUCCESS', {
+            students: data.students_count,
+            classes: data.classes_count,
+          })
+        );
       } else {
         const data = await bulkImportOther(importType, validData);
         toast.success(data.message || t('common.success'));
@@ -180,7 +187,7 @@ export const useImport = () => {
       handleClearFile();
       return true;
     } catch (err) {
-      handleApiError(err, t);
+      handleApiError(err as AxiosError<ApiErrorData>, t);
       return false;
     } finally {
       setIsUploading(false);

@@ -10,6 +10,7 @@ import {
   Search,
 } from 'lucide-react';
 import type { AttendanceStats, Session } from '../types';
+import { ATTENDANCE_STATUS } from '@/utils/constants';
 
 interface AttendanceControlsProps {
   isControlsExpanded: boolean;
@@ -80,10 +81,13 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
               <div
                 className="relative flex-1 group cursor-pointer min-w-0"
                 onClick={() => {
-                  const input = dateInputRef.current as any;
+                  const input = dateInputRef.current as HTMLInputElement;
                   if (input) {
-                    if ('showPicker' in input) input.showPicker();
-                    else input.click();
+                    if (typeof (input as any).showPicker === 'function') {
+                      (input as any).showPicker();
+                    } else {
+                      input.click();
+                    }
                   }
                 }}
               >
@@ -163,7 +167,7 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-700/50">
             {[
               {
-                key: 'present',
+                key: ATTENDANCE_STATUS.PRESENT,
                 bgColor: 'bg-green-50/50 dark:bg-green-900/10',
                 borderColor: 'border-green-100 dark:border-green-800/30',
                 textColor: 'text-green-600',
@@ -173,7 +177,7 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
                 showTotal: true,
               },
               {
-                key: 'absent',
+                key: ATTENDANCE_STATUS.ABSENT,
                 bgColor: 'bg-red-50/50 dark:bg-red-900/10',
                 borderColor: 'border-red-100 dark:border-red-800/30',
                 textColor: 'text-red-600',
@@ -181,7 +185,7 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
                 value: stats.absent,
               },
               {
-                key: 'late',
+                key: ATTENDANCE_STATUS.LATE,
                 bgColor: 'bg-amber-50/50 dark:bg-amber-900/10',
                 borderColor: 'border-amber-100 dark:border-amber-800/30',
                 textColor: 'text-amber-600',
@@ -189,7 +193,7 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
                 value: stats.late,
               },
               {
-                key: 'excused',
+                key: ATTENDANCE_STATUS.EXCUSED,
                 bgColor: 'bg-blue-50/50 dark:bg-blue-900/10',
                 borderColor: 'border-blue-100 dark:border-blue-800/30',
                 textColor: 'text-blue-600',

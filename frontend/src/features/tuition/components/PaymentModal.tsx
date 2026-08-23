@@ -7,18 +7,22 @@ import { handleApiError } from '@/utils/errorHelper';
 import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
 import { useTranslation } from 'react-i18next';
+import { PAYMENT_METHODS } from '@/utils/constants';
 
 interface Props {
   tuition: Tuition;
   onClose: () => void;
 }
 
-const getPaymentMethods = (t: any) => [
-  { value: 'cash', label: `💵 ${t('tuition.paymentMethods.cash')}` },
-  { value: 'bank_transfer', label: `🏦 ${t('tuition.paymentMethods.bank_transfer')}` },
-  { value: 'momo', label: `📱 ${t('tuition.paymentMethods.momo')}` },
-  { value: 'vnpay', label: `💳 ${t('tuition.paymentMethods.vnpay')}` },
-  { value: 'other', label: `🔧 ${t('tuition.paymentMethods.other')}` },
+const getPaymentMethods = (t: import('i18next').TFunction) => [
+  { value: PAYMENT_METHODS.CASH, label: `💵 ${t('tuition.paymentMethods.cash')}` },
+  {
+    value: PAYMENT_METHODS.BANK_TRANSFER,
+    label: `🏦 ${t('tuition.paymentMethods.bank_transfer')}`,
+  },
+  { value: PAYMENT_METHODS.MOMO, label: `📱 ${t('tuition.paymentMethods.momo')}` },
+  { value: PAYMENT_METHODS.VNPAY, label: `💳 ${t('tuition.paymentMethods.vnpay')}` },
+  { value: PAYMENT_METHODS.OTHER, label: `🔧 ${t('tuition.paymentMethods.other')}` },
 ];
 
 const formatCurrency = (amount: number | string) =>
@@ -37,7 +41,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
   } = useForm<RecordPaymentDto>({
     defaultValues: {
       amount_paid: remaining,
-      payment_method: 'cash',
+      payment_method: PAYMENT_METHODS.CASH,
       payment_date: new Date().toISOString().split('T')[0],
     },
   });
@@ -49,6 +53,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
     });
   };
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const paymentMethod = watch('payment_method');
 
   return (
@@ -151,9 +156,9 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
             </div>
           </div>
 
-          {(paymentMethod === 'bank_transfer' ||
-            paymentMethod === 'vnpay' ||
-            paymentMethod === 'momo') && (
+          {(paymentMethod === PAYMENT_METHODS.BANK_TRANSFER ||
+            paymentMethod === PAYMENT_METHODS.VNPAY ||
+            paymentMethod === PAYMENT_METHODS.MOMO) && (
             <div>
               <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
                 {t('tuition.payment.reference')}

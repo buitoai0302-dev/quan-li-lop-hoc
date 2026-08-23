@@ -16,8 +16,8 @@ export interface UpdatePlanPayload {
   yearlyPriceVnd?: number;
   yearlyPriceUsd?: number;
   isActive?: boolean;
-  limits?: any;
-  features?: any;
+  limits?: Record<string, number>;
+  features?: Record<string, boolean>;
 }
 
 export const updatePlan = (id: string, data: UpdatePlanPayload) =>
@@ -57,11 +57,14 @@ export interface AdminUser {
 export const getAdminUsers = (params?: { search?: string; role?: string; tenant_id?: string }) =>
   api.get<AdminUser[]>('/admin/users', { params }).then((res) => res.data);
 
-export const createAdminUser = (data: any) =>
+export const createAdminUser = (data: Record<string, unknown>) =>
   api.post('/admin/users', data).then((res) => res.data);
 
-export const resetAdminUserPassword = (id: string, data: any) =>
+export const resetAdminUserPassword = (id: string, data: Record<string, unknown>) =>
   api.post(`/admin/users/${id}/reset-password`, data).then((res) => res.data);
 
 export const toggleAdminUserStatus = (id: string) =>
   api.patch(`/admin/users/${id}/status`).then((res) => res.data);
+
+export const importAdminUsers = (tenant_id: string, data: Record<string, unknown>[]) =>
+  api.post('/admin/users/import', { tenant_id, data }).then((res) => res.data);

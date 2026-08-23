@@ -77,7 +77,7 @@ export const deleteClass = async (req: AuthRequest, res: Response, next: NextFun
     const { id } = req.params;
 
     await ClassService.deleteClass(tenantId as string, id as string);
-    res.json({ success: true, message: 'Lớp học đã được xóa thành công' });
+    res.json({ success: true, message: 'CLASS_DELETED_SUCCESS' });
   } catch (error) {
     next(error);
   }

@@ -7,7 +7,7 @@ import ConfirmModal from './common/ConfirmModal';
 import type { User } from '@/types';
 import { getMenuItems } from '../routes';
 import type { MenuGroup, MenuItem } from '../routes';
-import { USER_ROLES } from '../utils/constants';
+import { USER_ROLES, MENU_KEYS } from '../utils/constants';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
 import { usePublicSettings } from '@/features/admin/hooks/useSystemSettings';
 
@@ -35,8 +35,16 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
           (!group.roles || group.roles.includes(user?.role || '')) &&
           (!item.roles || item.roles.includes(user?.role || ''));
         if (!hasRole) return false;
-        const menuKey = item.path.substring(1).split('/')[0] || 'dashboard';
-        if (['settings', 'admin', 'subscription', 'help', 'activities'].includes(menuKey))
+        const menuKey = item.path.substring(1).split('/')[0] || MENU_KEYS.DASHBOARD;
+        if (
+          [
+            MENU_KEYS.SETTINGS,
+            USER_ROLES.ADMIN,
+            MENU_KEYS.SUBSCRIPTION,
+            MENU_KEYS.HELP,
+            MENU_KEYS.ACTIVITIES,
+          ].includes(menuKey)
+        )
           return true;
         const isEnabled = user?.tenant_settings?.menu?.[menuKey] ?? true;
         return isEnabled;

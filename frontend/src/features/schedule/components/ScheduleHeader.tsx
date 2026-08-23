@@ -61,10 +61,13 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
   };
 
   const handleShowPicker = () => {
-    const input = dateInputRef.current as any;
+    const input = dateInputRef.current as HTMLInputElement;
     if (input) {
-      if ('showPicker' in input) input.showPicker();
-      else input.click();
+      if (typeof (input as any).showPicker === 'function') {
+        (input as any).showPicker();
+      } else {
+        input.click();
+      }
     }
   };
 
@@ -113,7 +116,9 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
                 </span>
               )}
               {viewMode === VIEW_MODES.MONTH &&
-                format(selectedDate, 'MMMM yyyy', { locale: currentLocale as any })}
+                format(selectedDate, 'MMMM yyyy', {
+                  locale: currentLocale as import('date-fns').Locale,
+                })}
             </span>
           </h1>
           <div className="lg:hidden">{actionButtons}</div>
@@ -194,7 +199,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Branch Filter */}
             <div className="flex-1 space-y-2">
-              <Label className="uppercase tracking-[0.15em] ml-1 flex items-center gap-1.5 text-[10px]">
+              <Label className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-[10px] ml-1">
                 <MapPin size={12} className="text-primary/70" />
                 {t('common.branch')}
               </Label>
@@ -215,7 +220,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             {/* Teacher Filter */}
             {user?.role !== USER_ROLES.TEACHER && (
               <div className="flex-1 space-y-2">
-                <Label className="uppercase tracking-[0.15em] ml-1 flex items-center gap-1.5 text-[10px]">
+                <Label className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-[10px] ml-1">
                   <User size={12} className="text-primary/70" />
                   {t('schedule.teacher')}
                 </Label>
@@ -238,7 +243,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
 
             {/* Class Filter */}
             <div className="flex-1 space-y-2">
-              <Label className="uppercase tracking-[0.15em] ml-1 flex items-center gap-1.5 text-[10px]">
+              <Label className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-[10px] ml-1">
                 <BookOpen size={12} className="text-primary/70" />
                 {t('menu.classes')}
               </Label>

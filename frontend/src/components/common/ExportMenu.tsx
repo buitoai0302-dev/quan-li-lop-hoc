@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Download, FileSpreadsheet, FileText, ChevronDown, Loader2 } from 'lucide-react';
@@ -10,12 +10,7 @@ interface ExportMenuProps {
   align?: 'left' | 'right' | 'responsive';
 }
 
-const ExportMenu: React.FC<ExportMenuProps> = ({
-  onExportExcel,
-  onExportPDF,
-  disabled,
-  align = 'right',
-}) => {
+const ExportMenu: React.FC<ExportMenuProps> = ({ onExportExcel, onExportPDF, disabled }) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState<'excel' | 'pdf' | null>(null);
@@ -24,7 +19,7 @@ const ExportMenu: React.FC<ExportMenuProps> = ({
   const buttonRef = useRef<HTMLButtonElement>(null);
   const [dropdownStyle, setDropdownStyle] = useState<React.CSSProperties>({});
 
-  const updatePosition = () => {
+  const updatePosition = useCallback(() => {
     if (buttonRef.current && open) {
       const rect = buttonRef.current.getBoundingClientRect();
       setDropdownStyle({
@@ -32,7 +27,7 @@ const ExportMenu: React.FC<ExportMenuProps> = ({
         right: window.innerWidth - rect.right,
       });
     }
-  };
+  }, [open]);
 
   // Close on outside click
   useEffect(() => {
@@ -60,7 +55,7 @@ const ExportMenu: React.FC<ExportMenuProps> = ({
       window.removeEventListener('scroll', updatePosition, true);
       window.removeEventListener('resize', updatePosition);
     };
-  }, [open]);
+  }, [open, updatePosition]);
 
   const handleExport = async (type: 'excel' | 'pdf') => {
     setLoading(type);

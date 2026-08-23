@@ -4,7 +4,7 @@ export interface ActivityItem {
   action: string;
   target: string;
   time: string;
-  type: 'student' | 'class' | 'teacher' | 'session';
+  type: string;
 }
 
 export interface DashboardStats {

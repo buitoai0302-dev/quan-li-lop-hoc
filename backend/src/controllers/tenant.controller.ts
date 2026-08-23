@@ -1,123 +1,68 @@
-import { logger } from '../utils/logger';
-import { Response } from 'express';
-import crypto from 'crypto';
-import pool from '../db';
+import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
+import { TenantService } from '../services/tenant.service';
+import { AuthenticationError } from '../utils/errors';
 
-export const getApiKey = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getApiKey = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const tenantId = req.user?.tenantId;
+    if (!tenantId) throw new AuthenticationError();
 
-    // Check if plan supports API Access
-    const planResult = await pool.query(
-      `
-      SELECT pf.is_enabled 
-      FROM tenants t
-      JOIN plan_features pf ON t.plan_id = pf.plan_id
-      WHERE t.id = $1 AND pf.feature_key = 'api_access'
-    `,
-      [tenantId]
-    );
-
-    if (!planResult.rows[0]?.is_enabled) {
-      res.json({ hasAccess: false, apiKey: null });
-      return;
-    }
-
-    const result = await pool.query('SELECT api_key FROM tenants WHERE id = $1', [tenantId]);
-    res.json({ hasAccess: true, apiKey: result.rows[0]?.api_key });
+    const result = await TenantService.getApiKey(tenantId as string);
+    res.json(result);
   } catch (error) {
-    logger.error(error, 'Error in getApiKey:');
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 };
 
-export const generateApiKey = async (req: AuthRequest, res: Response): Promise<void> => {
+export const generateApiKey = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const tenantId = req.user?.tenantId;
+    if (!tenantId) throw new AuthenticationError();
 
-    // Check if plan supports API Access
-    const planResult = await pool.query(
-      `
-      SELECT pf.is_enabled 
-      FROM tenants t
-      JOIN plan_features pf ON t.plan_id = pf.plan_id
-      WHERE t.id = $1 AND pf.feature_key = 'api_access'
-    `,
-      [tenantId]
-    );
-
-    if (!planResult.rows[0]?.is_enabled) {
-      res.status(403).json({ error: 'API Access is not included in your current plan.' });
-      return;
-    }
-
-    const newKey = `sk_${crypto.randomBytes(24).toString('hex')}`;
-    await pool.query('UPDATE tenants SET api_key = $1 WHERE id = $2', [newKey, tenantId]);
-
-    res.json({ apiKey: newKey });
+    const result = await TenantService.generateApiKey(tenantId as string);
+    res.json(result);
   } catch (error) {
-    logger.error(error, 'Error in generateApiKey:');
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 };
 
-export const getTenant = async (req: AuthRequest, res: Response): Promise<void> => {
+export const getTenant = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const tenantId = req.user?.tenantId;
-    if (!tenantId) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
+    if (!tenantId) throw new AuthenticationError();
 
-    const result = await pool.query(
-      'SELECT id, name, domain, contact_email, plan_id, settings FROM tenants WHERE id = $1 AND is_active = true',
-      [tenantId]
-    );
-
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Tenant not found' });
-      return;
-    }
-
-    res.json(result.rows[0]);
+    const result = await TenantService.getTenant(tenantId as string);
+    res.json(result);
   } catch (error) {
-    logger.error(error, 'Error in getTenant:');
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 };
 
-export const updateTenant = async (req: AuthRequest, res: Response): Promise<void> => {
+export const updateTenant = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     const tenantId = req.user?.tenantId;
-    if (!tenantId) {
-      res.status(401).json({ error: 'Unauthorized' });
-      return;
-    }
+    if (!tenantId) throw new AuthenticationError();
 
-    const { name, contact_email, settings } = req.body;
-
-    if (!name || name.trim() === '') {
-      res.status(400).json({ error: 'Tenant name is required' });
-      return;
-    }
-
-    const result = await pool.query(
-      `UPDATE tenants 
-       SET name = $1, contact_email = $2, settings = COALESCE($3, settings), updated_at = NOW() 
-       WHERE id = $4 AND is_active = true 
-       RETURNING id, name, domain, contact_email, settings`,
-      [name, contact_email, settings ? JSON.stringify(settings) : null, tenantId]
-    );
-
-    if (result.rows.length === 0) {
-      res.status(404).json({ error: 'Tenant not found' });
-      return;
-    }
-
-    res.json(result.rows[0]);
+    const result = await TenantService.updateTenant(tenantId as string, req.body);
+    res.json(result);
   } catch (error) {
-    logger.error(error, 'Error in updateTenant:');
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 };

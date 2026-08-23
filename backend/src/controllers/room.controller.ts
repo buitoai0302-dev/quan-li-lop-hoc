@@ -1,29 +1,12 @@
-import { Request, Response, NextFunction } from 'express';
-import pool from '../db';
+import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
-import { checkPlanLimit } from '../utils/limitChecker';
-import { NotFoundError, ValidationError } from '../utils/errors';
-import { FeatureFlagService } from '../services/feature-flag.service';
+import { RoomService } from '../services/room.service';
 
 export const getRooms = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
-
-    const result = await pool.query(
-      `SELECT r.*, b.name as branch_name 
-       FROM rooms r
-       LEFT JOIN branches b ON r.branch_id = b.id
-       WHERE r.tenant_id = $1 AND r.is_deleted = false
-       ORDER BY r.name ASC`,
-      [tenantId]
-    );
-
-    const limit = await FeatureFlagService.checkLimit(tenantId as string, 'max_rooms');
-    if (limit > 0) {
-      return res.json(result.rows.slice(0, limit));
-    }
-
-    res.json(result.rows);
+    const rooms = await RoomService.getRooms(tenantId as string);
+    res.json(rooms);
   } catch (error) {
     next(error);
   }
@@ -32,22 +15,8 @@ export const getRooms = async (req: AuthRequest, res: Response, next: NextFuncti
 export const createRoom = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
-    const { branch_id, name, capacity, room_type } = req.body;
-
-    if (!branch_id || !name) {
-      throw new ValidationError('Vui lòng điền tên phòng và chi nhánh', 'MISSING_REQUIRED_FIELDS');
-    }
-
-    // Check Plan Limit
-    await checkPlanLimit(tenantId as string, 'max_rooms', 'rooms', 'LIMIT_EXCEEDED');
-
-    const result = await pool.query(
-      `INSERT INTO rooms (tenant_id, branch_id, name, capacity, room_type) 
-       VALUES ($1, $2, $3, $4, $5) RETURNING *`,
-      [tenantId, branch_id, name, capacity || 30, room_type || 'classroom']
-    );
-
-    res.status(201).json(result.rows[0]);
+    const room = await RoomService.createRoom(tenantId as string, req.body);
+    res.status(201).json(room);
   } catch (error) {
     next(error);
   }
@@ -57,24 +26,8 @@ export const updateRoom = async (req: AuthRequest, res: Response, next: NextFunc
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
-    const { branch_id, name, capacity, room_type, is_active } = req.body;
-
-    const result = await pool.query(
-      `UPDATE rooms 
-       SET branch_id = COALESCE($1, branch_id),
-           name = COALESCE($2, name),
-           capacity = COALESCE($3, capacity),
-           room_type = COALESCE($4, room_type),
-           is_active = COALESCE($5, is_active)
-       WHERE id = $6 AND tenant_id = $7 RETURNING *`,
-      [branch_id, name, capacity, room_type, is_active, id, tenantId]
-    );
-
-    if (result.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy phòng học', 'ROOM_NOT_FOUND');
-    }
-
-    res.json(result.rows[0]);
+    const room = await RoomService.updateRoom(tenantId as string, id as string, req.body);
+    res.json(room);
   } catch (error) {
     next(error);
   }
@@ -84,17 +37,8 @@ export const deleteRoom = async (req: AuthRequest, res: Response, next: NextFunc
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
-
-    const result = await pool.query(
-      `UPDATE rooms SET is_deleted = true WHERE id = $1 AND tenant_id = $2 RETURNING *`,
-      [id, tenantId]
-    );
-
-    if (result.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy phòng học', 'ROOM_NOT_FOUND');
-    }
-
-    res.json({ success: true, message: 'Phòng học đã được xóa thành công' });
+    await RoomService.deleteRoom(tenantId as string, id as string);
+    res.json({ success: true, message: 'ROOM_DELETED_SUCCESS' });
   } catch (error) {
     next(error);
   }

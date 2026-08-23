@@ -24,6 +24,7 @@ import PageLoading from '@/components/common/PageLoading';
 import type { Tenant } from '@/types';
 
 import { useAdminTenants, useAdminPlans, useAdminStats, useUpdateTenant } from '../hooks/useAdmin';
+import { BACKUP_CYCLES } from '@/utils/constants';
 
 const AdminTenants: React.FC = () => {
   const { t } = useTranslation();
@@ -44,7 +45,7 @@ const AdminTenants: React.FC = () => {
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [backupSettings, setBackupSettings] = useState({
     enabled: false,
-    cycle: 'daily',
+    cycle: BACKUP_CYCLES.DAILY as string,
     time: '02:00',
   });
 
@@ -152,19 +153,19 @@ const AdminTenants: React.FC = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-3 shrink-0">
             <StatCard
               label={t('admin.stats.totalTenants')}
-              value={stats?.totalTenants}
+              value={stats?.totalTenants || 0}
               icon={<Building size={14} className="sm:w-[16px] sm:h-[16px]" />}
               color="blue"
             />
             <StatCard
               label={t('admin.stats.totalUsers')}
-              value={stats?.totalUsers}
+              value={stats?.totalUsers || 0}
               icon={<Users size={14} className="sm:w-[16px] sm:h-[16px]" />}
               color="indigo"
             />
             <StatCard
               label={t('admin.stats.totalSessions')}
-              value={stats?.totalSessions}
+              value={stats?.totalSessions || 0}
               icon={<Calendar size={14} className="sm:w-[16px] sm:h-[16px]" />}
               color="emerald"
               className="col-span-2 md:col-span-1"
@@ -578,9 +579,9 @@ const AdminTenants: React.FC = () => {
                     }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-800 focus:ring-2 focus:ring-blue-500 outline-none"
                   >
-                    <option value="daily">{t('admin.backup.daily')}</option>
-                    <option value="weekly">{t('admin.backup.weekly')}</option>
-                    <option value="monthly">{t('admin.backup.monthly')}</option>
+                    <option value={BACKUP_CYCLES.DAILY}>{t('admin.backup.daily')}</option>
+                    <option value={BACKUP_CYCLES.WEEKLY}>{t('admin.backup.weekly')}</option>
+                    <option value={BACKUP_CYCLES.MONTHLY}>{t('admin.backup.monthly')}</option>
                   </select>
                 </div>
                 <div>

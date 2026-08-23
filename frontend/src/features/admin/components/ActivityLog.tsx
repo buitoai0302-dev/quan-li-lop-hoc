@@ -94,21 +94,21 @@ const ActivityLog: React.FC = () => {
 
             {/* Pagination */}
             <div className="p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between shrink-0">
-              <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 font-bold uppercase tracking-widest">
                 {t('common.page')} {pagination.page} / {pagination.totalPages}
               </p>
               <div className="flex gap-2">
                 <button
                   onClick={() => setPage(pagination.page - 1)}
                   disabled={pagination.page <= 1 || loading}
-                  className="p-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-50 transition-colors shadow-sm active:scale-95"
+                  className="p-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm active:scale-95"
                 >
                   <ChevronLeft size={16} />
                 </button>
                 <button
                   onClick={() => setPage(pagination.page + 1)}
                   disabled={pagination.page >= pagination.totalPages || loading}
-                  className="p-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-50 transition-colors shadow-sm active:scale-95"
+                  className="p-1.5 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border border-gray-200 dark:border-gray-700 rounded-lg disabled:opacity-30 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors shadow-sm active:scale-95"
                 >
                   <ChevronRight size={16} />
                 </button>

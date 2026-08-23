@@ -2,9 +2,10 @@ import { logger } from '../utils/logger';
 import { Response, NextFunction } from 'express';
 import pool from '../db';
 import { AuthRequest } from './auth.middleware';
+import { ROLES, HTTP_HEADERS } from '../utils/constants';
 
 export const apiKeyMiddleware = async (req: AuthRequest, res: Response, next: NextFunction) => {
-  const apiKey = req.headers['x-api-key'];
+  const apiKey = req.headers[HTTP_HEADERS.API_KEY];
 
   if (!apiKey) {
     return next(); // Continue to next middleware (likely authMiddleware)
@@ -27,7 +28,7 @@ export const apiKeyMiddleware = async (req: AuthRequest, res: Response, next: Ne
       userId: 'api_user',
       tenantId: tenant.id,
       branchId: null,
-      role: 'admin', // API access acts as admin
+      role: ROLES.ADMIN, // API access acts as admin
       email: `api@${tenant.name.toLowerCase().replace(/\s+/g, '-')}.com`,
     };
     req.tenantId = tenant.id;

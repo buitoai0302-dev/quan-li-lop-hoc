@@ -1,5 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getTeachers, createTeacher, updateTeacher, deleteTeacher } from '@/features/teachers/api/teachers.api';
+import {
+  getTeachers,
+  createTeacher,
+  updateTeacher,
+  deleteTeacher,
+  resetTeacherPassword,
+} from '@/features/teachers/api/teachers.api';
 import type { TeacherFormData } from '@/types/schemas';
 
 export const useTeachers = (branchId?: string) => {
@@ -43,5 +49,24 @@ export const useDeleteTeacher = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['teachers'] });
     },
+  });
+};
+
+export const useDeleteBulkTeachers = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => deleteTeacher(id)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['teachers'] });
+    },
+  });
+};
+
+export const useResetTeacherPassword = () => {
+  return useMutation({
+    mutationFn: ({ id, password }: { id: string; password?: string }) =>
+      resetTeacherPassword(id, password),
   });
 };

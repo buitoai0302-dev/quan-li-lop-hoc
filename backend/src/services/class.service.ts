@@ -3,6 +3,7 @@ import pool from '../db';
 import { checkPlanLimit } from '../utils/limitChecker';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { FeatureFlagService } from './feature-flag.service';
+import { CreateClassDto, UpdateClassDto } from '../types';
 
 export class ClassService {
   static async getClasses(
@@ -55,13 +56,13 @@ export class ClassService {
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy lớp học', 'CLASS_NOT_FOUND');
+      throw new NotFoundError('CLASS_NOT_FOUND', 'CLASS_NOT_FOUND');
     }
 
     return result.rows[0];
   }
 
-  static async createClass(tenantId: string, data: any) {
+  static async createClass(tenantId: string, data: CreateClassDto) {
     let client;
     try {
       client = await pool.connect();
@@ -79,7 +80,7 @@ export class ClassService {
       } = data;
 
       if (!branch_id || !name) {
-        throw new ValidationError('Vui lòng điền tên lớp và chi nhánh', 'MISSING_REQUIRED_FIELDS');
+        throw new ValidationError('MISSING_REQUIRED_FIELDS', 'MISSING_REQUIRED_FIELDS');
       }
 
       await checkPlanLimit(tenantId, 'max_classes', 'classes', 'LIMIT_EXCEEDED');
@@ -238,7 +239,7 @@ export class ClassService {
     return result.rows;
   }
 
-  static async updateClass(tenantId: string, id: string, data: any) {
+  static async updateClass(tenantId: string, id: string, data: UpdateClassDto) {
     let client;
     try {
       client = await pool.connect();
@@ -283,7 +284,7 @@ export class ClassService {
       );
 
       if (result.rows.length === 0) {
-        throw new NotFoundError('Không tìm thấy lớp học', 'CLASS_NOT_FOUND');
+        throw new NotFoundError('CLASS_NOT_FOUND', 'CLASS_NOT_FOUND');
       }
 
       if (recurring_schedules && Array.isArray(recurring_schedules)) {
@@ -405,7 +406,7 @@ export class ClassService {
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy lớp học', 'CLASS_NOT_FOUND');
+      throw new NotFoundError('CLASS_NOT_FOUND', 'CLASS_NOT_FOUND');
     }
 
     return true;
@@ -423,14 +424,19 @@ export class ClassService {
     return result.rows;
   }
 
-  static async enrollStudent(tenantId: string, id: string, student_id: any, student_ids: any) {
+  static async enrollStudent(
+    tenantId: string,
+    id: string,
+    student_id: string | null,
+    student_ids: string[] | null
+  ) {
     const classRes = await pool.query(
       `SELECT max_capacity FROM classes WHERE id = $1 AND tenant_id = $2`,
       [id, tenantId]
     );
 
     if (classRes.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy lớp học', 'CLASS_NOT_FOUND');
+      throw new NotFoundError('CLASS_NOT_FOUND', 'CLASS_NOT_FOUND');
     }
 
     const maxCapacity = classRes.rows[0].max_capacity;
@@ -447,10 +453,7 @@ export class ClassService {
     }
 
     if (currentCount + idsToAdd.length > maxCapacity) {
-      throw new ValidationError(
-        `Lớp đã đạt giới hạn sức chứa (${maxCapacity} học sinh). Chỉ còn trống ${maxCapacity - currentCount} chỗ.`,
-        'CAPACITY_EXCEEDED'
-      );
+      throw new ValidationError('CAPACITY_EXCEEDED', 'CAPACITY_EXCEEDED');
     }
 
     const results = [];

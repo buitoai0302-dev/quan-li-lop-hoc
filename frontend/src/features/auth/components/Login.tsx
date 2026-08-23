@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Globe, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { handleApiError } from '@/utils/errorHelper';
 import { GoogleLogin } from '@react-oauth/google';
-import { ERROR_CODES } from '@/utils/constants';
+import { ERROR_CODES, THEMES } from '@/utils/constants';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Input, Button, Label } from '@/components/common/UI';
 
@@ -37,8 +37,8 @@ const Login: React.FC = () => {
       login(data.token, data.user);
       toast.success(t('auth.loginSuccess'));
       navigate('/dashboard');
-    } catch (error) {
-      handleApiError(error, t, 'auth.googleLoginError');
+    } catch (error: any) {
+      handleApiError(error as any, t, 'auth.googleLoginError');
     } finally {
       setIsLoading(false);
     }
@@ -53,11 +53,11 @@ const Login: React.FC = () => {
       login(data.token, data.user);
       toast.success(t('auth.loginSuccess'));
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       if (error.response?.data?.code === ERROR_CODES.EMAIL_NOT_VERIFIED) {
         setEmailNotVerified(true);
       } else {
-        handleApiError(error, t, 'auth.loginError');
+        handleApiError(error as any, t, 'auth.loginError');
       }
     } finally {
       setIsLoading(false);
@@ -123,7 +123,7 @@ const Login: React.FC = () => {
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-1.5">
-              <Label className="text-[9px] text-slate-400 dark:text-gray-500 ml-1">
+              <Label className="text-[9px] text-slate-400 dark:text-gray-500  ml-1">
                 {t('auth.email')}
               </Label>
               <Input
@@ -221,9 +221,9 @@ const Login: React.FC = () => {
             <div className="mt-3 flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                onError={() => toast.error('Google Login Failed')}
+                onError={() => toast.error(t('errors.GOOGLE_LOGIN_FAILED'))}
                 useOneTap={false}
-                theme={currentTheme === 'dark' ? 'filled_black' : 'outline'}
+                theme={currentTheme === THEMES.DARK ? 'filled_black' : 'outline'}
                 shape="pill"
                 size="large"
                 text="continue_with"

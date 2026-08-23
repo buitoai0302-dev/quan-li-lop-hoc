@@ -65,7 +65,7 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="sm:col-span-2">
-          <Label required ml-1>
+          <Label required className="ml-1">
             {t('teachers.name')}
           </Label>
           <Input
@@ -81,11 +81,11 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
           )}
         </div>
         <div>
-          <Label ml-1>{t('teachers.phone')}</Label>
+          <Label className="ml-1">{t('teachers.phone')}</Label>
           <Input variant="muted" placeholder="09xxx..." icon={<Phone />} {...register('phone')} />
         </div>
         <div>
-          <Label required ml-1>
+          <Label required className="ml-1">
             {t('classes.branch')}
           </Label>
           <Select
@@ -112,7 +112,7 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
 
       <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-5">
         <div>
-          <Label required ml-1>
+          <Label required className="ml-1">
             {t('teachers.email')}
           </Label>
           <Input
@@ -129,7 +129,7 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
           )}
         </div>
         <div>
-          <Label ml-1>{t('teachers.specialization')}</Label>
+          <Label className="ml-1">{t('teachers.specialization')}</Label>
           <Input
             variant="white"
             placeholder={t('teachers.specPlaceholder')}
@@ -140,7 +140,7 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
       </div>
 
       <div>
-        <Label ml-1>{t('common.status')}</Label>
+        <Label className="ml-1">{t('common.status')}</Label>
         <Select
           variant="muted"
           {...register('is_active', { setValueAs: (v) => v === 'true' || v === true })}

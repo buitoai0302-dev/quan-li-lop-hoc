@@ -41,14 +41,14 @@ export async function exportToPDF<T>(
   data: T[],
   columns: ExportColumn<T>[],
   filename: string,
-  title: string
+  title?: string
 ): Promise<void> {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
   // Title
   doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text(title, 14, 18);
+  doc.text(title || filename, 14, 18);
 
   // Subtitle: date
   doc.setFontSize(9);

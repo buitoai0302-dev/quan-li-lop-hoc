@@ -13,7 +13,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 // Suppress known Recharts warning in React 18 Strict Mode
 const originalConsoleWarn = console.warn;
-console.warn = (...args: any[]) => {
+console.warn = (...args: unknown[]) => {
   if (
     typeof args[0] === 'string' &&
     args[0].includes('The width(-1) and height(-1) of chart should be greater than 0')

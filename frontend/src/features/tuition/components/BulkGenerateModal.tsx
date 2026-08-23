@@ -1,6 +1,6 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { Zap, X, AlertCircle } from 'lucide-react';
+import { Zap, X } from 'lucide-react';
 import { useBulkGenerateTuitions } from '../hooks/useTuition';
 import type { BulkGenerateDto } from '../api/tuition.api';
 import { handleApiError } from '@/utils/errorHelper';
@@ -8,6 +8,7 @@ import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
 import { useTranslation } from 'react-i18next';
 import { useClasses } from '@/features/classes/hooks/useClasses';
+import { BILLING_CYCLE } from '@/utils/constants';
 
 interface Props {
   onClose: () => void;
@@ -24,7 +25,7 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
     formState: { errors },
   } = useForm<BulkGenerateDto>({
     defaultValues: {
-      billing_cycle: 'monthly',
+      billing_cycle: BILLING_CYCLE.MONTHLY,
       skip_existing: true,
       discount: 0,
     },
@@ -80,7 +81,7 @@ const BulkGenerateModal: React.FC<Props> = ({ onClose }) => {
               className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/30"
             >
               <option value="">{t('tuition.bulk.selectClass')}</option>
-              {classes.map((c: any) => (
+              {classes.map((c: { id: string; name: string }) => (
                 <option key={c.id} value={c.id}>
                   {c.name}
                 </option>

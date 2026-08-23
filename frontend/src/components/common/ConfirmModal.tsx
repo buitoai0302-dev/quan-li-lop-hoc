@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next';
 interface ConfirmModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void | Promise<any>;
+  onConfirm: () => void | Promise<unknown>;
   title: string;
   message: string;
   confirmText?: string;

@@ -19,7 +19,7 @@ import {
   Building,
   Plus,
 } from 'lucide-react';
-import { PLAN_CODES, USER_ROLES } from '@/utils/constants';
+import { PLAN_CODES, USER_ROLES, ATTENDANCE_STATUS } from '@/utils/constants';
 import {
   XAxis,
   YAxis,
@@ -94,7 +94,7 @@ const Dashboard: React.FC = () => {
               <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-2">
                 {t('dashboard.welcome') as string}, {user?.full_name?.split(' ').pop()}!
               </h1>
-              <p className="text-white/50 text-sm md:text-base max-w-md leading-relaxed">
+              <p className="text-white/50 text-sm md:text-base leading-relaxed">
                 {t('dashboard.subtitle')}
               </p>
             </div>
@@ -340,7 +340,7 @@ const Dashboard: React.FC = () => {
                         <Tooltip
                           contentStyle={{
                             borderRadius: '1rem',
-                            border: 'none',
+                            border: ATTENDANCE_STATUS.NONE,
                             boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
                           }}
                         />
@@ -402,7 +402,7 @@ const Dashboard: React.FC = () => {
                           <Tooltip
                             contentStyle={{
                               borderRadius: '1rem',
-                              border: 'none',
+                              border: ATTENDANCE_STATUS.NONE,
                               boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1)',
                             }}
                             formatter={(value: unknown) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(value) || 0)}
@@ -580,7 +580,12 @@ const Dashboard: React.FC = () => {
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-bold text-gray-800 dark:text-white leading-snug">
                                 {act.user}{' '}
-                                <span className="font-medium text-gray-500">{act.action}</span>
+                                <span className="font-medium text-gray-500">
+                                  {t(
+                                    `dashboard.activities.${act.action.trim()}`,
+                                    act.action.trim()
+                                  )}
+                                </span>
                               </p>
                               <div className="flex items-center gap-1 text-[9px] text-gray-400 mt-0.5 uppercase font-black">
                                 <Clock size={10} />

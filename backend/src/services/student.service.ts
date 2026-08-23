@@ -2,6 +2,7 @@ import pool from '../db';
 import { checkPlanLimit } from '../utils/limitChecker';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { FeatureFlagService } from './feature-flag.service';
+import { CreateStudentDto, UpdateStudentDto } from '../types';
 
 export class StudentService {
   static async getStudents(tenantId: string) {
@@ -22,14 +23,11 @@ export class StudentService {
     return result.rows;
   }
 
-  static async createStudent(tenantId: string, data: any) {
+  static async createStudent(tenantId: string, data: CreateStudentDto) {
     const { full_name, email, phone, date_of_birth, branch_id, parent_phone } = data;
 
     if (!full_name || !email || !branch_id) {
-      throw new ValidationError(
-        'Vui lòng điền đầy đủ thông tin bắt buộc',
-        'MISSING_REQUIRED_FIELDS'
-      );
+      throw new ValidationError('MISSING_REQUIRED_FIELDS', 'MISSING_REQUIRED_FIELDS');
     }
 
     await checkPlanLimit(tenantId, 'max_students', 'students', 'LIMIT_EXCEEDED');
@@ -43,13 +41,13 @@ export class StudentService {
       return result.rows[0];
     } catch (error: any) {
       if (error.code === '23505') {
-        throw new ValidationError('Email học sinh đã tồn tại', 'EMAIL_ALREADY_EXISTS');
+        throw new ValidationError('EMAIL_ALREADY_EXISTS', 'EMAIL_ALREADY_EXISTS');
       }
       throw error;
     }
   }
 
-  static async updateStudent(tenantId: string, id: string, data: any) {
+  static async updateStudent(tenantId: string, id: string, data: UpdateStudentDto) {
     const { full_name, phone, date_of_birth, branch_id, is_active, parent_phone } = data;
 
     const result = await pool.query(
@@ -65,7 +63,7 @@ export class StudentService {
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy học sinh', 'STUDENT_NOT_FOUND');
+      throw new NotFoundError('STUDENT_NOT_FOUND', 'STUDENT_NOT_FOUND');
     }
 
     return result.rows[0];
@@ -78,24 +76,27 @@ export class StudentService {
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy học sinh', 'STUDENT_NOT_FOUND');
+      throw new NotFoundError('STUDENT_NOT_FOUND', 'STUDENT_NOT_FOUND');
     }
 
     return true;
   }
 
-  static async bulkImport(tenantId: string, data: any) {
+  static async bulkImport(
+    tenantId: string,
+    data: { students: CreateStudentDto[]; branch_id: string }
+  ) {
     let client;
     try {
       client = await pool.connect();
       const { students, branch_id } = data;
 
       if (!students || !Array.isArray(students) || students.length === 0) {
-        throw new ValidationError('Danh sách học sinh không hợp lệ', 'INVALID_DATA');
+        throw new ValidationError('INVALID_DATA', 'INVALID_DATA');
       }
 
       if (!branch_id) {
-        throw new ValidationError('Thiếu branch_id', 'MISSING_REQUIRED_FIELDS');
+        throw new ValidationError('MISSING_REQUIRED_FIELDS', 'MISSING_REQUIRED_FIELDS');
       }
 
       await client.query('BEGIN');

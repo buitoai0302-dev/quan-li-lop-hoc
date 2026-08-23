@@ -1,4 +1,5 @@
 import { Response, NextFunction } from 'express';
+
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { NotificationService } from '../services/notification.service';
 

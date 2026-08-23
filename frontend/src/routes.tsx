@@ -7,34 +7,34 @@ import type { TFunction } from 'i18next';
 import MainLayout from './components/MainLayout';
 
 // Lazy-loaded pages for code splitting
-const Login = lazy(() => import('./pages/Auth/Login'));
-const Register = lazy(() => import('./pages/Auth/Register'));
-const VerifyEmail = lazy(() => import('./pages/Auth/VerifyEmail'));
-const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'));
-const ResetPassword = lazy(() => import('./pages/Auth/ResetPassword'));
-const ResendVerification = lazy(() => import('./pages/Auth/ResendVerification'));
+const Login = lazy(() => import('./features/auth/components/Login'));
+const Register = lazy(() => import('./features/auth/components/Register'));
+const VerifyEmail = lazy(() => import('./features/auth/components/VerifyEmail'));
+const ForgotPassword = lazy(() => import('./features/auth/components/ForgotPassword'));
+const ResetPassword = lazy(() => import('./features/auth/components/ResetPassword'));
+const ResendVerification = lazy(() => import('./features/auth/components/ResendVerification'));
 const Dashboard = lazy(() => import('./features/dashboard/Dashboard'));
-const Schedule = lazy(() => import('./pages/Schedule'));
-const Classes = lazy(() => import('./pages/Classes'));
-const Attendance = lazy(() => import('./pages/Attendance'));
-const Teachers = lazy(() => import('./pages/Teachers'));
-const Students = lazy(() => import('./pages/Students'));
-const Rooms = lazy(() => import('./pages/Rooms'));
-const Branches = lazy(() => import('./pages/Branches'));
-const Settings = lazy(() => import('./pages/Settings'));
-const ImportData = lazy(() => import('./pages/ImportData'));
-const Help = lazy(() => import('./pages/Help'));
-const Subscription = lazy(() => import('./pages/Subscription'));
+const Schedule = lazy(() => import('./features/schedule/components/Schedule'));
+const Classes = lazy(() => import('./features/classes/components/Classes'));
+const Attendance = lazy(() => import('./features/attendance/components/Attendance'));
+const Teachers = lazy(() => import('./features/teachers/components/Teachers'));
+const Students = lazy(() => import('./features/students/components/Students'));
+const Rooms = lazy(() => import('./features/rooms/components/Rooms'));
+const Branches = lazy(() => import('./features/branches/components/Branches'));
+const Settings = lazy(() => import('./features/settings/components/Settings'));
+const ImportData = lazy(() => import('./features/import/components/ImportData'));
+const Help = lazy(() => import('./features/help/components/Help'));
+const Subscription = lazy(() => import('./features/subscription/components/Subscription'));
 const Checkout = lazy(() => import('./features/subscription/components/Checkout'));
-const Tuition = lazy(() => import('./pages/Tuition/Tuition'));
-const AdminTenants = lazy(() => import('./pages/Admin/AdminTenants'));
-const AdminPlans = lazy(() => import('./pages/Admin/AdminPlans'));
-const AdminPlanRequests = lazy(() => import('./pages/Admin/AdminPlanRequests'));
-const AdminUsers = lazy(() => import('./pages/Admin/AdminUsers')); // Force TS re-check
+const Tuition = lazy(() => import('./features/tuition/components/Tuition'));
+const AdminTenants = lazy(() => import('./features/admin/components/AdminTenants'));
+const AdminPlans = lazy(() => import('./features/admin/components/AdminPlans'));
+const AdminPlanRequests = lazy(() => import('./features/admin/components/AdminPlanRequests'));
+const AdminUsers = lazy(() => import('./features/admin/components/AdminUsers')); // Force TS re-check
 const AdminSettings = lazy(() => import('./features/admin/components/AdminSettings'));
-const ActivityLog = lazy(() => import('./pages/Admin/ActivityLog'));
-const Landing = lazy(() => import('./pages/Landing/index'));
-const BillingReturn = lazy(() => import('./pages/BillingReturn/BillingReturn'));
+const ActivityLog = lazy(() => import('./features/admin/components/ActivityLog'));
+const Landing = lazy(() => import('./features/landing/index'));
+const BillingReturn = lazy(() => import('./features/subscription/components/BillingReturn'));
 
 import { USER_ROLES, ROUTES, PREMIUM_FEATURES } from './utils/constants';
 import {

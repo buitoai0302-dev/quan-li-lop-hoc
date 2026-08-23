@@ -52,7 +52,7 @@ const ResetPassword: React.FC = () => {
       await resetPassword({ token, password });
       setSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error.response?.data?.error || t('common.error'));
     } finally {
       setIsLoading(false);
@@ -122,7 +122,7 @@ const ResetPassword: React.FC = () => {
             <form className="space-y-4" onSubmit={handleSubmit}>
               {/* New password */}
               <div className="space-y-1.5">
-                <Label ml-1 className="text-slate-400 dark:text-gray-500">
+                <Label className="text-slate-400 dark:text-gray-500 ml-1">
                   {t('auth.newPassword')}
                 </Label>
                 <div className="relative group">
@@ -170,7 +170,7 @@ const ResetPassword: React.FC = () => {
 
               {/* Confirm password */}
               <div className="space-y-1.5">
-                <Label ml-1 className="text-slate-400 dark:text-gray-500">
+                <Label className="text-slate-400 dark:text-gray-500 ml-1">
                   {t('auth.confirmPassword')}
                 </Label>
                 <Input

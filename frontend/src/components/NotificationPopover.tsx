@@ -1,6 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Bell, Clock, Activity, Users, BookOpen, Calendar, ChevronRight, X } from 'lucide-react';
+import {
+  Bell,
+  Clock,
+  Activity,
+  Users,
+  BookOpen,
+  Calendar,
+  ChevronRight,
+  X,
+  UserCheck,
+} from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { ACTIVITY_TYPES } from '@/utils/constants';
 import { useNavigate } from 'react-router-dom';
 import { getActivities } from '@/features/admin';
 import { formatDistanceToNow } from 'date-fns';
@@ -45,11 +56,13 @@ const NotificationPopover: React.FC = () => {
 
   const getActivityIcon = (type: string) => {
     switch (type) {
-      case 'student':
+      case ACTIVITY_TYPES.STUDENT:
         return <Users size={14} className="text-indigo-500" />;
-      case 'class':
+      case ACTIVITY_TYPES.CLASS:
         return <BookOpen size={14} className="text-emerald-500" />;
-      case 'session':
+      case ACTIVITY_TYPES.TEACHER:
+        return <UserCheck size={14} className="text-amber-500" />;
+      case ACTIVITY_TYPES.SESSION:
         return <Calendar size={14} className="text-rose-500" />;
       default:
         return <Activity size={14} className="text-gray-500" />;
@@ -117,7 +130,10 @@ const NotificationPopover: React.FC = () => {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-[11px] font-bold text-gray-800 dark:text-white leading-snug">
-                        {act.user} <span className="font-medium text-gray-500">{act.action}</span>{' '}
+                        {act.user}{' '}
+                        <span className="font-medium text-gray-500">
+                          {t(`dashboard.activities.${act.action.trim()}`, act.action.trim())}
+                        </span>{' '}
                         <span className="text-gray-400">{act.target}</span>
                       </p>
                       <div className="flex items-center gap-1 text-[9px] text-gray-400 mt-1 uppercase font-black">

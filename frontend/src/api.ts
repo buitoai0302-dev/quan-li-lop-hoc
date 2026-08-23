@@ -43,6 +43,11 @@ api.interceptors.response.use(
 
     // Nếu 401 và chưa retry, thử refresh token
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // Bỏ qua nếu là request login (để hiển thị lỗi sai mật khẩu thay vì reload)
+      if (originalRequest.url?.includes('/auth/login')) {
+        return Promise.reject(error);
+      }
+
       // Kiểm tra xem có access token không, nếu không thì logout luon
       if (!localStorage.getItem('token')) {
         window.location.href = '/login';

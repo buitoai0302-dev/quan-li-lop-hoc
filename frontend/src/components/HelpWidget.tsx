@@ -19,54 +19,50 @@ const HelpWidget: React.FC<HelpWidgetProps> = ({ isOpen, onClose }) => {
   const isAttendanceEnabled = user?.tenant_settings?.menu?.attendance !== false;
 
   const steps = isTeacher
-    ? (
-        [
-          {
-            icon: <Layout className="text-blue-500" size={20} />,
-            title: t('helpWidget.teacher.step1.title'),
-            desc: t('helpWidget.teacher.step1.desc'),
-          },
-          {
-            icon: <Calendar className="text-green-500" size={20} />,
-            title: t('helpWidget.teacher.step2.title'),
-            desc: t('helpWidget.teacher.step2.desc'),
-          },
-          {
-            icon: <BookOpen className="text-purple-500" size={20} />,
-            title: t('helpWidget.teacher.step3.title'),
-            desc: t('helpWidget.teacher.step3.desc'),
-          },
-          isAttendanceEnabled && {
-            icon: <UserPlus className="text-orange-500" size={20} />,
-            title: t('helpWidget.teacher.step4.title'),
-            desc: t('helpWidget.teacher.step4.desc'),
-          },
-        ] as any[]
-      ).filter(Boolean)
-    : (
-        [
-          {
-            icon: <Layout className="text-blue-500" size={20} />,
-            title: t('helpWidget.step1.title'),
-            desc: t('helpWidget.step1.desc'),
-          },
-          {
-            icon: <UserPlus className="text-green-500" size={20} />,
-            title: t('helpWidget.step2.title'),
-            desc: t('helpWidget.step2.desc'),
-          },
-          {
-            icon: <Calendar className="text-purple-500" size={20} />,
-            title: t('helpWidget.step3.title'),
-            desc: t('helpWidget.step3.desc'),
-          },
-          isAttendanceEnabled && {
-            icon: <BookOpen className="text-orange-500" size={20} />,
-            title: t('helpWidget.step4.title'),
-            desc: t('helpWidget.step4.desc'),
-          },
-        ] as any[]
-      ).filter(Boolean);
+    ? ([
+        {
+          icon: <Layout className="text-blue-500" size={20} />,
+          title: t('helpWidget.teacher.step1.title'),
+          desc: t('helpWidget.teacher.step1.desc'),
+        },
+        {
+          icon: <Calendar className="text-green-500" size={20} />,
+          title: t('helpWidget.teacher.step2.title'),
+          desc: t('helpWidget.teacher.step2.desc'),
+        },
+        {
+          icon: <BookOpen className="text-purple-500" size={20} />,
+          title: t('helpWidget.teacher.step3.title'),
+          desc: t('helpWidget.teacher.step3.desc'),
+        },
+        isAttendanceEnabled && {
+          icon: <UserPlus className="text-orange-500" size={20} />,
+          title: t('helpWidget.teacher.step4.title'),
+          desc: t('helpWidget.teacher.step4.desc'),
+        },
+      ].filter(Boolean) as Array<{ icon: React.ReactNode; title: string; desc: string }>)
+    : ([
+        {
+          icon: <Layout className="text-blue-500" size={20} />,
+          title: t('helpWidget.step1.title'),
+          desc: t('helpWidget.step1.desc'),
+        },
+        {
+          icon: <UserPlus className="text-green-500" size={20} />,
+          title: t('helpWidget.step2.title'),
+          desc: t('helpWidget.step2.desc'),
+        },
+        {
+          icon: <Calendar className="text-purple-500" size={20} />,
+          title: t('helpWidget.step3.title'),
+          desc: t('helpWidget.step3.desc'),
+        },
+        isAttendanceEnabled && {
+          icon: <BookOpen className="text-orange-500" size={20} />,
+          title: t('helpWidget.step4.title'),
+          desc: t('helpWidget.step4.desc'),
+        },
+      ].filter(Boolean) as Array<{ icon: React.ReactNode; title: string; desc: string }>);
 
   if (!isOpen) return null;
 

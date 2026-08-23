@@ -48,7 +48,7 @@ const MainLayout: React.FC = () => {
   // Flatten the groups to find the active menu item
   const allMenuItems = menuItems.flatMap((group) => group.items);
   const currentMenu =
-    allMenuItems.find((m: any) =>
+    allMenuItems.find((m: { path: string; label?: string }) =>
       m.path === '/' ? location.pathname === '/' : location.pathname.startsWith(m.path)
     )?.label || t('common.appName');
 
@@ -67,7 +67,8 @@ const MainLayout: React.FC = () => {
         {localStorage.getItem('impersonatedTenantId') && (
           <div className="w-full z-[100] bg-rose-500 text-white px-4 py-2 flex items-center justify-center gap-4 text-xs font-bold shadow-md shrink-0">
             <span>
-              Đang quản lý Trung tâm: {localStorage.getItem('impersonatedTenantName') || 'Unknown'}
+              {t('common.managingTenant')}{' '}
+              {localStorage.getItem('impersonatedTenantName') || t('common.unknown')}
             </span>
             <button
               onClick={() => {
@@ -77,7 +78,7 @@ const MainLayout: React.FC = () => {
               }}
               className="px-3 py-1 bg-white/20 hover:bg-white/30 rounded-md transition-colors uppercase tracking-widest text-[10px]"
             >
-              Thoát
+              {t('common.exit')}
             </button>
           </div>
         )}
@@ -100,7 +101,7 @@ const MainLayout: React.FC = () => {
             <button
               onClick={() => setIsFeedbackOpen(true)}
               className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
-              title={t('common.feedback', 'Gửi phản hồi / Báo lỗi')}
+              title={t('common.feedback')}
             >
               <MessageSquarePlus size={18} />
             </button>

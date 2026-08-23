@@ -17,7 +17,7 @@ const ResendVerification: React.FC = () => {
     try {
       await resendVerification(email);
       setSent(true);
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error.response?.data?.error || t('common.error'));
     } finally {
       setIsLoading(false);

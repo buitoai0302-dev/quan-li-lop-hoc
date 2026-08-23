@@ -18,7 +18,7 @@ const ForgotPassword: React.FC = () => {
     try {
       await forgotPassword(email);
       setSent(true);
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error.response?.data?.error || t('common.error'));
     } finally {
       setIsLoading(false);
@@ -77,9 +77,7 @@ const ForgotPassword: React.FC = () => {
           ) : (
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-1.5">
-                <Label ml-1 className="text-slate-400 dark:text-gray-500">
-                  {t('auth.email')}
-                </Label>
+                <Label className="text-slate-400 dark:text-gray-500 ml-1">{t('auth.email')}</Label>
                 <Input
                   id="email"
                   type="email"

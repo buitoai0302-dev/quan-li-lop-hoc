@@ -1,14 +1,34 @@
 import { Edit2, Trash2 } from 'lucide-react';
 import type { ClassTableProps } from '../types';
 import { CLASS_STATUS } from '@/utils/constants';
-import { Badge, Button } from '@/components/common/UI';
+import { Badge } from '@/components/common/UI';
 
-const ClassTable: React.FC<ClassTableProps> = ({ classes, onEdit, onDelete, t }) => {
+const ClassTable: React.FC<ClassTableProps> = ({
+  classes,
+  onEdit,
+  onDelete,
+  selectedIds = [],
+  onSelectAll,
+  onSelectOne,
+  t,
+}) => {
+  const allSelected = classes.length > 0 && classes.every((cls) => selectedIds.includes(cls.id));
+
   return (
     <div className="overflow-x-auto w-full custom-scrollbar">
       <table className="w-full border-separate border-spacing-0">
         <thead className="bg-gray-50 dark:bg-slate-900 sticky top-0 z-20 transition-colors">
           <tr>
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left w-12 border-b border-gray-100 dark:border-slate-800 shadow-sm">
+              {onSelectAll && (
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
+                  checked={allSelected}
+                  onChange={(e) => onSelectAll(e.target.checked)}
+                />
+              )}
+            </th>
             <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
               {t('classes.name')}
             </th>
@@ -30,8 +50,18 @@ const ClassTable: React.FC<ClassTableProps> = ({ classes, onEdit, onDelete, t })
           {classes.map((cls) => (
             <tr
               key={cls.id}
-              className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors group"
+              className={`hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors group ${selectedIds.includes(cls.id) ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
             >
+              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                {onSelectOne && (
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
+                    checked={selectedIds.includes(cls.id)}
+                    onChange={(e) => onSelectOne(cls.id, e.target.checked)}
+                  />
+                )}
+              </td>
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs shrink-0 relative">

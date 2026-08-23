@@ -75,10 +75,13 @@ const ClassForm: React.FC<ClassFormProps> = ({
   const { ref: endRef, ...endRegisterRest } = register('end_date');
 
   const handleShowPicker = (ref: React.RefObject<HTMLInputElement | null>) => {
-    const input = ref.current as any;
+    const input = ref.current as HTMLInputElement;
     if (input) {
-      if ('showPicker' in input) input.showPicker();
-      else input.click();
+      if (typeof (input as any).showPicker === 'function') {
+        (input as any).showPicker();
+      } else {
+        input.click();
+      }
     }
   };
 
@@ -94,7 +97,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
         <div className="lg:col-span-7 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
-              <Label required ml-1 size="xs">
+              <Label required size="xs" className="ml-1">
                 {t('classes.name')}
               </Label>
               <Input
@@ -112,7 +115,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
             </div>
 
             <div>
-              <Label required ml-1 size="xs">
+              <Label required size="xs" className="ml-1">
                 {t('classes.branch')}
               </Label>
               <Select
@@ -138,7 +141,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
             </div>
 
             <div>
-              <Label ml-1 size="xs">
+              <Label size="xs" className="ml-1">
                 {t('classes.capacity')}
               </Label>
               <Input
@@ -150,7 +153,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
             </div>
 
             <div className="col-span-2">
-              <Label ml-1 size="xs">
+              <Label size="xs" className="ml-1">
                 {t('classes.teacher')}
               </Label>
               <Select variant="muted" size="sm" {...register('teacher_id')}>
@@ -164,7 +167,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
             </div>
 
             <div>
-              <Label ml-1 size="xs">
+              <Label size="xs" className="ml-1">
                 {t('classes.startDate')}
               </Label>
               <Input
@@ -175,16 +178,17 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 onClick={() => handleShowPicker(startDateRef)}
                 className="cursor-pointer"
                 {...startRegisterRest}
-                // eslint-disable-next-line react-hooks/immutability
+                /* eslint-disable react-hooks/immutability */
                 ref={(e) => {
                   startRef(e);
-                  // eslint-disable-next-line react-hooks/immutability
-                  if (startDateRef) (startDateRef as any).current = e;
+                  if (startDateRef)
+                    (startDateRef as React.MutableRefObject<HTMLInputElement | null>).current = e;
                 }}
+                /* eslint-enable react-hooks/immutability */
               />
             </div>
             <div>
-              <Label ml-1 size="xs">
+              <Label size="xs" className="ml-1">
                 {t('classes.endDate')}
               </Label>
               <Input
@@ -195,12 +199,13 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 onClick={() => handleShowPicker(endDateRef)}
                 className="cursor-pointer"
                 {...endRegisterRest}
-                // eslint-disable-next-line react-hooks/immutability
+                /* eslint-disable react-hooks/immutability */
                 ref={(e) => {
                   endRef(e);
-                  // eslint-disable-next-line react-hooks/immutability
-                  if (endDateRef) (endDateRef as any).current = e;
+                  if (endDateRef)
+                    (endDateRef as React.MutableRefObject<HTMLInputElement | null>).current = e;
                 }}
+                /* eslint-enable react-hooks/immutability */
               />
             </div>
           </div>

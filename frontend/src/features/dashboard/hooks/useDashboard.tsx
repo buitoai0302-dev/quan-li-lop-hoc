@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getDashboardStats } from '../api/dashboard.api';
 import { useTranslation } from 'react-i18next';
@@ -7,7 +7,7 @@ import { TENANT_STATUS, ACTIVITY_TYPES } from '@/utils/constants';
 import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
 
-import { Users, BookOpen, Calendar, Activity } from 'lucide-react';
+import { Users, BookOpen, Calendar, Activity, UserCheck } from 'lucide-react';
 
 export const useDashboard = () => {
   const { t, i18n } = useTranslation();
@@ -24,25 +24,25 @@ export const useDashboard = () => {
   const statsQuery = useQuery({
     queryKey: ['dashboard-stats', chartPeriod],
     queryFn: () => getDashboardStats(chartPeriod),
-    select: (data) => {
+    select: React.useCallback((data: any) => {
       // Inject mock revenue trends based on student trends
       if (data && data.studentTrends) {
         const baseRevenuePerStudent = 500000; // 500,000 VND
-        const revenueTrends = data.studentTrends.map((t: any) => {
-          const expected = t.count * baseRevenuePerStudent;
-          // Actual is expected with some random variance (e.g., 80% to 100%)
-          const variance = 0.8 + Math.random() * 0.2;
-          const actual = Math.floor(expected * variance);
-          return {
-            month: t.month,
-            expected,
-            actual,
-          };
-        });
+        const revenueTrends = data.studentTrends.map(
+          (t: { period: string; count?: number; month?: string }) => {
+            const expected = (t.count || 0) * baseRevenuePerStudent;
+            const actual = Math.floor(expected * 0.9); // Fixed variance to avoid infinite loops
+            return {
+              month: t.month,
+              expected,
+              actual,
+            };
+          }
+        );
         return { ...data, revenueTrends };
       }
       return data;
-    },
+    }, []),
   });
 
   const getStatusLabel = (status: string) => {
@@ -61,6 +61,8 @@ export const useDashboard = () => {
         return <Users size={14} />;
       case ACTIVITY_TYPES.CLASS:
         return <BookOpen size={14} />;
+      case ACTIVITY_TYPES.TEACHER:
+        return <UserCheck size={14} />;
       case ACTIVITY_TYPES.SESSION:
         return <Calendar size={14} />;
       default:

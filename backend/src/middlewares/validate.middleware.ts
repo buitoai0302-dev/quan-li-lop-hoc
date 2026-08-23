@@ -1,5 +1,27 @@
 import { Request, Response, NextFunction } from 'express';
+import { ZodError } from 'zod';
 import { ValidationError } from '../utils/errors';
+
+export const validate = (schema: any) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      await schema.parseAsync({
+        body: req.body,
+        query: req.query,
+        params: req.params,
+      });
+      next();
+    } catch (error: any) {
+      if (error && error.issues && error.issues.length > 0) {
+        next(new ValidationError(error.issues[0].message, 'VALIDATION_ERROR'));
+      } else if (error && error.errors && error.errors.length > 0) {
+        next(new ValidationError(error.errors[0].message, 'VALIDATION_ERROR'));
+      } else {
+        next(error);
+      }
+    }
+  };
+};
 
 // Relaxed UUID regex to allow all valid UUID formats, including manually created mock data (e.g. 11111111-0000-0000-0000-000000000001)
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

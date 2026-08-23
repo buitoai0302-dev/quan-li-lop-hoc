@@ -145,4 +145,7 @@ export interface BaseTableProps<T> {
   t: TFunction;
   onEdit: (item: T) => void;
   onDelete: (id: string) => void;
+  selectedIds?: string[];
+  onSelectAll?: (checked: boolean) => void;
+  onSelectOne?: (id: string, checked: boolean) => void;
 }

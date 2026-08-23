@@ -109,7 +109,7 @@ export const useSettings = () => {
         contact_email: contactEmail,
         settings: { menu: menuSettings },
       });
-      updateUser({ tenant_settings: data.settings });
+      updateUser({ tenant_settings: data.settings as any });
       toast.success(t('common.success'));
     } catch {
       toast.error(t('common.error'));

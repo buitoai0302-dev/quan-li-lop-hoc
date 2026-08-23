@@ -64,12 +64,7 @@ export const useClasses = () => {
 };
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  getClasses,
-  createClass,
-  updateClass,
-  deleteClass,
-} from '../api/classes.api';
+import { getClasses, createClass, updateClass, deleteClass } from '../api/classes.api';
 import type { ClassBasicFormData } from '@/types/schemas';
 
 export const useCreateClass = () => {
@@ -96,6 +91,18 @@ export const useDeleteClass = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => deleteClass(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['classes'] });
+    },
+  });
+};
+
+export const useDeleteBulkClasses = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => deleteClass(id)));
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['classes'] });
     },

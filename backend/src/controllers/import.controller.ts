@@ -6,6 +6,7 @@ import crypto from 'crypto';
 import { sendTeacherWelcomeEmail } from '../services/email.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ValidationError } from '../utils/errors';
+import { IMPORT_TYPES, ROLES } from '../utils/constants';
 
 export const importData = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -27,7 +28,7 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
     let successCount = 0;
     let skipCount = 0;
 
-    if (type === 'students') {
+    if (type === IMPORT_TYPES.STUDENTS) {
       for (const row of data) {
         try {
           const { full_name, email, phone, date_of_birth, branch_id } = row;
@@ -53,7 +54,7 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
           skipCount++;
         }
       }
-    } else if (type === 'teachers') {
+    } else if (type === IMPORT_TYPES.TEACHERS) {
       for (const row of data) {
         const client = await pool.connect();
         try {
@@ -95,7 +96,7 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
                   email,
                   passwordHash,
                   full_name,
-                  'teacher',
+                  ROLES.TEACHER,
                   false,
                   verificationToken,
                   tokenExpires,
@@ -123,7 +124,7 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
           client.release();
         }
       }
-    } else if (type === 'rooms') {
+    } else if (type === IMPORT_TYPES.ROOMS) {
       for (const row of data) {
         try {
           const { name, capacity, room_type, branch_id } = row;
@@ -149,7 +150,7 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
           skipCount++;
         }
       }
-    } else if (type === 'classes') {
+    } else if (type === IMPORT_TYPES.CLASSES) {
       for (const row of data) {
         try {
           const { name, max_capacity, start_date, end_date, teacher_email, branch_id } = row;

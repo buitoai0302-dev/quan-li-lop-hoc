@@ -45,3 +45,15 @@ export const useDeleteRoom = () => {
     },
   });
 };
+
+export const useDeleteBulkRooms = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => deleteRoom(id)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['rooms'] });
+    },
+  });
+};

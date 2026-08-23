@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -35,8 +36,7 @@ const modalVariants = cva(
 );
 
 export interface ModalProps
-  extends React.HTMLAttributes<HTMLDivElement>,
-  VariantProps<typeof modalVariants> {
+  extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof modalVariants> {
   isOpen: boolean;
   onClose: () => void;
   title: string;

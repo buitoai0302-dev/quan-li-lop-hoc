@@ -11,8 +11,11 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-let app;
-let messaging;
+import type { FirebaseApp } from 'firebase/app';
+import type { Messaging } from 'firebase/messaging';
+
+let app: FirebaseApp | undefined;
+let messaging: Messaging | undefined;
 
 try {
   // Only initialize if config is present

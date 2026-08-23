@@ -113,7 +113,8 @@ export const useCreateAdminUser = () => {
 
 export const useResetAdminUserPassword = () => {
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: any }) => resetAdminUserPassword(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
+      resetAdminUserPassword(id, data),
   });
 };
 

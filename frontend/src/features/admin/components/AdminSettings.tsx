@@ -18,6 +18,8 @@ import { Card, Button, Input } from '@/components/common/UI';
 import { useAdminSettings, useUpdateSettings } from '../hooks/useSystemSettings';
 import type { SystemSettings } from '../api/system.api';
 import { handleApiError } from '@/utils/errorHelper';
+import type { AxiosError } from 'axios';
+import type { ApiErrorData } from '@/utils/errorHelper';
 
 const AdminSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -41,7 +43,7 @@ const AdminSettings: React.FC = () => {
       onSuccess: () => {
         toast.success(t('common.success', 'Lưu thay đổi thành công'));
       },
-      onError: (error: any) => handleApiError(error, t),
+      onError: (error: any) => handleApiError(error as AxiosError<ApiErrorData>, t),
     });
   };
 
@@ -52,8 +54,18 @@ const AdminSettings: React.FC = () => {
       <PageHeader
         icon={Settings}
         actions={
-          <Button onClick={handleSave} loading={isSaving} className="gap-2">
-            <Save size={16} /> {t('admin.settings.save')}
+          <Button
+            variant="default"
+            size="sm"
+            onClick={handleSave}
+            loading={isSaving}
+            className="h-9 px-4 rounded-lg text-[10px] font-black uppercase tracking-widest gap-2 group"
+          >
+            <Save
+              size={16}
+              className="shrink-0 transition-transform duration-300 group-hover:scale-110"
+            />
+            <span className="hidden sm:inline">{t('admin.settings.save')}</span>
           </Button>
         }
       ></PageHeader>

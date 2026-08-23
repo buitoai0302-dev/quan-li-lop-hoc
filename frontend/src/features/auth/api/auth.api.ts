@@ -2,7 +2,10 @@ import api from '@/api';
 import type { User } from '@/types';
 
 // Helper để unwrap data trả về từ backend nếu backend bọc trong { success: true, data: ... }
-const unwrap = (res: any) => (res.data && res.data.data !== undefined ? res.data.data : res.data);
+import type { AxiosResponse } from 'axios';
+
+const unwrap = <T>(res: AxiosResponse<T> | any) =>
+  res.data && res.data.data !== undefined ? res.data.data : res.data;
 
 export const login = (data: Record<string, unknown>) => api.post('/auth/login', data).then(unwrap);
 export const register = async (data: Record<string, unknown>) => {

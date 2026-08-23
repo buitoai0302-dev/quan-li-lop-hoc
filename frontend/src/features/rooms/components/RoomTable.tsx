@@ -1,13 +1,34 @@
 import React from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
 import type { RoomTableProps } from '../types';
+import { ROOM_TYPES } from '@/utils/constants';
 
-const RoomTable: React.FC<RoomTableProps> = ({ rooms, onEdit, onDelete, t }) => {
+const RoomTable: React.FC<RoomTableProps> = ({
+  rooms,
+  onEdit,
+  onDelete,
+  selectedIds = [],
+  onSelectAll,
+  onSelectOne,
+  t,
+}) => {
+  const allSelected = rooms.length > 0 && rooms.every((r) => selectedIds.includes(r.id));
+
   return (
     <div className="w-full overflow-x-auto">
       <table className="w-full border-separate border-spacing-0">
         <thead className="bg-gray-50 dark:bg-slate-900 sticky top-0 z-20 transition-colors">
           <tr>
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left w-12 border-b border-gray-100 dark:border-slate-800 shadow-sm">
+              {onSelectAll && (
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
+                  checked={allSelected}
+                  onChange={(e) => onSelectAll(e.target.checked)}
+                />
+              )}
+            </th>
             <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
               {t('rooms.name')}
             </th>
@@ -30,8 +51,18 @@ const RoomTable: React.FC<RoomTableProps> = ({ rooms, onEdit, onDelete, t }) => 
           {rooms.map((room) => (
             <tr
               key={room.id}
-              className="hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors group"
+              className={`hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors group ${selectedIds.includes(room.id) ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
             >
+              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+                {onSelectOne && (
+                  <input
+                    type="checkbox"
+                    className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
+                    checked={selectedIds.includes(room.id)}
+                    onChange={(e) => onSelectOne(room.id, e.target.checked)}
+                  />
+                )}
+              </td>
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs shrink-0 relative">
@@ -46,7 +77,7 @@ const RoomTable: React.FC<RoomTableProps> = ({ rooms, onEdit, onDelete, t }) => 
                       {room.name}
                     </div>
                     <div className="text-[10px] text-gray-500 truncate">
-                      {t(`rooms.${room.room_type || 'classroom'}`)}
+                      {t(`rooms.${room.room_type || ROOM_TYPES.CLASSROOM}`)}
                     </div>
                   </div>
                 </div>
@@ -58,7 +89,7 @@ const RoomTable: React.FC<RoomTableProps> = ({ rooms, onEdit, onDelete, t }) => 
                 {room.capacity}
               </td>
               <td className="hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
-                {t(`rooms.${room.room_type || 'classroom'}`)}
+                {t(`rooms.${room.room_type || ROOM_TYPES.CLASSROOM}`)}
               </td>
 
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">

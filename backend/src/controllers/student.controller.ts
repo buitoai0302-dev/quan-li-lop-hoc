@@ -39,7 +39,7 @@ export const deleteStudent = async (req: AuthRequest, res: Response, next: NextF
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
     await StudentService.deleteStudent(tenantId as string, id as string);
-    res.json({ success: true, message: 'Học sinh đã được xóa thành công' });
+    res.json({ success: true, message: 'STUDENT_DELETED_SUCCESS' });
   } catch (error) {
     next(error);
   }

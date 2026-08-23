@@ -9,6 +9,7 @@ import { GoogleLogin } from '@react-oauth/google';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Input, Button, Label } from '@/components/common/UI';
+import { THEMES } from '@/utils/constants';
 
 const getStrength = (pw: string, t: (k: string) => string) => {
   const checks = [
@@ -52,8 +53,8 @@ const Register: React.FC = () => {
       login(data.token, data.user);
       toast.success(t('auth.loginSuccess'));
       navigate('/dashboard');
-    } catch (error) {
-      handleApiError(error, t, 'auth.googleLoginError');
+    } catch (error: any) {
+      handleApiError(error as any, t, 'auth.googleLoginError');
     } finally {
       setIsLoading(false);
     }
@@ -70,8 +71,8 @@ const Register: React.FC = () => {
       await registerApi({ fullName, email, password, tenantName: `${fullName}'s Center` });
       toast.success(t('auth.registerSuccess'));
       navigate('/login');
-    } catch (error) {
-      handleApiError(error, t, 'auth.registerError');
+    } catch (error: any) {
+      handleApiError(error as any, t, 'auth.registerError');
     } finally {
       setIsLoading(false);
     }
@@ -119,7 +120,7 @@ const Register: React.FC = () => {
           <form className="space-y-4" onSubmit={handleSubmit}>
             {/* Full Name */}
             <div className="space-y-1.5">
-              <Label className="text-[9px] text-slate-400 dark:text-gray-500 ml-1">
+              <Label className="text-[9px] text-slate-400 dark:text-gray-500  ml-1">
                 {t('auth.fullName')}
               </Label>
               <Input
@@ -136,7 +137,7 @@ const Register: React.FC = () => {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <Label className="text-[9px] text-slate-400 dark:text-gray-500 ml-1">
+              <Label className="text-[9px] text-slate-400 dark:text-gray-500  ml-1">
                 {t('auth.email')}
               </Label>
               <Input
@@ -154,7 +155,7 @@ const Register: React.FC = () => {
 
             {/* Password + Strength */}
             <div className="space-y-1.5">
-              <Label className="text-[9px] text-slate-400 dark:text-gray-500 ml-1">
+              <Label className="text-[9px] text-slate-400 dark:text-gray-500  ml-1">
                 {t('auth.password')}
               </Label>
               <div className="relative group">
@@ -226,9 +227,9 @@ const Register: React.FC = () => {
             <div className="mt-3 flex justify-center">
               <GoogleLogin
                 onSuccess={handleGoogleSuccess}
-                onError={() => toast.error('Google Login Failed')}
+                onError={() => toast.error(t('errors.GOOGLE_LOGIN_FAILED'))}
                 useOneTap={false}
-                theme={currentTheme === 'dark' ? 'filled_black' : 'outline'}
+                theme={currentTheme === THEMES.DARK ? 'filled_black' : 'outline'}
                 shape="pill"
                 size="large"
                 text="signup_with"

@@ -8,17 +8,21 @@ import {
   Building,
   CheckCircle,
   KeyRound,
-  UserPlus,
+  Plus,
   Copy,
   Lock,
   Unlock,
   Zap,
+  Upload,
 } from 'lucide-react';
 import { Modal, Card, Button, Input, Select } from '@/components/common/UI';
 import { USER_ROLES } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
 import Pagination from '@/components/common/Pagination';
+import FilterBar from '@/components/common/FilterBar';
+import FilterSelect from '@/components/common/FilterSelect';
+import ImportUsersModal from './ImportUsersModal';
 
 import {
   useAdminUsers,
@@ -35,6 +39,7 @@ const AdminUsers: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
   const [tenantFilter, setTenantFilter] = useState('ALL');
+  const [isFilterVisible, setIsFilterVisible] = useState(false);
 
   const { data: users = [], isLoading: loadingUsers } = useAdminUsers();
   const { data: tenants = [], isLoading: loadingTenants } = useAdminTenants();
@@ -78,6 +83,7 @@ const AdminUsers: React.FC = () => {
   // Modal states
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
   // Form states
@@ -126,12 +132,19 @@ const AdminUsers: React.FC = () => {
     });
   };
 
-  const handleResetSubmit = (e: React.FormEvent) => {
+  const handleResetPasswordSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
 
+    if (resetPasswordInput && resetPasswordInput.length > 0 && resetPasswordInput.length < 8) {
+      toast.error(
+        t('admin.users.messages.password_min_length', 'Mật khẩu phải có ít nhất 8 ký tự.')
+      );
+      return;
+    }
+
     resetPasswordMutation.mutate(
-      { id: selectedUser.id, data: { password: resetPasswordInput } },
+      { id: selectedUser.id, data: { password: resetPasswordInput || undefined } },
       {
         onSuccess: (data) => {
           toast.success(t('admin.users.messages.reset_success'));
@@ -180,54 +193,74 @@ const AdminUsers: React.FC = () => {
       <PageHeader
         icon={Users}
         actions={
-          <Button onClick={handleOpenCreate} className="gap-0 sm:gap-2 shrink-0 px-2 sm:px-4">
-            <UserPlus size={16} className="sm:mr-0" />{' '}
-            <span className="hidden sm:inline">{t('admin.users.add_user')}</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsFilterVisible(!isFilterVisible)}
+              className={`h-9 w-9 px-0 rounded-lg transition-all ${isFilterVisible ? 'bg-primary/10 border-primary/30 text-primary' : ''}`}
+              title={t('common.filter')}
+            >
+              <Search size={16} />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsImportModalOpen(true)}
+              className="h-9 w-9 sm:w-auto px-0 sm:px-4 rounded-lg text-[10px] font-black uppercase tracking-widest gap-2 group"
+            >
+              <Upload size={16} className="shrink-0" />
+              <span className="hidden sm:inline">
+                {t('admin.users.buttons.import', 'Nhập danh sách')}
+              </span>
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleOpenCreate}
+              className="h-9 w-9 sm:w-auto px-0 sm:px-4 rounded-lg text-[10px] font-black uppercase tracking-widest gap-2 group"
+            >
+              <Plus
+                size={16}
+                className="shrink-0 transition-transform duration-300 group-hover:rotate-90"
+              />
+              <span className="hidden sm:inline">{t('admin.users.buttons.create')}</span>
+            </Button>
+          </div>
         }
-      />
+      >
+        <FilterBar
+          isVisible={isFilterVisible}
+          searchQuery={searchTerm}
+          onSearchChange={(val) => {
+            setSearchTerm(val);
+            setCurrentPage(1);
+          }}
+          searchPlaceholder={t('admin.users.search_placeholder')}
+        >
+          <FilterSelect
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            placeholder={t('admin.users.all_roles')}
+            options={[
+              { value: USER_ROLES.SUPER_ADMIN, label: t('admin.users.roles.super_admin') },
+              { value: USER_ROLES.ADMIN, label: t('admin.users.roles.admin') },
+              { value: USER_ROLES.STAFF, label: t('admin.users.roles.staff') },
+              { value: USER_ROLES.TEACHER, label: t('admin.users.roles.teacher') },
+              { value: USER_ROLES.STUDENT, label: t('admin.users.roles.student') },
+            ]}
+          />
+          <FilterSelect
+            value={tenantFilter}
+            onChange={(e) => setTenantFilter(e.target.value)}
+            placeholder={t('admin.users.all_tenants')}
+            options={tenants.map((t) => ({ value: t.id, label: t.name }))}
+          />
+        </FilterBar>
+      </PageHeader>
 
       <div className="flex-1 overflow-hidden flex flex-col px-1">
         <div className="max-w-7xl mx-auto w-full flex-1 flex flex-col space-y-3 min-h-0 py-2">
-          {/* Toolbar */}
-          <div className="flex flex-col md:flex-row gap-2 sm:gap-3 bg-white dark:bg-gray-800 p-2 sm:p-3 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm shrink-0">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={16}
-              />
-              <input
-                type="text"
-                placeholder={t('admin.users.search_placeholder')}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 bg-gray-50/50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg text-sm text-gray-900 dark:text-white outline-none focus:border-primary"
-              />
-            </div>
-            <div className="grid grid-cols-2 md:flex gap-2">
-              <div className="w-full md:w-48">
-                <Select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
-                  <option value="ALL">{t('admin.users.all_roles')}</option>
-                  <option value={USER_ROLES.SUPER_ADMIN}>Super Admin</option>
-                  <option value={USER_ROLES.ADMIN}>Admin</option>
-                  <option value={USER_ROLES.STAFF}>Staff</option>
-                  <option value={USER_ROLES.TEACHER}>Teacher</option>
-                  <option value={USER_ROLES.STUDENT}>Student</option>
-                </Select>
-              </div>
-              <div className="w-full md:w-64">
-                <Select value={tenantFilter} onChange={(e) => setTenantFilter(e.target.value)}>
-                  <option value="ALL">{t('admin.users.all_tenants')}</option>
-                  {tenants.map((t) => (
-                    <option key={t.id} value={t.id}>
-                      {t.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
-            </div>
-          </div>
-
           <Card
             className="flex-1 min-h-0 overflow-hidden"
             scrollable={true}
@@ -355,6 +388,8 @@ const AdminUsers: React.FC = () => {
         </div>
       </div>
 
+      <ImportUsersModal isOpen={isImportModalOpen} onClose={() => setIsImportModalOpen(false)} />
+
       {/* CREATE USER MODAL */}
       <Modal
         isOpen={isCreateModalOpen}
@@ -398,7 +433,7 @@ const AdminUsers: React.FC = () => {
           ) : (
             <form onSubmit={handleCreateSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold mb-1">
+                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
                   {t('admin.users.modal.tenant')}
                 </label>
                 <Select
@@ -423,7 +458,7 @@ const AdminUsers: React.FC = () => {
               {formData.tenant_id === 'NEW' && (
                 <div className="space-y-4 p-4 bg-primary/5 rounded-xl border border-primary/20">
                   <div>
-                    <label className="block text-sm font-semibold mb-1 text-primary">
+                    <label className="block text-sm font-semibold mb-1 text-primary dark:text-blue-400">
                       {t('admin.users.modal.new_tenant_name')}
                     </label>
                     <Input
@@ -436,7 +471,7 @@ const AdminUsers: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-1 text-primary">
+                    <label className="block text-sm font-semibold mb-1 text-primary dark:text-blue-400">
                       {t('admin.users.modal.plan')}
                     </label>
                     <Select
@@ -455,7 +490,7 @@ const AdminUsers: React.FC = () => {
               )}
 
               <div>
-                <label className="block text-sm font-semibold mb-1">
+                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
                   {t('admin.users.table.role')}
                 </label>
                 <Select
@@ -474,7 +509,7 @@ const AdminUsers: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-1">
+                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
                   {t('admin.users.modal.fullname')}
                 </label>
                 <Input
@@ -486,7 +521,7 @@ const AdminUsers: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-1">
+                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
                   {t('admin.users.modal.email')}
                 </label>
                 <Input
@@ -499,7 +534,7 @@ const AdminUsers: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-1">
+                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
                   {t('admin.users.modal.password_label')}
                 </label>
                 <div className="flex gap-2">
@@ -577,7 +612,7 @@ const AdminUsers: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleResetSubmit} className="space-y-4">
+            <form onSubmit={handleResetPasswordSubmit} className="space-y-6">
               <p className="text-sm text-gray-500 mb-4">
                 {t('admin.users.modal.reset_notice_1')}
                 <span className="font-bold text-gray-900 dark:text-white">
@@ -586,7 +621,7 @@ const AdminUsers: React.FC = () => {
               </p>
 
               <div>
-                <label className="block text-sm font-semibold mb-1">
+                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
                   {t('admin.users.modal.new_password_label')}
                 </label>
                 <div className="flex gap-2">

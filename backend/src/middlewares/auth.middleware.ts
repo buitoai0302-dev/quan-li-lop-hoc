@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import { ROLES, HTTP_HEADERS } from '../utils/constants';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -34,8 +35,8 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
     }
 
     // Super Admin Tenant Impersonation
-    if (decoded.role === 'super_admin' && req.headers['x-tenant-id']) {
-      req.tenantId = req.headers['x-tenant-id'] as string;
+    if (decoded.role === ROLES.SUPER_ADMIN && req.headers[HTTP_HEADERS.TENANT_ID]) {
+      req.tenantId = req.headers[HTTP_HEADERS.TENANT_ID] as string;
     }
 
     next();
@@ -47,7 +48,7 @@ export const authMiddleware = (req: AuthRequest, res: Response, next: NextFuncti
 export const requireRole = (roles: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     // Super Admin always has access to everything
-    if (req.user?.role === 'super_admin') {
+    if (req.user?.role === ROLES.SUPER_ADMIN) {
       return next();
     }
 

@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getCurrentUser, logout as logoutApi } from '@/features/auth';
 import { queryClient } from '@/utils/queryClient';

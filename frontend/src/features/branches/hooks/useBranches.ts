@@ -45,3 +45,15 @@ export const useDeleteBranch = () => {
     },
   });
 };
+
+export const useDeleteBulkBranches = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (ids: string[]) => {
+      await Promise.all(ids.map((id) => deleteBranch(id)));
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['branches'] });
+    },
+  });
+};

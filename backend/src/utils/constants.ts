@@ -29,3 +29,70 @@ export const PLAN_REQUEST_STATUS = {
   APPROVED: 'approved',
   REJECTED: 'rejected',
 };
+
+// ─── User Roles ───────────────────────────────────────────────────────────────
+export const ROLES = {
+  SUPER_ADMIN: 'super_admin',
+  ADMIN: 'admin',
+  CENTER_ADMIN: 'center_admin',
+  MANAGER: 'manager',
+  ACCOUNTANT: 'accountant',
+  STAFF: 'staff',
+  TEACHER: 'teacher',
+  STUDENT: 'student',
+} as const;
+
+export type Role = (typeof ROLES)[keyof typeof ROLES];
+
+// ─── Import Types ─────────────────────────────────────────────────────────────
+export const IMPORT_TYPES = {
+  STUDENTS: 'students',
+  TEACHERS: 'teachers',
+  ROOMS: 'rooms',
+  CLASSES: 'classes',
+} as const;
+
+export type ImportType = (typeof IMPORT_TYPES)[keyof typeof IMPORT_TYPES];
+
+// ─── HTTP Headers ─────────────────────────────────────────────────────────────
+export const HTTP_HEADERS = {
+  TENANT_ID: 'x-tenant-id',
+  API_KEY: 'x-api-key',
+  AUTHORIZATION: 'authorization',
+} as const;
+
+// ─── Status Values ────────────────────────────────────────────────────────────
+export const SESSION_STATUS = {
+  CANCELLED: 'cancelled',
+  COMPLETED: 'completed',
+  SCHEDULED: 'scheduled',
+} as const;
+
+export const TUITION_STATUS = {
+  UNPAID: 'unpaid',
+  PARTIAL: 'partial',
+  PAID: 'paid',
+  OVERDUE: 'overdue',
+  WAIVED: 'waived',
+} as const;
+
+export const CLASS_STATUS = {
+  ACTIVE: 'active',
+  COMPLETED: 'completed',
+  CANCELLED: 'cancelled',
+} as const;
+
+// ─── Session Types ────────────────────────────────────────────────────────────
+export const SESSION_TYPE = {
+  LECTURE: 'lecture',
+  EXAM: 'exam',
+  MAKEUP: 'makeup',
+  PRACTICE: 'practice',
+} as const;
+
+// ─── Enrollment Status ────────────────────────────────────────────────────────
+export const ENROLLMENT_STATUS = {
+  ENROLLED: 'enrolled',
+  UNENROLLED: 'unenrolled',
+  PENDING: 'pending',
+} as const;

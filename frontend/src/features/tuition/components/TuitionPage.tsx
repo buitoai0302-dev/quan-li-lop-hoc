@@ -10,6 +10,7 @@ import {
   Receipt,
   CreditCard,
 } from 'lucide-react';
+import { Button } from '@/components/common/UI';
 import { useTuitions, useDeleteTuition } from '../hooks/useTuition';
 import type { Tuition } from '../api/tuition.api';
 import BulkGenerateModal from './BulkGenerateModal';
@@ -21,8 +22,9 @@ import ConfirmModal from '@/components/common/ConfirmModal';
 import { handleApiError } from '@/utils/errorHelper';
 import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
+import { TUITION_STATUS } from '@/utils/constants';
 
-const STATUS_CONFIG: Record<string, { color: string; icon: any }> = {
+const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> = {
   unpaid: {
     color: 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300',
     icon: Clock,
@@ -158,13 +160,15 @@ const TuitionPage: React.FC = () => {
       <PageHeader
         icon={DollarSign}
         actions={
-          <button
+          <Button
+            variant="default"
+            size="sm"
             onClick={() => setShowBulkGenerate(true)}
-            className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 bg-primary text-white rounded-lg hover:bg-primary-dark transition-all font-bold text-[10px] sm:text-xs shadow-md shadow-primary/20 active:scale-95 uppercase tracking-wider"
+            className="flex items-center justify-center gap-1.5 px-3 py-1.5 sm:px-4 sm:py-2 text-[10px] sm:text-xs font-bold uppercase tracking-wider"
           >
-            <CreditCard size={14} />
+            <CreditCard size={14} className="shrink-0" />
             {t('tuition.bulkGenerate')}
-          </button>
+          </Button>
         }
       />
 
@@ -271,7 +275,8 @@ const TuitionPage: React.FC = () => {
                   const statusCfg = STATUS_CONFIG[tuition.status] || STATUS_CONFIG.unpaid;
                   const StatusIcon = statusCfg.icon;
                   const isOverdue =
-                    new Date(tuition.due_date) < new Date() && tuition.status !== 'paid';
+                    new Date(tuition.due_date) < new Date() &&
+                    tuition.status !== TUITION_STATUS.PAID;
                   return (
                     <tr
                       key={tuition.id}
@@ -326,7 +331,7 @@ const TuitionPage: React.FC = () => {
                       </td>
                       <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
                         <span
-                          className={`text-sm font-medium ${isOverdue && tuition.status !== 'paid' ? 'text-rose-500 font-bold' : 'text-gray-600 dark:text-gray-400'}`}
+                          className={`text-sm font-medium ${isOverdue && tuition.status !== TUITION_STATUS.PAID ? 'text-rose-500 font-bold' : 'text-gray-600 dark:text-gray-400'}`}
                         >
                           {new Date(tuition.due_date).toLocaleDateString('vi-VN')}
                         </span>
@@ -341,18 +346,21 @@ const TuitionPage: React.FC = () => {
                       </td>
                       <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
                         <div className="flex items-center gap-1">
-                          {tuition.status !== 'paid' && tuition.status !== 'waived' && (
-                            <button
-                              onClick={() => {
-                                setSelectedTuition(tuition);
-                                setShowPaymentModal(true);
-                              }}
-                              className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1.5"
-                            >
-                              <DollarSign size={14} />
-                              <span className="hidden sm:inline">{t('tuition.collectMoney')}</span>
-                            </button>
-                          )}
+                          {tuition.status !== TUITION_STATUS.PAID &&
+                            tuition.status !== TUITION_STATUS.WAIVED && (
+                              <button
+                                onClick={() => {
+                                  setSelectedTuition(tuition);
+                                  setShowPaymentModal(true);
+                                }}
+                                className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1.5"
+                              >
+                                <DollarSign size={14} />
+                                <span className="hidden sm:inline">
+                                  {t('tuition.collectMoney')}
+                                </span>
+                              </button>
+                            )}
                           <button
                             onClick={() => {
                               setSelectedTuition(tuition);

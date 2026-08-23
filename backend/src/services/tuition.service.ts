@@ -1,8 +1,15 @@
 import pool from '../db';
 import { NotFoundError, ValidationError } from '../utils/errors';
+import {
+  TuitionFilters,
+  CreateTuitionDto,
+  BulkGenerateTuitionDto,
+  UpdateTuitionDto,
+  RecordPaymentDto,
+} from '../types';
 
 export class TuitionService {
-  static async getTuitions(tenantId: string, filters: any) {
+  static async getTuitions(tenantId: string, filters: TuitionFilters) {
     const { status, class_id, billing_period, student_id, limit = 100, offset = 0 } = filters;
 
     let query = `
@@ -101,7 +108,7 @@ export class TuitionService {
     return result.rows;
   }
 
-  static async createTuition(tenantId: string, userId: string, data: any) {
+  static async createTuition(tenantId: string, userId: string, data: CreateTuitionDto) {
     const {
       student_id,
       class_id,
@@ -114,10 +121,7 @@ export class TuitionService {
     } = data;
 
     if (!student_id || !amount || !due_date) {
-      throw new ValidationError(
-        'Vui lòng điền học sinh, số tiền và ngày đến hạn',
-        'MISSING_REQUIRED_FIELDS'
-      );
+      throw new ValidationError('MISSING_REQUIRED_FIELDS', 'MISSING_REQUIRED_FIELDS');
     }
 
     const result = await pool.query(
@@ -141,7 +145,11 @@ export class TuitionService {
     return result.rows[0];
   }
 
-  static async bulkGenerateTuitions(tenantId: string, userId: string, data: any) {
+  static async bulkGenerateTuitions(
+    tenantId: string,
+    userId: string,
+    data: BulkGenerateTuitionDto
+  ) {
     const client = await pool.connect();
     try {
       const {
@@ -156,10 +164,7 @@ export class TuitionService {
       } = data;
 
       if (!class_id || !amount || !due_date || !billing_period) {
-        throw new ValidationError(
-          'Thiếu thông tin lớp học, số tiền, ngày đến hạn hoặc kỳ học phí',
-          'MISSING_REQUIRED_FIELDS'
-        );
+        throw new ValidationError('MISSING_REQUIRED_FIELDS', 'MISSING_REQUIRED_FIELDS');
       }
 
       await client.query('BEGIN');
@@ -172,10 +177,7 @@ export class TuitionService {
       );
 
       if (studentsResult.rows.length === 0) {
-        throw new ValidationError(
-          'Lớp học không có học sinh hoặc không tìm thấy',
-          'NO_STUDENTS_FOUND'
-        );
+        throw new ValidationError('NO_STUDENTS_FOUND', 'NO_STUDENTS_FOUND');
       }
 
       let created = 0;
@@ -225,7 +227,7 @@ export class TuitionService {
     }
   }
 
-  static async updateTuition(tenantId: string, id: string, data: any) {
+  static async updateTuition(tenantId: string, id: string, data: UpdateTuitionDto) {
     const { amount, discount, due_date, status, notes } = data;
 
     const result = await pool.query(
@@ -241,8 +243,7 @@ export class TuitionService {
       [amount, discount, due_date, status, notes, id, tenantId]
     );
 
-    if (result.rows.length === 0)
-      throw new NotFoundError('Không tìm thấy học phí', 'TUITION_NOT_FOUND');
+    if (result.rows.length === 0) throw new NotFoundError('TUITION_NOT_FOUND', 'TUITION_NOT_FOUND');
     return result.rows[0];
   }
 
@@ -251,15 +252,14 @@ export class TuitionService {
       id,
     ]);
     if (parseInt(paymentCheck.rows[0].count) > 0) {
-      throw new ValidationError('Không thể xóa học phí đã có lịch sử thanh toán', 'HAS_PAYMENTS');
+      throw new ValidationError('HAS_PAYMENTS', 'HAS_PAYMENTS');
     }
 
     const result = await pool.query(
       `DELETE FROM tuitions WHERE id = $1 AND tenant_id = $2 RETURNING id`,
       [id, tenantId]
     );
-    if (result.rows.length === 0)
-      throw new NotFoundError('Không tìm thấy học phí', 'TUITION_NOT_FOUND');
+    if (result.rows.length === 0) throw new NotFoundError('TUITION_NOT_FOUND', 'TUITION_NOT_FOUND');
 
     return true;
   }
@@ -276,11 +276,16 @@ export class TuitionService {
     return result.rows;
   }
 
-  static async recordPayment(tenantId: string, userId: string, tuitionId: string, data: any) {
+  static async recordPayment(
+    tenantId: string,
+    userId: string,
+    tuitionId: string,
+    data: RecordPaymentDto
+  ) {
     const { amount_paid, payment_date, payment_method = 'cash', reference_code, notes } = data;
 
     if (!amount_paid || Number(amount_paid) <= 0) {
-      throw new ValidationError('Số tiền thanh toán phải lớn hơn 0', 'INVALID_AMOUNT');
+      throw new ValidationError('INVALID_AMOUNT', 'INVALID_AMOUNT');
     }
 
     const tuitionResult = await pool.query(
@@ -288,11 +293,11 @@ export class TuitionService {
       [tuitionId, tenantId]
     );
     if (tuitionResult.rows.length === 0)
-      throw new NotFoundError('Không tìm thấy học phí', 'TUITION_NOT_FOUND');
+      throw new NotFoundError('TUITION_NOT_FOUND', 'TUITION_NOT_FOUND');
 
     const tuition = tuitionResult.rows[0];
     if (tuition.status === 'paid') {
-      throw new ValidationError('Học phí này đã được thanh toán đầy đủ', 'ALREADY_PAID');
+      throw new ValidationError('ALREADY_PAID', 'ALREADY_PAID');
     }
 
     const result = await pool.query(

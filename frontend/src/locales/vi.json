@@ -1,6 +1,10 @@
 {
   "common": {
     "appName": "EduSchedule",
+    "managingTenant": "Đang quản lý Trung tâm: ",
+    "exit": "Thoát",
+    "feedback": "Gửi phản hồi / Báo lỗi",
+    "unknown": "Chưa xác định",
     "premiumEdition": "Phiên bản Cao cấp",
     "premiumSaaS": "Dịch vụ SaaS Cao cấp",
     "search": "Tìm kiếm...",
@@ -153,7 +157,15 @@
     "readyToTeach": "Sẵn sàng cho ngày làm việc mới!",
     "teacherWelcomeDesc": "Kiểm tra lịch dạy của bạn hôm nay và chuẩn bị cho các buổi học tuyệt vời.",
     "setupGuide": "Hướng dẫn thiết lập",
-    "setupGuideDesc": "Hoàn thành các bước sau để sẵn sàng sử dụng."
+    "setupGuideDesc": "Hoàn thành các bước sau để sẵn sàng sử dụng.",
+    "activities": {
+      "STUDENT_REGISTERED": "vừa đăng ký học",
+      "TENANT_JOINED": "vừa gia nhập hệ thống",
+      "CLASS_CREATED": "vừa được khởi tạo",
+      "STUDENT_JOINED_CLASS": "vừa gia nhập lớp của bạn",
+      "CLASS_ASSIGNED": "vừa được gán cho bạn",
+      "TEACHER_JOINED": "vừa tham gia đội ngũ"
+    }
   },
   "import": {
     "title": "Nhập dữ liệu hệ thống",
@@ -838,17 +850,17 @@
     "createFirstStudent": "Thêm học viên đầu tiên của bạn"
   },
   "errors": {
-    "INTERNAL_ERROR": "Lỗi hệ thống. Vui lòng thử lại sau.",
-    "UNAUTHORIZED": "Bạn cần đăng nhập để thực hiện hành động này.",
-    "FORBIDDEN": "Bạn không có quyền thực hiện hành động này.",
+    "INTERNAL_ERROR": "Hệ thống gặp sự cố",
+    "UNAUTHORIZED": "Không có quyền truy cập",
+    "FORBIDDEN": "Bị từ chối truy cập",
     "NOT_FOUND": "Không tìm thấy dữ liệu.",
     "LIMIT_EXCEEDED": "Bạn đã đạt giới hạn tối đa cho gói dịch vụ này.",
     "VALIDATION_ERROR": "Dữ liệu không hợp lệ.",
-    "MISSING_REQUIRED_FIELDS": "Vui lòng điền đầy đủ thông tin bắt buộc.",
-    "EMAIL_ALREADY_EXISTS": "Email này đã tồn tại trong hệ thống.",
+    "MISSING_REQUIRED_FIELDS": "Vui lòng điền đầy đủ thông tin bắt buộc",
+    "EMAIL_ALREADY_EXISTS": "Email này đã tồn tại trong hệ thống",
     "TEACHER_NOT_FOUND": "Không tìm thấy nhân sự/giáo viên.",
-    "STUDENT_NOT_FOUND": "Không tìm thấy học sinh.",
-    "CLASS_NOT_FOUND": "Không tìm thấy lớp học.",
+    "STUDENT_NOT_FOUND": "Không tìm thấy học sinh",
+    "CLASS_NOT_FOUND": "Không tìm thấy lớp học",
     "BRANCH_NOT_FOUND": "Không tìm thấy chi nhánh.",
     "ROOM_NOT_FOUND": "Không tìm thấy phòng học.",
     "EMAIL_NOT_VERIFIED": "Email chưa được xác thực.",
@@ -863,7 +875,15 @@
     "SCHEDULE_CONFLICT": "Trùng lịch học",
     "TEACHER_CONFLICT": "Giáo viên đã có lịch dạy vào thời gian này",
     "ROOM_CONFLICT": "Phòng học đã được sử dụng vào thời gian này",
-    "CLASS_CONFLICT": "Lớp học đã có buổi dạy vào thời gian này"
+    "CLASS_CONFLICT": "Lớp học đã có buổi dạy vào thời gian này",
+    "INVALID_DATA": "Dữ liệu không hợp lệ",
+    "CAPACITY_EXCEEDED": "Lớp đã đạt giới hạn sức chứa",
+    "TUITION_NOT_FOUND": "Không tìm thấy học phí",
+    "HAS_PAYMENTS": "Không thể xóa học phí đã có lịch sử thanh toán",
+    "INVALID_AMOUNT": "Số tiền thanh toán phải lớn hơn 0",
+    "ALREADY_PAID": "Học phí này đã được thanh toán đầy đủ",
+    "NO_STUDENTS_FOUND": "Lớp học không có học sinh hoặc không tìm thấy",
+    "GOOGLE_LOGIN_FAILED": "Đăng nhập Google thất bại"
   },
   "validation": {
     "nameMin": "Tên phải có ít nhất 2 ký tự",
@@ -1072,5 +1092,13 @@
     "processing": "Đang xử lý...",
     "needHelp": "Cần hỗ trợ?",
     "contactSupport": "Liên hệ với chúng tôi qua các kênh sau để được hỗ trợ nhanh nhất:"
+  },
+  "success": {
+    "CLASS_DELETED_SUCCESS": "Lớp học đã được xóa thành công",
+    "STUDENT_DELETED_SUCCESS": "Học sinh đã được xóa thành công",
+    "TUITION_DELETED_SUCCESS": "Đã xóa khoản học phí",
+    "IMPORT_SUCCESS": "Thành công: {{students}} học sinh, {{classes}} lớp học.",
+    "TUITION_BULK_GENERATED": "Đã tạo {{created}} khoản học phí{{skip_text}}",
+    "TUITION_BULK_GENERATED_SKIPPED": ", bỏ qua {{skipped}} đã tồn tại"
   }
 }

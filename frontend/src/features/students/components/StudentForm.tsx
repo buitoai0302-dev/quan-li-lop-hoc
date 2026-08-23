@@ -81,7 +81,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="sm:col-span-2">
-          <Label required ml-1>
+          <Label required className="ml-1">
             {t('students.name')}
           </Label>
           <Input
@@ -97,7 +97,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
           )}
         </div>
         <div>
-          <Label ml-1>{t('students.dob')}</Label>
+          <Label className="ml-1">{t('students.dob')}</Label>
           <Input
             type="date"
             variant="muted"
@@ -114,7 +114,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
           />
         </div>
         <div>
-          <Label required ml-1>
+          <Label required className="ml-1">
             {t('classes.branch')}
           </Label>
           <Select
@@ -141,7 +141,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
       <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-5">
         <div>
-          <Label required ml-1>
+          <Label required className="ml-1">
             {t('students.email')}
           </Label>
           <Input
@@ -159,7 +159,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
         </div>
         <div className="grid grid-cols-2 gap-5">
           <div>
-            <Label ml-1>{t('students.phone')}</Label>
+            <Label className="ml-1">{t('students.phone')}</Label>
             <Input
               variant="white"
               placeholder="09xxx..."
@@ -168,7 +168,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
             />
           </div>
           <div>
-            <Label ml-1>{t('students.parentPhone')}</Label>
+            <Label className="ml-1">{t('students.parentPhone')}</Label>
             <Input
               variant="white"
               placeholder="09xxx..."
@@ -181,7 +181,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
       {editingId && (
         <div>
-          <Label ml-1>{t('common.status')}</Label>
+          <Label className="ml-1">{t('common.status')}</Label>
           <Select
             variant="muted"
             {...register('is_active', { setValueAs: (v) => v === 'true' || v === true })}

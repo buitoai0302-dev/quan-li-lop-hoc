@@ -25,7 +25,7 @@ const VerifyEmail: React.FC = () => {
         setStatus('success');
         setMessage(data.message || t('auth.verifyEmailSuccessDesc'));
         setTimeout(() => navigate('/login'), 3000);
-      } catch (error) {
+      } catch (error: any) {
         setStatus('error');
         const msg = error.response?.data?.error || t('common.error');
         setMessage(msg);

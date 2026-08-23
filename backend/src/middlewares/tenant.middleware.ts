@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import { ROLES, HTTP_HEADERS } from '../utils/constants';
 
 declare global {
   namespace Express {
@@ -18,10 +19,10 @@ export const tenantMiddleware = async (
   next: NextFunction
 ): Promise<void> => {
   // Extract tenantId injected by authMiddleware, fallback to header for testing
-  const tenantId = (req as any).tenantId || req.header('x-tenant-id');
+  const tenantId = (req as any).tenantId || req.header(HTTP_HEADERS.TENANT_ID);
   const userRole = (req as any).user?.role;
 
-  if (!tenantId && userRole !== 'super_admin') {
+  if (!tenantId && userRole !== ROLES.SUPER_ADMIN) {
     res.status(401).json({
       success: false,
       message: 'Tenant ID is required (Missing token or x-tenant-id header)',

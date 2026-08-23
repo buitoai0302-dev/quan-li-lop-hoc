@@ -4,6 +4,7 @@ import type { Tuition } from '../api/tuition.api';
 import { useTuitionPayments } from '../hooks/useTuition';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
+import { PAYMENT_METHODS, TUITION_STATUS, ATTENDANCE_STATUS } from '@/utils/constants';
 
 interface Props {
   tuition: Tuition;
@@ -13,13 +14,13 @@ interface Props {
 const formatCurrency = (amount: number | string) =>
   new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount));
 
-const getPaymentMethodLabels = (t: any) => ({
-  cash: t('tuition.paymentMethods.cash'),
-  bank_transfer: t('tuition.paymentMethods.bank_transfer'),
-  momo: t('tuition.paymentMethods.momo'),
-  vnpay: t('tuition.paymentMethods.vnpay'),
-  stripe: t('tuition.paymentMethods.stripe'),
-  other: t('tuition.paymentMethods.other'),
+const getPaymentMethodLabels = (t: import('i18next').TFunction): Record<string, string> => ({
+  [PAYMENT_METHODS.CASH]: t('tuition.paymentMethods.cash'),
+  [PAYMENT_METHODS.BANK_TRANSFER]: t('tuition.paymentMethods.bank_transfer'),
+  [PAYMENT_METHODS.MOMO]: t('tuition.paymentMethods.momo'),
+  [PAYMENT_METHODS.VNPAY]: t('tuition.paymentMethods.vnpay'),
+  [PAYMENT_METHODS.STRIPE]: t('tuition.paymentMethods.stripe'),
+  [PAYMENT_METHODS.OTHER]: t('tuition.paymentMethods.other'),
 });
 
 const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
@@ -33,7 +34,7 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
   const handlePrint = () => {
     const printContent = receiptRef.current?.innerHTML || '';
     const iframe = document.createElement('iframe');
-    iframe.style.display = 'none';
+    iframe.style.display = ATTENDANCE_STATUS.NONE;
     document.body.appendChild(iframe);
     const win = iframe.contentWindow;
     if (!win) {
@@ -86,20 +87,20 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
 
   const statusClass =
     {
-      paid: 'status-paid',
-      partial: 'status-partial',
-      unpaid: 'status-unpaid',
-      overdue: 'status-overdue',
-      waived: 'status-paid',
+      [TUITION_STATUS.PAID]: 'status-paid',
+      [TUITION_STATUS.PARTIAL]: 'status-partial',
+      [TUITION_STATUS.UNPAID]: 'status-unpaid',
+      [TUITION_STATUS.OVERDUE]: 'status-overdue',
+      [TUITION_STATUS.WAIVED]: 'status-paid',
     }[tuition.status] || 'status-unpaid';
 
   const statusLabel =
     {
-      paid: t('tuition.statusLabels.paid'),
-      partial: t('tuition.statusLabels.partial'),
-      unpaid: t('tuition.statusLabels.unpaid'),
-      overdue: t('tuition.statusLabels.overdue'),
-      waived: t('tuition.statusLabels.waived'),
+      [TUITION_STATUS.PAID]: t('tuition.statusLabels.paid'),
+      [TUITION_STATUS.PARTIAL]: t('tuition.statusLabels.partial'),
+      [TUITION_STATUS.UNPAID]: t('tuition.statusLabels.unpaid'),
+      [TUITION_STATUS.OVERDUE]: t('tuition.statusLabels.overdue'),
+      [TUITION_STATUS.WAIVED]: t('tuition.statusLabels.waived'),
     }[tuition.status] || tuition.status;
 
   return (
@@ -195,7 +196,11 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
               <span
                 className={`status-badge ${statusClass} inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider`}
               >
-                {tuition.status === 'paid' ? <CheckCircle2 size={12} /> : <Clock size={12} />}
+                {tuition.status === TUITION_STATUS.PAID ? (
+                  <CheckCircle2 size={12} />
+                ) : (
+                  <Clock size={12} />
+                )}
                 {statusLabel}
               </span>
             </div>
@@ -228,9 +233,7 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
                           {new Date(p.payment_date).toLocaleDateString('vi-VN')}
                         </td>
                         <td className="px-2 py-2 text-xs">
-                          {(getPaymentMethodLabels(t) as Record<string, string>)[
-                            p.payment_method
-                          ] || p.payment_method}
+                          {getPaymentMethodLabels(t)[p.payment_method] || p.payment_method}
                         </td>
                         <td className="px-2 py-2 text-xs text-right font-bold text-emerald-600">
                           {formatCurrency(p.amount_paid)}

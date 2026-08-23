@@ -46,10 +46,13 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
   const modalDateInputRef = React.useRef<HTMLInputElement>(null);
 
   const handleShowPicker = () => {
-    const input = modalDateInputRef.current as any;
+    const input = modalDateInputRef.current as HTMLInputElement;
     if (input) {
-      if ('showPicker' in input) input.showPicker();
-      else input.click();
+      if (typeof (input as any).showPicker === 'function') {
+        (input as any).showPicker();
+      } else {
+        input.click();
+      }
     }
   };
 
@@ -67,7 +70,7 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
         <div className="bg-primary/5 dark:bg-primary/10 p-4 rounded-2xl border border-primary/10 dark:border-primary/20 transition-all duration-300">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label required className="text-primary dark:text-blue-400 ml-1">
+              <Label required className="text-primary dark:text-blue-400  ml-1">
                 {t('schedule.date')}
               </Label>
               <Input
@@ -84,7 +87,7 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label required className="text-primary dark:text-blue-400 ml-1">
+                <Label required className="text-primary dark:text-blue-400  ml-1">
                   {t('schedule.startTime')}
                 </Label>
                 <Input
@@ -97,7 +100,7 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label required className="text-primary dark:text-blue-400 ml-1">
+                <Label required className="text-primary dark:text-blue-400  ml-1">
                   {t('schedule.endTime')}
                 </Label>
                 <Input
@@ -116,7 +119,7 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
         <div className="space-y-4 px-1">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label required ml-1>
+              <Label required className="ml-1">
                 {t('schedule.class')}
               </Label>
               <Select
@@ -140,7 +143,7 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <Label required ml-1>
+              <Label required className="ml-1">
                 {t('schedule.teacher')}
               </Label>
               <Select
@@ -167,7 +170,7 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-end">
             <div className="sm:col-span-1 space-y-1.5">
-              <Label required ml-1>
+              <Label required className="ml-1">
                 {t('schedule.room')}
               </Label>
               <Select
@@ -192,7 +195,7 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
             </div>
 
             <div className="sm:col-span-2 space-y-1.5">
-              <Label ml-1>{t('common.notes')}</Label>
+              <Label className="ml-1">{t('common.notes')}</Label>
               <Input
                 type="text"
                 size="sm"

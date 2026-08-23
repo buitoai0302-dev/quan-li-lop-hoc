@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { authMiddleware, requireRole } from '../middlewares/auth.middleware';
-import { validateBody } from '../middlewares/zod.middleware';
+import { validate } from '../middlewares/validate.middleware';
 import { CreateTuitionSchema, RecordPaymentSchema } from '../validators/tuition.validator';
 import {
   getTuitions,
@@ -26,7 +26,7 @@ router.get('/overdue', getOverdueTuitions);
 router.post(
   '/',
   requireRole(['super_admin', 'center_admin', 'manager']),
-  validateBody(CreateTuitionSchema),
+  validate(CreateTuitionSchema),
   createTuition
 );
 router.post('/bulk-generate', requireRole(['admin', 'staff', 'super_admin']), bulkGenerateTuitions);
@@ -38,7 +38,7 @@ router.get('/:id/payments', getTuitionPayments);
 router.post(
   '/:id/payments',
   requireRole(['super_admin', 'center_admin', 'manager', 'accountant']),
-  validateBody(RecordPaymentSchema),
+  validate(RecordPaymentSchema),
   recordPayment
 );
 

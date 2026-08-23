@@ -6,10 +6,11 @@ import {
   requestPlanUpgrade,
   createPaymentUrl,
 } from '../api/subscription.api';
+import { QUERY_KEYS, PAYMENT_METHODS } from '@/utils/constants';
 
 export const useSubscriptionData = () => {
   return useQuery({
-    queryKey: ['subscription-data'],
+    queryKey: [QUERY_KEYS.SUBSCRIPTION_DATA],
     queryFn: async () => {
       const [plansData, tenantData, requestsData] = await Promise.all([
         getPlans(),
@@ -27,14 +28,19 @@ export const useRequestPlanUpgrade = () => {
     mutationFn: (data: { planId: string; billingCycle: string; notes?: string }) =>
       requestPlanUpgrade(data),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['subscription-data'] });
+      queryClient.invalidateQueries({ queryKey: [QUERY_KEYS.SUBSCRIPTION_DATA] });
     },
   });
 };
 
 export const useCreatePaymentUrl = () => {
   return useMutation({
-    mutationFn: (data: { plan_id: string; gateway: 'vnpay' | 'momo' | 'stripe' }) =>
-      createPaymentUrl(data),
+    mutationFn: (data: {
+      plan_id: string;
+      gateway:
+        | typeof PAYMENT_METHODS.VNPAY
+        | typeof PAYMENT_METHODS.MOMO
+        | typeof PAYMENT_METHODS.STRIPE;
+    }) => createPaymentUrl(data),
   });
 };

@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { MessageSquare, ArrowRight, Info, CreditCard } from 'lucide-react';
 
 import { useAuth } from '@/contexts/AuthContext';
-import { PLAN_REQUEST_STATUS } from '@/utils/constants';
+import { PLAN_REQUEST_STATUS, PLAN_BILLING_CYCLE } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
 
@@ -33,7 +33,9 @@ const Subscription: React.FC = () => {
   const isVi = i18n.language === 'vi';
 
   const pendingPlanId = initialPendingId || null;
-  const [billingCycle, setBillingCycle] = useState<'MONTHLY' | 'YEARLY'>('YEARLY');
+  const [billingCycle, setBillingCycle] = useState<
+    typeof PLAN_BILLING_CYCLE.MONTHLY | typeof PLAN_BILLING_CYCLE.YEARLY
+  >(PLAN_BILLING_CYCLE.YEARLY);
 
   const maxSavingsPercent = useMemo(() => {
     if (!plans || plans.length === 0) return 0;
@@ -70,39 +72,38 @@ const Subscription: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <PageHeader
-        icon={CreditCard}
-        actions={
-          <div className="relative flex bg-gray-100 dark:bg-gray-800 rounded-full p-1 border border-gray-200/50 dark:border-gray-700/50 w-[310px] sm:w-[350px]">
+      <PageHeader icon={CreditCard}>
+        <div className="flex justify-center w-full lg:absolute lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-auto">
+          <div className="relative flex bg-gray-100 dark:bg-gray-800/80 rounded-full p-1 border border-gray-200/50 dark:border-gray-700/50 w-[310px] sm:w-[350px]">
             <div
-              className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-white dark:bg-gray-700 rounded-full shadow-sm transition-all duration-300 ease-out border border-gray-200/50 dark:border-gray-600/50 ${billingCycle === 'YEARLY' ? 'left-1/2 ml-[2px]' : 'left-1'}`}
+              className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-primary rounded-full shadow-md transition-all duration-300 ease-out ${billingCycle === PLAN_BILLING_CYCLE.YEARLY ? 'left-1/2 ml-[2px]' : 'left-1'}`}
             />
             <button
-              onClick={() => setBillingCycle('MONTHLY')}
+              onClick={() => setBillingCycle(PLAN_BILLING_CYCLE.MONTHLY)}
               className={`relative z-10 flex-1 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-black transition-colors uppercase tracking-wider flex items-center justify-center ${
-                billingCycle === 'MONTHLY'
-                  ? 'text-gray-900 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                billingCycle === PLAN_BILLING_CYCLE.MONTHLY
+                  ? 'text-white drop-shadow-sm'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
               }`}
             >
               {t('subscription.monthlyBilling')}
             </button>
 
             <button
-              onClick={() => setBillingCycle('YEARLY')}
+              onClick={() => setBillingCycle(PLAN_BILLING_CYCLE.YEARLY)}
               className={`relative z-10 flex-1 py-1 rounded-full text-[10px] sm:text-xs font-black transition-colors uppercase tracking-wider flex flex-col items-center justify-center gap-0.5 ${
-                billingCycle === 'YEARLY'
-                  ? 'text-gray-900 dark:text-white'
-                  : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+                billingCycle === PLAN_BILLING_CYCLE.YEARLY
+                  ? 'text-white drop-shadow-sm'
+                  : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
               }`}
             >
               <span className="leading-none mt-0.5">{t('subscription.yearlyBilling')}</span>
               {maxSavingsPercent > 0 && (
                 <span
                   className={`text-[8px] px-1.5 py-[2px] rounded-full font-bold whitespace-nowrap transition-colors leading-none ${
-                    billingCycle === 'YEARLY'
-                      ? 'bg-red-100 text-red-600 dark:bg-red-900/50 dark:text-red-400'
-                      : 'bg-gray-200 text-gray-500 dark:bg-gray-700 dark:text-gray-400'
+                    billingCycle === PLAN_BILLING_CYCLE.YEARLY
+                      ? 'bg-white/20 text-white'
+                      : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400'
                   }`}
                 >
                   {t('subscription.saveUpTo', { percent: maxSavingsPercent })}
@@ -110,8 +111,8 @@ const Subscription: React.FC = () => {
               )}
             </button>
           </div>
-        }
-      />
+        </div>
+      </PageHeader>
 
       <div className="flex-1 overflow-auto custom-scrollbar px-1 pt-4">
         <div className="max-w-7xl mx-auto space-y-8">

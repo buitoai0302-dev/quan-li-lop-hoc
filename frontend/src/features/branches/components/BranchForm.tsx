@@ -6,7 +6,7 @@ import { z } from 'zod';
 import type { BranchFormProps } from '../types';
 import { Input, Select, Label, Button } from '@/components/common/UI';
 
-const getBranchSchema = (t: unknown) =>
+const getBranchSchema = (t: any) =>
   z.object({
     name: z.string().min(2, { message: t('validation.nameMin') }),
     address: z.string().optional(),
@@ -41,7 +41,7 @@ const BranchForm: React.FC<BranchFormProps> = ({
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <Label required ml-1>
+        <Label required className="ml-1">
           {t('branches.name')}
         </Label>
         <Input
@@ -57,7 +57,7 @@ const BranchForm: React.FC<BranchFormProps> = ({
 
       <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-5">
         <div className="space-y-1.5">
-          <Label ml-1>{t('branches.address')}</Label>
+          <Label className="ml-1">{t('branches.address')}</Label>
           <Input
             variant="white"
             placeholder={t('branches.addressPlaceholder')}
@@ -67,7 +67,7 @@ const BranchForm: React.FC<BranchFormProps> = ({
         </div>
         <div className="grid grid-cols-2 gap-5">
           <div className="space-y-1.5">
-            <Label ml-1>{t('branches.phone')}</Label>
+            <Label className="ml-1">{t('branches.phone')}</Label>
             <Input
               variant="white"
               placeholder="024xxx..."
@@ -76,7 +76,7 @@ const BranchForm: React.FC<BranchFormProps> = ({
             />
           </div>
           <div className="space-y-1.5">
-            <Label ml-1>{t('common.status')}</Label>
+            <Label className="ml-1">{t('common.status')}</Label>
             <Select
               variant="white"
               {...register('is_active', { setValueAs: (v) => v === 'true' || v === true })}
