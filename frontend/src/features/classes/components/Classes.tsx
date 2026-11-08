@@ -6,7 +6,7 @@ import {
   unenrollStudent,
   enrollBulk,
 } from '@/features/classes';
-import { Modal, Card, Button } from '@/components/common/UI';
+import { Modal, Card, Button, FormPanelActions } from '@/components/common/UI';
 import { BookOpen } from 'lucide-react';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';
@@ -43,10 +43,11 @@ import {
 
 const Classes: React.FC = () => {
   const { t } = useTranslation();
+  const formId = React.useId();
   const navigate = useNavigate();
   const startDateRef = React.useRef<HTMLInputElement>(null);
   const endDateRef = React.useRef<HTMLInputElement>(null);
-  const originalSchedules = React.useRef('[]');
+  const [originalSchedules, setOriginalSchedules] = useState('[]');
 
   const { classes, branches, teachers, rooms, allStudents, loading, refreshClasses } = useClasses();
 
@@ -107,7 +108,7 @@ const Classes: React.FC = () => {
             getClassSchedules(cls.id),
             getClassEnrollments(cls.id),
           ]);
-          originalSchedules.current = JSON.stringify(schedulesData);
+          setOriginalSchedules(JSON.stringify(schedulesData));
           setRecurringSchedules(schedulesData);
           setEnrollments(enrollmentsData);
         } catch (error) {
@@ -117,7 +118,7 @@ const Classes: React.FC = () => {
       } else {
         setEditingId(null);
         setEditingClass(null);
-        originalSchedules.current = '[]';
+        setOriginalSchedules('[]');
         setRecurringSchedules([]);
         setEnrollments([]);
       }
@@ -142,7 +143,7 @@ const Classes: React.FC = () => {
 
   const handleSubmit = useCallback(
     (data: ClassBasicFormData) => {
-      const scheduleChanged = JSON.stringify(recurringSchedules) !== originalSchedules.current;
+      const scheduleChanged = JSON.stringify(recurringSchedules) !== originalSchedules;
       const scheduleDatesOrTeacherChanged =
         editingClass &&
         (data.teacher_id !== editingClass.teacher_id ||
@@ -192,6 +193,7 @@ const Classes: React.FC = () => {
       editingId,
       editingClass,
       recurringSchedules,
+      originalSchedules,
       enrollments,
       t,
       handleCloseModal,
@@ -431,9 +433,21 @@ const Classes: React.FC = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         title={editingId ? t('classes.editClass') : t('classes.addClass')}
-        size="4xl"
+        placement="right"
+        width="clamp(600px, 58vw, 860px)"
+        closeLabel={t('common.close')}
+        closeBlocked={isSubmitting}
+        confirmCloseMessage={t('common.discardPanelChanges')}
+        hasUnsavedChanges={
+          JSON.stringify(recurringSchedules) !== originalSchedules ||
+          (!editingId && enrollments.length > 0)
+        }
+        footer={(requestClose) => (
+          <FormPanelActions formId={formId} onCancel={requestClose} isSubmitting={isSubmitting} />
+        )}
       >
         <ClassForm
+          id={formId}
           initialData={editingClass || undefined}
           onSubmit={handleSubmit}
           branches={branches}
@@ -448,8 +462,6 @@ const Classes: React.FC = () => {
           onEnrollStudent={handleEnrollStudent}
           onUnenrollStudent={handleUnenrollStudent}
           onOpenBulkEnroll={() => setIsBulkEnrollOpen(true)}
-          onClose={handleCloseModal}
-          isSubmitting={isSubmitting}
           t={t}
           startDateRef={startDateRef}
           endDateRef={endDateRef}

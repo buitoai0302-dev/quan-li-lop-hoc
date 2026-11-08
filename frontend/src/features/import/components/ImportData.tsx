@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import ConfirmModal from '@/components/common/ConfirmModal';
-import PageHeader from '@/components/common/PageHeader';
 import { Card } from '@/components/common/UI';
 import PageLoading from '@/components/common/PageLoading';
 
@@ -88,26 +87,26 @@ const ImportData: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <PageHeader
-        icon={ImportIcon}
-        actions={
-          <button
-            onClick={() => setIsGuideOpen(!isGuideOpen)}
-            className="h-9 px-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-100 dark:border-gray-700 whitespace-nowrap flex items-center justify-center gap-2 active:scale-95 shadow-sm"
-          >
-            <AlertCircle size={14} />
-            <span className="hidden sm:inline">
-              {isGuideOpen ? t('common.close') : t('common.viewDetail')}
-            </span>
-          </button>
-        }
-      />
-
-      <div className="flex-1 overflow-auto custom-scrollbar">
-        <div className="max-w-6xl mx-auto space-y-6">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden">
+      <div className="min-h-0 flex-1 overflow-y-auto custom-scrollbar">
+        <div className="mx-auto max-w-6xl space-y-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
+              <ImportIcon size={18} className="shrink-0 text-primary dark:text-indigo-300" />
+              {t('import.uploadIntro')}
+            </p>
+            <button
+              type="button"
+              aria-expanded={isGuideOpen}
+              onClick={() => setIsGuideOpen(!isGuideOpen)}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-primary dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              <AlertCircle size={15} />
+              {isGuideOpen ? t('import.hideGuide') : t('import.guideTitle')}
+            </button>
+          </div>
           <Card
-            className="p-4 sm:p-6"
+            bodyClassName="gap-4 p-4 sm:p-5"
             header={
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
@@ -159,10 +158,10 @@ const ImportData: React.FC = () => {
             }
           >
             {isGuideOpen && (
-              <div className="mb-6 p-5 bg-amber-50/50 dark:bg-amber-900/10 rounded-2xl border border-amber-100/50 dark:border-amber-800/20 animate-in slide-in-from-top-2 duration-300">
-                <div className="flex items-center gap-2 mb-4">
+              <div className="rounded-xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-800/50 dark:bg-amber-950/20">
+                <div className="mb-3 flex items-center gap-2">
                   <AlertCircle size={16} className="text-amber-500" />
-                  <h4 className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">
+                  <h4 className="text-sm font-semibold text-amber-900 dark:text-amber-200">
                     {t('import.guideTitle')}
                   </h4>
                 </div>
@@ -260,28 +259,31 @@ const ImportData: React.FC = () => {
                     </>
                   )}
                 </div>
-                <p className="mt-4 text-[10px] text-amber-700/60 font-bold italic">
+                <p className="mt-3 text-xs leading-relaxed text-amber-900 dark:text-amber-200">
                   <span className="text-rose-500 font-black mr-1">*</span> {t('import.guideDesc')}
                 </p>
               </div>
             )}
 
             {!file || (parsedData.length === 0 && !isProcessing) ? (
-              <div className="min-h-[300px] flex flex-col items-center justify-center border-2 border-dashed border-gray-100 dark:border-gray-700 rounded-3xl bg-gray-50/50 dark:bg-gray-900/20 p-10 relative group transition-all hover:border-primary/50 hover:bg-primary/[0.02]">
+              <div className="relative flex min-h-44 flex-col items-center justify-center rounded-xl border border-dashed border-slate-300 bg-slate-50 p-5 hover:border-primary/60 focus-within:ring-2 focus-within:ring-primary dark:border-slate-600 dark:bg-slate-950/30">
                 <input
                   type="file"
+                  aria-label={t('import.click_to_select')}
                   accept=".csv, .tsv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel"
                   onChange={handleFileSelect}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-20"
                 />
-                <div className="w-20 h-20 rounded-2xl bg-white dark:bg-gray-800 shadow-xl flex items-center justify-center text-primary mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-500 border border-gray-50 dark:border-gray-700">
-                  <Upload size={32} />
+                <div className="mb-3 grid size-10 place-items-center rounded-lg bg-primary/10 text-primary dark:text-indigo-300">
+                  <Upload size={21} />
                 </div>
                 <div className="text-center">
-                  <h3 className="text-base font-black text-gray-900 dark:text-white uppercase tracking-tight mb-2">
+                  <h3 className="mb-1 text-sm font-semibold text-slate-900 dark:text-slate-100">
                     {t('import.dropzoneText')}
                   </h3>
-                  <p className="text-xs text-gray-400 font-medium">{t('import.dropzoneSub')}</p>
+                  <p className="text-xs text-slate-600 dark:text-slate-300">
+                    {t('import.dropzoneSub')}
+                  </p>
                 </div>
                 {file && (
                   <button

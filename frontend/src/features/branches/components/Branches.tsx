@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
-import { Modal, Card, Button } from '@/components/common/UI';
+import { Modal, Card, Button, FormPanelActions } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';
 import { Building } from 'lucide-react';
@@ -33,6 +33,7 @@ import {
 
 const Branches: React.FC = () => {
   const { t } = useTranslation();
+  const formId = React.useId();
   const { branches, loading } = useBranches();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -260,13 +261,19 @@ const Branches: React.FC = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         title={editingId ? t('branches.editBranch') : t('branches.addBranch')}
-        size="xl"
+        placement="right"
+        width="clamp(480px, 44vw, 560px)"
+        closeLabel={t('common.close')}
+        closeBlocked={isSubmitting}
+        confirmCloseMessage={t('common.discardPanelChanges')}
+        footer={(requestClose) => (
+          <FormPanelActions formId={formId} onCancel={requestClose} isSubmitting={isSubmitting} />
+        )}
       >
         <BranchForm
+          id={formId}
           initialData={editingBranch || undefined}
           onSubmit={handleSubmit}
-          isSubmitting={isSubmitting}
-          onClose={handleCloseModal}
           t={t}
         />
       </Modal>

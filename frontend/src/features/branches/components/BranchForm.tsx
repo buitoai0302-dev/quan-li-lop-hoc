@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { BranchFormProps } from '../types';
-import { Input, Select, Label, Button } from '@/components/common/UI';
+import { Input, Select, Label } from '@/components/common/UI';
 
 const getBranchSchema = (t: any) =>
   z.object({
@@ -16,13 +16,7 @@ const getBranchSchema = (t: any) =>
 
 type BranchSchemaType = z.infer<ReturnType<typeof getBranchSchema>>;
 
-const BranchForm: React.FC<BranchFormProps> = ({
-  initialData,
-  onSubmit,
-  isSubmitting,
-  onClose,
-  t,
-}) => {
+const BranchForm: React.FC<BranchFormProps> = ({ id, initialData, onSubmit, t }) => {
   const schema = getBranchSchema(t);
   const {
     register,
@@ -39,7 +33,7 @@ const BranchForm: React.FC<BranchFormProps> = ({
   }, [initialData, reset]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form id={id} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
         <Label required className="ml-1">
           {t('branches.name')}
@@ -86,24 +80,6 @@ const BranchForm: React.FC<BranchFormProps> = ({
             </Select>
           </div>
         </div>
-      </div>
-
-      <div className="flex gap-3 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          className="flex-1 text-[10px] uppercase tracking-widest"
-        >
-          {t('common.cancel')}
-        </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex-[2] text-[10px] uppercase tracking-widest"
-        >
-          {isSubmitting ? t('common.saving') : t('common.save')}
-        </Button>
       </div>
     </form>
   );

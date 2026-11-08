@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 
-import { Modal, Card, Button } from '@/components/common/UI';
+import { Modal, Card, Button, FormPanelActions } from '@/components/common/UI';
 import { DoorOpen } from 'lucide-react';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';
@@ -37,6 +37,7 @@ import { ROOM_TYPES } from '@/utils/constants';
 
 const Rooms: React.FC = () => {
   const { t } = useTranslation();
+  const formId = React.useId();
   const navigate = useNavigate();
   const { rooms, loading: roomsLoading } = useRooms();
   const { branches, loading: branchesLoading } = useBranches();
@@ -286,14 +287,20 @@ const Rooms: React.FC = () => {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         title={editingId ? t('rooms.editRoom') : t('rooms.addRoom')}
-        size="xl"
+        placement="right"
+        width="clamp(480px, 44vw, 560px)"
+        closeLabel={t('common.close')}
+        closeBlocked={isSubmitting}
+        confirmCloseMessage={t('common.discardPanelChanges')}
+        footer={(requestClose) => (
+          <FormPanelActions formId={formId} onCancel={requestClose} isSubmitting={isSubmitting} />
+        )}
       >
         <RoomForm
+          id={formId}
           initialData={editingRoom || undefined}
           onSubmit={handleSubmit}
           branches={branches}
-          isSubmitting={isSubmitting}
-          onClose={handleCloseModal}
           t={t}
         />
       </Modal>

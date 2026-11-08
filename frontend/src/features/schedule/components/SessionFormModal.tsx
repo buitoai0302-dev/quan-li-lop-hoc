@@ -17,6 +17,7 @@ interface SessionFormState {
 interface SessionFormModalProps {
   isOpen: boolean;
   onClose: () => void;
+  isSubmitting: boolean;
   editingSession: Session | null;
   formData: SessionFormState;
   setFormData: React.Dispatch<React.SetStateAction<SessionFormState>>;
@@ -32,6 +33,7 @@ interface SessionFormModalProps {
 const SessionFormModal: React.FC<SessionFormModalProps> = ({
   isOpen,
   onClose,
+  isSubmitting,
   editingSession,
   formData,
   setFormData,
@@ -44,6 +46,7 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
   t,
 }) => {
   const modalDateInputRef = React.useRef<HTMLInputElement>(null);
+  const formId = React.useId();
 
   const handleShowPicker = () => {
     const input = modalDateInputRef.current as HTMLInputElement;
@@ -64,9 +67,32 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
       isOpen={isOpen}
       onClose={onClose}
       title={editingSession ? t('schedule.editSession') : t('schedule.addSession')}
-      size="xl"
+      placement="right"
+      width="clamp(480px, 46vw, 600px)"
+      closeLabel={t('common.close')}
+      closeBlocked={isSubmitting}
+      confirmCloseMessage={t('common.discardPanelChanges')}
+      footer={(requestClose) => (
+        <div className="flex flex-wrap justify-end gap-3">
+          <Button type="button" variant="outline" onClick={requestClose} disabled={isSubmitting}>
+            {t('common.cancel')}
+          </Button>
+          {editingSession && (
+            <Button type="button" variant="destructive" onClick={onDelete} disabled={isSubmitting}>
+              {t('common.delete')}
+            </Button>
+          )}
+          <Button type="submit" form={formId} disabled={isSubmitting}>
+            {isSubmitting
+              ? t('common.saving')
+              : editingSession
+                ? t('common.update')
+                : t('common.save')}
+          </Button>
+        </div>
+      )}
     >
-      <form onSubmit={onSubmit} className="space-y-4 py-1">
+      <form id={formId} onSubmit={onSubmit} className="space-y-4 py-1">
         <div className="bg-primary/5 dark:bg-primary/10 p-4 rounded-2xl border border-primary/10 dark:border-primary/20 transition-all duration-300">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -206,31 +232,6 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
               />
             </div>
           </div>
-        </div>
-
-        <div className="flex gap-3 pt-4 border-t border-gray-100 dark:border-slate-800">
-          <Button type="submit" className="flex-1 uppercase tracking-widest text-xs font-black">
-            {editingSession ? t('common.update') : t('common.save')}
-          </Button>
-          {editingSession ? (
-            <Button
-              type="button"
-              variant="destructive"
-              onClick={onDelete}
-              className="px-6 uppercase tracking-widest text-[10px]"
-            >
-              {t('common.delete')}
-            </Button>
-          ) : (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onClose}
-              className="px-6 uppercase tracking-widest text-[10px]"
-            >
-              {t('common.cancel')}
-            </Button>
-          )}
         </div>
       </form>
     </Modal>

@@ -1,6 +1,15 @@
 @import 'tailwindcss';
 @custom-variant dark (&:is(.dark *));
 
+@keyframes modal-panel-enter {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
 @theme {
   --color-primary: #6366f1;
   --color-primary-dark: #4f46e5;

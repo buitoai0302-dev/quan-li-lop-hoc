@@ -1,5 +1,9 @@
 {
   "common": {
+    "discardPanelChanges": "You have unsaved changes. Close and discard them?",
+    "unsavedChanges": "Unsaved changes",
+    "continueEditing": "Continue editing",
+    "discardChanges": "Discard changes",
     "previous": "Previous",
     "next": "Next",
     "select": "Select",
@@ -94,7 +98,14 @@
       "student": "Student"
     },
     "progress": "Progress",
-    "setupNow": "Setup Now"
+    "setupNow": "Setup Now",
+    "expand": "Expand",
+    "collapse": "Collapse",
+    "installApp": "Install app",
+    "confirm": "Confirm",
+    "processing": "Processing…",
+    "tryDifferentSearch": "Try a different search.",
+    "goBack": "Go back"
   },
   "menu": {
     "dashboard": "Dashboard",
@@ -123,7 +134,9 @@
       "tools": "Tools",
       "system": "System",
       "admin": "Super Admin"
-    }
+    },
+    "users": "Users",
+    "systemSettings": "System settings"
   },
   "dashboard": {
     "title": "System Overview",
@@ -175,7 +188,11 @@
       "STUDENT_JOINED_CLASS": "just joined your class",
       "CLASS_ASSIGNED": "was just assigned to you",
       "TEACHER_JOINED": "just joined the team"
-    }
+    },
+    "revenueForecast": "Revenue forecast",
+    "revenueNote": "Based on actual enrollment",
+    "expectedRevenue": "Expected",
+    "actualRevenue": "Actual"
   },
   "import": {
     "title": "System Data Import",
@@ -225,8 +242,21 @@
       "invalidFormat": "Unsupported file format",
       "readCsv": "Error reading CSV: {{message}}",
       "readExcel": "Error reading Excel",
-      "invalidData": "Invalid data or missing required fields"
-    }
+      "invalidData": "Invalid data or missing required fields",
+      "invalid_file_type": "Choose a valid Excel or CSV file.",
+      "missing_file_or_tenant": "Choose a file and a center.",
+      "empty_file": "The file contains no data.",
+      "no_valid_data": "No valid rows found. Check the Email and Full Name columns.",
+      "read_file_error": "Could not read the file. Try again."
+    },
+    "no_template": "No template available.",
+    "download_template_desc": "Use the template to prepare the required columns.",
+    "download_template": "Download template",
+    "data_file": "Data file",
+    "drag_and_drop": "Drag and drop a file here",
+    "click_to_select": "Choose file",
+    "hideGuide": "Hide format guide",
+    "uploadIntro": "Choose a data type and branch, then upload a file to preview it."
   },
   "help": {
     "title": "EduSchedule Help Center",
@@ -293,6 +323,12 @@
       "tip3": {
         "q": "Import failed?",
         "a": "Ensure your file has required columns like Full Name and Email."
+      },
+      "teacher": {
+        "tip3": {
+          "q": "Missing a scheduled class?",
+          "a": "Check the date range and ask your center to confirm your teaching assignment."
+        }
       }
     },
     "detailNote": "Note: You can watch more tutorial videos on our Youtube channel.",
@@ -338,7 +374,25 @@
       "desc": "Connect Google Calendar and enable Email notifications."
     },
     "understand": "I Understand",
-    "viewFull": "View Full Guide"
+    "viewFull": "View Full Guide",
+    "teacher": {
+      "step1": {
+        "title": "1. Personal profile",
+        "desc": "Update your profile photo and check your contact information."
+      },
+      "step2": {
+        "title": "2. Google Calendar",
+        "desc": "Connect your calendar to receive class reminders."
+      },
+      "step3": {
+        "title": "3. Your classes",
+        "desc": "View your assigned classes and student lists."
+      },
+      "step4": {
+        "title": "4. Attendance",
+        "desc": "Mark attendance at the start of each class."
+      }
+    }
   },
   "subscription": {
     "monthlyBilling": "Monthly",
@@ -527,13 +581,17 @@
         "email_placeholder": "Enter email address...",
         "password_placeholder": "Leave blank to auto generate",
         "reset_notice_1": "You are resetting the password for account ",
-        "reset_notice_2": ""
+        "reset_notice_2": "",
+        "import_users": "Import users",
+        "import_users_desc": "Upload a user list for the selected center.",
+        "select_tenant_placeholder": "Select a center"
       },
       "buttons": {
         "copy": "Copy",
         "close": "Close",
         "cancel": "Cancel",
         "create": "Create Account",
+        "import": "Import users",
         "reset": "Reset Password",
         "random": "Random"
       },
@@ -543,14 +601,20 @@
         "status_success": "Status updated successfully",
         "copy_success": "Copied to clipboard",
         "confirm_lock": "Are you sure you want to lock account {{email}}?",
-        "confirm_unlock": "Are you sure you want to unlock account {{email}}?"
+        "confirm_unlock": "Are you sure you want to unlock account {{email}}?",
+        "import_success": "Users imported successfully."
       },
       "tooltip": {
         "reset": "Reset Password",
         "lock": "Lock Account",
         "unlock": "Unlock Account"
       }
-    }
+    },
+    "system": "System",
+    "systemShort": "System",
+    "login": "Log in",
+    "statusPending": "Awaiting email verification",
+    "statusPendingShort": "Pending verification"
   },
   "attendance": {
     "disabledTitle": "Feature Not Enabled",
@@ -615,7 +679,8 @@
       "fri": "Fri",
       "sat": "Sat",
       "sun": "Sun"
-    }
+    },
+    "selectDate": "Select date"
   },
   "classes": {
     "title": "Class Management",
@@ -657,7 +722,8 @@
     "noData": "No rooms found. Add one!",
     "namePlaceholder": "Room name...",
     "capacityPlaceholder": "Capacity...",
-    "createFirstRoom": "Add your first room"
+    "createFirstRoom": "Add your first room",
+    "branch": "Branch"
   },
   "teachers": {
     "title": "Teacher Management",
@@ -727,8 +793,6 @@
     "loginLink": "Login",
     "notReceivedVerification": "Didn't receive email?",
     "resendLink": "Resend",
-    "showPassword": "Show password",
-    "hidePassword": "Hide password",
     "forgotPasswordTitle": "Forgot Password",
     "forgotPasswordSubtitle": "Enter email to receive reset link",
     "sendResetLink": "Send Reset Link",
@@ -762,7 +826,8 @@
     "resending": "Sending...",
     "resendSuccessTitle": "Resent!",
     "resendSuccessDesc": "If email {{email}} exists and is not verified, we sent a new link.",
-    "resendNotReceived": "Not found? Check spam or"
+    "resendNotReceived": "Not found? Check spam or",
+    "processing": "Processing…"
   },
   "passwordStrength": {
     "label": "Strength",
@@ -825,7 +890,9 @@
     "menuConfig": "Menu & Features Configuration",
     "menuConfigDesc": "Enable or disable menu items to customize the interface for your center.",
     "quickGuide": "Quick Guide",
-    "updateCenterInfo": "Update center info"
+    "updateCenterInfo": "Update center info",
+    "copied": "Copied",
+    "generate": "Generate key"
   },
   "onboarding": {
     "welcome": "Welcome",
@@ -920,7 +987,8 @@
     "emailInvalid": "Invalid email address",
     "branchRequired": "Please select a branch",
     "roomNameRequired": "Room name is required",
-    "classNameRequired": "Class name is required"
+    "classNameRequired": "Class name is required",
+    "capacityMin": "Capacity must be at least 1"
   },
   "landing": {
     "footerDesc": "The modern operating system for educational centers. Simplify scheduling, attendance, and management.",
@@ -998,7 +1066,38 @@
     "priceUnavailable": "Contact us for pricing",
     "billingPeriod": "Billing period",
     "login": "Login",
-    "register": "Register"
+    "register": "Register",
+    "navigation": "Main navigation",
+    "switchLanguage": "Switch language",
+    "closeMenu": "Close menu",
+    "openMenu": "Open menu",
+    "mobileNavigation": "Mobile navigation",
+    "featureCards": {
+      "schedule": {
+        "title": "Smart scheduling",
+        "desc": "Create and manage class schedules without conflicts."
+      },
+      "attendance": {
+        "title": "Attendance tracking",
+        "desc": "Track attendance and review detailed reports."
+      },
+      "multitenant": {
+        "title": "Multi-branch support",
+        "desc": "Manage multiple branches from a single dashboard."
+      },
+      "analytics": {
+        "title": "Reporting and analytics",
+        "desc": "Monitor operations with statistics and dashboards."
+      },
+      "tuition": {
+        "title": "Tuition management",
+        "desc": "Generate charges, record payments, and track outstanding balances."
+      },
+      "data": {
+        "title": "Data import and export",
+        "desc": "Move data easily with Excel and CSV."
+      }
+    }
   },
   "feedback": {
     "title": "Send Feedback / Report Bug",
@@ -1116,6 +1215,9 @@
       "title": "Tuition Receipt",
       "print": "Print / Save PDF",
       "receiptSubtitle": "Tuition Payment Receipt",
+      "originalAmount": "Original Tuition",
+      "netAmount": "Net Tuition",
+      "totalPaid": "Total Paid",
       "printDate": "Printed on {{date}}",
       "documentTitle": "Tuition Receipt - {{student}}",
       "loadingPayments": "Loading payment history…",
@@ -1166,7 +1268,8 @@
     "confirmPayment": "Confirm Payment",
     "processing": "Processing...",
     "needHelp": "Need Help?",
-    "contactSupport": "Contact us through the following channels for quick support:"
+    "contactSupport": "Contact us through the following channels for quick support:",
+    "backBtn": "Back"
   },
   "success": {
     "CLASS_DELETED_SUCCESS": "Class deleted successfully",
@@ -1191,5 +1294,10 @@
     "STUDENT_REGISTERED": "registered into the system",
     "CLASS_CREATED": "created a class",
     "TEACHER_JOINED": "joined the system"
+  },
+  "premium": {
+    "title": "Premium feature",
+    "description": "Upgrade your plan to use this feature.",
+    "upgradeBtn": "Upgrade now"
   }
 }

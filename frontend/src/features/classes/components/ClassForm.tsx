@@ -20,6 +20,7 @@ const getClassSchema = (t: TFunction) =>
 type ClassBasicSchemaType = z.infer<ReturnType<typeof getClassSchema>>;
 
 const ClassForm: React.FC<ClassFormProps> = ({
+  id,
   initialData,
   onSubmit,
   branches,
@@ -34,8 +35,6 @@ const ClassForm: React.FC<ClassFormProps> = ({
   onEnrollStudent,
   onUnenrollStudent,
   onOpenBulkEnroll,
-  onClose,
-  isSubmitting,
   t,
   startDateRef,
   endDateRef,
@@ -87,14 +86,15 @@ const ClassForm: React.FC<ClassFormProps> = ({
 
   return (
     <form
+      id={id}
       onSubmit={handleSubmit((data) => {
         onSubmit(data);
       })}
       className="space-y-4 py-1"
     >
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Basic Info - Left Column */}
-        <div className="lg:col-span-7 space-y-3">
+        <div className="min-w-0 space-y-3">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2">
               <Label required size="xs" className="ml-1">
@@ -212,7 +212,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
         </div>
 
         {/* Recurring Schedule - Right Column */}
-        <div className="lg:col-span-5 flex flex-col min-h-[120px]">
+        <div className="flex min-h-[120px] min-w-0 flex-col">
           <div className="flex items-center justify-between pb-1">
             <Label className="text-xs font-bold text-gray-500 uppercase tracking-wider">
               {t('classes.recurringSchedule')}
@@ -237,13 +237,13 @@ const ClassForm: React.FC<ClassFormProps> = ({
           <Card
             variant="muted"
             scrollable={true}
-            className="flex-1 max-h-[320px]"
-            bodyClassName="p-2 space-y-1 custom-scrollbar"
+            className="h-[15.375rem] shrink-0"
+            bodyClassName="gap-1 p-2 custom-scrollbar lg:overscroll-contain"
           >
             {recurringSchedules.map((schedule, index) => (
               <div
                 key={index}
-                className="relative bg-white dark:bg-gray-800 p-2 rounded-lg border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md pr-8"
+                className="relative h-28 shrink-0 rounded-lg border border-gray-100 bg-white p-2 pr-8 shadow-sm transition-all hover:shadow-md dark:border-gray-700 dark:bg-gray-800"
               >
                 <Button
                   type="button"
@@ -256,9 +256,9 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 >
                   <X size={10} />
                 </Button>
-                <div className="grid grid-cols-2 gap-2 mt-1">
+                <div className="grid grid-cols-2 gap-x-2 gap-y-1">
                   <div>
-                    <label className="text-[9px] font-semibold text-gray-500 uppercase">
+                    <label className="block text-[9px] leading-3 font-semibold text-gray-500 uppercase">
                       {t('common.day')}
                     </label>
                     <Select
@@ -280,7 +280,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-semibold text-gray-500 uppercase">
+                    <label className="block text-[9px] leading-3 font-semibold text-gray-500 uppercase">
                       {t('schedule.room')}
                     </label>
                     <Select
@@ -303,7 +303,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-semibold text-gray-500 uppercase">
+                    <label className="block text-[9px] leading-3 font-semibold text-gray-500 uppercase">
                       {t('common.start')}
                     </label>
                     <Input
@@ -320,7 +320,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   </div>
 
                   <div>
-                    <label className="text-[9px] font-semibold text-gray-500 uppercase">
+                    <label className="block text-[9px] leading-3 font-semibold text-gray-500 uppercase">
                       {t('common.end')}
                     </label>
                     <Input
@@ -408,8 +408,8 @@ const ClassForm: React.FC<ClassFormProps> = ({
         <Card
           variant="muted"
           scrollable={true}
-          className="max-h-[180px]"
-          bodyClassName="p-3 custom-scrollbar"
+          className="max-h-[180px] lg:max-h-[clamp(7rem,calc(100dvh-34rem),16rem)]"
+          bodyClassName="p-3 custom-scrollbar lg:overscroll-contain"
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
             {enrollments.map((s) => (
@@ -445,24 +445,6 @@ const ClassForm: React.FC<ClassFormProps> = ({
             )}
           </div>
         </Card>
-      </div>
-
-      <div className="flex gap-3 pt-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          className="flex-1 text-[10px] uppercase tracking-widest"
-        >
-          {t('common.cancel')}
-        </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex-[2] text-[10px] uppercase tracking-widest"
-        >
-          {isSubmitting ? t('common.saving') : t('common.save')}
-        </Button>
       </div>
     </form>
   );

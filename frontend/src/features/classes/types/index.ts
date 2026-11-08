@@ -1,5 +1,14 @@
 import type { TFunction } from 'i18next';
-import type { ClassData, ClassBasicFormData, Branch, Teacher, Room, Student, RecurringSchedule, Enrollment } from '@/types/schemas';
+import type {
+  ClassData,
+  ClassBasicFormData,
+  Branch,
+  Teacher,
+  Room,
+  Student,
+  RecurringSchedule,
+  Enrollment,
+} from '@/types/schemas';
 import type { BaseTableProps } from '@/types';
 
 export interface BulkEnrollModalProps {
@@ -16,6 +25,7 @@ export interface ClassTableProps extends BaseTableProps<ClassData> {
 }
 
 export interface ClassFormProps {
+  id: string;
   initialData?: ClassBasicFormData;
   onSubmit: (data: ClassBasicFormData) => void;
   branches: Branch[];
@@ -30,8 +40,6 @@ export interface ClassFormProps {
   onEnrollStudent: () => void;
   onUnenrollStudent: (studentId: string) => void;
   onOpenBulkEnroll: () => void;
-  onClose: () => void;
-  isSubmitting: boolean;
   t: TFunction;
   startDateRef: React.RefObject<HTMLInputElement | null>;
   endDateRef: React.RefObject<HTMLInputElement | null>;

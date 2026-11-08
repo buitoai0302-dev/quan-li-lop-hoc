@@ -13,7 +13,7 @@ import {
   Unlock,
   Upload,
 } from 'lucide-react';
-import { Modal, Card, Button, Input, Select } from '@/components/common/UI';
+import { Modal, Card, Button, Input, Select, FormPanelActions } from '@/components/common/UI';
 import { USER_ROLES } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
@@ -34,6 +34,7 @@ import {
 
 const AdminUsers: React.FC = () => {
   const { t } = useTranslation();
+  const createFormId = React.useId();
 
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
@@ -379,6 +380,23 @@ const AdminUsers: React.FC = () => {
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
         title={t('admin.users.modal.create_title')}
+        placement="right"
+        width="clamp(480px, 46vw, 600px)"
+        closeLabel={t('common.close')}
+        closeBlocked={createMutation.isPending}
+        confirmCloseMessage={newlyCreatedPassword ? undefined : t('common.discardPanelChanges')}
+        footer={
+          newlyCreatedPassword
+            ? undefined
+            : (requestClose) => (
+                <FormPanelActions
+                  formId={createFormId}
+                  onCancel={requestClose}
+                  isSubmitting={createMutation.isPending}
+                  submitLabel={t('admin.users.buttons.create')}
+                />
+              )
+        }
       >
         <div className="p-4 sm:p-6">
           {newlyCreatedPassword ? (
@@ -402,7 +420,7 @@ const AdminUsers: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <form onSubmit={handleCreateSubmit} className="space-y-4">
+            <form id={createFormId} onSubmit={handleCreateSubmit} className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
                   {t('admin.users.modal.tenant')}
@@ -502,20 +520,6 @@ const AdminUsers: React.FC = () => {
               </div>
 
               <p className="text-sm text-gray-500">Người dùng sẽ nhận email để tự đặt mật khẩu.</p>
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="flex-1"
-                  onClick={() => setIsCreateModalOpen(false)}
-                >
-                  {t('admin.users.buttons.cancel')}
-                </Button>
-                <Button type="submit" className="flex-1" loading={createMutation.isPending}>
-                  {t('admin.users.buttons.create')}
-                </Button>
-              </div>
             </form>
           )}
         </div>

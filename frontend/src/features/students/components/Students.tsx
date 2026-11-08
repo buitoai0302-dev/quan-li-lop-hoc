@@ -1,6 +1,6 @@
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useId } from 'react';
 
-import { Modal, Card } from '@/components/common/UI';
+import { Modal, Card, FormPanelActions } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';
 import toast from 'react-hot-toast';
@@ -36,6 +36,7 @@ import { useBranches } from '@/features/branches/hooks/useBranches';
 
 const Students: React.FC = () => {
   const { t } = useTranslation();
+  const studentFormId = useId();
   const navigate = useNavigate();
   const dobInputRef = React.useRef<HTMLInputElement>(null);
   const { students, loading: studentsLoading } = useStudents();
@@ -315,16 +316,26 @@ const Students: React.FC = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
+        closeLabel={t('common.close')}
         title={editingId ? t('students.editStudent') : t('students.addStudent')}
-        size="xl"
+        placement="right"
+        width="clamp(480px, 44vw, 560px)"
+        closeBlocked={isSubmitting}
+        confirmCloseMessage={t('common.discardPanelChanges')}
+        footer={(requestClose) => (
+          <FormPanelActions
+            formId={studentFormId}
+            onCancel={requestClose}
+            isSubmitting={isSubmitting}
+          />
+        )}
       >
         <StudentForm
+          id={studentFormId}
           initialData={editingStudent || undefined}
           onSubmit={handleSubmit}
           branches={branches}
           editingId={editingId}
-          isSubmitting={isSubmitting}
-          onClose={handleCloseModal}
           t={t}
           dobInputRef={dobInputRef}
         />

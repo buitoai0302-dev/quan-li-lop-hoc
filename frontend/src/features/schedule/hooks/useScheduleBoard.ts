@@ -253,5 +253,6 @@ export const useScheduleBoard = () => {
       if (editingSession) deleteSessionMutation.mutate(editingSession.id);
     },
     updateSessionMutation,
+    isSessionSubmitting: createSessionMutation.isPending || updateSessionMutation.isPending,
   };
 };

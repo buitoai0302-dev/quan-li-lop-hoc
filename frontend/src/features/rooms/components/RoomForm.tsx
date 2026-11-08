@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { RoomFormProps } from '../types';
 import { ROOM_TYPES } from '@/utils/constants';
-import { Input, Select, Label, Button } from '@/components/common/UI';
+import { Input, Select, Label } from '@/components/common/UI';
 
 const getRoomSchema = (t: any) =>
   z.object({
@@ -17,14 +17,7 @@ const getRoomSchema = (t: any) =>
 
 type RoomSchemaType = z.infer<ReturnType<typeof getRoomSchema>>;
 
-const RoomForm: React.FC<RoomFormProps> = ({
-  initialData,
-  onSubmit,
-  branches,
-  isSubmitting,
-  onClose,
-  t,
-}) => {
+const RoomForm: React.FC<RoomFormProps> = ({ id, initialData, onSubmit, branches, t }) => {
   const schema = getRoomSchema(t);
   const {
     register,
@@ -55,7 +48,7 @@ const RoomForm: React.FC<RoomFormProps> = ({
   }, [initialData, reset, branches]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form id={id} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="sm:col-span-2">
           <Label required className="ml-1">
@@ -133,24 +126,6 @@ const RoomForm: React.FC<RoomFormProps> = ({
             </Select>
           </div>
         </div>
-      </div>
-
-      <div className="flex gap-3 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          className="flex-1 text-[10px] uppercase tracking-widest"
-        >
-          {t('common.cancel')}
-        </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex-[2] text-[10px] uppercase tracking-widest"
-        >
-          {isSubmitting ? t('common.saving') : t('common.save')}
-        </Button>
       </div>
     </form>
   );

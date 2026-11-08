@@ -16,6 +16,10 @@ interface Props {
   onClose: () => void;
 }
 
+const AMOUNT_ROW_CLASS =
+  'receipt-row grid grid-cols-[minmax(0,1fr)_auto] items-baseline gap-x-4 text-sm leading-6';
+const AMOUNT_VALUE_CLASS = 'whitespace-nowrap text-right text-base font-semibold tabular-nums';
+
 const getPaymentMethodLabels = (t: import('i18next').TFunction): Record<string, string> => ({
   [PAYMENT_METHODS.CASH]: t('tuition.paymentMethods.cash'),
   [PAYMENT_METHODS.BANK_TRANSFER]: t('tuition.paymentMethods.bank_transfer'),
@@ -181,33 +185,35 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
             <div className="receipt-divider border-t border-dashed border-gray-200 my-4" />
 
             {/* Amount */}
-            <div className="receipt-amount bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-900/30 rounded-xl p-4 mb-4">
-              <div className="receipt-row flex justify-between gap-3 text-sm mb-1">
-                <span className="text-gray-500">{t('tuition.amount')}</span>
-                <span className="font-semibold">{formatCurrency(tuition.amount)}</span>
+            <div className="receipt-amount mb-4 space-y-2 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-slate-700 dark:border-emerald-900/60 dark:bg-emerald-900/20 dark:text-slate-200">
+              <div className={AMOUNT_ROW_CLASS}>
+                <span>{t('tuition.receipt.originalAmount')}</span>
+                <span className={AMOUNT_VALUE_CLASS}>{formatCurrency(tuition.amount)}</span>
               </div>
               {tuition.discount > 0 && (
-                <div className="receipt-row flex justify-between gap-3 text-sm mb-1">
-                  <span className="text-gray-500">{t('tuition.discount')}</span>
-                  <span className="font-semibold text-emerald-600">
-                    -{formatCurrency(tuition.discount)}
-                  </span>
+                <div className={AMOUNT_ROW_CLASS}>
+                  <span>{t('tuition.discount')}</span>
+                  <span className={AMOUNT_VALUE_CLASS}>-{formatCurrency(tuition.discount)}</span>
                 </div>
               )}
-              <div className="receipt-row receipt-total flex justify-between gap-3 font-black text-lg text-emerald-700 border-t border-emerald-200 pt-2 mt-2">
-                <span>{t('tuition.payment.amountDue')}</span>
-                <span>{formatCurrency(tuition.amount_due)}</span>
+              <div
+                className={`${AMOUNT_ROW_CLASS} receipt-total border-t border-emerald-200 pt-2 font-bold text-emerald-800 dark:border-emerald-900/60 dark:text-emerald-300`}
+              >
+                <span>{t('tuition.receipt.netAmount')}</span>
+                <span className={AMOUNT_VALUE_CLASS}>{formatCurrency(tuition.amount_due)}</span>
               </div>
-              <div className="receipt-row flex justify-between gap-3 text-sm mt-1">
-                <span className="text-gray-500">{t('tuition.payment.amountPaid')}</span>
-                <span className="font-bold text-emerald-600">
-                  {formatCurrency(tuition.amount_paid)}
-                </span>
+              <div className={AMOUNT_ROW_CLASS}>
+                <span>{t('tuition.receipt.totalPaid')}</span>
+                <span className={AMOUNT_VALUE_CLASS}>{formatCurrency(tuition.amount_paid)}</span>
               </div>
-              {remaining > 0 && (
-                <div className="receipt-row flex justify-between gap-3 text-sm mt-1">
-                  <span className="text-gray-500">{t('tuition.payment.remaining')}</span>
-                  <span className="font-bold text-rose-500">{formatCurrency(remaining)}</span>
+              {remaining >= 0 && (
+                <div className={AMOUNT_ROW_CLASS}>
+                  <span>{t('tuition.payment.remaining')}</span>
+                  <span
+                    className={`${AMOUNT_VALUE_CLASS} ${remaining > 0 ? 'text-rose-700 dark:text-rose-300' : 'text-emerald-800 dark:text-emerald-300'}`}
+                  >
+                    {formatCurrency(remaining)}
+                  </span>
                 </div>
               )}
             </div>

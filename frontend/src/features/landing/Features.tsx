@@ -8,54 +8,54 @@ const Features: React.FC = () => {
   const features = [
     {
       icon: <CalendarDays size={24} />,
-      title: t('landing.features.schedule.title', 'Smart Scheduling'),
+      title: t('landing.featureCards.schedule.title', 'Smart Scheduling'),
       description: t(
-        'landing.features.schedule.desc',
+        'landing.featureCards.schedule.desc',
         'Effortlessly create and manage complex class schedules without conflicts.'
       ),
       color: 'bg-blue-50 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400',
     },
     {
       icon: <Users size={24} />,
-      title: t('landing.features.attendance.title', 'Attendance Tracking'),
+      title: t('landing.featureCards.attendance.title', 'Attendance Tracking'),
       description: t(
-        'landing.features.attendance.desc',
+        'landing.featureCards.attendance.desc',
         'Track student and teacher attendance in real-time with comprehensive reports.'
       ),
       color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400',
     },
     {
       icon: <Building2 size={24} />,
-      title: t('landing.features.multitenant.title', 'Multi-Branch Support'),
+      title: t('landing.featureCards.multitenant.title', 'Multi-Branch Support'),
       description: t(
-        'landing.features.multitenant.desc',
+        'landing.featureCards.multitenant.desc',
         'Manage multiple branches or entire organizations from a single unified dashboard.'
       ),
       color: 'bg-purple-50 text-purple-600 dark:bg-purple-900/20 dark:text-purple-400',
     },
     {
       icon: <BarChart3 size={24} />,
-      title: t('landing.features.analytics.title', 'Advanced Analytics'),
+      title: t('landing.featureCards.analytics.title', 'Advanced Analytics'),
       description: t(
-        'landing.features.analytics.desc',
+        'landing.featureCards.analytics.desc',
         'Gain actionable insights with detailed statistics and performance dashboards.'
       ),
       color: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',
     },
     {
       icon: <DollarSign size={24} />,
-      title: t('landing.features.tuition.title', 'Comprehensive Tuition Management'),
+      title: t('landing.featureCards.tuition.title', 'Comprehensive Tuition Management'),
       description: t(
-        'landing.features.tuition.desc',
+        'landing.featureCards.tuition.desc',
         'Automate billing generation, payment collection, discount calculation, and student debt tracking.'
       ),
       color: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400',
     },
     {
       icon: <FileUp size={24} />,
-      title: t('landing.features.data.title', 'Smart Data Import/Export'),
+      title: t('landing.featureCards.data.title', 'Smart Data Import/Export'),
       description: t(
-        'landing.features.data.desc',
+        'landing.featureCards.data.desc',
         'Easily synchronize and backup data with Excel/CSV. Automatic analysis prevents duplicates.'
       ),
       color: 'bg-amber-50 text-amber-600 dark:bg-amber-900/20 dark:text-amber-400',

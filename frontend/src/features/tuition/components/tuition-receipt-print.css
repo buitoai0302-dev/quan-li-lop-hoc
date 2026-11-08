@@ -68,13 +68,23 @@ body {
   padding: 10px 14px;
   break-inside: avoid;
 }
-.receipt-total {
+.receipt-amount .receipt-row {
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 18px;
+  padding-block: 5px;
+}
+.receipt-amount .receipt-row > :last-child {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.receipt-amount .receipt-total {
   border-top: 1px solid #86ad9b;
   margin-top: 5px;
   padding-top: 6px;
   font-weight: 700;
 }
-.receipt-total > span {
+.receipt-total > span:first-child,
+.receipt-total > span:last-child {
   color: #166534;
 }
 .receipt-status {

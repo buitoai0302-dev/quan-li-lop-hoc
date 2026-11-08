@@ -10,12 +10,11 @@ export interface StudentTableProps extends BaseTableProps<Student> {
 }
 
 export interface StudentFormProps {
+  id: string;
   initialData?: StudentFormData;
   onSubmit: (data: StudentFormData) => void;
   branches: Branch[];
   editingId: string | null;
-  isSubmitting: boolean;
-  onClose: () => void;
   t: TFunction;
   dobInputRef: React.RefObject<HTMLInputElement | null>;
 }

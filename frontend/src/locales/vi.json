@@ -1,5 +1,9 @@
 {
   "common": {
+    "discardPanelChanges": "Bạn có thay đổi chưa lưu. Đóng và bỏ các thay đổi này?",
+    "unsavedChanges": "Thay đổi chưa lưu",
+    "continueEditing": "Tiếp tục chỉnh sửa",
+    "discardChanges": "Bỏ thay đổi",
     "previous": "Trước",
     "next": "Tiếp",
     "select": "Chọn",
@@ -97,7 +101,13 @@
       "student": "Học sinh"
     },
     "progress": "Tiến độ",
-    "setupNow": "Thiết lập ngay"
+    "setupNow": "Thiết lập ngay",
+    "expand": "Mở rộng",
+    "collapse": "Thu gọn",
+    "installApp": "Cài đặt ứng dụng",
+    "processing": "Đang xử lý…",
+    "tryDifferentSearch": "Thử từ khóa khác.",
+    "goBack": "Quay lại"
   },
   "menu": {
     "dashboard": "Tổng quan",
@@ -126,7 +136,9 @@
       "tools": "Công cụ",
       "system": "Hệ thống",
       "admin": "Quản trị hệ thống"
-    }
+    },
+    "users": "Người dùng",
+    "systemSettings": "Cài đặt hệ thống"
   },
   "dashboard": {
     "title": "Tổng quan hệ thống",
@@ -178,7 +190,11 @@
       "STUDENT_JOINED_CLASS": "vừa gia nhập lớp của bạn",
       "CLASS_ASSIGNED": "vừa được gán cho bạn",
       "TEACHER_JOINED": "vừa tham gia đội ngũ"
-    }
+    },
+    "revenueForecast": "Doanh thu dự kiến",
+    "revenueNote": "Dựa trên số lượng học viên thực tế",
+    "expectedRevenue": "Dự kiến",
+    "actualRevenue": "Thực tế"
   },
   "import": {
     "title": "Nhập dữ liệu hệ thống",
@@ -228,8 +244,21 @@
       "invalidFormat": "Định dạng tệp không được hỗ trợ",
       "readCsv": "Lỗi khi đọc tệp CSV: {{message}}",
       "readExcel": "Lỗi khi đọc tệp Excel",
-      "invalidData": "Dữ liệu không hợp lệ hoặc thiếu các trường bắt buộc"
-    }
+      "invalidData": "Dữ liệu không hợp lệ hoặc thiếu các trường bắt buộc",
+      "invalid_file_type": "Chọn tệp Excel hoặc CSV hợp lệ.",
+      "missing_file_or_tenant": "Chọn tệp và trung tâm.",
+      "empty_file": "Tệp không có dữ liệu.",
+      "no_valid_data": "Không có dữ liệu hợp lệ. Kiểm tra cột Email và Họ tên.",
+      "read_file_error": "Không đọc được tệp. Vui lòng thử lại."
+    },
+    "no_template": "Chưa có tệp mẫu.",
+    "download_template_desc": "Dùng tệp mẫu để chuẩn bị đúng các cột.",
+    "download_template": "Tải tệp mẫu",
+    "data_file": "Tệp dữ liệu",
+    "drag_and_drop": "Kéo và thả tệp vào đây",
+    "click_to_select": "Chọn tệp",
+    "hideGuide": "Ẩn hướng dẫn định dạng",
+    "uploadIntro": "Chọn loại dữ liệu và chi nhánh, sau đó tải tệp lên để xem trước."
   },
   "help": {
     "title": "Trung tâm hỗ trợ EduSchedule",
@@ -555,13 +584,17 @@
         "email_placeholder": "Nhập địa chỉ email...",
         "password_placeholder": "Để trống để tự tạo ngẫu nhiên",
         "reset_notice_1": "Bạn đang cấp lại mật khẩu cho tài khoản ",
-        "reset_notice_2": ""
+        "reset_notice_2": "",
+        "import_users": "Nhập người dùng",
+        "import_users_desc": "Tải danh sách người dùng cho trung tâm đã chọn.",
+        "select_tenant_placeholder": "Chọn trung tâm"
       },
       "buttons": {
         "copy": "Copy",
         "close": "Đóng",
         "cancel": "Hủy",
         "create": "Tạo Tài khoản",
+        "import": "Nhập danh sách",
         "reset": "Cấp lại Mật khẩu",
         "random": "Ngẫu nhiên"
       },
@@ -571,14 +604,20 @@
         "status_success": "Cập nhật trạng thái thành công",
         "copy_success": "Đã sao chép vào khay nhớ tạm",
         "confirm_lock": "Bạn có chắc muốn khóa tài khoản {{email}}?",
-        "confirm_unlock": "Bạn có chắc muốn mở khóa tài khoản {{email}}?"
+        "confirm_unlock": "Bạn có chắc muốn mở khóa tài khoản {{email}}?",
+        "import_success": "Đã nhập người dùng."
       },
       "tooltip": {
         "reset": "Cấp lại mật khẩu",
         "lock": "Khóa tài khoản",
         "unlock": "Mở khóa"
       }
-    }
+    },
+    "system": "Hệ thống",
+    "systemShort": "Hệ thống",
+    "login": "Đăng nhập",
+    "statusPending": "Chờ xác thực email",
+    "statusPendingShort": "Chờ xác thực"
   },
   "attendance": {
     "disabledTitle": "Tính năng chưa được kích hoạt",
@@ -643,7 +682,8 @@
       "fri": "T6",
       "sat": "T7",
       "sun": "CN"
-    }
+    },
+    "selectDate": "Chọn ngày"
   },
   "classes": {
     "title": "Quản lý Lớp học",
@@ -685,7 +725,8 @@
     "noData": "Chưa có phòng học nào",
     "namePlaceholder": "Tên phòng...",
     "capacityPlaceholder": "Sức chứa...",
-    "createFirstRoom": "Thêm phòng học đầu tiên của bạn"
+    "createFirstRoom": "Thêm phòng học đầu tiên của bạn",
+    "branch": "Chi nhánh"
   },
   "teachers": {
     "title": "Quản lý Giáo viên",
@@ -755,8 +796,6 @@
     "loginLink": "Đăng nhập",
     "notReceivedVerification": "Không nhận được email?",
     "resendLink": "Gửi lại",
-    "showPassword": "Hiện mật khẩu",
-    "hidePassword": "Ẩn mật khẩu",
     "forgotPasswordTitle": "Quên mật khẩu",
     "forgotPasswordSubtitle": "Nhập email để nhận liên kết đặt lại",
     "sendResetLink": "Gửi liên kết đặt lại",
@@ -790,7 +829,8 @@
     "resending": "Đang gửi...",
     "resendSuccessTitle": "Đã gửi lại!",
     "resendSuccessDesc": "Nếu email {{email}} tồn tại và chưa xác thực, chúng tôi đã gửi liên kết mới.",
-    "resendNotReceived": "Không thấy? Kiểm tra spam hoặc"
+    "resendNotReceived": "Không thấy? Kiểm tra spam hoặc",
+    "processing": "Đang xử lý…"
   },
   "passwordStrength": {
     "label": "Độ mạnh",
@@ -853,7 +893,9 @@
     "menuConfig": "Cấu hình Menu & Tính năng",
     "menuConfigDesc": "Bật hoặc tắt các mục trong menu để tinh chỉnh giao diện cho phù hợp với nhu cầu của trung tâm bạn.",
     "quickGuide": "Hướng dẫn nhanh",
-    "updateCenterInfo": "Thông tin trung tâm"
+    "updateCenterInfo": "Thông tin trung tâm",
+    "copied": "Đã sao chép",
+    "generate": "Tạo khóa"
   },
   "onboarding": {
     "welcome": "Chào mừng",
@@ -1027,7 +1069,38 @@
     "priceUnavailable": "Liên hệ để biết giá",
     "billingPeriod": "Kỳ thanh toán",
     "login": "Đăng nhập",
-    "register": "Đăng ký"
+    "register": "Đăng ký",
+    "navigation": "Điều hướng chính",
+    "switchLanguage": "Đổi ngôn ngữ",
+    "closeMenu": "Đóng menu",
+    "openMenu": "Mở menu",
+    "mobileNavigation": "Điều hướng trên thiết bị di động",
+    "featureCards": {
+      "schedule": {
+        "title": "Xếp lịch học",
+        "desc": "Quản lý lịch lớp, phòng và giáo viên để tránh trùng giờ."
+      },
+      "attendance": {
+        "title": "Theo dõi điểm danh",
+        "desc": "Theo dõi điểm danh và xem báo cáo tổng hợp."
+      },
+      "multitenant": {
+        "title": "Quản lý nhiều chi nhánh",
+        "desc": "Quản lý các chi nhánh từ một bảng điều khiển."
+      },
+      "analytics": {
+        "title": "Báo cáo và phân tích",
+        "desc": "Theo dõi hoạt động qua thống kê và biểu đồ."
+      },
+      "tuition": {
+        "title": "Quản lý học phí",
+        "desc": "Tạo khoản thu, ghi nhận thanh toán và theo dõi công nợ."
+      },
+      "data": {
+        "title": "Nhập và xuất dữ liệu",
+        "desc": "Chuyển dữ liệu dễ dàng bằng tệp Excel và CSV."
+      }
+    }
   },
   "feedback": {
     "title": "Gửi Phản hồi / Báo lỗi",
@@ -1145,6 +1218,9 @@
       "title": "Biên lai học phí",
       "print": "In / Lưu PDF",
       "receiptSubtitle": "Biên lai thu học phí",
+      "originalAmount": "Học phí gốc",
+      "netAmount": "Học phí phải đóng",
+      "totalPaid": "Tổng đã thu",
       "printDate": "Ngày in: {{date}}",
       "documentTitle": "Biên lai học phí - {{student}}",
       "loadingPayments": "Đang tải lịch sử thanh toán…",
@@ -1195,7 +1271,8 @@
     "confirmPayment": "Xác nhận đã thanh toán",
     "processing": "Đang xử lý...",
     "needHelp": "Cần hỗ trợ?",
-    "contactSupport": "Liên hệ với chúng tôi qua các kênh sau để được hỗ trợ nhanh nhất:"
+    "contactSupport": "Liên hệ với chúng tôi qua các kênh sau để được hỗ trợ nhanh nhất:",
+    "backBtn": "Quay lại"
   },
   "success": {
     "CLASS_DELETED_SUCCESS": "Lớp học đã được xóa thành công",
@@ -1203,7 +1280,8 @@
     "TUITION_DELETED_SUCCESS": "Đã xóa khoản học phí",
     "IMPORT_SUCCESS": "Thành công: {{students}} học sinh, {{classes}} lớp học.",
     "TUITION_BULK_GENERATED": "Đã tạo {{created}} khoản học phí{{skip_text}}",
-    "TUITION_BULK_GENERATED_SKIPPED": ", bỏ qua {{skipped}} đã tồn tại"
+    "TUITION_BULK_GENERATED_SKIPPED": ", bỏ qua {{skipped}} đã tồn tại",
+    "PAYMENT_RECORDED_SUCCESS": "Đã ghi nhận khoản thanh toán."
   },
   "legal": {
     "documents": "Pháp lý",
@@ -1219,5 +1297,10 @@
     "STUDENT_REGISTERED": "đã đăng ký vào hệ thống",
     "CLASS_CREATED": "đã tạo lớp học",
     "TEACHER_JOINED": "đã tham gia hệ thống"
+  },
+  "premium": {
+    "title": "Tính năng nâng cao",
+    "description": "Nâng cấp gói để sử dụng tính năng này.",
+    "upgradeBtn": "Nâng cấp ngay"
   }
 }

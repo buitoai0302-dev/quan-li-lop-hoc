@@ -15,7 +15,6 @@ import {
   Search,
   LogIn,
   Cloud,
-  Save,
 } from 'lucide-react';
 import { Modal, Card, Button, Badge } from '@/components/common/UI';
 import { TENANT_STATUS, PLAN_CODES, TENANT_ACTIONS, SYSTEM_DOMAIN } from '@/utils/constants';
@@ -34,7 +33,7 @@ const AdminTenants: React.FC = () => {
   const { data: plans = [], isLoading: loadingPlans } = useAdminPlans();
   const { data: stats, isLoading: loadingStats } = useAdminStats();
 
-  const { mutate: updateTenantMutate } = useUpdateTenant();
+  const { mutate: updateTenantMutate, isPending: isUpdatingTenant } = useUpdateTenant();
 
   const loading = loadingTenants || loadingPlans || loadingStats;
 
@@ -42,6 +41,7 @@ const AdminTenants: React.FC = () => {
   const [selectedTenant, setSelectedTenant] = useState<Tenant | null>(null);
   const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const [newPlanId, setNewPlanId] = useState('');
+  const [planChanged, setPlanChanged] = useState(false);
 
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [backupSettings, setBackupSettings] = useState({
@@ -87,6 +87,7 @@ const AdminTenants: React.FC = () => {
   const handleOpenPlanModal = (tenant: Tenant) => {
     setSelectedTenant(tenant);
     setNewPlanId(tenant.plan_id);
+    setPlanChanged(false);
     setIsPlanModalOpen(true);
   };
 
@@ -449,6 +450,27 @@ const AdminTenants: React.FC = () => {
         isOpen={isPlanModalOpen}
         onClose={() => setIsPlanModalOpen(false)}
         title={t('admin.editPlan')}
+        placement="right"
+        width="clamp(480px, 46vw, 600px)"
+        closeLabel={t('common.close')}
+        closeBlocked={isUpdatingTenant}
+        confirmCloseMessage={planChanged ? t('common.discardPanelChanges') : undefined}
+        hasUnsavedChanges={planChanged}
+        footer={(requestClose) => (
+          <div className="flex flex-wrap justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={requestClose}
+              disabled={isUpdatingTenant}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button type="button" onClick={handleUpdatePlan} disabled={isUpdatingTenant}>
+              {isUpdatingTenant ? t('common.saving') : t('common.save')}
+            </Button>
+          </div>
+        )}
       >
         <div className="p-2 space-y-6">
           <div className="flex items-center gap-4 p-5 bg-gray-50 dark:bg-gray-900/50 rounded-xl border border-gray-100 dark:border-gray-800">
@@ -475,7 +497,11 @@ const AdminTenants: React.FC = () => {
                 return (
                   <button
                     key={p.id}
-                    onClick={() => setNewPlanId(p.id)}
+                    type="button"
+                    onClick={() => {
+                      setNewPlanId(p.id);
+                      setPlanChanged(p.id !== selectedTenant?.plan_id);
+                    }}
                     className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${
                       isSelected
                         ? 'border-primary bg-primary/5 dark:bg-primary/10'
@@ -518,19 +544,6 @@ const AdminTenants: React.FC = () => {
               })}
             </div>
           </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsPlanModalOpen(false)}
-              className="flex-1 uppercase tracking-widest text-xs"
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button onClick={handleUpdatePlan} className="flex-1 uppercase tracking-widest text-xs">
-              {t('common.save')}
-            </Button>
-          </div>
         </div>
       </Modal>
       {/* Backup Settings Modal */}
@@ -538,6 +551,26 @@ const AdminTenants: React.FC = () => {
         isOpen={isBackupModalOpen}
         onClose={() => setIsBackupModalOpen(false)}
         title={t('admin.backup.title')}
+        placement="right"
+        width="clamp(480px, 46vw, 600px)"
+        closeLabel={t('common.close')}
+        closeBlocked={isUpdatingTenant}
+        confirmCloseMessage={t('common.discardPanelChanges')}
+        footer={(requestClose) => (
+          <div className="flex flex-wrap justify-end gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={requestClose}
+              disabled={isUpdatingTenant}
+            >
+              {t('common.cancel')}
+            </Button>
+            <Button type="button" onClick={handleUpdateBackup} disabled={isUpdatingTenant}>
+              {isUpdatingTenant ? t('common.saving') : t('admin.backup.save')}
+            </Button>
+          </div>
+        )}
       >
         <div className="p-4 space-y-6">
           <div className="flex items-center gap-4 p-5 bg-blue-50 dark:bg-blue-900/20 rounded-xl border border-blue-100 dark:border-blue-800">
@@ -609,22 +642,6 @@ const AdminTenants: React.FC = () => {
                 </div>
               </div>
             )}
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => setIsBackupModalOpen(false)}
-              className="flex-1 uppercase tracking-widest text-xs"
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button
-              onClick={handleUpdateBackup}
-              className="flex-1 uppercase tracking-widest text-xs bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <Save size={16} className="mr-2" /> {t('admin.backup.save')}
-            </Button>
           </div>
         </div>
       </Modal>

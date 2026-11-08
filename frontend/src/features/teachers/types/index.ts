@@ -7,11 +7,10 @@ export interface TeacherTableProps extends BaseTableProps<Teacher> {
 }
 
 export interface TeacherFormProps {
+  id: string;
   initialData?: TeacherFormData;
   onSubmit: (data: TeacherFormData) => void;
   branches: Branch[];
   editingId: string | null;
-  isSubmitting: boolean;
-  onClose: () => void;
   t: TFunction;
 }

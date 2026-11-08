@@ -52,6 +52,7 @@ const ScheduleBoard: React.FC = () => {
     handleOpenModal,
     handleCloseModal,
     handleSubmit,
+    isSessionSubmitting,
     handleDelete,
     handlePrev,
     handleNext,
@@ -297,6 +298,7 @@ const ScheduleBoard: React.FC = () => {
 
       <SessionFormModal
         isOpen={isModalOpen}
+        isSubmitting={isSessionSubmitting}
         onClose={handleCloseModal}
         editingSession={editingSession}
         formData={formData}

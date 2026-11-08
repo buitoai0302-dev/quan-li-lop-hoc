@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { StudentFormProps } from '../types';
 import type { StudentFormData } from '@/types/schemas';
-import { Input, Select, Label, Button } from '@/components/common/UI';
+import { Input, Select, Label } from '@/components/common/UI';
 
 // 1. Zod Schema
 const getStudentSchema = (t: TFunction) =>
@@ -21,12 +21,11 @@ const getStudentSchema = (t: TFunction) =>
   });
 
 const StudentForm: React.FC<StudentFormProps> = ({
+  id,
   initialData,
   onSubmit,
   branches,
   editingId,
-  isSubmitting,
-  onClose,
   t,
   dobInputRef,
 }) => {
@@ -78,7 +77,7 @@ const StudentForm: React.FC<StudentFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form id={id} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="sm:col-span-2">
           <Label required className="ml-1">
@@ -191,24 +190,6 @@ const StudentForm: React.FC<StudentFormProps> = ({
           </Select>
         </div>
       )}
-
-      <div className="flex gap-3 pt-2">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onClose}
-          className="flex-1 text-[10px] uppercase tracking-widest"
-        >
-          {t('common.cancel')}
-        </Button>
-        <Button
-          type="submit"
-          disabled={isSubmitting}
-          className="flex-[2] text-[10px] uppercase tracking-widest"
-        >
-          {isSubmitting ? t('common.saving') : t('common.save')}
-        </Button>
-      </div>
     </form>
   );
 };

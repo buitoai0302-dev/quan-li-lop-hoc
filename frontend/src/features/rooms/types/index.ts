@@ -7,10 +7,9 @@ export interface RoomTableProps extends BaseTableProps<Room> {
 }
 
 export interface RoomFormProps {
+  id: string;
   initialData?: RoomFormData;
   onSubmit: (data: RoomFormData) => void;
   branches: Branch[];
-  isSubmitting: boolean;
-  onClose: () => void;
   t: TFunction;
 }

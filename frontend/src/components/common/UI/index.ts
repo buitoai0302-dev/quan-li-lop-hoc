@@ -5,3 +5,4 @@ export * from './Label';
 export * from './Badge';
 export * from './Card';
 export * from './Modal';
+export * from './FormPanelActions';

@@ -7,9 +7,8 @@ export interface BranchTableProps extends BaseTableProps<Branch> {
 }
 
 export interface BranchFormProps {
+  id: string;
   initialData?: BranchFormData;
   onSubmit: (data: BranchFormData) => void;
-  isSubmitting: boolean;
-  onClose: () => void;
   t: TFunction;
 }
