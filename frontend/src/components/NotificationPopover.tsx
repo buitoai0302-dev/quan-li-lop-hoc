@@ -17,6 +17,7 @@ import { getActivities } from '@/features/admin';
 import { formatDistanceToNow } from 'date-fns';
 import { vi, enUS } from 'date-fns/locale';
 import type { ActivityItem } from '@/features/dashboard';
+import ActionHint from './common/ActionHint';
 
 const NotificationPopover: React.FC = () => {
   const { t, i18n } = useTranslation();
@@ -82,17 +83,18 @@ const NotificationPopover: React.FC = () => {
 
   return (
     <div className="relative" ref={popoverRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all active:scale-95 shadow-sm group"
-        title="Notifications"
-      >
-        <Bell
-          size={18}
-          className={`transition-colors ${isOpen ? 'text-primary' : 'text-gray-600 dark:text-gray-400 group-hover:text-primary'}`}
-        />
-        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse"></span>
-      </button>
+      <ActionHint label={t('common.notificationsButton')} showTouchLabel={false}>
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 transition-all active:scale-95 shadow-sm group"
+        >
+          <Bell
+            size={18}
+            className={`transition-colors ${isOpen ? 'text-primary' : 'text-gray-600 dark:text-gray-400 group-hover:text-primary'}`}
+          />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 border-2 border-white dark:border-gray-800 rounded-full animate-pulse"></span>
+        </button>
+      </ActionHint>
 
       {isOpen && (
         <div className="fixed sm:absolute inset-x-4 sm:inset-x-auto sm:right-0 mt-3 sm:w-80 bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden z-[100] animate-in fade-in slide-in-from-top-2 duration-200">

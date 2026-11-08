@@ -8,15 +8,30 @@ dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl: { rejectUnauthorized: true },
 });
 
 async function setup() {
   try {
+    const email = process.env.SUPERADMIN_EMAIL;
+    const password = process.env.SUPERADMIN_PASSWORD;
+    if (
+      !email ||
+      !password ||
+      password.length < 16 ||
+      !/[A-Z]/.test(password) ||
+      !/[a-z]/.test(password) ||
+      !/[0-9]/.test(password) ||
+      !/[^A-Za-z0-9]/.test(password)
+    ) {
+      throw new Error('Set SUPERADMIN_EMAIL and a strong SUPERADMIN_PASSWORD (16+ characters)');
+    }
     const planResult = await pool.query(
       "SELECT id FROM plan_definitions WHERE code = 'ENTERPRISE'"
     );
-    const enterprisePlanId = planResult.rows[0]?.id || '64d77ca0-65b0-4bd9-9a2a-91322f50d2b8';
+    const enterprisePlanId = planResult.rows[0]?.id;
+    if (!enterprisePlanId)
+      throw new Error('ENTERPRISE plan is required before creating the system tenant');
 
     // 1. Create a System Tenant if not exists
     const tenantResult = await pool.query(
@@ -26,29 +41,26 @@ async function setup() {
     const tenantId = tenantResult.rows[0].id;
 
     // 2. Create Super Admin User
-    const email = process.env.SUPERADMIN_EMAIL || 'superadmin@eduschedule.com';
-    const password = process.env.SUPERADMIN_PASSWORD || 'Admin@123456';
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
-    await pool.query(
+    const created = await pool.query(
       `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_email_verified) 
        VALUES ($1, $2, $3, $4, $5, $6)
-       ON CONFLICT (tenant_id, email) DO UPDATE SET role = 'super_admin', is_email_verified = true`,
+       ON CONFLICT (tenant_id, email) DO NOTHING RETURNING id`,
       [tenantId, email, hashedPassword, 'System Super Admin', 'super_admin', true]
     );
 
-    logger.info('--- Super Admin Account Created ---');
-    logger.info(`Email: ${email}`);
-    if (process.env.NODE_ENV === 'development' || !process.env.SUPERADMIN_PASSWORD) {
-      logger.info(`Password: ${password}`);
-    } else {
-      logger.info(`Password: ******** (set via ENV)`);
-    }
-    logger.info('-----------------------------------');
-    process.exit(0);
+    logger.info(
+      { email },
+      created.rowCount
+        ? 'Super Admin account created'
+        : 'Super Admin account already exists; no changes made'
+    );
   } catch (err) {
     logger.error(err, 'Error creating super admin:');
-    process.exit(1);
+    process.exitCode = 1;
+  } finally {
+    await pool.end();
   }
 }
 

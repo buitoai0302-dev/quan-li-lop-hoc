@@ -1,0 +1,135 @@
+@page {
+  size: A4;
+  margin: 16mm;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: #172033;
+  font:
+    11pt/1.45 Arial,
+    sans-serif;
+}
+
+.tuition-receipt {
+  max-width: 160mm;
+  margin: 0 auto;
+  overflow-wrap: anywhere;
+}
+
+.receipt-header,
+.receipt-footer,
+.receipt-status {
+  text-align: center;
+}
+.receipt-header {
+  padding-bottom: 12px;
+  border-bottom: 2px solid #cbd5e1;
+  margin-bottom: 16px;
+}
+.receipt-header h1 {
+  color: #1e40af;
+  font-size: 18pt;
+  margin: 0;
+}
+.receipt-header p,
+.receipt-footer p {
+  margin: 4px 0 0;
+}
+.receipt-header p,
+.receipt-footer,
+.receipt-row > :first-child {
+  color: #475569;
+}
+
+.receipt-row {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  gap: 12px;
+  padding: 3px 0;
+  break-inside: avoid;
+}
+
+.receipt-row > :last-child {
+  text-align: right;
+  font-weight: 700;
+}
+.receipt-divider {
+  border-top: 1px dashed #cbd5e1;
+  margin: 14px 0;
+}
+.receipt-amount {
+  border: 1px solid #86ad9b;
+  border-radius: 8px;
+  padding: 10px 14px;
+  break-inside: avoid;
+}
+.receipt-total {
+  border-top: 1px solid #86ad9b;
+  margin-top: 5px;
+  padding-top: 6px;
+  font-weight: 700;
+}
+.receipt-total > span {
+  color: #166534;
+}
+.receipt-status {
+  margin: 14px 0;
+}
+.status-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  border: 1px solid currentColor;
+  border-radius: 20px;
+  font-weight: 700;
+}
+.status-badge svg {
+  display: none;
+}
+.status-paid {
+  color: #166534;
+}
+.status-partial {
+  color: #854d0e;
+}
+.status-unpaid,
+.status-overdue {
+  color: #991b1b;
+}
+
+.receipt-history-title {
+  font-weight: 700;
+  break-after: avoid;
+}
+.receipt-payment-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 6px;
+}
+.receipt-payment-table thead {
+  display: table-header-group;
+}
+.receipt-payment-table tr {
+  break-inside: avoid;
+}
+.receipt-payment-table th,
+.receipt-payment-table td {
+  text-align: left;
+  border-bottom: 1px solid #cbd5e1;
+  padding: 6px 8px;
+}
+.receipt-payment-table th:last-child,
+.receipt-payment-table td:last-child {
+  text-align: right;
+}
+.receipt-footer {
+  margin-top: 16px;
+  padding-top: 8px;
+  border-top: 1px solid #cbd5e1;
+  font-size: 9pt;
+  break-inside: avoid;
+}

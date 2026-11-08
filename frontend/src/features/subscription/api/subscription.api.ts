@@ -23,3 +23,10 @@ export interface PaymentUrlResponse {
 
 export const createPaymentUrl = (data: CreatePaymentDto) =>
   api.post<PaymentUrlResponse>('/billing/create-payment-url', data).then((res) => res.data);
+
+export const getBillingInvoiceStatus = (orderId: string) =>
+  api
+    .get<{
+      status: 'pending' | 'paid' | 'failed' | 'cancelled' | 'refunded';
+    }>(`/billing/invoices/${encodeURIComponent(orderId)}`)
+    .then((res) => res.data);

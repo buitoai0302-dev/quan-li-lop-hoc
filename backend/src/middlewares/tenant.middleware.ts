@@ -1,5 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { ROLES, HTTP_HEADERS } from '../utils/constants';
+import { Response, NextFunction } from 'express';
+import type { AuthRequest } from './auth.middleware';
+import { ROLES } from '../utils/constants';
 
 declare global {
   namespace Express {
@@ -14,18 +15,18 @@ declare global {
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export const tenantMiddleware = async (
-  req: Request,
+  req: AuthRequest,
   res: Response,
   next: NextFunction
 ): Promise<void> => {
-  // Extract tenantId injected by authMiddleware, fallback to header for testing
-  const tenantId = (req as any).tenantId || req.header(HTTP_HEADERS.TENANT_ID);
-  const userRole = (req as any).user?.role;
+  // Only authentication middleware may resolve a tenant from a header.
+  const tenantId = req.tenantId || req.user?.tenantId;
+  const userRole = req.user?.role;
 
   if (!tenantId && userRole !== ROLES.SUPER_ADMIN) {
     res.status(401).json({
       success: false,
-      message: 'Tenant ID is required (Missing token or x-tenant-id header)',
+      message: 'An authenticated tenant context is required',
     });
     return;
   }

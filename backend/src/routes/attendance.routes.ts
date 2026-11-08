@@ -1,3 +1,4 @@
+import { ACCESS } from '../utils/permissions';
 import { Router } from 'express';
 import { getAttendanceBySession, recordAttendance } from '../controllers/attendance.controller';
 import { requireRole } from '../middlewares/auth.middleware';
@@ -21,13 +22,13 @@ const recordAttendanceSchema = z.object({
 
 router.get(
   '/session/:sessionId',
-  requireRole(['admin', 'teacher', 'staff']),
+  requireRole(ACCESS.ADMIN_STAFF_TEACHER),
   validateUUID(['sessionId']),
   getAttendanceBySession
 );
 router.post(
   '/session/:sessionId',
-  requireRole(['admin', 'teacher', 'staff']),
+  requireRole(ACCESS.ADMIN_STAFF_TEACHER),
   validateUUID(['sessionId']),
   validate(recordAttendanceSchema),
   recordAttendance

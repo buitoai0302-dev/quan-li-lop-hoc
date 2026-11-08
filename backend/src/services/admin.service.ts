@@ -1,18 +1,11 @@
 import pool from '../db';
 import { ValidationError, NotFoundError } from '../utils/errors';
 import bcrypt from 'bcrypt';
-import { sendNewUserPasswordEmail } from './email.service';
+import crypto from 'crypto';
+import { sendPasswordResetEmail } from './email.service';
 import { logger } from '../utils/logger';
-import { ROLES, DEFAULT_FREE_PLAN_ID } from '../utils/constants';
-
-const generateRandomPassword = (length = 10) => {
-  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
-  let pass = '';
-  for (let i = 0; i < length; i++) {
-    pass += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return pass;
-};
+import { ERROR_CODES, ROLES } from '../utils/constants';
+import { getFreePlanId } from '../utils/plans';
 
 export class AdminService {
   static async getSystemStats() {
@@ -49,7 +42,7 @@ export class AdminService {
     if (!planId && isActive === undefined && !status && !settings) {
       throw new ValidationError(
         'At least one field is required (planId, isActive, status, or settings)',
-        'MISSING_REQUIRED_FIELDS'
+        ERROR_CODES.MISSING_REQUIRED_FIELDS
       );
     }
 
@@ -87,7 +80,7 @@ export class AdminService {
     const result = await pool.query(sql, params);
 
     if (result.rowCount === 0) {
-      throw new NotFoundError('Tenant not found', 'NOT_FOUND');
+      throw new NotFoundError('Tenant not found', ERROR_CODES.NOT_FOUND);
     }
 
     return result.rows[0];
@@ -253,14 +246,15 @@ export class AdminService {
   }
 
   static async createUser(data: any) {
-    const { email, role, full_name, tenant_id, new_tenant_name, plan_id, password } = data;
+    const { email, role, full_name, tenant_id, new_tenant_name, plan_id } = data;
 
     if (!email || !role || !full_name || !tenant_id) {
       throw new ValidationError('Thiếu thông tin bắt buộc (email, role, full_name, tenant_id)');
     }
 
-    const finalPassword = password || generateRandomPassword();
-    const passwordHash = await bcrypt.hash(finalPassword, 10);
+    const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+    const setupToken = crypto.randomUUID();
+    const setupExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
     let targetTenantId = tenant_id;
     let client;
@@ -278,7 +272,7 @@ export class AdminService {
           throw new ValidationError('Tên trung tâm mới không được để trống');
         }
 
-        const defaultPlanId = plan_id || DEFAULT_FREE_PLAN_ID;
+        const defaultPlanId = plan_id || (await getFreePlanId(client));
         const tenantResult = await client.query(
           `INSERT INTO tenants (name, domain, plan_id, status, is_active) 
            VALUES ($1, $2, $3, 'active', true) RETURNING id`,
@@ -288,21 +282,23 @@ export class AdminService {
       }
 
       const userResult = await client.query(
-        `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_email_verified, is_active)
-         VALUES ($1, $2, $3, $4, $5, true, true) RETURNING id, email, full_name, role, tenant_id`,
-        [targetTenantId, email, passwordHash, full_name, role]
+        `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_email_verified,
+           is_active, reset_password_token, reset_password_expires)
+         VALUES ($1, $2, $3, $4, $5, false, true, $6, $7)
+         RETURNING id, email, full_name, role, tenant_id`,
+        [targetTenantId, email, passwordHash, full_name, role, setupToken, setupExpires]
       );
 
       await client.query('COMMIT');
 
-      sendNewUserPasswordEmail(email, full_name, finalPassword).catch((err) =>
-        logger.error(err, '[Admin] Failed to send new user password email:')
+      sendPasswordResetEmail(email, setupToken).catch((err) =>
+        logger.error(err, '[Admin] Failed to send account setup email:')
       );
 
       return {
         success: true,
         user: userResult.rows[0],
-        message: 'Người dùng đã được tạo thành công. Mật khẩu đã được gửi qua email.',
+        message: 'Người dùng đã được tạo. Liên kết đặt mật khẩu đã được gửi qua email.',
       };
     } catch (error) {
       if (client) await client.query('ROLLBACK');
@@ -312,14 +308,15 @@ export class AdminService {
     }
   }
 
-  static async resetUserPassword(id: string, data: any) {
-    const { password } = data;
-    const finalPassword = password || generateRandomPassword();
-    const passwordHash = await bcrypt.hash(finalPassword, 10);
+  static async resetUserPassword(id: string, _data: any) {
+    const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+    const resetToken = crypto.randomUUID();
+    const resetExpires = new Date(Date.now() + 60 * 60 * 1000);
 
     const result = await pool.query(
-      'UPDATE users SET password_hash = $1 WHERE id = $2 RETURNING id, email, full_name',
-      [passwordHash, id]
+      `UPDATE users SET password_hash = $1, reset_password_token = $2,
+         reset_password_expires = $3 WHERE id = $4 RETURNING id, email, full_name`,
+      [passwordHash, resetToken, resetExpires, id]
     );
 
     if (result.rowCount === 0) {
@@ -327,16 +324,14 @@ export class AdminService {
     }
 
     const userEmail = result.rows[0].email;
-    const userFullName = result.rows[0].full_name || userEmail;
-
-    sendNewUserPasswordEmail(userEmail, userFullName, finalPassword).catch((err) =>
+    await pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [id]);
+    sendPasswordResetEmail(userEmail, resetToken).catch((err) =>
       logger.error(err, '[Admin] Failed to send reset password email:')
     );
 
     return {
       success: true,
-      message: 'Cấp lại mật khẩu thành công. Mật khẩu mới đã được gửi qua email.',
-      rawPassword: finalPassword,
+      message: 'Liên kết đặt lại mật khẩu đã được gửi qua email.',
     };
   }
 
@@ -345,6 +340,9 @@ export class AdminService {
       'UPDATE users SET is_active = NOT is_active WHERE id = $1 RETURNING id, is_active',
       [id]
     );
+    if (result.rows[0] && !result.rows[0].is_active) {
+      await pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [id]);
+    }
 
     if (result.rowCount === 0) {
       throw new NotFoundError('User not found');
@@ -359,7 +357,10 @@ export class AdminService {
 
   static async importUsers(tenant_id: string, data: any[]) {
     if (!tenant_id || !Array.isArray(data) || data.length === 0) {
-      throw new ValidationError('Invalid data or missing tenant_id', 'INVALID_IMPORT_DATA');
+      throw new ValidationError(
+        'Invalid data or missing tenant_id',
+        ERROR_CODES.INVALID_IMPORT_DATA
+      );
     }
 
     let successCount = 0;
@@ -368,7 +369,7 @@ export class AdminService {
     for (const row of data) {
       const client = await pool.connect();
       try {
-        const { full_name, email, role, password } = row;
+        const { full_name, email, role } = row;
         if (!full_name || !email || !role) {
           skipCount++;
           continue;
@@ -376,10 +377,9 @@ export class AdminService {
 
         await client.query('BEGIN');
 
-        // Generate password if not provided
-        const finalPassword = password || email.split('@')[0];
-        const salt = await bcrypt.genSalt(10);
-        const passwordHash = await bcrypt.hash(finalPassword, salt);
+        const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
+        const setupToken = crypto.randomUUID();
+        const setupExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
         // Check if user exists
         const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
@@ -389,11 +389,12 @@ export class AdminService {
           continue;
         }
 
-        // Insert user (is_email_verified = true, is_active = true)
+        // An imported account becomes usable only after the owner sets a password.
         const result = await client.query(
-          `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_email_verified, is_active, onboarding_completed) 
-           VALUES ($1, $2, $3, $4, $5, true, true, true) RETURNING id`,
-          [tenant_id, email, passwordHash, full_name, role]
+          `INSERT INTO users (tenant_id, email, password_hash, full_name, role,
+             is_email_verified, is_active, onboarding_completed, reset_password_token, reset_password_expires)
+           VALUES ($1, $2, $3, $4, $5, false, true, true, $6, $7) RETURNING id`,
+          [tenant_id, email, passwordHash, full_name, role, setupToken, setupExpires]
         );
 
         if (result.rowCount && result.rowCount > 0) {
@@ -422,6 +423,9 @@ export class AdminService {
           }
 
           await client.query('COMMIT');
+          sendPasswordResetEmail(email, setupToken).catch((err) =>
+            logger.error(err, '[Admin] Failed to send account setup email:')
+          );
           successCount++;
         } else {
           await client.query('ROLLBACK');

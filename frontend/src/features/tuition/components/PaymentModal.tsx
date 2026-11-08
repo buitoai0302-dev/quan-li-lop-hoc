@@ -8,6 +8,8 @@ import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
 import { useTranslation } from 'react-i18next';
 import { PAYMENT_METHODS } from '@/utils/constants';
+import { formatCurrency } from '@/utils/formatters';
+import { useDialogFocus } from '@/components/common/UI/useDialogFocus';
 
 interface Props {
   tuition: Tuition;
@@ -25,10 +27,8 @@ const getPaymentMethods = (t: import('i18next').TFunction) => [
   { value: PAYMENT_METHODS.OTHER, label: `🔧 ${t('tuition.paymentMethods.other')}` },
 ];
 
-const formatCurrency = (amount: number | string) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount));
-
 const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
+  const dialogRef = useDialogFocus(onClose);
   const { t } = useTranslation();
   const remaining = Number(tuition.amount_due) - Number(tuition.amount_paid);
 
@@ -59,7 +59,14 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
   return (
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-slate-700">
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="payment-dialog-title"
+        tabIndex={-1}
+        className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md border border-gray-100 dark:border-slate-700 max-h-[90vh] overflow-y-auto"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-gray-100 dark:border-slate-800">
           <div className="flex items-center gap-3">
@@ -67,15 +74,20 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
               <DollarSign size={20} className="text-emerald-600" />
             </div>
             <div>
-              <h2 className="text-base font-black text-gray-900 dark:text-white">
+              <h2
+                id="payment-dialog-title"
+                className="text-base font-black text-gray-900 dark:text-white"
+              >
                 {t('tuition.payment.title')}
               </h2>
               <p className="text-xs text-gray-500">{tuition.student_name}</p>
             </div>
           </div>
           <button
+            type="button"
+            aria-label={t('common.close', 'Đóng')}
             onClick={onClose}
-            className="p-2 text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl"
+            className="min-h-11 min-w-11 flex items-center justify-center text-gray-500 hover:bg-gray-100 dark:hover:bg-slate-800 rounded-xl"
           >
             <X size={18} />
           </button>
@@ -110,10 +122,14 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="p-5 space-y-4">
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+            <label
+              htmlFor="payment-amount"
+              className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+            >
               {t('tuition.payment.amount')} *
             </label>
             <input
+              id="payment-amount"
               type="number"
               min={1}
               max={remaining}
@@ -130,20 +146,28 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="payment-date"
+                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+              >
                 {t('tuition.receipt.date')}
               </label>
               <input
+                id="payment-date"
                 type="date"
                 {...register('payment_date')}
                 className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="payment-method"
+                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+              >
                 {t('tuition.payment.method')}
               </label>
               <select
+                id="payment-method"
                 {...register('payment_method')}
                 className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
               >
@@ -160,10 +184,14 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
             paymentMethod === PAYMENT_METHODS.VNPAY ||
             paymentMethod === PAYMENT_METHODS.MOMO) && (
             <div>
-              <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+              <label
+                htmlFor="payment-reference"
+                className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+              >
                 {t('tuition.payment.reference')}
               </label>
               <input
+                id="payment-reference"
                 type="text"
                 {...register('reference_code')}
                 placeholder="TXN1234567890"
@@ -173,10 +201,14 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
           )}
 
           <div>
-            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5">
+            <label
+              htmlFor="payment-notes"
+              className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+            >
               {t('tuition.bulk.notes')}
             </label>
             <input
+              id="payment-notes"
               type="text"
               {...register('notes')}
               placeholder={t('tuition.bulk.notesPlaceholder')}

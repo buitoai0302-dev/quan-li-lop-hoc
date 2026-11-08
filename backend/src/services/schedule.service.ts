@@ -1,6 +1,8 @@
+import { ERROR_CODES } from '../utils/constants';
 import pool from '../db';
-import { ValidationError, NotFoundError } from '../utils/errors';
+import { ValidationError, NotFoundError, scheduleWriteError } from '../utils/errors';
 import { syncEventToGoogle, deleteEventFromGoogle } from './google.service';
+import { lockScheduleWrites } from './schedule-write.service';
 
 export interface GetScheduleParams {
   startDate: string;
@@ -114,9 +116,10 @@ export class ScheduleService {
 
   static async createSession(tenantId: string, userId: string | undefined, data: CreateSessionDTO) {
     const client = await pool.connect();
+    let sessionData;
     try {
       await client.query('BEGIN');
-      await client.query('SET TRANSACTION ISOLATION LEVEL SERIALIZABLE');
+      await lockScheduleWrites(client, tenantId);
 
       const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)`;
       const conflictParams = [
@@ -155,37 +158,36 @@ export class ScheduleService {
       ];
 
       const newSession = await client.query(insertSql, insertParams);
-      const sessionData = newSession.rows[0];
+      sessionData = newSession.rows[0];
 
       await client.query('COMMIT');
-
-      if (userId) {
-        const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [data.classId]);
-        const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [data.roomId]);
-        const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [
-          data.teacherId,
-        ]);
-
-        await syncEventToGoogle(userId, {
-          id: sessionData.id,
-          className: classRes.rows[0]?.name || 'Class',
-          roomName: roomRes.rows[0]?.name || 'Room',
-          teacherName: teacherRes.rows[0]?.full_name,
-          teacherId: data.teacherId,
-          notes: sessionData.notes,
-          date: sessionData.session_date,
-          startTime: sessionData.start_time,
-          endTime: sessionData.end_time,
-        });
-      }
-
-      return { success: true, data: sessionData };
     } catch (error) {
       await client.query('ROLLBACK');
-      throw error;
+      throw scheduleWriteError(error);
     } finally {
       client.release();
     }
+
+    if (userId) {
+      const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [data.classId]);
+      const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [data.roomId]);
+      const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [
+        data.teacherId,
+      ]);
+
+      await syncEventToGoogle(userId, {
+        id: sessionData.id,
+        className: classRes.rows[0]?.name || 'Class',
+        roomName: roomRes.rows[0]?.name || 'Room',
+        teacherName: teacherRes.rows[0]?.full_name,
+        teacherId: data.teacherId,
+        notes: sessionData.notes,
+        date: sessionData.session_date,
+        startTime: sessionData.start_time,
+        endTime: sessionData.end_time,
+      });
+    }
+    return { success: true, data: sessionData };
   }
 
   static async updateSession(
@@ -194,68 +196,86 @@ export class ScheduleService {
     sessionId: string,
     data: UpdateSessionDTO
   ) {
-    const getResult = await pool.query(
-      `SELECT * FROM schedule_sessions WHERE id = $1 AND tenant_id = $2`,
-      [sessionId, tenantId]
-    );
+    const client = await pool.connect();
+    let sessionData;
+    try {
+      await client.query('BEGIN');
+      await lockScheduleWrites(client, tenantId);
+      const getResult = await client.query(
+        `SELECT *, session_date::text AS session_date
+         FROM schedule_sessions WHERE id = $1 AND tenant_id = $2 FOR UPDATE`,
+        [sessionId, tenantId]
+      );
 
-    if (getResult.rows.length === 0) {
-      throw new NotFoundError('Session not found', 'NOT_FOUND');
+      if (getResult.rows.length === 0) {
+        throw new NotFoundError('Session not found', ERROR_CODES.NOT_FOUND);
+      }
+
+      const session = getResult.rows[0];
+      const newRoomId = data.roomId || session.room_id;
+      const newTeacherId = data.teacherId || session.teacher_id;
+      const newClassId = data.classId || session.class_id;
+      const newSessionDate = data.sessionDate || session.session_date;
+      const newStartTime = data.startTime || session.start_time;
+      const newEndTime = data.endTime || session.end_time;
+
+      const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7, $8)`;
+      const conflictParams = [
+        tenantId,
+        newTeacherId,
+        newRoomId,
+        newClassId,
+        newSessionDate,
+        newStartTime,
+        newEndTime,
+        sessionId,
+      ];
+
+      const conflictResult = await client.query(conflictSql, conflictParams);
+
+      if (conflictResult.rows.length > 0) {
+        await client.query('ROLLBACK');
+        return { success: false, conflicts: conflictResult.rows };
+      }
+
+      const updateSql = `
+        UPDATE schedule_sessions
+        SET session_date = $1, start_time = $2, end_time = $3, room_id = $4, teacher_id = $5, class_id = $6, session_type = $7, notes = $8
+        WHERE id = $9 AND tenant_id = $10
+        RETURNING *, session_date::text as session_date
+      `;
+      const updateParams = [
+        newSessionDate,
+        newStartTime,
+        newEndTime,
+        newRoomId,
+        newTeacherId,
+        newClassId,
+        data.sessionType || session.session_type,
+        data.notes !== undefined ? data.notes : session.notes,
+        sessionId,
+        tenantId,
+      ];
+
+      const updatedSession = await client.query(updateSql, updateParams);
+      sessionData = updatedSession.rows[0];
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw scheduleWriteError(error);
+    } finally {
+      client.release();
     }
-
-    const session = getResult.rows[0];
-    const newRoomId = data.roomId || session.room_id;
-    const newTeacherId = data.teacherId || session.teacher_id;
-    const newClassId = data.classId || session.class_id;
-    const newSessionDate = data.sessionDate || session.session_date;
-    const newStartTime = data.startTime || session.start_time;
-    const newEndTime = data.endTime || session.end_time;
-
-    const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7, $8)`;
-    const conflictParams = [
-      tenantId,
-      newTeacherId,
-      newRoomId,
-      newClassId,
-      newSessionDate,
-      newStartTime,
-      newEndTime,
-      sessionId,
-    ];
-
-    const conflictResult = await pool.query(conflictSql, conflictParams);
-
-    if (conflictResult.rows.length > 0) {
-      return { success: false, conflicts: conflictResult.rows };
-    }
-
-    const updateSql = `
-      UPDATE schedule_sessions 
-      SET session_date = $1, start_time = $2, end_time = $3, room_id = $4, teacher_id = $5, class_id = $6, session_type = $7, notes = $8
-      WHERE id = $9 AND tenant_id = $10
-      RETURNING *, session_date::text as session_date
-    `;
-    const updateParams = [
-      newSessionDate,
-      newStartTime,
-      newEndTime,
-      newRoomId,
-      newTeacherId,
-      newClassId,
-      data.sessionType || session.session_type,
-      data.notes !== undefined ? data.notes : session.notes,
-      sessionId,
-      tenantId,
-    ];
-
-    const updatedSession = await pool.query(updateSql, updateParams);
-    const sessionData = updatedSession.rows[0];
 
     if (userId) {
-      const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [newClassId]);
-      const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [newRoomId]);
+      const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [
+        sessionData.class_id,
+      ]);
+      const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [
+        sessionData.room_id,
+      ]);
       const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [
-        newTeacherId,
+        sessionData.teacher_id,
       ]);
 
       await syncEventToGoogle(userId, {
@@ -263,7 +283,7 @@ export class ScheduleService {
         className: classRes.rows[0]?.name || 'Class',
         roomName: roomRes.rows[0]?.name || 'Room',
         teacherName: teacherRes.rows[0]?.full_name,
-        teacherId: newTeacherId,
+        teacherId: sessionData.teacher_id,
         notes: sessionData.notes,
         date: sessionData.session_date,
         startTime: sessionData.start_time,
@@ -281,7 +301,7 @@ export class ScheduleService {
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundError('Session not found', 'NOT_FOUND');
+      throw new NotFoundError('Session not found', ERROR_CODES.NOT_FOUND);
     }
 
     if (userId) {

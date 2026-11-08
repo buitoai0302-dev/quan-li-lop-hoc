@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Download, FileSpreadsheet, FileText, ChevronDown, Loader2 } from 'lucide-react';
+import ActionHint from './ActionHint';
 
 interface ExportMenuProps {
   onExportExcel: () => void | Promise<void>;
@@ -71,21 +72,23 @@ const ExportMenu: React.FC<ExportMenuProps> = ({ onExportExcel, onExportPDF, dis
   return (
     <div className="relative" ref={containerRef}>
       {/* Button — same style as other toolbar buttons */}
-      <button
-        ref={buttonRef}
-        onClick={() => setOpen((prev) => !prev)}
-        disabled={disabled || loading !== null}
-        className="h-9 w-9 sm:w-auto sm:px-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-100 dark:border-gray-700 whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
-      >
-        {loading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
-        <span className="hidden sm:inline">
-          {loading ? t('export.exporting') : t('export.button')}
-        </span>
-        <ChevronDown
-          size={12}
-          className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
-        />
-      </button>
+      <ActionHint label={t('export.button')}>
+        <button
+          ref={buttonRef}
+          onClick={() => setOpen((prev) => !prev)}
+          disabled={disabled || loading !== null}
+          className="h-9 w-9 sm:w-auto sm:px-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-gray-100 dark:border-gray-700 whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 active:scale-95 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
+        >
+          {loading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
+          <span className="hidden sm:inline">
+            {loading ? t('export.exporting') : t('export.button')}
+          </span>
+          <ChevronDown
+            size={12}
+            className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}
+          />
+        </button>
+      </ActionHint>
 
       {/* Dropdown rendered in Portal to escape overflow-hidden/auto containers */}
       {open &&

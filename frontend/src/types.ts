@@ -36,6 +36,9 @@ export interface User {
   role: string;
   tenant_name: string;
   plan_code?: string;
+  signup_plan_id?: string | null;
+  signup_plan_code?: string | null;
+  signup_billing_cycle?: 'MONTHLY' | 'YEARLY' | null;
   plan_features?: Record<string, boolean>;
   onboarding_completed: boolean;
   notify_upcoming_sessions: boolean;

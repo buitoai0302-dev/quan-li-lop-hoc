@@ -296,7 +296,6 @@ const Settings: React.FC = () => {
                     ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]'
                     : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-primary'
                 }`}
-                title={item.label}
               >
                 <div className="flex flex-col lg:flex-row items-center gap-1 lg:gap-3">
                   <item.icon

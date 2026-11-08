@@ -1,8 +1,10 @@
+import { ERROR_CODES } from '../utils/constants';
 import pool from '../db';
 import { checkPlanLimit } from '../utils/limitChecker';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { FeatureFlagService } from './feature-flag.service';
 import { CreateStudentDto, UpdateStudentDto } from '../types';
+import { assertTenantReferences } from './tenant-reference.service';
 
 export class StudentService {
   static async getStudents(tenantId: string) {
@@ -27,10 +29,11 @@ export class StudentService {
     const { full_name, email, phone, date_of_birth, branch_id, parent_phone } = data;
 
     if (!full_name || !email || !branch_id) {
-      throw new ValidationError('MISSING_REQUIRED_FIELDS', 'MISSING_REQUIRED_FIELDS');
+      throw new ValidationError('MISSING_REQUIRED_FIELDS', ERROR_CODES.MISSING_REQUIRED_FIELDS);
     }
 
     await checkPlanLimit(tenantId, 'max_students', 'students', 'LIMIT_EXCEEDED');
+    await assertTenantReferences(pool, tenantId, 'branches', [branch_id]);
 
     try {
       const result = await pool.query(
@@ -41,7 +44,7 @@ export class StudentService {
       return result.rows[0];
     } catch (error: any) {
       if (error.code === '23505') {
-        throw new ValidationError('EMAIL_ALREADY_EXISTS', 'EMAIL_ALREADY_EXISTS');
+        throw new ValidationError('EMAIL_ALREADY_EXISTS', ERROR_CODES.EMAIL_ALREADY_EXISTS);
       }
       throw error;
     }
@@ -49,6 +52,7 @@ export class StudentService {
 
   static async updateStudent(tenantId: string, id: string, data: UpdateStudentDto) {
     const { full_name, phone, date_of_birth, branch_id, is_active, parent_phone } = data;
+    await assertTenantReferences(pool, tenantId, 'branches', [branch_id]);
 
     const result = await pool.query(
       `UPDATE students 
@@ -63,7 +67,7 @@ export class StudentService {
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundError('STUDENT_NOT_FOUND', 'STUDENT_NOT_FOUND');
+      throw new NotFoundError('STUDENT_NOT_FOUND', ERROR_CODES.STUDENT_NOT_FOUND);
     }
 
     return result.rows[0];
@@ -76,7 +80,7 @@ export class StudentService {
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundError('STUDENT_NOT_FOUND', 'STUDENT_NOT_FOUND');
+      throw new NotFoundError('STUDENT_NOT_FOUND', ERROR_CODES.STUDENT_NOT_FOUND);
     }
 
     return true;
@@ -92,14 +96,15 @@ export class StudentService {
       const { students, branch_id } = data;
 
       if (!students || !Array.isArray(students) || students.length === 0) {
-        throw new ValidationError('INVALID_DATA', 'INVALID_DATA');
+        throw new ValidationError('INVALID_DATA', ERROR_CODES.INVALID_DATA);
       }
 
       if (!branch_id) {
-        throw new ValidationError('MISSING_REQUIRED_FIELDS', 'MISSING_REQUIRED_FIELDS');
+        throw new ValidationError('MISSING_REQUIRED_FIELDS', ERROR_CODES.MISSING_REQUIRED_FIELDS);
       }
 
       await client.query('BEGIN');
+      await assertTenantReferences(client, tenantId, 'branches', [branch_id]);
 
       const createdStudents = [];
       const createdClasses = new Map<string, string>();

@@ -6,7 +6,7 @@ dotenv.config();
 const poolConfig: any = process.env.DATABASE_URL
   ? {
       connectionString: process.env.DATABASE_URL,
-      ssl: { rejectUnauthorized: false }, // Required for Neon/Supabase cloud databases
+      ssl: { rejectUnauthorized: true },
     }
   : {
       user: process.env.DB_USER || 'postgres',

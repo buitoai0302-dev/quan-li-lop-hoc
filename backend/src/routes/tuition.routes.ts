@@ -1,3 +1,4 @@
+import { ACCESS } from '../utils/permissions';
 import { Router } from 'express';
 import { authMiddleware, requireRole } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
@@ -19,25 +20,20 @@ const router = Router();
 router.use(authMiddleware);
 
 // Danh sách học phí & tổng kết
-router.get('/', getTuitions);
-router.get('/overdue', getOverdueTuitions);
+router.get('/', requireRole(ACCESS.ADMIN_STAFF), getTuitions);
+router.get('/overdue', requireRole(ACCESS.ADMIN_STAFF), getOverdueTuitions);
 
 // CRUD học phí
-router.post(
-  '/',
-  requireRole(['super_admin', 'center_admin', 'manager']),
-  validate(CreateTuitionSchema),
-  createTuition
-);
-router.post('/bulk-generate', requireRole(['admin', 'staff', 'super_admin']), bulkGenerateTuitions);
-router.patch('/:id', requireRole(['admin', 'staff', 'super_admin']), updateTuition);
-router.delete('/:id', requireRole(['admin', 'super_admin']), deleteTuition);
+router.post('/', requireRole(ACCESS.ADMIN_STAFF), validate(CreateTuitionSchema), createTuition);
+router.post('/bulk-generate', requireRole(ACCESS.ADMIN_STAFF_SUPER_ADMIN), bulkGenerateTuitions);
+router.patch('/:id', requireRole(ACCESS.ADMIN_STAFF_SUPER_ADMIN), updateTuition);
+router.delete('/:id', requireRole(ACCESS.ADMIN_SUPER_ADMIN), deleteTuition);
 
 // Thanh toán học phí
-router.get('/:id/payments', getTuitionPayments);
+router.get('/:id/payments', requireRole(ACCESS.ADMIN_STAFF), getTuitionPayments);
 router.post(
   '/:id/payments',
-  requireRole(['super_admin', 'center_admin', 'manager', 'accountant']),
+  requireRole(ACCESS.ADMIN_STAFF),
   validate(RecordPaymentSchema),
   recordPayment
 );

@@ -1,3 +1,4 @@
+import { ACCESS } from '../utils/permissions';
 import { Router } from 'express';
 import {
   getTeachers,
@@ -13,32 +14,27 @@ import { z } from 'zod';
 
 const router = Router();
 
-const createTeacherSchema = z.object({
-  body: z.object({
-    full_name: z.string().min(1, 'Tên nhân sự không được để trống'),
-    email: z.string().email('Email không hợp lệ'),
-    phone: z.string().optional(),
-    specialization: z.string().optional(),
-    branch_id: z.string().uuid('ID chi nhánh không hợp lệ'),
-  }),
+const teacherBodySchema = z.object({
+  full_name: z.string().min(1, 'Tên nhân sự không được để trống'),
+  email: z.string().email('Email không hợp lệ'),
+  phone: z.string().optional(),
+  specialization: z.string().optional(),
+  branch_id: z.string().uuid('ID chi nhánh không hợp lệ'),
 });
+const createTeacherSchema = z.object({ body: teacherBodySchema });
 
 const updateTeacherSchema = z.object({
-  body: z.object({
-    full_name: z.string().min(1).optional(),
-    phone: z.string().optional(),
-    specialization: z.string().optional(),
-    branch_id: z.string().uuid().optional(),
+  body: teacherBodySchema.omit({ email: true }).partial().extend({
     is_active: z.boolean().optional(),
   }),
 });
 
-router.get('/', requireRole(['admin', 'staff', 'teacher', 'student']), getTeachers);
+router.get('/', requireRole(ACCESS.ADMIN_STAFF_TEACHER_STUDENT), getTeachers);
 
 // Check if max_teachers is reached before creating
 router.post(
   '/',
-  requireRole(['admin']),
+  requireRole(ACCESS.ADMIN),
   enforceLimit(
     'max_teachers',
     'SELECT COUNT(*) FROM teachers WHERE tenant_id = $1 AND is_active = true'
@@ -49,15 +45,15 @@ router.post(
 
 router.put(
   '/:id',
-  requireRole(['admin']),
+  requireRole(ACCESS.ADMIN),
   validateUUID(['id']),
   validate(updateTeacherSchema),
   updateTeacher
 );
-router.delete('/:id', requireRole(['admin']), validateUUID(['id']), deleteTeacher);
+router.delete('/:id', requireRole(ACCESS.ADMIN), validateUUID(['id']), deleteTeacher);
 router.post(
   '/:id/reset-password',
-  requireRole(['admin']),
+  requireRole(ACCESS.ADMIN),
   validateUUID(['id']),
   resetTeacherPassword
 );

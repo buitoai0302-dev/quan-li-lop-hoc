@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
 import Header from './Header';
 import Hero from './Hero';
+import ProductPreview from './ProductPreview';
 import Features from './Features';
 import Pricing from './Pricing';
 import Footer from './Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { ROUTES } from '@/utils/constants';
+import { ROUTES, USER_ROLES } from '@/utils/constants';
 
 const LandingPage: React.FC = () => {
   const { user, loading } = useAuth();
@@ -15,7 +16,11 @@ const LandingPage: React.FC = () => {
   // If already logged in, redirect to Dashboard
   useEffect(() => {
     if (!loading && user) {
-      navigate(ROUTES.SCHEDULE);
+      navigate(
+        user.role === USER_ROLES.ADMIN && user.signup_plan_id
+          ? ROUTES.SUBSCRIPTION
+          : ROUTES.SCHEDULE
+      );
     }
   }, [user, loading, navigate]);
 
@@ -26,6 +31,7 @@ const LandingPage: React.FC = () => {
       <Header />
       <main>
         <Hero />
+        <ProductPreview />
         <Features />
         <Pricing />
       </main>

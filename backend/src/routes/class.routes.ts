@@ -1,3 +1,4 @@
+import { ACCESS } from '../utils/permissions';
 import { Router } from 'express';
 import {
   getClasses,
@@ -23,32 +24,22 @@ const recurringScheduleSchema = z.object({
   notes: z.string().optional().nullable(),
 });
 
-const createClassSchema = z.object({
-  body: z.object({
-    branch_id: z.string().uuid('ID chi nhánh không hợp lệ'),
-    subject_id: z.string().uuid().optional().nullable(),
-    teacher_id: z.string().uuid().optional().nullable(),
-    name: z.string().min(1, 'Tên lớp không được để trống'),
-    max_capacity: z.number().int().positive().optional(),
-    start_date: z.string().optional().nullable(),
-    end_date: z.string().optional().nullable(),
-    recurring_schedules: z.array(recurringScheduleSchema).optional(),
-    enrollments: z.array(z.string().uuid()).optional(),
-  }),
+const classBodySchema = z.object({
+  branch_id: z.string().uuid('ID chi nhánh không hợp lệ'),
+  subject_id: z.string().uuid().optional().nullable(),
+  teacher_id: z.string().uuid().optional().nullable(),
+  name: z.string().min(1, 'Tên lớp không được để trống'),
+  max_capacity: z.number().int().positive().optional(),
+  start_date: z.string().optional().nullable(),
+  end_date: z.string().optional().nullable(),
+  recurring_schedules: z.array(recurringScheduleSchema).optional(),
+  enrollments: z.array(z.string().uuid()).optional(),
 });
+const createClassSchema = z.object({ body: classBodySchema });
 
 const updateClassSchema = z.object({
-  body: z.object({
-    branch_id: z.string().uuid().optional(),
-    subject_id: z.string().uuid().optional().nullable(),
-    teacher_id: z.string().uuid().optional().nullable(),
-    name: z.string().min(1).optional(),
-    max_capacity: z.number().int().positive().optional(),
-    start_date: z.string().optional().nullable(),
-    end_date: z.string().optional().nullable(),
+  body: classBodySchema.partial().extend({
     status: z.string().optional(),
-    recurring_schedules: z.array(recurringScheduleSchema).optional(),
-    enrollments: z.array(z.string().uuid()).optional(),
   }),
 });
 
@@ -65,22 +56,22 @@ const enrollStudentSchema = z.object({
 
 const router = Router();
 
-router.get('/', requireRole(['admin', 'staff', 'teacher', 'student']), getClasses);
+router.get('/', requireRole(ACCESS.ADMIN_STAFF_TEACHER_STUDENT_API), getClasses);
 router.get(
   '/:id',
-  requireRole(['admin', 'staff', 'teacher', 'student']),
+  requireRole(ACCESS.ADMIN_STAFF_TEACHER_STUDENT),
   validateUUID(['id']),
   getClassById
 );
 router.get(
   '/:id/recurring',
-  requireRole(['admin', 'staff', 'teacher']),
+  requireRole(ACCESS.ADMIN_STAFF_TEACHER),
   validateUUID(['id']),
   getRecurringSchedules
 );
 router.get(
   '/:id/students',
-  requireRole(['admin', 'staff', 'teacher']),
+  requireRole(ACCESS.ADMIN_STAFF_TEACHER),
   validateUUID(['id']),
   getEnrollments
 );
@@ -88,7 +79,7 @@ router.get(
 // Apply the enforceLimit middleware to check if 'max_classes' has been reached
 router.post(
   '/',
-  requireRole(['admin', 'staff']),
+  requireRole(ACCESS.ADMIN_STAFF),
   enforceLimit(
     'max_classes',
     'SELECT COUNT(*) FROM classes WHERE tenant_id = $1 AND is_deleted = false'
@@ -99,22 +90,22 @@ router.post(
 
 router.post(
   '/:id/students',
-  requireRole(['admin', 'staff']),
+  requireRole(ACCESS.ADMIN_STAFF),
   validateUUID(['id']),
   validate(enrollStudentSchema),
   enrollStudent
 );
 router.put(
   '/:id',
-  requireRole(['admin', 'staff']),
+  requireRole(ACCESS.ADMIN_STAFF),
   validateUUID(['id']),
   validate(updateClassSchema),
   updateClass
 );
-router.delete('/:id', requireRole(['admin', 'staff']), validateUUID(['id']), deleteClass);
+router.delete('/:id', requireRole(ACCESS.ADMIN_STAFF), validateUUID(['id']), deleteClass);
 router.delete(
   '/:id/students/:studentId',
-  requireRole(['admin', 'staff']),
+  requireRole(ACCESS.ADMIN_STAFF),
   validateUUID(['id', 'studentId']),
   unenrollStudent
 );

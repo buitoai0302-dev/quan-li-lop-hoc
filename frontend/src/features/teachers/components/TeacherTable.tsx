@@ -1,6 +1,7 @@
 import React from 'react';
 import { Edit2, Trash2, KeyRound } from 'lucide-react';
 import type { TeacherTableProps } from '../types';
+import ActionHint from '@/components/common/ActionHint';
 
 const TeacherTable: React.FC<TeacherTableProps & { onResetPassword?: (teacher: any) => void }> = ({
   teachers,
@@ -87,28 +88,31 @@ const TeacherTable: React.FC<TeacherTableProps & { onResetPassword?: (teacher: a
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                 <div className="flex justify-end gap-1 sm:gap-2">
                   {onResetPassword && (
-                    <button
-                      onClick={() => onResetPassword(teacher)}
-                      className="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all active:scale-90"
-                      title={t('admin.users.tooltip.reset')}
-                    >
-                      <KeyRound size={16} />
-                    </button>
+                    <ActionHint label={t('admin.users.tooltip.reset')}>
+                      <button
+                        onClick={() => onResetPassword(teacher)}
+                        className="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all active:scale-90"
+                      >
+                        <KeyRound size={16} />
+                      </button>
+                    </ActionHint>
                   )}
-                  <button
-                    onClick={() => onEdit(teacher)}
-                    className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all active:scale-90"
-                    title={t('common.edit')}
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  <button
-                    onClick={() => onDelete(teacher.id)}
-                    className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all active:scale-90"
-                    title={t('common.delete')}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <ActionHint label={t('common.edit')}>
+                    <button
+                      onClick={() => onEdit(teacher)}
+                      className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all active:scale-90"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  </ActionHint>
+                  <ActionHint label={t('common.delete')}>
+                    <button
+                      onClick={() => onDelete(teacher.id)}
+                      className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all active:scale-90"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </ActionHint>
                 </div>
               </td>
             </tr>

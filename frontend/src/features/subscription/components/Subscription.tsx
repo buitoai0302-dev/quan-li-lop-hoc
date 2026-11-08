@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, ArrowRight, Info, CreditCard } from 'lucide-react';
 
@@ -11,6 +11,7 @@ import PlanCard from './PlanCard';
 
 import { useSubscriptionData } from '../hooks/useSubscription';
 import { usePublicSettings } from '@/features/admin/hooks/useSystemSettings';
+import { getZaloUrl } from '@/utils/systemContact';
 import { useNavigate } from 'react-router-dom';
 
 const Subscription: React.FC = () => {
@@ -23,7 +24,7 @@ const Subscription: React.FC = () => {
 
   const isSubmitting = false; // No longer submitting directly here
 
-  const plans = data?.plans || [];
+  const plans = useMemo(() => data?.plans || [], [data?.plans]);
   const currentTenantPlanId = data?.tenant?.plan_id || null;
   const initialPendingId =
     data?.requestStatus?.status === PLAN_REQUEST_STATUS.PENDING
@@ -36,6 +37,9 @@ const Subscription: React.FC = () => {
   const [billingCycle, setBillingCycle] = useState<
     typeof PLAN_BILLING_CYCLE.MONTHLY | typeof PLAN_BILLING_CYCLE.YEARLY
   >(PLAN_BILLING_CYCLE.YEARLY);
+  useEffect(() => {
+    if (user?.signup_billing_cycle) setBillingCycle(user.signup_billing_cycle);
+  }, [user?.signup_billing_cycle]);
 
   const maxSavingsPercent = useMemo(() => {
     if (!plans || plans.length === 0) return 0;
@@ -53,15 +57,18 @@ const Subscription: React.FC = () => {
   }, [plans, isVi]);
 
   const handleUpgradeClick = (planId: string, planName: string) => {
-    navigate('/checkout', { state: { planId, planName, billingCycle } });
+    navigate(`/checkout?plan=${encodeURIComponent(planId)}&cycle=${billingCycle}`, {
+      state: { planId, planName, billingCycle },
+    });
   };
 
   const handleContactSales = () => {
-    const zaloLink = settings?.CONTACT_ZALO;
+    const zaloLink = getZaloUrl(settings?.CONTACT_ZALO);
     if (zaloLink) {
       window.open(zaloLink, '_blank');
     } else {
-      const supportEmail = settings?.CONTACT_EMAIL || 'support@eduschedule.com';
+      const supportEmail = settings?.CONTACT_EMAIL;
+      if (!supportEmail) return;
       const subject = encodeURIComponent(t('subscription.consultSubject'));
       const body = encodeURIComponent(t('subscription.consultBody', { email: user?.email }));
       window.location.href = `mailto:${supportEmail}?subject=${subject}&body=${body}`;
@@ -116,6 +123,14 @@ const Subscription: React.FC = () => {
 
       <div className="flex-1 overflow-auto custom-scrollbar px-1 pt-4">
         <div className="max-w-7xl mx-auto space-y-8">
+          {user?.signup_plan_id && !pendingPlanId && (
+            <div className="mx-2 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900 dark:border-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-100">
+              {plans.some((p) => p.id === user.signup_plan_id && p.is_active)
+                ? t('landing.reviewPlan')
+                : t('landing.planUnavailable')}{' '}
+              <strong>{user.signup_plan_code}</strong>
+            </div>
+          )}
           {/* Pricing Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 px-2">
             {plans
@@ -128,6 +143,7 @@ const Subscription: React.FC = () => {
                   isVi={isVi}
                   isSubmitting={isSubmitting}
                   pendingPlanId={pendingPlanId}
+                  isSignupSelection={plan.id === user?.signup_plan_id}
                   billingCycle={billingCycle}
                   onUpgrade={handleUpgradeClick}
                   t={t}
@@ -149,8 +165,9 @@ const Subscription: React.FC = () => {
                 </p>
               </div>
               <button
+                disabled={!getZaloUrl(settings?.CONTACT_ZALO) && !settings?.CONTACT_EMAIL}
                 onClick={handleContactSales}
-                className="flex items-center gap-3 px-8 py-4 bg-white text-indigo-950 rounded-xl font-bold text-base md:text-lg hover:bg-primary hover:text-white transition-all shadow-xl active:scale-95 uppercase tracking-wide shrink-0"
+                className="flex items-center gap-3 px-8 py-4 bg-white text-indigo-950 rounded-xl font-bold text-base md:text-lg hover:bg-primary hover:text-white transition-all shadow-xl active:scale-95 uppercase tracking-wide shrink-0 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <MessageSquare size={20} /> {t('subscription.contactSales')}{' '}
                 <ArrowRight size={20} />

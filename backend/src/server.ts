@@ -7,7 +7,9 @@ import helmet from 'helmet';
 import cookieParser from 'cookie-parser';
 import path from 'path';
 import pinoHttp from 'pino-http';
+import { randomUUID } from 'crypto';
 import { logger } from './utils/logger';
+import { safeRequestLog, requestLogContext } from './utils/request-logging';
 import { tenantMiddleware } from './middlewares/tenant.middleware';
 import { authMiddleware } from './middlewares/auth.middleware';
 import authRoutes from './routes/auth.routes';
@@ -33,6 +35,7 @@ import notificationRoutes from './routes/notification.routes';
 import { initNotificationJobs } from './cron/notification.cron';
 import { initBackupJobs } from './cron/backup.cron';
 import boss from './cron/queue';
+import pool from './db';
 
 import { errorMiddleware } from './middlewares/error.middleware';
 import { NotFoundError } from './utils/errors';
@@ -40,6 +43,7 @@ import { NotFoundError } from './utils/errors';
 dotenv.config();
 
 import { apiKeyMiddleware } from './middlewares/api.middleware';
+import { config } from './utils/config';
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -55,13 +59,7 @@ app.use(
 );
 
 // CORS — chỉ cho phép các domain đã xác định
-const ALLOWED_ORIGINS = [
-  process.env.FRONTEND_URL || 'http://localhost:5173',
-  'http://localhost:5174',
-  'http://localhost:3000',
-  'https://eduschedule.vercel.app',
-  'https://quan-li-lop-hoc-beta.vercel.app',
-].filter(Boolean);
+const ALLOWED_ORIGINS = config.allowedOrigins();
 
 app.use(
   cors({
@@ -80,7 +78,21 @@ app.use(
 );
 app.use(express.json({ limit: '2mb' }));
 app.use(cookieParser()); // Parse httpOnly cookies
-app.use(pinoHttp({ logger }));
+app.use(
+  pinoHttp({
+    logger,
+    serializers: {
+      // Verification tokens and OAuth codes may be in query strings.
+      req: safeRequestLog,
+    },
+    genReqId: (_req, res) => {
+      const id = randomUUID();
+      res.setHeader('X-Request-Id', id);
+      return id;
+    },
+    customProps: requestLogContext,
+  })
+);
 
 // 1. Public routes (No authentication or tenant context needed)
 app.use('/api/auth', authRoutes);
@@ -89,6 +101,17 @@ app.use('/api/billing', billingRoutes); // Includes public webhook endpoints
 app.get('/api/plans', getPlans); // Make plans public
 app.get('/api/system/settings/public', getPublicSettings); // Make system settings public
 app.get('/health', (req, res) => res.json({ status: 'ok' }));
+const backgroundJobsDisabled = process.env.DISABLE_BACKGROUND_JOBS === 'true';
+let jobsReady = backgroundJobsDisabled;
+app.get('/ready', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    if (!jobsReady) return res.status(503).json({ status: 'starting' });
+    return res.json({ status: 'ready' });
+  } catch {
+    return res.status(503).json({ status: 'unavailable' });
+  }
+});
 
 // 2. Protected routes - Core Business Logic (Auth & Tenant required)
 const protectedRoutes = express.Router();
@@ -113,21 +136,22 @@ protectedRoutes.use('/notifications', notificationRoutes);
 app.use('/api', protectedRoutes);
 
 // Initialize pg-boss queue and background jobs
-boss
-  .start()
-  .then(async () => {
-    logger.info('[pg-boss] Queue started successfully');
-    await initNotificationJobs();
-    await initBackupJobs();
-  })
-  .catch((err: Error) => {
-    logger.error(err, '[pg-boss] Failed to start queue:');
-  });
-
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
+if (backgroundJobsDisabled) {
+  logger.warn('[pg-boss] Background jobs disabled for this process');
+} else {
+  boss
+    .start()
+    .then(async () => {
+      logger.info('[pg-boss] Queue started successfully');
+      await initNotificationJobs();
+      await initBackupJobs();
+      jobsReady = true;
+    })
+    .catch((err: Error) => {
+      jobsReady = false;
+      logger.error(err, '[pg-boss] Failed to start queue:');
+    });
+}
 
 // Serve frontend static files in production
 const rootDir = process.cwd();

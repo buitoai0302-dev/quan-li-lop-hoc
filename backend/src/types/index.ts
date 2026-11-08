@@ -43,7 +43,13 @@ export interface CreateClassDto {
   end_date?: string;
   schedule?: any;
   max_capacity?: number;
-  recurring_schedules?: any[];
+  recurring_schedules?: Array<{
+    day_of_week: string;
+    start_time: string;
+    end_time: string;
+    room_id?: string | null;
+    notes?: string | null;
+  }>;
   enrollments?: any[];
 }
 

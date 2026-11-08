@@ -1,15 +1,23 @@
+import { ERROR_CODES } from '../utils/constants';
 import { Request, Response, NextFunction } from 'express';
 import { AuthService } from '../services/auth.service';
 import { ValidationError, AuthenticationError } from '../utils/errors';
+import { config } from '../utils/config';
 
 const setRefreshCookie = (res: Response, token: string) => {
   res.cookie('refreshToken', token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
-    sameSite: 'lax',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
     maxAge: 30 * 24 * 60 * 60 * 1000,
     path: '/',
   });
+};
+
+const cookieOriginAllowed = (req: Request): boolean => {
+  const origin = req.headers.origin;
+  if (!origin) return true; // Native and server-to-server clients do not send Origin.
+  return config.cookieOrigins().includes(origin);
 };
 
 export const login = async (req: Request, res: Response, next: NextFunction) => {
@@ -18,7 +26,9 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
     const ip = req.ip || req.socket?.remoteAddress || 'unknown';
 
     if (!email || !password) {
-      return next(new ValidationError('Missing email or password', 'MISSING_REQUIRED_FIELDS'));
+      return next(
+        new ValidationError('Missing email or password', ERROR_CODES.MISSING_REQUIRED_FIELDS)
+      );
     }
 
     const { accessToken, refreshToken, user } = await AuthService.login(email, password, ip);
@@ -35,7 +45,9 @@ export const googleLogin = async (req: Request, res: Response, next: NextFunctio
     const { credential } = req.body;
 
     if (!credential) {
-      return next(new ValidationError('Missing Google credential', 'MISSING_REQUIRED_FIELDS'));
+      return next(
+        new ValidationError('Missing Google credential', ERROR_CODES.MISSING_REQUIRED_FIELDS)
+      );
     }
 
     const { accessToken, refreshToken, user } = await AuthService.googleLogin(credential);
@@ -52,7 +64,7 @@ export const register = async (req: Request, res: Response, next: NextFunction) 
     const { email, password, fullName, tenantName } = req.body;
 
     if (!email || !password || !fullName) {
-      return next(new ValidationError('Missing fields', 'MISSING_REQUIRED_FIELDS'));
+      return next(new ValidationError('Missing fields', ERROR_CODES.MISSING_REQUIRED_FIELDS));
     }
 
     const result = await AuthService.register(req.body);
@@ -67,7 +79,7 @@ export const verifyEmail = async (req: Request, res: Response, next: NextFunctio
     const { token } = req.query;
 
     if (!token || typeof token !== 'string') {
-      return next(new ValidationError('Invalid token', 'INVALID_TOKEN'));
+      return next(new ValidationError('Invalid token', ERROR_CODES.INVALID_TOKEN));
     }
 
     const result = await AuthService.verifyEmail(token);
@@ -83,7 +95,7 @@ export const resendVerification = async (req: Request, res: Response, next: Next
     const ip = req.ip || req.socket?.remoteAddress || 'unknown';
 
     if (!email) {
-      return next(new ValidationError('Email required', 'MISSING_REQUIRED_FIELDS'));
+      return next(new ValidationError('Email required', ERROR_CODES.MISSING_REQUIRED_FIELDS));
     }
 
     const result = await AuthService.resendVerification(email, ip);
@@ -99,7 +111,7 @@ export const forgotPassword = async (req: Request, res: Response, next: NextFunc
     const ip = req.ip || req.socket?.remoteAddress || 'unknown';
 
     if (!email) {
-      return next(new ValidationError('Email required', 'MISSING_REQUIRED_FIELDS'));
+      return next(new ValidationError('Email required', ERROR_CODES.MISSING_REQUIRED_FIELDS));
     }
 
     const result = await AuthService.forgotPassword(email, ip);
@@ -114,7 +126,9 @@ export const resetPassword = async (req: Request, res: Response, next: NextFunct
     const { token, password } = req.body;
 
     if (!token || !password) {
-      return next(new ValidationError('Missing token or password', 'MISSING_REQUIRED_FIELDS'));
+      return next(
+        new ValidationError('Missing token or password', ERROR_CODES.MISSING_REQUIRED_FIELDS)
+      );
     }
 
     const result = await AuthService.resetPassword(req.body);
@@ -158,9 +172,12 @@ export const completeOnboarding = async (req: Request, res: Response, next: Next
 
 export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if (!cookieOriginAllowed(req)) return res.status(403).json({ error: 'Origin not allowed' });
     const token = req.cookies?.refreshToken || req.body?.refreshToken;
     if (!token)
-      return next(new ValidationError('Refresh token required', 'MISSING_REQUIRED_FIELDS'));
+      return next(
+        new ValidationError('Refresh token required', ERROR_CODES.MISSING_REQUIRED_FIELDS)
+      );
 
     const { accessToken, refreshToken: newRefreshToken } = await AuthService.refreshToken(token);
 
@@ -173,6 +190,7 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 
 export const logout = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    if (!cookieOriginAllowed(req)) return res.status(403).json({ error: 'Origin not allowed' });
     const token = req.cookies?.refreshToken || req.body?.refreshToken;
 
     const result = await AuthService.logout(token);

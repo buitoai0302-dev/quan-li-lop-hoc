@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { register as registerApi, googleLogin } from '@/features/auth';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -10,6 +10,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Input, Button, Label } from '@/components/common/UI';
 import { THEMES } from '@/utils/constants';
+import { useQuery } from '@tanstack/react-query';
+import { getPlans } from '@/features/subscription/api/subscription.api';
 
 const getStrength = (pw: string, t: (k: string) => string) => {
   const checks = [
@@ -32,11 +34,24 @@ const getStrength = (pw: string, t: (k: string) => string) => {
 
 const Register: React.FC = () => {
   const [fullName, setFullName] = useState('');
+  const [tenantName, setTenantName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const intendedPlanCode = searchParams.get('plan') || undefined;
+  const billingCycle = searchParams.get('cycle') === 'YEARLY' ? 'YEARLY' : 'MONTHLY';
+  const planQuery = useQuery({
+    queryKey: ['public-plans'],
+    queryFn: getPlans,
+    enabled: !!intendedPlanCode,
+  });
+  const selectedPlan = planQuery.data?.find(
+    (plan) => plan.code === intendedPlanCode && plan.is_active
+  );
+  const planUnavailable = !!intendedPlanCode && !planQuery.isLoading && !selectedPlan;
   const { t, i18n } = useTranslation();
   const { login } = useAuth();
   const { theme: currentTheme } = useTheme();
@@ -62,13 +77,21 @@ const Register: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (planUnavailable || (intendedPlanCode && planQuery.isLoading)) return;
     if (strength.score < 3) {
       toast.error(t('passwordStrength.notStrongEnough'));
       return;
     }
     setIsLoading(true);
     try {
-      await registerApi({ fullName, email, password, tenantName: `${fullName}'s Center` });
+      await registerApi({
+        fullName,
+        email,
+        password,
+        tenantName,
+        intendedPlanCode,
+        billingCycle: intendedPlanCode ? billingCycle : undefined,
+      });
       toast.success(t('auth.registerSuccess'));
       navigate('/login');
     } catch (error: any) {
@@ -118,9 +141,29 @@ const Register: React.FC = () => {
       <div className="mt-3 sm:mx-auto sm:w-full sm:max-w-[420px] relative z-10">
         <div className="bg-white/40 dark:bg-gray-800/50 backdrop-blur-xl py-4 px-6 sm:px-10 shadow-xl shadow-slate-200/50 dark:shadow-none rounded-[2rem] sm:rounded-[2.5rem] border border-slate-200/50 dark:border-gray-700/50">
           <form className="space-y-4" onSubmit={handleSubmit}>
+            {intendedPlanCode && (
+              <p
+                role="status"
+                className="rounded-xl bg-indigo-50 dark:bg-indigo-900/30 p-3 text-sm text-indigo-800 dark:text-indigo-200"
+              >
+                {planQuery.isLoading ? (
+                  t('landing.loadingPlans')
+                ) : planUnavailable ? (
+                  t('landing.planUnavailable')
+                ) : (
+                  <>
+                    {t('landing.selectedPlan')}: <strong>{selectedPlan?.name}</strong> ·{' '}
+                    {billingCycle === 'YEARLY'
+                      ? t('subscription.yearlyBilling')
+                      : t('subscription.monthlyBilling')}
+                    . {t('landing.confirmLater')}
+                  </>
+                )}
+              </p>
+            )}
             {/* Full Name */}
             <div className="space-y-1.5">
-              <Label className="text-[9px] text-slate-400 dark:text-gray-500  ml-1">
+              <Label htmlFor="fullName" className="text-xs text-slate-600 dark:text-gray-300 ml-1">
                 {t('auth.fullName')}
               </Label>
               <Input
@@ -135,9 +178,27 @@ const Register: React.FC = () => {
               />
             </div>
 
+            <div className="space-y-1.5">
+              <Label
+                htmlFor="tenantName"
+                className="text-xs text-slate-600 dark:text-gray-300 ml-1"
+              >
+                {t('auth.tenantName')}
+              </Label>
+              <Input
+                id="tenantName"
+                type="text"
+                required
+                maxLength={100}
+                value={tenantName}
+                onChange={(e) => setTenantName(e.target.value)}
+                variant="muted"
+              />
+            </div>
+
             {/* Email */}
             <div className="space-y-1.5">
-              <Label className="text-[9px] text-slate-400 dark:text-gray-500  ml-1">
+              <Label htmlFor="email" className="text-xs text-slate-600 dark:text-gray-300 ml-1">
                 {t('auth.email')}
               </Label>
               <Input
@@ -155,7 +216,7 @@ const Register: React.FC = () => {
 
             {/* Password + Strength */}
             <div className="space-y-1.5">
-              <Label className="text-[9px] text-slate-400 dark:text-gray-500  ml-1">
+              <Label htmlFor="password" className="text-xs text-slate-600 dark:text-gray-300 ml-1">
                 {t('auth.password')}
               </Label>
               <div className="relative group">
@@ -172,6 +233,11 @@ const Register: React.FC = () => {
                 />
                 <button
                   type="button"
+                  aria-label={
+                    showPassword
+                      ? t('auth.hidePassword', 'Ẩn mật khẩu / Hide password')
+                      : t('auth.showPassword', 'Hiện mật khẩu / Show password')
+                  }
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors z-10"
                 >
@@ -206,36 +272,39 @@ const Register: React.FC = () => {
             <Button
               type="submit"
               loading={isLoading}
+              disabled={isLoading || planUnavailable || (!!intendedPlanCode && planQuery.isLoading)}
               className="w-full text-[11px] uppercase tracking-[0.2em]"
             >
               {t('auth.registerButton')}
             </Button>
           </form>
 
-          <div className="mt-4">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-slate-100 dark:border-gray-700"></div>
+          {!intendedPlanCode && (
+            <div className="mt-4">
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-slate-100 dark:border-gray-700"></div>
+                </div>
+                <div className="relative flex justify-center text-[7px] font-black uppercase tracking-[0.2em]">
+                  <span className="px-4 bg-surface dark:bg-gray-800 text-slate-400 dark:text-gray-500">
+                    {t('auth.orContinueWith')}
+                  </span>
+                </div>
               </div>
-              <div className="relative flex justify-center text-[7px] font-black uppercase tracking-[0.2em]">
-                <span className="px-4 bg-surface dark:bg-gray-800 text-slate-400 dark:text-gray-500">
-                  {t('auth.orContinueWith')}
-                </span>
-              </div>
-            </div>
 
-            <div className="mt-3 flex justify-center">
-              <GoogleLogin
-                onSuccess={handleGoogleSuccess}
-                onError={() => toast.error(t('errors.GOOGLE_LOGIN_FAILED'))}
-                useOneTap={false}
-                theme={currentTheme === THEMES.DARK ? 'filled_black' : 'outline'}
-                shape="pill"
-                size="large"
-                text="signup_with"
-              />
+              <div className="mt-3 flex justify-center">
+                <GoogleLogin
+                  onSuccess={handleGoogleSuccess}
+                  onError={() => toast.error(t('errors.GOOGLE_LOGIN_FAILED'))}
+                  useOneTap={false}
+                  theme={currentTheme === THEMES.DARK ? 'filled_black' : 'outline'}
+                  shape="pill"
+                  size="large"
+                  text="signup_with"
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <div className="mt-4 text-center pt-3 border-t border-slate-100 dark:border-gray-700/50 space-y-1">
             <p className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide">
@@ -261,6 +330,17 @@ const Register: React.FC = () => {
       </div>
 
       {/* Footer Branding */}
+      <nav
+        aria-label={t('legal.documents')}
+        className="relative z-10 mt-4 flex justify-center gap-4 text-xs text-slate-600 dark:text-slate-300"
+      >
+        <Link to="/privacy" className="underline">
+          {t('landing.privacy')}
+        </Link>
+        <Link to="/terms" className="underline">
+          {t('landing.terms')}
+        </Link>
+      </nav>
       <div className="mt-4 text-center opacity-30 select-none">
         <p className="text-[8px] font-black uppercase tracking-[0.5em] text-gray-400">
           Powered by EduSchedule Cloud

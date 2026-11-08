@@ -18,11 +18,15 @@ import {
 
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/utils/constants';
+import { usePublicSettings } from '@/features/admin/hooks/useSystemSettings';
+import { getZaloUrl } from '@/utils/systemContact';
 import type { HelpCategory } from '@/types';
 
 const Help: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { data: systemSettings } = usePublicSettings();
+  const supportZaloUrl = getZaloUrl(systemSettings?.CONTACT_ZALO);
   const [selectedCategory, setSelectedCategory] = useState<HelpCategory | null>(null);
 
   const allCategories = [
@@ -349,14 +353,16 @@ const Help: React.FC = () => {
               >
                 <MessageSquare size={20} /> {t('help.contactSupport')}
               </button>
-              <a
-                href={`https://zalo.me/${import.meta.env.VITE_SUPPORT_ZALO_ID || '0912345678'}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-black hover:bg-gray-50 transition-all shadow-sm"
-              >
-                <ExternalLink size={20} /> Zalo Support
-              </a>
+              {supportZaloUrl && (
+                <a
+                  href={supportZaloUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-3 px-8 py-4 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl font-black hover:bg-gray-50 transition-all shadow-sm"
+                >
+                  <ExternalLink size={20} /> Zalo Support
+                </a>
+              )}
             </div>
           </div>
         </div>

@@ -4,6 +4,16 @@ import { z } from 'zod';
 // Primitive helpers
 // ---------------------------------------------------------------------------
 const optionalString = z.string().optional();
+// PostgreSQL nullable text fields arrive as null; keep the UI-facing shape optional.
+const nullableString = z
+  .string()
+  .nullish()
+  .transform((value) => value ?? undefined)
+  .optional();
+const optionalEmail = z
+  .union([z.string().email(), z.literal('')])
+  .nullish()
+  .transform((value) => value ?? undefined);
 const optionalBool = z.boolean().optional();
 
 // ---------------------------------------------------------------------------
@@ -13,41 +23,41 @@ const optionalBool = z.boolean().optional();
 export const BranchSchema = z.object({
   id: z.string(),
   name: z.string(),
-  address: optionalString,
-  phone: optionalString,
+  address: nullableString,
+  phone: nullableString,
   is_active: optionalBool,
 });
 
 export const TeacherSchema = z.object({
   id: z.string(),
   full_name: z.string(),
-  email: z.string().email().optional().or(z.literal('')),
-  phone: optionalString,
-  specialization: optionalString,
-  branch_id: optionalString,
-  branch_name: optionalString,
+  email: optionalEmail,
+  phone: nullableString,
+  specialization: nullableString,
+  branch_id: nullableString,
+  branch_name: nullableString,
   is_active: optionalBool,
 });
 
 export const StudentSchema = z.object({
   id: z.string(),
   full_name: z.string(),
-  email: z.string().email().optional().or(z.literal('')),
-  phone: optionalString,
-  date_of_birth: optionalString,
-  branch_id: optionalString,
-  branch_name: optionalString,
+  email: optionalEmail,
+  phone: nullableString,
+  date_of_birth: nullableString,
+  branch_id: nullableString,
+  branch_name: nullableString,
   is_active: optionalBool,
-  parent_phone: optionalString,
+  parent_phone: nullableString,
 });
 
 export const RoomSchema = z.object({
   id: z.string(),
   name: z.string(),
   capacity: z.number().optional(),
-  room_type: optionalString,
-  branch_id: optionalString,
-  branch_name: optionalString,
+  room_type: nullableString,
+  branch_id: nullableString,
+  branch_name: nullableString,
   is_active: optionalBool,
 });
 
@@ -56,14 +66,14 @@ export const ClassSchema = z.object({
   name: z.string(),
   max_capacity: z.number(),
   branch_id: z.string(),
-  branch_name: optionalString,
+  branch_name: nullableString,
   teacher_id: z.string(),
-  teacher_name: optionalString,
-  subject_id: optionalString,
+  teacher_name: nullableString,
+  subject_id: nullableString,
   start_date: z.string(),
   end_date: z.string(),
   status: z.string(),
-  created_at: optionalString,
+  created_at: nullableString,
 });
 
 export const SessionSchema = z.object({
@@ -77,24 +87,24 @@ export const SessionSchema = z.object({
   end_time: z.string(),
   session_type: z.string(),
   status: z.string(),
-  notes: optionalString,
-  class_name: optionalString,
-  teacher_name: optionalString,
-  room_name: optionalString,
-  branch_name: optionalString,
+  notes: nullableString,
+  class_name: nullableString,
+  teacher_name: nullableString,
+  room_name: nullableString,
+  branch_name: nullableString,
 });
 
 export const EnrollmentSchema = z.object({
   id: z.string(),
   full_name: z.string(),
-  email: optionalString,
+  email: nullableString,
   enrolled_at: z.string(),
 });
 
 export const AttendanceRecordSchema = z.object({
   student_id: z.string(),
   full_name: z.string(),
-  email: optionalString,
+  email: nullableString,
   attendance_id: z.string().nullable(),
   status: z.string(),
   marked_at: z.string().nullable(),
@@ -104,8 +114,11 @@ export const RecurringScheduleSchema = z.object({
   day_of_week: z.number(),
   start_time: z.string(),
   end_time: z.string(),
-  room_id: z.string(),
-  notes: optionalString,
+  room_id: z
+    .string()
+    .nullable()
+    .transform((value) => value ?? ''),
+  notes: nullableString,
 });
 
 // ---------------------------------------------------------------------------
@@ -190,11 +203,7 @@ export type SessionFormData = z.infer<typeof SessionFormSchema>;
 // Safe parse helper — logs warnings, returns fallback on failure
 // ---------------------------------------------------------------------------
 
-export function safeParse<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown,
-  context?: string
-): T {
+export function safeParse<T>(schema: z.ZodSchema<T>, data: unknown, context?: string): T {
   const result = schema.safeParse(data);
   if (!result.success) {
     console.error(`[Zod] Parse error${context ? ` (${context})` : ''}:`, result.error.flatten());
@@ -204,11 +213,7 @@ export function safeParse<T>(
   return result.data;
 }
 
-export function safeParseArray<T>(
-  schema: z.ZodSchema<T>,
-  data: unknown,
-  context?: string
-): T[] {
+export function safeParseArray<T>(schema: z.ZodSchema<T>, data: unknown, context?: string): T[] {
   if (!Array.isArray(data)) {
     console.error(`[Zod] Expected array${context ? ` (${context})` : ''}:`, data);
     return [];

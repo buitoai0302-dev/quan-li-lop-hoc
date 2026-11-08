@@ -9,20 +9,61 @@ on:
 jobs:
   backend-check:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: eduschedule_integrity_test
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - name: Check tracked files and migration history
+        run: node scripts/check-git-hygiene.cjs --base "$MIGRATION_BASE"
+        env:
+          MIGRATION_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
       - name: Install backend deps
         run: cd backend && npm ci
       - name: TypeScript check
         run: cd backend && npx tsc --noEmit
-      - name: Run tests
-        run: cd backend && npm test
+      - name: Test TypeScript check
+        run: cd backend && npx tsc --noEmit -p tests/tsconfig.json
+      - name: Check source rules and API error contract
+        run: npm run check:src
+      - name: Run isolated backend tests
+        run: cd backend && npm test -- --runInBand
         env:
-          DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          DATABASE_URL: postgresql://ci:ci@127.0.0.1:5432/ci_unreachable
+          JWT_SECRET: ci-only-secret-never-used-outside-tests
+          GOOGLE_CLIENT_ID: ci-oauth-client-id
+          GOOGLE_CLIENT_SECRET: ci-oauth-client-secret
+          ONLINE_PAYMENTS_ENABLED: 'false'
+          DISABLE_BACKGROUND_JOBS: 'true'
+      - name: Verify data integrity on PostgreSQL
+        working-directory: backend
+        run: |
+          npm run db:init
+          npm run db:migrate
+          npm run test:staging -- --runTestsByPath tests/staging/data-integrity.staging.test.ts
+        env:
+          DB_HOST: 127.0.0.1
+          DB_NAME: eduschedule_integrity_test
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          ALLOW_DESTRUCTIVE_DB_INIT: 'yes'
+          PG_INTEGRITY_TEST_URL: postgresql://postgres:postgres@127.0.0.1:5432/eduschedule_integrity_test
+          PG_INTEGRITY_CONFIRMATION: isolated-synthetic-staging
 
   frontend-check:
     runs-on: ubuntu-latest
@@ -36,4 +77,6 @@ jobs:
       - name: TypeScript check
         run: cd frontend && npx tsc --noEmit
       - name: Lint check
-        run: cd frontend && npm run lint
+        run: cd frontend && npm run lint -- --max-warnings=0
+      - name: Production build
+        run: cd frontend && npm run build

@@ -4,6 +4,14 @@ import Redis from 'ioredis';
 
 // ─── Khởi tạo Cache: Thử dùng Redis, nếu không có thì fallback dùng NodeCache (RAM)
 let redisClient: Redis | null = null;
+const useMemoryCache = () => {
+  if (redisClient) {
+    const client = redisClient;
+    redisClient = null;
+    client.disconnect();
+    logger.warn('[RateLimit] Redis unavailable; using in-memory cache for this process');
+  }
+};
 if (process.env.REDIS_URL) {
   try {
     redisClient = new Redis(process.env.REDIS_URL, {
@@ -11,16 +19,13 @@ if (process.env.REDIS_URL) {
       retryStrategy: () => null, // Không retry mãi mãi nếu không kết nối được
     });
 
-    redisClient.on('error', (err) => {
-      console.warn('[Redis] Connection error, falling back to in-memory cache.', err.message);
-      redisClient = null;
-    });
+    redisClient.on('error', useMemoryCache);
 
     redisClient.on('connect', () => {
       logger.info('[Redis] Rate Limit Service connected successfully.');
     });
   } catch (err) {
-    console.warn('[Redis] Failed to initialize, falling back to in-memory cache.');
+    logger.warn('[Redis] Failed to initialize, falling back to in-memory cache.');
     redisClient = null;
   }
 } else {
@@ -45,8 +50,12 @@ interface AttemptData {
 
 const getCache = async (key: string, isEmail: boolean): Promise<AttemptData | null> => {
   if (redisClient) {
-    const data = await redisClient.get(key);
-    return data ? JSON.parse(data) : null;
+    try {
+      const data = await redisClient.get(key);
+      return data ? JSON.parse(data) : null;
+    } catch {
+      useMemoryCache();
+    }
   }
   return isEmail
     ? emailRateCache.get<AttemptData>(key) || null
@@ -55,20 +64,28 @@ const getCache = async (key: string, isEmail: boolean): Promise<AttemptData | nu
 
 const setCache = async (key: string, data: AttemptData, ttlSeconds: number, isEmail: boolean) => {
   if (redisClient) {
-    await redisClient.set(key, JSON.stringify(data), 'EX', ttlSeconds);
-  } else {
-    if (isEmail) emailRateCache.set(key, data, ttlSeconds);
-    else loginAttemptCache.set(key, data, ttlSeconds);
+    try {
+      await redisClient.set(key, JSON.stringify(data), 'EX', ttlSeconds);
+      return;
+    } catch {
+      useMemoryCache();
+    }
   }
+  if (isEmail) emailRateCache.set(key, data, ttlSeconds);
+  else loginAttemptCache.set(key, data, ttlSeconds);
 };
 
 const delCache = async (key: string, isEmail: boolean) => {
   if (redisClient) {
-    await redisClient.del(key);
-  } else {
-    if (isEmail) emailRateCache.del(key);
-    else loginAttemptCache.del(key);
+    try {
+      await redisClient.del(key);
+      return;
+    } catch {
+      useMemoryCache();
+    }
   }
+  if (isEmail) emailRateCache.del(key);
+  else loginAttemptCache.del(key);
 };
 
 // ─── Login Rate Limiting ─────────────────────────────────────────────────────

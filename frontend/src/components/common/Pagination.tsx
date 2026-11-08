@@ -1,6 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import ActionHint from './ActionHint';
 
 interface PaginationProps {
   currentPage: number;
@@ -77,28 +78,30 @@ const Pagination: React.FC<PaginationProps> = ({
       </div>
 
       <div className="flex items-center gap-1.5 sm:gap-2">
-        <button
-          onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-          className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl text-gray-400 hover:bg-white dark:hover:bg-gray-800 hover:text-primary dark:hover:text-blue-400 hover:shadow-lg hover:shadow-primary/10 border border-transparent hover:border-gray-100 dark:hover:border-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-90"
-          title={t('common.previous')}
-        >
-          <ChevronLeft size={16} className="sm:w-[18px] sm:h-[18px]" strokeWidth={3} />
-        </button>
+        <ActionHint label={t('common.previous')}>
+          <button
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+            className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl text-gray-400 hover:bg-white dark:hover:bg-gray-800 hover:text-primary dark:hover:text-blue-400 hover:shadow-lg hover:shadow-primary/10 border border-transparent hover:border-gray-100 dark:hover:border-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-90"
+          >
+            <ChevronLeft size={16} className="sm:w-[18px] sm:h-[18px]" strokeWidth={3} />
+          </button>
+        </ActionHint>
 
         <div className="flex items-center px-3 sm:px-4 h-8 sm:h-9 rounded-lg sm:rounded-xl bg-primary/5 dark:bg-blue-500/10 text-[10px] sm:text-[11px] font-black text-primary dark:text-blue-400 border border-primary/20 dark:border-blue-400/20 shadow-sm min-w-[70px] sm:min-w-[80px] justify-center tracking-tighter">
           {currentPage} <span className="mx-1.5 sm:mx-2 opacity-30 font-normal">/</span>{' '}
           {totalPages}
         </div>
 
-        <button
-          onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages || totalItems === 0}
-          className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl text-gray-400 hover:bg-white dark:hover:bg-gray-800 hover:text-primary dark:hover:text-blue-400 hover:shadow-lg hover:shadow-primary/10 border border-transparent hover:border-gray-100 dark:hover:border-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-90"
-          title={t('common.next')}
-        >
-          <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px]" strokeWidth={3} />
-        </button>
+        <ActionHint label={t('common.next')}>
+          <button
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages || totalItems === 0}
+            className="flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl text-gray-400 hover:bg-white dark:hover:bg-gray-800 hover:text-primary dark:hover:text-blue-400 hover:shadow-lg hover:shadow-primary/10 border border-transparent hover:border-gray-100 dark:hover:border-gray-700 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-90"
+          >
+            <ChevronRight size={16} className="sm:w-[18px] sm:h-[18px]" strokeWidth={3} />
+          </button>
+        </ActionHint>
       </div>
     </div>
   );

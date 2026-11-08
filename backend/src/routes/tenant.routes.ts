@@ -1,3 +1,4 @@
+import { ACCESS } from '../utils/permissions';
 import { Router } from 'express';
 import {
   getTenant,
@@ -19,9 +20,15 @@ const UpdateTenantSchema = z.object({
 
 const router = Router();
 
-router.get('/', authMiddleware, requireRole(['admin']), getTenant);
-router.put('/', authMiddleware, requireRole(['admin']), validate(UpdateTenantSchema), updateTenant);
-router.get('/api-key', authMiddleware, requireRole(['admin']), getApiKey);
-router.post('/api-key', authMiddleware, requireRole(['admin']), generateApiKey);
+router.get('/', authMiddleware, requireRole(ACCESS.ADMIN), getTenant);
+router.put(
+  '/',
+  authMiddleware,
+  requireRole(ACCESS.ADMIN),
+  validate(UpdateTenantSchema),
+  updateTenant
+);
+router.get('/api-key', authMiddleware, requireRole(ACCESS.ADMIN), getApiKey);
+router.post('/api-key', authMiddleware, requireRole(ACCESS.ADMIN), generateApiKey);
 
 export default router;

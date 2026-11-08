@@ -13,6 +13,7 @@ import {
 import { USER_ROLES, VIEW_MODES } from '@/utils/constants';
 import { Button, Select, Label } from '@/components/common/UI';
 import type { ScheduleHeaderProps } from '../types';
+import ActionHint from '@/components/common/ActionHint';
 
 const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
   selectedDate,
@@ -73,23 +74,28 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
 
   const actionButtons = (
     <div className="flex items-center gap-2 shrink-0">
-      <Button
-        variant={isFilterVisible ? 'secondary' : 'outline'}
-        size="icon"
-        onClick={() => setIsFilterVisible(!isFilterVisible)}
-        className="w-9 h-9 sm:w-10 sm:h-10 shadow-sm"
-        title={t('common.filter')}
-      >
-        <SlidersHorizontal size={18} />
-      </Button>
-      {canEdit && (
+      <ActionHint label={t('common.filter')}>
         <Button
+          variant={isFilterVisible ? 'secondary' : 'outline'}
           size="icon"
-          onClick={onAddSession}
-          className="w-9 h-9 sm:w-10 sm:h-10 bg-primary hover:bg-primary-dark text-white rounded-lg transition-all shadow-lg shadow-primary/25 group active:scale-95"
+          aria-label={t('common.filter')}
+          onClick={() => setIsFilterVisible(!isFilterVisible)}
+          className="w-9 h-9 sm:w-10 sm:h-10 shadow-sm"
         >
-          <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+          <SlidersHorizontal size={18} />
         </Button>
+      </ActionHint>
+      {canEdit && (
+        <ActionHint label={t('schedule.addSession')}>
+          <Button
+            size="icon"
+            aria-label={t('schedule.addSession', 'Thêm buổi học')}
+            onClick={onAddSession}
+            className="w-9 h-9 sm:w-10 sm:h-10 bg-primary hover:bg-primary-dark text-white rounded-lg transition-all shadow-lg shadow-primary/25 group active:scale-95"
+          >
+            <Plus size={20} className="group-hover:rotate-90 transition-transform duration-300" />
+          </Button>
+        </ActionHint>
       )}
     </div>
   );
@@ -130,6 +136,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             <Button
               variant="ghost"
               size="icon"
+              aria-label={t('common.previous', 'Trước')}
               className="h-8 w-10 sm:w-8 hover:bg-white dark:hover:bg-gray-700 rounded-lg shrink-0"
               onClick={handlePrev}
             >
@@ -144,6 +151,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
               </span>
               <input
                 ref={dateInputRef}
+                aria-label={t('schedule.selectDate', 'Chọn ngày')}
                 type="date"
                 value={format(selectedDate, 'yyyy-MM-dd')}
                 onChange={(e) => e.target.value && setSelectedDate(new Date(e.target.value))}
@@ -154,6 +162,7 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             <Button
               variant="ghost"
               size="icon"
+              aria-label={t('common.next', 'Tiếp')}
               className="h-8 w-10 sm:w-8 hover:bg-white dark:hover:bg-gray-700 rounded-lg shrink-0"
               onClick={handleNext}
             >
@@ -177,8 +186,10 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             {([VIEW_MODES.DAY, VIEW_MODES.WEEK, VIEW_MODES.MONTH] as const).map((mode) => (
               <button
                 key={mode}
+                type="button"
+                aria-pressed={viewMode === mode}
                 onClick={() => setViewMode(mode)}
-                className={`flex-1 sm:px-6 py-2 rounded-lg text-[10px] font-black transition-colors duration-300 whitespace-nowrap uppercase tracking-widest flex items-center justify-center min-w-[70px] ${
+                className={`flex-1 sm:px-6 py-2 min-h-11 rounded-lg text-xs font-black transition-colors duration-300 whitespace-nowrap uppercase tracking-widest flex items-center justify-center min-w-[70px] ${
                   viewMode === mode
                     ? 'text-primary'
                     : 'text-gray-500 hover:text-gray-700 dark:text-gray-400 hover:text-gray-200'
@@ -199,11 +210,15 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
           <div className="flex flex-col sm:flex-row gap-4">
             {/* Branch Filter */}
             <div className="flex-1 space-y-2">
-              <Label className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-[10px] ml-1">
+              <Label
+                htmlFor="schedule-branch"
+                className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-xs ml-1"
+              >
                 <MapPin size={12} className="text-primary/70" />
                 {t('common.branch')}
               </Label>
               <Select
+                id="schedule-branch"
                 value={selectedBranch}
                 onChange={(e) => setSelectedBranch(e.target.value)}
                 size="sm"
@@ -220,11 +235,15 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
             {/* Teacher Filter */}
             {user?.role !== USER_ROLES.TEACHER && (
               <div className="flex-1 space-y-2">
-                <Label className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-[10px] ml-1">
+                <Label
+                  htmlFor="schedule-teacher"
+                  className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-xs ml-1"
+                >
                   <User size={12} className="text-primary/70" />
                   {t('schedule.teacher')}
                 </Label>
                 <Select
+                  id="schedule-teacher"
                   value={selectedTeacher}
                   onChange={(e) => setSelectedTeacher(e.target.value)}
                   size="sm"
@@ -243,11 +262,15 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
 
             {/* Class Filter */}
             <div className="flex-1 space-y-2">
-              <Label className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-[10px] ml-1">
+              <Label
+                htmlFor="schedule-class"
+                className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-xs ml-1"
+              >
                 <BookOpen size={12} className="text-primary/70" />
                 {t('menu.classes')}
               </Label>
               <Select
+                id="schedule-class"
                 value={selectedClass}
                 onChange={(e) => setSelectedClass(e.target.value)}
                 size="sm"

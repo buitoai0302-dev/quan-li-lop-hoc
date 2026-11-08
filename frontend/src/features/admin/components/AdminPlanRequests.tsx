@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, X, Clock, Building, Zap, Crown, Shield, FileText } from 'lucide-react';
 import { getPlanRequests, approvePlanRequest, rejectPlanRequest } from '@/features/admin';
@@ -20,7 +20,7 @@ const AdminPlanRequests: React.FC = () => {
     action: (typeof PLAN_REQUEST_ACTIONS)[keyof typeof PLAN_REQUEST_ACTIONS];
   }>({ isOpen: false, id: null, action: PLAN_REQUEST_ACTIONS.APPROVE });
 
-  const fetchRequests = async () => {
+  const fetchRequests = useCallback(async () => {
     try {
       const data = await getPlanRequests();
       setRequests(data);
@@ -29,11 +29,11 @@ const AdminPlanRequests: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     fetchRequests();
-  }, []);
+  }, [fetchRequests]);
 
   const handleApprove = async () => {
     if (!confirmModal.id) return;

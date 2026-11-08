@@ -1,5 +1,7 @@
+import { ERROR_CODES } from '../utils/constants';
 import pool from '../db';
 import { NotFoundError, ValidationError } from '../utils/errors';
+import { assertTenantReferences } from './tenant-reference.service';
 
 export interface AttendanceRecord {
   student_id: string;
@@ -19,7 +21,7 @@ export class AttendanceService {
     );
 
     if (sessionRes.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy buổi học', 'SESSION_NOT_FOUND');
+      throw new NotFoundError('Không tìm thấy buổi học', ERROR_CODES.SESSION_NOT_FOUND);
     }
 
     const { class_id, tenant_settings } = sessionRes.rows[0];
@@ -59,7 +61,7 @@ export class AttendanceService {
 
   static async recordAttendance(tenantId: string, sessionId: string, records: AttendanceRecord[]) {
     if (!records || !Array.isArray(records)) {
-      throw new ValidationError('Dữ liệu điểm danh không hợp lệ', 'INVALID_DATA');
+      throw new ValidationError('Dữ liệu điểm danh không hợp lệ', ERROR_CODES.INVALID_DATA);
     }
 
     const client = await pool.connect();
@@ -67,7 +69,7 @@ export class AttendanceService {
       await client.query('BEGIN');
 
       const sessionRes = await client.query(
-        `SELECT s.id, s.session_date, t.settings as tenant_settings 
+        `SELECT s.id, s.class_id, s.session_date, t.settings as tenant_settings
          FROM schedule_sessions s
          JOIN tenants t ON s.tenant_id = t.id
          WHERE s.id = $1 AND s.tenant_id = $2`,
@@ -75,10 +77,31 @@ export class AttendanceService {
       );
 
       if (sessionRes.rows.length === 0) {
-        throw new NotFoundError('Không tìm thấy buổi học', 'SESSION_NOT_FOUND');
+        throw new NotFoundError('Không tìm thấy buổi học', ERROR_CODES.SESSION_NOT_FOUND);
       }
 
       const { session_date, tenant_settings } = sessionRes.rows[0];
+
+      await assertTenantReferences(
+        client,
+        tenantId,
+        'students',
+        records.map((r) => r.student_id)
+      );
+      const enrolled = await client.query(
+        `SELECT student_id FROM class_students
+         WHERE class_id = $1 AND tenant_id = $2 AND student_id = ANY($3::uuid[])`,
+        [sessionRes.rows[0].class_id, tenantId, records.map((r) => r.student_id)]
+      );
+      if (
+        new Set(enrolled.rows.map((r) => r.student_id)).size !==
+        new Set(records.map((r) => r.student_id)).size
+      ) {
+        throw new ValidationError(
+          'Học sinh chưa ghi danh vào lớp',
+          ERROR_CODES.STUDENT_NOT_ENROLLED
+        );
+      }
 
       const today = new Date();
       today.setHours(0, 0, 0, 0);

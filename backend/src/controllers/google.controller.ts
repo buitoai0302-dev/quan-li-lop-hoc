@@ -6,6 +6,7 @@ import pool from '../db';
 import jwt from 'jsonwebtoken';
 
 import { config } from '../utils/config';
+import { ROLES } from '../utils/constants';
 
 export const googleAuthUrl = (req: Request, res: Response) => {
   const userId = (req as any).user?.userId;
@@ -14,7 +15,7 @@ export const googleAuthUrl = (req: Request, res: Response) => {
   // Sign the state to prevent CSRF
   const state = jwt.sign({ userId }, config.jwtSecret(), { expiresIn: '15m' });
 
-  const url = getAuthUrl(state);
+  const url = getAuthUrl(state, (req as any).user?.role === ROLES.SUPER_ADMIN);
   res.json({ url });
 };
 

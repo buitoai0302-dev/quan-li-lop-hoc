@@ -3,6 +3,8 @@ import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { verifyEmail } from '@/features/auth';
 import { useTranslation } from 'react-i18next';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import type { AxiosError } from 'axios';
+import { getApiErrorMessage, type ApiErrorData } from '@/utils/errorHelper';
 
 const VerifyEmail: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -27,7 +29,7 @@ const VerifyEmail: React.FC = () => {
         setTimeout(() => navigate('/login'), 3000);
       } catch (error: any) {
         setStatus('error');
-        const msg = error.response?.data?.error || t('common.error');
+        const msg = getApiErrorMessage(error as AxiosError<ApiErrorData>, t);
         setMessage(msg);
         if (msg.includes('expired') || msg.includes('limit') || msg.includes('exist')) {
           setIsExpired(true);

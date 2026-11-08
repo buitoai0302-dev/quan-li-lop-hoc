@@ -203,7 +203,7 @@ const ScheduleBoard: React.FC = () => {
           onTouchEnd={handleTouchEnd}
         >
           {viewMode === VIEW_MODES.MONTH && (
-            <div className="grid grid-cols-7 border-b border-border dark:border-gray-600 sticky top-0 z-20 min-w-[800px] sm:min-w-[1000px] xl:min-w-full shadow-sm">
+            <div className="grid grid-cols-7 border-b border-border dark:border-gray-600 bg-slate-100 dark:bg-slate-700 sticky top-0 z-20 min-w-[800px] sm:min-w-[1000px] xl:min-w-full shadow-sm">
               {[
                 t('schedule.days.mon'),
                 t('schedule.days.tue'),
@@ -217,7 +217,7 @@ const ScheduleBoard: React.FC = () => {
                   key={i}
                   className={`p-2.5 sm:p-3 text-center text-xs sm:text-sm font-bold uppercase tracking-wider ${
                     i === 6
-                      ? 'bg-red-50/80 text-red-600 dark:bg-red-900/40 dark:text-red-400'
+                      ? 'bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400'
                       : 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200'
                   } border-r border-border dark:border-gray-600 last:border-r-0`}
                 >
@@ -243,7 +243,7 @@ const ScheduleBoard: React.FC = () => {
                 >
                   {viewMode !== VIEW_MODES.MONTH ? (
                     <div
-                      className={`p-2 sm:p-3 text-center border-b border-border dark:border-gray-600 ${isToday ? 'bg-primary/10 dark:bg-primary/20' : isSunday ? 'bg-red-50/80 dark:bg-red-900/20' : 'bg-slate-50 dark:bg-slate-800/80'} backdrop-blur-md sticky top-0 z-10 shadow-sm`}
+                      className={`p-2 sm:p-3 text-center border-b border-border dark:border-gray-600 ${isToday ? 'bg-indigo-50 dark:bg-indigo-950' : isSunday ? 'bg-red-50 dark:bg-red-950' : 'bg-slate-50 dark:bg-slate-800'} sticky top-0 z-10 shadow-sm`}
                     >
                       <div
                         className={`font-black uppercase tracking-widest ${isToday ? 'text-primary dark:text-blue-400' : isSunday ? 'text-red-500 dark:text-red-400' : 'text-slate-500 dark:text-slate-400'} text-[10px] sm:text-[11px] mb-0.5`}

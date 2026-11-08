@@ -3,10 +3,12 @@ import { LimitExceededError } from '../utils/errors';
 import pool from '../db';
 import { ERROR_CODES } from './constants';
 
+type LimitTable = 'branches' | 'classes' | 'students' | 'rooms' | 'teachers';
+
 export const checkPlanLimit = async (
   tenantId: string,
   limitKey: string,
-  tableName: string,
+  tableName: LimitTable,
   errorKey: string = ERROR_CODES.LIMIT_EXCEEDED
 ) => {
   const limit = await FeatureFlagService.checkLimit(tenantId, limitKey);

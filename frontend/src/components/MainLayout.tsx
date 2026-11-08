@@ -1,6 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
-import { Menu, Globe, Moon, Sun, Monitor, HelpCircle, MessageSquarePlus } from 'lucide-react';
+import {
+  Menu,
+  Globe,
+  Moon,
+  Sun,
+  Monitor,
+  HelpCircle,
+  MessageSquarePlus,
+  Ellipsis,
+} from 'lucide-react';
 import { getMenuItems } from '../routes';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
@@ -9,6 +18,7 @@ import HelpWidget from './HelpWidget';
 import NotificationPopover from './NotificationPopover';
 import Sidebar from './Sidebar';
 import FeedbackModal from './FeedbackModal';
+import ActionHint from './common/ActionHint';
 import { useFCM } from '@/features/notifications/hooks/useFCM';
 
 const MainLayout: React.FC = () => {
@@ -16,6 +26,9 @@ const MainLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
+  const [isQuickActionsOpen, setIsQuickActionsOpen] = useState(false);
+  const quickActionsRef = useRef<HTMLDivElement>(null);
+  const quickActionsButtonRef = useRef<HTMLButtonElement>(null);
   const { user, logout } = useAuth();
   const location = useLocation();
   const { t, i18n } = useTranslation();
@@ -26,6 +39,25 @@ const MainLayout: React.FC = () => {
     window.addEventListener('open-feedback-modal', handleOpenFeedback);
     return () => window.removeEventListener('open-feedback-modal', handleOpenFeedback);
   }, []);
+
+  useEffect(() => {
+    if (!isQuickActionsOpen) return;
+    const dismissOutside = (event: PointerEvent) => {
+      if (!quickActionsRef.current?.contains(event.target as Node)) setIsQuickActionsOpen(false);
+    };
+    const dismissEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsQuickActionsOpen(false);
+        quickActionsButtonRef.current?.focus();
+      }
+    };
+    document.addEventListener('pointerdown', dismissOutside);
+    document.addEventListener('keydown', dismissEscape);
+    return () => {
+      document.removeEventListener('pointerdown', dismissOutside);
+      document.removeEventListener('keydown', dismissEscape);
+    };
+  }, [isQuickActionsOpen]);
 
   const handleLogout = () => {
     logout();
@@ -89,11 +121,12 @@ const MainLayout: React.FC = () => {
           </div>
         )}
 
-        <header className="sticky top-0 z-[70] h-16 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl backdrop-saturate-150 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 shadow-sm transition-colors duration-200 shrink-0 will-change-transform">
+        <header className="sticky top-0 z-[70] h-16 bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-800 flex items-center justify-between px-4 md:px-8 shadow-sm transition-colors duration-200 shrink-0 will-change-transform relative">
           <div className="flex items-center min-w-0 mr-4">
             <button
-              className="mr-3 md:hidden text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 focus:outline-none shrink-0"
+              className="mr-3 lg:hidden text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 focus-visible:ring-2 focus-visible:ring-primary rounded-md shrink-0"
               onClick={() => setIsMobileMenuOpen(true)}
+              aria-label={t('common.menuButton')}
             >
               <Menu size={24} />
             </button>
@@ -102,39 +135,111 @@ const MainLayout: React.FC = () => {
             </h2>
           </div>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <NotificationPopover />
-            <button
-              onClick={() => setIsFeedbackOpen(true)}
-              className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
-              title={t('common.feedback')}
-            >
-              <MessageSquarePlus size={18} />
-            </button>
-            <button
-              onClick={() => setIsHelpOpen(true)}
-              className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
-              title={t('helpWidget.title')}
-            >
-              <HelpCircle size={18} />
-            </button>
-            <button
-              onClick={cycleTheme}
-              className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
-              title={`Theme: ${theme}`}
-            >
-              {renderThemeIcon()}
-            </button>
-            <button
-              onClick={toggleLanguage}
-              className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
-              title="Toggle Language"
-            >
-              <Globe size={18} />
-              <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center min-w-[14px] h-3.5 px-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-[7px] font-black text-primary dark:text-blue-400 shadow-sm leading-none uppercase tracking-tighter">
-                {i18n.language.startsWith('en') ? 'EN' : 'VI'}
-              </span>
-            </button>
+            <div className="relative sm:hidden" ref={quickActionsRef}>
+              <ActionHint label={t('common.moreActions')} showTouchLabel={false}>
+                <button
+                  ref={quickActionsButtonRef}
+                  type="button"
+                  onClick={() => setIsQuickActionsOpen((open) => !open)}
+                  aria-label={t('common.moreActions')}
+                  aria-expanded={isQuickActionsOpen}
+                  aria-controls="mobile-quick-actions"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-primary dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-600"
+                >
+                  <Ellipsis size={20} aria-hidden="true" />
+                </button>
+              </ActionHint>
+              {isQuickActionsOpen && (
+                <div
+                  id="mobile-quick-actions"
+                  className="absolute right-0 top-full z-[100] mt-2 w-56 rounded-xl border border-gray-200 bg-white p-2 shadow-xl dark:border-gray-700 dark:bg-gray-800"
+                >
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFeedbackOpen(true);
+                      setIsQuickActionsOpen(false);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-primary dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    <MessageSquarePlus size={18} aria-hidden="true" />
+                    {t('common.feedbackShort')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsHelpOpen(true);
+                      setIsQuickActionsOpen(false);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-primary dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    <HelpCircle size={18} aria-hidden="true" />
+                    {t('common.helpShort')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      cycleTheme();
+                      setIsQuickActionsOpen(false);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-primary dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    {renderThemeIcon()}
+                    {t('common.themeButton')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toggleLanguage();
+                      setIsQuickActionsOpen(false);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm text-gray-700 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-primary dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    <Globe size={18} aria-hidden="true" />
+                    {t('common.languageButton')}
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+              <ActionHint label={t('common.feedback')} touchLabel={t('common.feedbackShort')}>
+                <button
+                  onClick={() => setIsFeedbackOpen(true)}
+                  className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
+                >
+                  <MessageSquarePlus size={18} />
+                </button>
+              </ActionHint>
+              <ActionHint label={t('helpWidget.title')} touchLabel={t('common.helpShort')}>
+                <button
+                  onClick={() => setIsHelpOpen(true)}
+                  className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
+                >
+                  <HelpCircle size={18} />
+                </button>
+              </ActionHint>
+              <ActionHint label={t('common.themeButton')} touchLabel={t('common.themeShort')}>
+                <button
+                  onClick={cycleTheme}
+                  className="flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-400 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
+                >
+                  {renderThemeIcon()}
+                </button>
+              </ActionHint>
+              <ActionHint label={t('common.languageButton')} touchLabel={t('common.languageShort')}>
+                <button
+                  onClick={toggleLanguage}
+                  className="relative flex items-center justify-center w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-blue-400 transition-all active:scale-95 shadow-sm"
+                >
+                  <Globe size={18} />
+                  <span className="absolute -bottom-0.5 -right-0.5 flex items-center justify-center min-w-[14px] h-3.5 px-0.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded text-[7px] font-black text-primary dark:text-blue-400 shadow-sm leading-none uppercase tracking-tighter">
+                    {i18n.language.startsWith('en') ? 'EN' : 'VI'}
+                  </span>
+                </button>
+              </ActionHint>
+            </div>
           </div>
         </header>
 

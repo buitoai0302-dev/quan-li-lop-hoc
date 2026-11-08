@@ -1,6 +1,7 @@
+import { ERROR_CODES } from '../utils/constants';
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
-import { ValidationError } from '../utils/errors';
+import { ScheduleConflictError, ValidationError } from '../utils/errors';
 import { ScheduleService } from '../services/schedule.service';
 
 export const getWeeklySchedule = async (
@@ -15,19 +16,25 @@ export const getWeeklySchedule = async (
     const queryStartDate = (startDate as string) || (weekStart as string);
 
     if (!queryStartDate) {
-      throw new ValidationError('startDate or weekStart is required', 'MISSING_REQUIRED_FIELDS');
+      throw new ValidationError(
+        'startDate or weekStart is required',
+        ERROR_CODES.MISSING_REQUIRED_FIELDS
+      );
     }
 
     const userRole = req.user?.role;
-    let userEmail = req.user?.email;
+    const userEmail = req.user?.email;
 
     let queryEndDate = endDate as string;
     if (!queryEndDate) {
       const tempDate = new Date(queryStartDate);
       if (isNaN(tempDate.getTime())) {
-        throw new ValidationError('Invalid startDate or weekStart format', 'INVALID_DATE_FORMAT');
+        throw new ValidationError(
+          'Invalid startDate or weekStart format',
+          ERROR_CODES.INVALID_DATE_FORMAT
+        );
       }
-      tempDate.setDate(tempDate.getDate() + 6);
+      tempDate.setUTCDate(tempDate.getUTCDate() + 6);
       queryEndDate = tempDate.toISOString().split('T')[0];
     }
 
@@ -69,12 +76,7 @@ export const createSession = async (
     const result = await ScheduleService.createSession(tenantId as string, userId, req.body);
 
     if (!result.success) {
-      res.status(409).json({
-        success: false,
-        error: 'SCHEDULE_CONFLICT',
-        conflicts: result.conflicts,
-      });
-      return;
+      throw new ScheduleConflictError(result.conflicts ?? []);
     }
 
     res.status(201).json({
@@ -104,12 +106,7 @@ export const updateSession = async (
     );
 
     if (!result.success) {
-      res.status(409).json({
-        success: false,
-        error: 'SCHEDULE_CONFLICT',
-        conflicts: result.conflicts,
-      });
-      return;
+      throw new ScheduleConflictError(result.conflicts ?? []);
     }
 
     res.status(200).json({

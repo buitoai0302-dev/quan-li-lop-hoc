@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { Modal, Card, Button, Input } from '@/components/common/UI';
+import { Modal, Card, Button } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import Pagination from '@/components/common/Pagination';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
-import { UserCheck, CheckCircle, Copy } from 'lucide-react';
+import { UserCheck, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import PageHeader from '@/components/common/PageHeader';
@@ -51,10 +51,8 @@ const Teachers: React.FC = () => {
 
   const [resettingTeacher, setResettingTeacher] = useState<Teacher | null>(null);
   const [isResetModalOpen, setIsResetModalOpen] = useState(false);
-  const [resetPasswordInput, setResetPasswordInput] = useState('');
   const [newlyCreatedPassword, setNewlyCreatedPassword] = useState<{
     email: string;
-    password: string;
   } | null>(null);
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -85,14 +83,8 @@ const Teachers: React.FC = () => {
   const { selectedIds, handleSelectAll, handleSelectOne, clearSelection } =
     useSelection(paginatedTeachers);
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(t('common.copied', 'Đã sao chép!'));
-  };
-
   const handleOpenResetModal = useCallback((teacher: Teacher) => {
     setResettingTeacher(teacher);
-    setResetPasswordInput('');
     setNewlyCreatedPassword(null);
     setIsResetModalOpen(true);
   }, []);
@@ -136,21 +128,13 @@ const Teachers: React.FC = () => {
     e.preventDefault();
     if (!resettingTeacher) return;
 
-    if (resetPasswordInput && resetPasswordInput.length > 0 && resetPasswordInput.length < 8) {
-      toast.error(
-        t('admin.users.messages.password_min_length', 'Mật khẩu phải có ít nhất 8 ký tự.')
-      );
-      return;
-    }
-
     resetPasswordMutate(
-      { id: resettingTeacher.id, password: resetPasswordInput || undefined },
+      { id: resettingTeacher.id, password: undefined },
       {
-        onSuccess: (data) => {
+        onSuccess: () => {
           toast.success(t('admin.users.messages.reset_success'));
           setNewlyCreatedPassword({
             email: resettingTeacher.email || '',
-            password: data.rawPassword,
           });
         },
         onError: (error: any) => handleApiError(error, t),
@@ -215,7 +199,7 @@ const Teachers: React.FC = () => {
         setIsBulkDeleteModalOpen(false);
       },
     });
-  }, [selectedIds, deleteBulkTeachersMutate, t]);
+  }, [selectedIds, deleteBulkTeachersMutate, t, clearSelection]);
 
   const handleExportExcel = () => {
     const columns: ExportColumn<Teacher>[] = [
@@ -345,10 +329,7 @@ const Teachers: React.FC = () => {
                 {t('admin.users.messages.reset_success')}
               </h4>
               <p className="text-sm text-gray-500 dark:text-gray-400 text-center">
-                {t(
-                  'admin.users.messages.reset_success_desc',
-                  'Mật khẩu mới đã được tạo thành công'
-                )}
+                {t('admin.users.modal.password_created', { email: newlyCreatedPassword.email })}
               </p>
             </div>
 
@@ -359,23 +340,6 @@ const Teachers: React.FC = () => {
                 </label>
                 <div className="font-medium text-gray-900 dark:text-white">
                   {newlyCreatedPassword.email}
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-bold text-gray-500 uppercase mb-1 block">
-                  {t('admin.users.modal.password_label')}
-                </label>
-                <div className="flex items-center gap-2">
-                  <code className="flex-1 bg-white dark:bg-slate-800 px-3 py-2 rounded-lg font-mono text-sm font-bold text-primary border border-gray-200 dark:border-slate-700">
-                    {newlyCreatedPassword.password}
-                  </code>
-                  <button
-                    onClick={() => copyToClipboard(newlyCreatedPassword.password)}
-                    className="p-2 text-gray-400 hover:text-primary hover:bg-white dark:hover:bg-slate-800 rounded-lg transition-all border border-transparent hover:border-gray-200 dark:hover:border-slate-700"
-                    title={t('common.copy')}
-                  >
-                    <Copy size={20} />
-                  </button>
                 </div>
               </div>
             </div>
@@ -396,23 +360,9 @@ const Teachers: React.FC = () => {
               </p>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('admin.users.modal.password_label')}
-              </label>
-              <Input
-                type="password"
-                value={resetPasswordInput}
-                onChange={(e) => setResetPasswordInput(e.target.value)}
-                placeholder={t('admin.users.modal.password_placeholder')}
-              />
-              <p className="text-xs text-gray-500">
-                {t(
-                  'admin.users.helpers.leave_blank_for_random',
-                  'Nếu để trống, hệ thống sẽ tự động tạo một mật khẩu ngẫu nhiên.'
-                )}
-              </p>
-            </div>
+            <p className="text-sm text-gray-500">
+              Xác nhận để gửi liên kết đặt lại mật khẩu; phiên hiện tại sẽ bị thu hồi.
+            </p>
 
             <div className="flex justify-end gap-3 pt-2">
               <Button type="button" variant="outline" onClick={() => setIsResetModalOpen(false)}>

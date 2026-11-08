@@ -42,29 +42,39 @@ const DraggableSessionCard: React.FC<DraggableSessionCardProps> = ({ session, on
       }`}
     >
       {/* Drag Handle - Only for desktop or dedicated drag area */}
-      <div
+      <button
+        type="button"
+        aria-label={`Kéo buổi học ${session.class_name || ''}`}
         {...listeners}
         {...attributes}
         className="absolute top-1 left-0.5 p-1 text-gray-400 hover:text-primary cursor-grab active:cursor-grabbing z-10"
       >
         <GripVertical size={10} />
-      </div>
+      </button>
 
       {onEdit && (
-        <div
-          className={`absolute top-1 right-1 p-1 bg-white/90 dark:bg-black/20 rounded shadow-sm opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:scale-110 z-10`}
+        <button
+          type="button"
+          aria-label={`Sửa buổi học ${session.class_name || ''}`}
+          className={`absolute top-1 right-1 min-h-10 min-w-10 flex items-center justify-center bg-white dark:bg-slate-800 rounded shadow-sm opacity-100 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer hover:scale-110 z-10`}
           onClick={(e) => {
             e.stopPropagation();
             onEdit(session);
           }}
         >
-          <Edit2 size={10} className={color.icon} />
-        </div>
+          <Edit2 size={16} className={color.icon} />
+        </button>
       )}
 
-      <div className="h-full w-full select-none relative pt-4" onClick={() => onView?.(session)}>
+      <button
+        type="button"
+        disabled={!onView}
+        aria-label={`Xem buổi học ${session.class_name || ''}`}
+        className="h-full w-full select-none relative pt-4 text-left"
+        onClick={() => onView?.(session)}
+      >
         <div
-          className={`font-black ${color.text} text-[10px] sm:text-[11px] truncate pr-3 leading-tight uppercase tracking-tight`}
+          className={`font-black ${color.text} text-xs sm:text-sm truncate pr-3 leading-tight uppercase tracking-tight`}
         >
           {session.class_name || 'Class'}
         </div>
@@ -81,7 +91,7 @@ const DraggableSessionCard: React.FC<DraggableSessionCardProps> = ({ session, on
           <Badge
             variant="ghost"
             size="xs"
-            className="text-gray-500 dark:text-gray-400 font-bold px-0 gap-1 text-[8px] sm:text-[9px] w-full"
+            className="text-gray-600 dark:text-gray-300 font-bold px-0 gap-1 text-xs w-full"
           >
             <MapPin size={9} className="shrink-0" />
             <span className="truncate">{session.room_name}</span>
@@ -89,7 +99,7 @@ const DraggableSessionCard: React.FC<DraggableSessionCardProps> = ({ session, on
         </div>
 
         {session.teacher_name && user?.id !== session.teacher_id && (
-          <div className="text-[8px] sm:text-[9px] text-gray-600 dark:text-gray-400 mt-1 truncate font-bold flex items-center gap-1 opacity-80">
+          <div className="text-xs text-gray-600 dark:text-gray-300 mt-1 truncate font-bold flex items-center gap-1">
             <User size={9} className="shrink-0 text-gray-400" />
             <span className="truncate">{session.teacher_name}</span>
           </div>
@@ -99,11 +109,11 @@ const DraggableSessionCard: React.FC<DraggableSessionCardProps> = ({ session, on
         <div className="absolute bottom-0 right-0 w-1.5 h-1.5 border-r border-b border-blue-300 dark:border-indigo-500 rounded-br-[2px] sm:hidden"></div>
 
         {session.notes && (
-          <div className="text-[8px] sm:text-[10px] text-yellow-700 dark:text-yellow-300 bg-yellow-50/50 dark:bg-yellow-900/30 px-1 py-0.5 rounded mt-1 truncate border border-yellow-200/50 dark:border-yellow-700/50">
+          <div className="text-xs text-yellow-700 dark:text-yellow-300 bg-yellow-50/50 dark:bg-yellow-900/30 px-1 py-0.5 rounded mt-1 truncate border border-yellow-200/50 dark:border-yellow-700/50">
             {session.notes}
           </div>
         )}
-      </div>
+      </button>
     </div>
   );
 };

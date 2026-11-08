@@ -11,12 +11,12 @@ const oauth2Client = new google.auth.OAuth2(
   config.google.redirectUri()
 );
 
-export const getAuthUrl = (state: string) => {
+export const getAuthUrl = (state: string, includeDrive: boolean) => {
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: [
       'https://www.googleapis.com/auth/calendar.events',
-      'https://www.googleapis.com/auth/drive.file',
+      ...(includeDrive ? ['https://www.googleapis.com/auth/drive.file'] : []),
     ],
     state: state,
     prompt: 'consent', // Để luôn trả về refresh_token

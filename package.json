@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
+    "check:git": "node scripts/check-git-hygiene.cjs",
+    "check:src": "npm --prefix backend run check:src",
     "prepare": "husky"
   },
   "keywords": [],

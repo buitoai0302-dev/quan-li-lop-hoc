@@ -13,12 +13,14 @@ import {
   Copy,
 } from 'lucide-react';
 import PageHeader from '@/components/common/PageHeader';
+import ActionHint from '@/components/common/ActionHint';
 import { useRequestPlanUpgrade, useSubscriptionData } from '../hooks/useSubscription';
 import { usePublicSettings } from '@/features/admin/hooks/useSystemSettings';
 import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';
 import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CheckoutState {
   planId: string;
@@ -27,36 +29,74 @@ interface CheckoutState {
 }
 
 const Checkout: React.FC = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const location = useLocation();
   const navigate = useNavigate();
+  const { updateUser } = useAuth();
   const state = location.state as CheckoutState | null;
+  const params = new URLSearchParams(location.search);
 
-  const { data } = useSubscriptionData();
+  const { data, isError, refetch } = useSubscriptionData();
   const { data: settings } = usePublicSettings();
   const { mutate: requestUpgradeMutate, isPending } = useRequestPlanUpgrade();
 
-  if (!state) {
-    navigate('/settings/subscription', { replace: true });
-    return null;
+  const planId = params.get('plan') || state?.planId;
+  const billingCycle =
+    params.get('cycle') === 'YEARLY'
+      ? 'YEARLY'
+      : params.get('cycle') === 'MONTHLY'
+        ? 'MONTHLY'
+        : state?.billingCycle;
+  const plan = data?.plans?.find((p) => p.id === planId && p.is_active);
+  const planName = plan?.name || '';
+  const hasPendingRequest = data?.requestStatus?.status === 'pending';
+
+  if (isError)
+    return (
+      <div className="p-8" role="alert">
+        {t('landing.pricingError')}{' '}
+        <button className="underline" onClick={() => refetch()}>
+          {t('landing.retry')}
+        </button>
+      </div>
+    );
+  if (!data)
+    return (
+      <div className="p-8" role="status">
+        {t('common.loading', 'Đang tải...')}
+      </div>
+    );
+  if (!plan || !billingCycle) {
+    return (
+      <div className="p-8" role="alert">
+        {t('landing.planUnavailable', 'Gói không còn khả dụng.')}{' '}
+        <button className="underline" onClick={() => navigate('/subscription')}>
+          {t('landing.viewPlans', 'Xem các gói')}
+        </button>
+      </div>
+    );
+  }
+  // VietQR and the configured bank account collect VND regardless of the UI language.
+  const rawTransferAmount = billingCycle === 'YEARLY' ? plan.yearly_price_vnd : plan.price_vnd;
+  const transferAmountVnd = Number(rawTransferAmount);
+  if (
+    rawTransferAmount === null ||
+    rawTransferAmount === undefined ||
+    !Number.isSafeInteger(transferAmountVnd) ||
+    transferAmountVnd < 0
+  ) {
+    return (
+      <div className="p-8" role="alert">
+        {t('landing.priceUnavailable')}{' '}
+        <button className="underline" onClick={() => navigate('/subscription')}>
+          {t('landing.viewPlans')}
+        </button>
+      </div>
+    );
   }
 
-  const { planId, planName, billingCycle } = state;
-  const isVi = i18n.language === 'vi';
-
-  const plan = data?.plans?.find((p) => p.id === planId);
-
-  if (!plan) {
-    return <div>Plan not found</div>;
-  }
-
-  const monthlyPrice = isVi ? Number(plan.price_vnd) || 0 : Number(plan.price_usd) || 0;
-  const yearlyPrice = isVi
-    ? Number(plan.yearly_price_vnd) || 0
-    : Number(plan.yearly_price_usd) || 0;
   const isYearly = billingCycle === 'YEARLY';
-
-  const finalPrice = isYearly ? yearlyPrice : monthlyPrice;
+  const formattedTransferAmount = new Intl.NumberFormat('vi-VN').format(transferAmountVnd);
   const transferMessageText = `Thanh toan goi ${planName} ${isYearly ? '1 nam' : '1 thang'}`;
 
   const handleCopy = (text: string) => {
@@ -65,12 +105,14 @@ const Checkout: React.FC = () => {
   };
 
   const handleConfirm = () => {
+    if (hasPendingRequest) return;
     requestUpgradeMutate(
-      { planId, billingCycle },
+      { planId: plan.id, billingCycle },
       {
         onSuccess: () => {
+          updateUser({ signup_plan_id: null, signup_plan_code: null, signup_billing_cycle: null });
           toast.success(t('subscription.requestSent', { planName }));
-          navigate('/settings/subscription', { replace: true });
+          navigate('/subscription', { replace: true });
         },
         onError: (err: unknown) => {
           handleApiError(err as AxiosError<ApiErrorData>, t);
@@ -130,11 +172,14 @@ const Checkout: React.FC = () => {
                   </span>
                   <div className="text-right">
                     <span className="text-3xl font-black text-primary tracking-tighter">
-                      {isVi ? new Intl.NumberFormat('vi-VN').format(finalPrice) : finalPrice}
+                      {formattedTransferAmount}
                     </span>
-                    <span className="text-lg font-bold text-primary ml-1">{isVi ? 'đ' : '$'}</span>
+                    <span className="text-lg font-bold text-primary ml-1">VND</span>
                   </div>
                 </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 text-right">
+                  {t('checkout.bankTransferCurrencyNote')}
+                </p>
               </div>
             </div>
 
@@ -214,7 +259,7 @@ const Checkout: React.FC = () => {
             <div className="w-full max-w-[280px] bg-white dark:bg-gray-900 rounded-2xl flex flex-col items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-700 mb-8 relative group overflow-hidden min-h-[280px] p-2">
               {settings?.PAYMENT_BANK_ID && settings?.PAYMENT_ACCOUNT_NUMBER ? (
                 <img
-                  src={`https://img.vietqr.io/image/${settings.PAYMENT_BANK_ID.trim().toLowerCase()}-${settings.PAYMENT_ACCOUNT_NUMBER.trim().replace(/\s/g, '')}-compact2.jpg?amount=${finalPrice}&addInfo=${encodeURIComponent(`Thanh toan goi ${planName}`)}&accountName=${encodeURIComponent(settings.PAYMENT_ACCOUNT_NAME || '')}`}
+                  src={`https://img.vietqr.io/image/${settings.PAYMENT_BANK_ID.trim().toLowerCase()}-${settings.PAYMENT_ACCOUNT_NUMBER.trim().replace(/\s/g, '')}-compact2.jpg?amount=${transferAmountVnd}&addInfo=${encodeURIComponent(`Thanh toan goi ${planName}`)}&accountName=${encodeURIComponent(settings.PAYMENT_ACCOUNT_NAME || '')}`}
                   alt="QR Code"
                   className="w-full h-auto object-contain mix-blend-multiply dark:mix-blend-normal rounded-xl"
                 />
@@ -235,6 +280,24 @@ const Checkout: React.FC = () => {
             </div>
 
             <div className="w-full space-y-4 mb-8">
+              <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30 flex items-center justify-between gap-3">
+                <div>
+                  <div className="text-xs text-blue-600 dark:text-blue-400 font-bold mb-1">
+                    {t('checkout.transferAmount')}
+                  </div>
+                  <div className="font-black text-blue-900 dark:text-blue-100 text-lg">
+                    {formattedTransferAmount} VND
+                  </div>
+                </div>
+                <ActionHint label={t('checkout.copyAmount')}>
+                  <button
+                    onClick={() => handleCopy(String(transferAmountVnd))}
+                    className="w-10 h-10 shrink-0 rounded-xl bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors shadow-sm"
+                  >
+                    <Copy size={18} />
+                  </button>
+                </ActionHint>
+              </div>
               <div className="bg-gray-50 dark:bg-gray-900/50 p-4 rounded-2xl">
                 <div className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">
                   {t('checkout.accountNumber')}
@@ -268,22 +331,27 @@ const Checkout: React.FC = () => {
                     {transferMessageText}
                   </div>
                 </div>
-                <button
-                  onClick={() => handleCopy(transferMessageText)}
-                  className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors shadow-sm"
-                  title="Copy"
-                >
-                  <Copy size={18} />
-                </button>
+                <ActionHint label={t('checkout.copyTransferMessage')}>
+                  <button
+                    onClick={() => handleCopy(transferMessageText)}
+                    className="w-10 h-10 rounded-xl bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 flex items-center justify-center hover:bg-blue-600 hover:text-white transition-colors shadow-sm"
+                  >
+                    <Copy size={18} />
+                  </button>
+                </ActionHint>
               </div>
             </div>
 
             <button
               onClick={handleConfirm}
-              disabled={isPending}
+              disabled={isPending || hasPendingRequest}
               className="w-full py-4 px-6 rounded-2xl font-black text-sm uppercase tracking-widest transition-all shadow-xl bg-primary text-white hover:bg-primary-dark hover:scale-[1.02] active:scale-95 shadow-primary/20 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isPending ? t('checkout.processing') : t('checkout.confirmPayment')}
+              {hasPendingRequest
+                ? t('subscription.pending')
+                : isPending
+                  ? t('checkout.processing')
+                  : t('landing.confirmUpgrade', 'Xác nhận gửi yêu cầu nâng cấp')}
             </button>
           </div>
         </div>

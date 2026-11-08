@@ -16,9 +16,11 @@ import {
   AuthenticationError,
   ForbiddenError,
   NotFoundError,
+  TooManyRequestsError,
 } from '../utils/errors';
 import { config } from '../utils/config';
-import { PLAN_CODES, TENANT_STATUS, DEFAULT_FREE_PLAN_ID, ROLES } from '../utils/constants';
+import { ERROR_CODES, PLAN_CODES, TENANT_STATUS, ROLES } from '../utils/constants';
+import { getFreePlanId } from '../utils/plans';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -57,46 +59,67 @@ export class AuthService {
   static async login(email: string, password: string, ip: string) {
     const rateCheck = await checkRateLimit(ip, email);
     if (rateCheck.blocked) {
-      throw {
-        status: 429,
-        error: `Too many failed attempts. Try again in ${Math.ceil(rateCheck.retryAfter! / 60)} min.`,
-        code: 'TOO_MANY_ATTEMPTS',
-        retryAfter: rateCheck.retryAfter,
-      };
+      const minutes = Math.ceil((rateCheck.retryAfter || 0) / 60);
+      throw new TooManyRequestsError(
+        `Too many failed attempts. Try again in ${minutes} min.`,
+        ERROR_CODES.TOO_MANY_ATTEMPTS,
+        { minutes }
+      );
     }
 
     const result = await pool.query(
       `SELECT u.*, t.name as tenant_name, t.plan_id, t.is_active as tenant_active, t.settings as tenant_settings, pd.code as plan_code,
+              t.signup_plan_id, t.signup_billing_cycle, sp.code as signup_plan_code,
               (SELECT COALESCE(json_object_agg(feature_key, is_enabled), '{}'::json) FROM plan_features WHERE plan_id = t.plan_id) as plan_features
        FROM users u 
        JOIN tenants t ON u.tenant_id = t.id 
        JOIN plan_definitions pd ON t.plan_id = pd.id
+       LEFT JOIN plan_definitions sp ON t.signup_plan_id = sp.id
        WHERE u.email = $1 AND u.is_active = true`,
       [email]
     );
 
     if (result.rows.length === 0) {
       await recordFailedAttempt(ip, email);
-      throw new AuthenticationError('Invalid email or password', 'INVALID_CREDENTIALS');
+      const failedState = await checkRateLimit(ip, email);
+      if (failedState.blocked) {
+        const minutes = Math.ceil((failedState.retryAfter || 0) / 60);
+        throw new TooManyRequestsError(
+          `Too many failed attempts. Try again in ${minutes} min.`,
+          ERROR_CODES.TOO_MANY_ATTEMPTS,
+          { minutes }
+        );
+      }
+      throw new AuthenticationError('Invalid email or password', ERROR_CODES.INVALID_CREDENTIALS);
     }
 
     const user = result.rows[0];
 
     if (user.role !== ROLES.SUPER_ADMIN && !user.tenant_active) {
-      throw new ForbiddenError('Your center is inactive or suspended', 'TENANT_INACTIVE');
+      throw new ForbiddenError('Your center is inactive or suspended', ERROR_CODES.TENANT_INACTIVE);
     }
 
     if (!user.is_email_verified) {
-      throw new ForbiddenError('Email not verified', 'EMAIL_NOT_VERIFIED');
+      throw new ForbiddenError('Email not verified', ERROR_CODES.EMAIL_NOT_VERIFIED);
     }
 
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       await recordFailedAttempt(ip, email);
-      const remaining = (await checkRateLimit(ip, email)).remainingAttempts;
+      const failedState = await checkRateLimit(ip, email);
+      if (failedState.blocked) {
+        const minutes = Math.ceil((failedState.retryAfter || 0) / 60);
+        throw new TooManyRequestsError(
+          `Too many failed attempts. Try again in ${minutes} min.`,
+          ERROR_CODES.TOO_MANY_ATTEMPTS,
+          { minutes }
+        );
+      }
+      const remaining = failedState.remainingAttempts;
       throw new AuthenticationError(
         `Invalid email or password. ${remaining} attempts left.`,
-        'INVALID_CREDENTIALS'
+        ERROR_CODES.INVALID_CREDENTIALS_REMAINING,
+        { remaining }
       );
     }
 
@@ -115,8 +138,8 @@ export class AuthService {
       audience: process.env.GOOGLE_CLIENT_ID,
     });
     const payload = ticket.getPayload();
-    if (!payload || !payload.email) {
-      throw new AuthenticationError('Invalid Google token', 'INVALID_CREDENTIALS');
+    if (!payload || !payload.email || !payload.email_verified) {
+      throw new AuthenticationError('Invalid Google token', ERROR_CODES.INVALID_CREDENTIALS);
     }
 
     const email = payload.email;
@@ -124,11 +147,13 @@ export class AuthService {
 
     const result = await pool.query(
       `SELECT u.*, t.name as tenant_name, t.plan_id, t.is_active as tenant_active, t.settings as tenant_settings, pd.code as plan_code,
+              t.signup_plan_id, t.signup_billing_cycle, sp.code as signup_plan_code,
               (SELECT COALESCE(json_object_agg(feature_key, is_enabled), '{}'::json) FROM plan_features WHERE plan_id = t.plan_id) as plan_features
        FROM users u 
        JOIN tenants t ON u.tenant_id = t.id 
        JOIN plan_definitions pd ON t.plan_id = pd.id
-       WHERE u.email = $1`,
+       LEFT JOIN plan_definitions sp ON t.signup_plan_id = sp.id
+        WHERE u.email = $1`,
       [email]
     );
 
@@ -139,12 +164,8 @@ export class AuthService {
       try {
         await client.query('BEGIN');
 
-        const planResult = await client.query(
-          `SELECT id, code FROM plan_definitions WHERE code = $1`,
-          [PLAN_CODES.FREE]
-        );
-        const planId = planResult.rows[0]?.id || DEFAULT_FREE_PLAN_ID;
-        const planCode = planResult.rows[0]?.code || 'FREE';
+        const planId = await getFreePlanId(client);
+        const planCode = PLAN_CODES.FREE;
 
         const tenantResult = await client.query(
           'INSERT INTO tenants (plan_id, name, status, is_active, contact_email) VALUES ($1, $2, $3, true, $4) RETURNING id, name as tenant_name, plan_id, is_active as tenant_active, settings as tenant_settings',
@@ -184,8 +205,11 @@ export class AuthService {
       user = result.rows[0];
     }
 
+    if (!user.is_active) {
+      throw new ForbiddenError('Account inactive', ERROR_CODES.ACCOUNT_INACTIVE);
+    }
     if (user.role !== ROLES.SUPER_ADMIN && !user.tenant_active) {
-      throw new ForbiddenError('Your center is inactive or suspended', 'TENANT_INACTIVE');
+      throw new ForbiddenError('Your center is inactive or suspended', ERROR_CODES.TENANT_INACTIVE);
     }
 
     if (!user.is_email_verified) {
@@ -200,7 +224,10 @@ export class AuthService {
   }
 
   static async register(data: any) {
-    const { email, password, fullName, tenantName } = data;
+    const { email, password, fullName, tenantName, intendedPlanCode, billingCycle } = data;
+    if (billingCycle && !intendedPlanCode) {
+      throw new ValidationError('Plan code is required with billing cycle');
+    }
 
     const pwCheck = this.validatePassword(password);
     if (!pwCheck.valid) {
@@ -213,17 +240,30 @@ export class AuthService {
 
       const existingUser = await client.query('SELECT id FROM users WHERE email = $1', [email]);
       if (existingUser.rows.length > 0) {
-        throw new ValidationError('Email already registered', 'EMAIL_ALREADY_EXISTS');
+        throw new ValidationError('Email already registered', ERROR_CODES.EMAIL_ALREADY_EXISTS);
       }
 
-      const planResult = await client.query(`SELECT id FROM plan_definitions WHERE code = $1`, [
-        PLAN_CODES.FREE,
-      ]);
-      const planId = planResult.rows[0]?.id || DEFAULT_FREE_PLAN_ID;
+      const planId = await getFreePlanId(client);
+      let signupPlanId: string | null = null;
+      if (intendedPlanCode) {
+        const intended = await client.query(
+          'SELECT id, code FROM plan_definitions WHERE code = $1 AND is_active = true FOR SHARE',
+          [intendedPlanCode]
+        );
+        if (!intended.rows.length) throw new ValidationError('Selected plan is unavailable');
+        signupPlanId = intended.rows[0].code === PLAN_CODES.FREE ? null : intended.rows[0].id;
+      }
 
       const tenantResult = await client.query(
-        'INSERT INTO tenants (plan_id, name, status, is_active, contact_email) VALUES ($1, $2, $3, false, $4) RETURNING id, settings as tenant_settings',
-        [planId, tenantName || `Center of ${fullName}`, TENANT_STATUS.PENDING, email]
+        'INSERT INTO tenants (plan_id, name, status, is_active, contact_email, signup_plan_id, signup_billing_cycle) VALUES ($1, $2, $3, false, $4, $5, $6) RETURNING id, settings as tenant_settings',
+        [
+          planId,
+          tenantName || `Center of ${fullName}`,
+          TENANT_STATUS.PENDING,
+          email,
+          signupPlanId,
+          signupPlanId ? billingCycle || 'MONTHLY' : null,
+        ]
       );
       const { id: tenantId } = tenantResult.rows[0];
 
@@ -286,9 +326,10 @@ export class AuthService {
   static async resendVerification(email: string, ip: string) {
     const rateCheck = await checkEmailRateLimit(ip);
     if (rateCheck.blocked) {
-      throw new ForbiddenError(
+      throw new TooManyRequestsError(
         `Too many requests. Please try again in ${rateCheck.retryAfter} seconds.`,
-        'RATE_LIMIT_EXCEEDED'
+        ERROR_CODES.RATE_LIMIT_EXCEEDED,
+        { seconds: rateCheck.retryAfter || 0 }
       );
     }
 
@@ -316,9 +357,10 @@ export class AuthService {
   static async forgotPassword(email: string, ip: string) {
     const rateCheck = await checkEmailRateLimit(ip);
     if (rateCheck.blocked) {
-      throw new ForbiddenError(
+      throw new TooManyRequestsError(
         `Too many requests. Please try again in ${rateCheck.retryAfter} seconds.`,
-        'RATE_LIMIT_EXCEEDED'
+        ERROR_CODES.RATE_LIMIT_EXCEEDED,
+        { seconds: rateCheck.retryAfter || 0 }
       );
     }
 
@@ -355,7 +397,7 @@ export class AuthService {
     );
 
     if (result.rows.length === 0) {
-      throw new ValidationError('Token expired', 'RESET_PASSWORD_EXPIRED');
+      throw new ValidationError('Token expired', ERROR_CODES.RESET_PASSWORD_EXPIRED);
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -363,7 +405,8 @@ export class AuthService {
 
     await pool.query(
       `UPDATE users 
-       SET password_hash = $1, reset_password_token = NULL, reset_password_expires = NULL 
+       SET password_hash = $1, reset_password_token = NULL, reset_password_expires = NULL,
+           is_email_verified = true, verification_token = NULL, verification_token_expires = NULL
        WHERE id = $2`,
       [passwordHash, result.rows[0].id]
     );
@@ -380,15 +423,18 @@ export class AuthService {
               t.name as tenant_name,
               t.settings as tenant_settings,
               pd.code as plan_code,
+              t.signup_plan_id, t.signup_billing_cycle, sp.code as signup_plan_code,
               (SELECT COALESCE(json_object_agg(feature_key, is_enabled), '{}'::json) FROM plan_features WHERE plan_id = t.plan_id) as plan_features
        FROM users u 
        JOIN tenants t ON u.tenant_id = t.id 
        JOIN plan_definitions pd ON t.plan_id = pd.id
+       LEFT JOIN plan_definitions sp ON t.signup_plan_id = sp.id
        WHERE u.id = $1`,
       [userId]
     );
 
-    if (result.rows.length === 0) throw new NotFoundError('User not found', 'USER_NOT_FOUND');
+    if (result.rows.length === 0)
+      throw new NotFoundError('User not found', ERROR_CODES.USER_NOT_FOUND);
 
     return result.rows[0];
   }
@@ -402,7 +448,8 @@ export class AuthService {
       [full_name, notify_upcoming_sessions, userId]
     );
 
-    if (result.rows.length === 0) throw new NotFoundError('User not found', 'USER_NOT_FOUND');
+    if (result.rows.length === 0)
+      throw new NotFoundError('User not found', ERROR_CODES.USER_NOT_FOUND);
 
     return result.rows[0];
   }
@@ -414,19 +461,23 @@ export class AuthService {
 
   static async refreshToken(token: string) {
     const result = await pool.query(
-      `SELECT rt.user_id, u.tenant_id, u.branch_id, u.role
-       FROM refresh_tokens rt
-       JOIN users u ON rt.user_id = u.id
-       WHERE rt.token = $1 AND rt.expires_at > NOW()`,
+      `DELETE FROM refresh_tokens rt
+       USING users u, tenants t
+       WHERE rt.token = $1 AND rt.expires_at > NOW()
+         AND rt.user_id = u.id AND u.tenant_id = t.id
+         AND u.is_active = true AND (t.is_active = true OR u.role = 'super_admin')
+       RETURNING u.id AS user_id, u.tenant_id, u.branch_id, u.role, u.email`,
       [token]
     );
 
     if (result.rows.length === 0) {
-      throw new AuthenticationError('Invalid or expired refresh token', 'INVALID_REFRESH_TOKEN');
+      throw new AuthenticationError(
+        'Invalid or expired refresh token',
+        ERROR_CODES.INVALID_REFRESH_TOKEN
+      );
     }
 
     const user = result.rows[0];
-    await pool.query('DELETE FROM refresh_tokens WHERE token = $1', [token]);
 
     const { accessToken, refreshToken: newRefreshToken } = await this.issueTokens(user);
 

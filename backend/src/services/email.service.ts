@@ -1,5 +1,6 @@
 import { logger } from '../utils/logger';
 import nodemailer from 'nodemailer';
+import { config } from '../utils/config';
 
 // Escape user-controlled strings before injecting into HTML templates
 const escapeHtml = (str: string): string =>
@@ -22,10 +23,8 @@ const transporter = nodemailer.createTransport({
 
 const logPreviewUrl = (info: any) => {
   if (!process.env.SMTP_USER || process.env.SMTP_HOST === 'smtp.ethereal.email') {
-    const previewUrl = nodemailer.getTestMessageUrl(info);
-    if (previewUrl) {
-      logger.info(`\n📧 EMAIL PREVIEW URL (dev only): ${previewUrl}\n`);
-    }
+    // Preview links can contain verification/reset tokens and must stay out of logs.
+    if (nodemailer.getTestMessageUrl(info)) logger.info('Test email generated');
   }
 };
 
@@ -85,7 +84,7 @@ const button = (url: string, viLabel: string, enLabel: string, color = '#3b82f6'
 // ─── Send Verification Email (Generic) ─────────────────────────────────────────
 
 export const sendVerificationEmail = async (to: string, token: string) => {
-  const verifyLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
+  const verifyLink = `${config.frontendUrl()}/verify-email?token=${token}`;
 
   const body = `
     <!-- VI -->
@@ -124,23 +123,21 @@ export const sendVerificationEmail = async (to: string, token: string) => {
 // ─── Send Teacher Welcome Email ───────────────────────────────────────────────
 
 export const sendTeacherWelcomeEmail = async (to: string, token: string, fullName: string) => {
-  const verifyLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${token}`;
-  const defaultPassword = to.split('@')[0];
+  const setupLink = `${config.frontendUrl()}/reset-password?token=${token}`;
 
   const body = `
     <!-- VI -->
     <h2 style="margin:0 0 8px;color:#1e293b;font-size:20px;">🎉 Chào mừng Giáo viên ${escapeHtml(fullName)}</h2>
     <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 12px;">
-      Bạn vừa được thêm vào hệ thống quản lý giáo dục <strong>EduSchedule</strong>. Dưới đây là thông tin đăng nhập tạm thời của bạn:
+      Bạn vừa được thêm vào EduSchedule. Hãy dùng liên kết một lần bên dưới để đặt mật khẩu trước khi đăng nhập.
     </p>
     
     <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
-      <p style="margin:0 0 8px;font-size:14px;"><strong>📧 Email:</strong> ${to}</p>
-      <p style="margin:0;font-size:14px;"><strong>🔑 Mật khẩu mặc định:</strong> <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;">${defaultPassword}</code></p>
+      <p style="margin:0 0 8px;font-size:14px;"><strong>📧 Email:</strong> ${escapeHtml(to)}</p>
     </div>
 
     <p style="color:#ef4444;font-size:13px;margin:0 0 20px;">
-      <strong>Lưu ý:</strong> Vui lòng nhấn nút bên dưới để xác thực email trước khi đăng nhập. Bạn nên đổi mật khẩu ngay sau khi đăng nhập thành công.
+      <strong>Lưu ý:</strong> Liên kết đặt mật khẩu chỉ có hiệu lực trong 24 giờ.
     </p>
 
     ${divider}
@@ -148,18 +145,17 @@ export const sendTeacherWelcomeEmail = async (to: string, token: string, fullNam
     <!-- EN -->
     <h2 style="margin:0 0 8px;color:#1e293b;font-size:20px;">🎉 Welcome Teacher ${escapeHtml(fullName)}</h2>
     <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 12px;">
-      You have been added to <strong>EduSchedule</strong> management system. Here are your temporary login credentials:
+      You have been added to EduSchedule. Use the one-time link below to set your password before signing in.
     </p>
     <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
-      <p style="margin:0 0 8px;font-size:14px;"><strong>📧 Email:</strong> ${to}</p>
-      <p style="margin:0;font-size:14px;"><strong>🔑 Default Password:</strong> <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;">${defaultPassword}</code></p>
+      <p style="margin:0 0 8px;font-size:14px;"><strong>📧 Email:</strong> ${escapeHtml(to)}</p>
     </div>
     
     <p style="color:#ef4444;font-size:13px;margin:0 0 20px;">
-      <strong>Note:</strong> Please click the button below to verify your email before logging in. You should change your password immediately after successful login.
+      <strong>Note:</strong> This password setup link expires in 24 hours.
     </p>
 
-    ${button(verifyLink, 'Kích Hoạt Tài Khoản', 'Activate Account')}
+    ${button(setupLink, 'Đặt Mật Khẩu', 'Set Password')}
   `;
 
   try {
@@ -179,7 +175,7 @@ export const sendTeacherWelcomeEmail = async (to: string, token: string, fullNam
 // ─── Send Password Reset Email ────────────────────────────────────────────────
 
 export const sendPasswordResetEmail = async (to: string, token: string) => {
-  const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${token}`;
+  const resetLink = `${config.frontendUrl()}/reset-password?token=${token}`;
 
   const body = `
     <!-- VI -->
@@ -212,53 +208,6 @@ export const sendPasswordResetEmail = async (to: string, token: string) => {
   } catch (error) {
     logger.error(error, 'Error sending password reset email:');
     throw error;
-  }
-};
-
-// ─── Send New User Password Email (Admin tạo tài khoản) ───────────────────────────────────────
-
-export const sendNewUserPasswordEmail = async (to: string, fullName: string, password: string) => {
-  const loginLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/login`;
-
-  const body = `
-    <!-- VI -->
-    <h2 style="margin:0 0 8px;color:#1e293b;font-size:20px;">🔐 Tài khoản của bạn đã được tạo</h2>
-    <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 12px;">
-      Xin chào <strong>${escapeHtml(fullName)}</strong>, tài khoản của bạn trên <strong>EduSchedule</strong> đã được tạo bởi quản trị viên. Dưới đây là thông tin đăng nhập tạm thời:
-    </p>
-    <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
-      <p style="margin:0 0 8px;font-size:14px;"><strong>📧 Email:</strong> ${escapeHtml(to)}</p>
-      <p style="margin:0;font-size:14px;"><strong>🔑 Mật khẩu tạm thời:</strong> <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;">${escapeHtml(password)}</code></p>
-    </div>
-    <p style="color:#ef4444;font-size:13px;margin:0 0 20px;">⚠️ <strong>Lưu ý:</strong> Đây là mật khẩu tạm thời. Vui lòng đổi mật khẩu ngay sau khi đăng nhập lần đầu.</p>
-
-    ${divider}
-
-    <!-- EN -->
-    <h2 style="margin:0 0 8px;color:#1e293b;font-size:20px;">🔐 Your account has been created</h2>
-    <p style="color:#475569;font-size:14px;line-height:1.7;margin:0 0 12px;">
-      Hello <strong>${escapeHtml(fullName)}</strong>, your account on <strong>EduSchedule</strong> has been created by an administrator. Here are your temporary login credentials:
-    </p>
-    <div style="background:#f8fafc;padding:20px;border-radius:12px;margin:20px 0;border:1px solid #e2e8f0;">
-      <p style="margin:0 0 8px;font-size:14px;"><strong>📧 Email:</strong> ${escapeHtml(to)}</p>
-      <p style="margin:0;font-size:14px;"><strong>🔑 Temporary Password:</strong> <code style="background:#e2e8f0;padding:2px 6px;border-radius:4px;">${escapeHtml(password)}</code></p>
-    </div>
-    <p style="color:#ef4444;font-size:13px;margin:0 0 20px;">⚠️ <strong>Note:</strong> This is a temporary password. Please change it immediately after your first login.</p>
-
-    ${button(loginLink, 'Đăng Nhập Ngay', 'Login Now')}
-  `;
-
-  try {
-    const info = await transporter.sendMail({
-      from: `"EduSchedule" <${process.env.SMTP_USER || 'no-reply@eduschedule.com'}>`,
-      to,
-      subject: '[EduSchedule] Thông tin tài khoản mới · Your new account credentials',
-      html: emailWrapper(body),
-    });
-    logPreviewUrl(info);
-  } catch (error) {
-    logger.error(error, 'Error sending new user password email:');
-    // Không throw — việc tạo user đã thành công, email lỗi chỉ là warning
   }
 };
 

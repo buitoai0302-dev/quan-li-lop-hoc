@@ -1,7 +1,8 @@
 import axios from 'axios';
 
+const apiBaseUrl = import.meta.env.VITE_API_URL || '/api';
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  baseURL: apiBaseUrl,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -71,7 +72,7 @@ api.interceptors.response.use(
       try {
         // Gọi refresh không cần gửi body — cookie tự được gửi kèm (withCredentials: true)
         const { data } = await axios.post(
-          `${import.meta.env.VITE_API_URL || '/api'}/auth/refresh`,
+          `${apiBaseUrl}/auth/refresh`,
           {},
           { withCredentials: true }
         );

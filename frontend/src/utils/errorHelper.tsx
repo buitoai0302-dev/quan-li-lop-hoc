@@ -8,12 +8,39 @@ export interface ApiErrorData {
   errorCode?: string;
   message?: string;
   error?: string;
+  params?: Record<string, string | number>;
+  slot?: { date: string; startTime: string; endTime: string };
   conflicts?: Array<{
     conflict_type: string;
-    conflict_id: string;
-    detail: string;
+    conflict_id?: string;
+    detail?: string;
   }>;
 }
+
+const readErrorCode = (data?: ApiErrorData) =>
+  data?.code ||
+  data?.errorCode ||
+  (data?.error === ERROR_CODES.SCHEDULE_CONFLICT ? data.error : undefined);
+
+export const getApiErrorMessage = (
+  error: AxiosError<ApiErrorData>,
+  t: TFunction,
+  defaultMessageKey: string = 'common.error'
+): string => {
+  const data = error.response?.data;
+  const code = readErrorCode(data);
+  if (error.response?.status === 429 && (!code || code === ERROR_CODES.INTERNAL_ERROR)) {
+    return t('errors.TOO_MANY_REQUESTS');
+  }
+  if (code) {
+    const key = `errors.${code}`;
+    const translated = t(key, data?.params || {});
+    if (translated && translated !== key) return translated;
+    if (code === ERROR_CODES.INTERNAL_ERROR) return t('errors.INTERNAL_ERROR');
+  }
+  if (error.response?.status === 429) return t('errors.TOO_MANY_REQUESTS');
+  return data?.message || data?.error || t(defaultMessageKey);
+};
 
 export const handleApiError = (
   error: AxiosError<ApiErrorData>,
@@ -21,7 +48,7 @@ export const handleApiError = (
   defaultMessageKey: string = 'common.error'
 ) => {
   const data = error.response?.data;
-  const errorCode = data?.code || data?.errorCode || data?.error;
+  const errorCode = readErrorCode(data);
   const errorMessage = data?.message || data?.error || '';
   const status = error.response?.status;
 
@@ -72,14 +99,23 @@ export const handleApiError = (
   }
 
   // Handle Schedule Conflicts
-  if (errorCode === ERROR_CODES.SCHEDULE_CONFLICT || errorCode === 'SCHEDULE_CONFLICT') {
+  if (errorCode === ERROR_CODES.SCHEDULE_CONFLICT) {
     if (data?.conflicts && Array.isArray(data.conflicts) && data.conflicts.length > 0) {
       // Group conflicts by type for cleaner messages
       const conflictMessages = data.conflicts.map((c) => {
         const typeKey = `errors.${c.conflict_type}`;
         const translatedType = t(typeKey);
         // If translation doesn't exist, use the detail from server (fallback)
-        return translatedType !== typeKey ? translatedType : c.detail;
+        const message =
+          translatedType !== typeKey ? translatedType : c.detail || t('errors.SCHEDULE_CONFLICT');
+        return data.slot
+          ? t('errors.SCHEDULE_CONFLICT_AT', {
+              message,
+              date: data.slot.date,
+              startTime: data.slot.startTime.slice(0, 5),
+              endTime: data.slot.endTime.slice(0, 5),
+            })
+          : message;
       });
 
       // Show unique messages
@@ -90,16 +126,5 @@ export const handleApiError = (
     }
   }
 
-  if (errorCode && errorCode !== ERROR_CODES.INTERNAL_ERROR) {
-    // Try to translate the error code
-    const translatedMessage = t(`errors.${errorCode}`);
-    // If translation exists and is not just the key itself
-    if (translatedMessage && translatedMessage !== `errors.${errorCode}`) {
-      toast.error(translatedMessage);
-      return;
-    }
-  }
-
-  // Fallback to error message from server or default message
-  toast.error(data?.error || data?.message || t(defaultMessageKey));
+  toast.error(getApiErrorMessage(error, t, defaultMessageKey));
 };

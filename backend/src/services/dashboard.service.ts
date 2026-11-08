@@ -176,11 +176,12 @@ export class DashboardService {
           EXTRACT(MONTH FROM created_at) as month_num,
           EXTRACT(YEAR FROM created_at) as year
         FROM students 
-        WHERE tenant_id = $1 AND created_at > CURRENT_DATE - INTERVAL '${period} months'
+        WHERE tenant_id = $1 AND is_deleted = false
+          AND created_at > CURRENT_DATE - make_interval(months => $2::int)
         GROUP BY month, month_num, year
         ORDER BY year, month_num
       `,
-        [tenantId]
+        [tenantId, period]
       ),
       // Class distribution by status
       pool.query(
@@ -202,24 +203,27 @@ export class DashboardService {
       `,
         [tenantId]
       ),
-      // Real attendance trends (By Day of Week)
+      // Attendance by class date, independent of when an operator entered the record.
       pool.query(
         `
         SELECT 
-          TO_CHAR(created_at, 'Dy') as day,
-          ROUND(AVG(CASE WHEN status = 'present' THEN 100 ELSE 0 END)) as rate
-        FROM attendance
-        WHERE tenant_id = $1 AND created_at > CURRENT_DATE - INTERVAL '7 days'
-        GROUP BY day
+          TO_CHAR(s.session_date, 'Dy') as day,
+          ROUND(AVG(CASE WHEN a.status = 'present' THEN 100 ELSE 0 END)) as rate
+        FROM attendance a
+        JOIN schedule_sessions s ON s.id = a.session_id AND s.tenant_id = a.tenant_id
+        WHERE a.tenant_id = $1 AND s.session_date BETWEEN CURRENT_DATE - 6 AND CURRENT_DATE
+        GROUP BY s.session_date
+        ORDER BY s.session_date
       `,
         [tenantId]
       ),
       // Overall attendance rate for header
       pool.query(
         `
-        SELECT ROUND(AVG(CASE WHEN status = 'present' THEN 100 ELSE 0 END)) as rate
-        FROM attendance
-        WHERE tenant_id = $1 AND created_at > CURRENT_DATE - INTERVAL '30 days'
+        SELECT ROUND(AVG(CASE WHEN a.status = 'present' THEN 100 ELSE 0 END)) as rate
+        FROM attendance a
+        JOIN schedule_sessions s ON s.id = a.session_id AND s.tenant_id = a.tenant_id
+        WHERE a.tenant_id = $1 AND s.session_date BETWEEN CURRENT_DATE - 29 AND CURRENT_DATE
       `,
         [tenantId]
       ),
@@ -376,7 +380,7 @@ export class DashboardService {
       `;
       countSql = `
         SELECT COUNT(*) FROM (
-          (SELECT cs.id FROM class_students cs JOIN classes c ON cs.class_id = c.id WHERE c.teacher_id = $1 AND c.tenant_id = $2)
+          (SELECT cs.student_id FROM class_students cs JOIN classes c ON cs.class_id = c.id WHERE c.teacher_id = $1 AND c.tenant_id = $2)
           UNION ALL
           (SELECT id FROM classes WHERE teacher_id = $1 AND tenant_id = $2)
         ) combined
@@ -416,9 +420,7 @@ export class DashboardService {
       ),
     ]);
 
-    const countParams = role === 'teacher' ? [params[0], params[1]] : [params[0]];
-    const countResult = await pool.query(countSql, countParams);
-    const total = parseInt(countResult.rows[0].count, 10);
+    const total = parseInt(countRes.rows[0].count, 10);
 
     return {
       activities: activitiesRes.rows.map((r) => ({

@@ -1,4 +1,4 @@
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
@@ -19,24 +19,27 @@ async function dumpDatabase() {
 
   console.log(`--- Starting Database Dump to ${dumpFile} ---`);
 
-  // Note: This requires pg_dump to be installed and in your PATH
-  const command = `pg_dump "${dbUrl}" > "${dumpPath}"`;
-
-  exec(command, (error, stdout, stderr) => {
-    if (error) {
-      console.error('Error during dump:');
-      console.error(error.message);
-      console.log(
-        '\nTip: Make sure PostgreSQL tools (pg_dump) are installed and added to your system PATH.'
-      );
-      process.exit(1);
+  // Keep the connection string out of shell commands and process arguments.
+  const child = spawn('pg_dump', ['--no-password', '--file', dumpPath], {
+    shell: false,
+    windowsHide: true,
+    env: { ...process.env, PGDATABASE: dbUrl },
+  });
+  let stderr = '';
+  child.stderr.on('data', chunk => { stderr += String(chunk); });
+  child.on('error', error => {
+    fs.rmSync(dumpPath, { force: true });
+    console.error('Could not start pg_dump:', error.message);
+    process.exitCode = 1;
+  });
+  child.on('close', code => {
+    if (code !== 0) {
+      fs.rmSync(dumpPath, { force: true });
+      console.error('Database dump failed:', stderr.trim() || `pg_dump exited with code ${code}`);
+      process.exitCode = 1;
+      return;
     }
-    if (stderr && !stderr.includes('Warning')) {
-      console.error('Stderr:', stderr);
-    }
-
     console.log(`--- Success! Database dumped to: ${dumpPath} ---`);
-    process.exit(0);
   });
 }
 

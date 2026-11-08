@@ -155,7 +155,7 @@ const Students: React.FC = () => {
         handleApiError(error as AxiosError<ApiErrorData>, t);
       },
     });
-  }, [deletingId, t, deleteStudentMutate]);
+  }, [deletingId, t, deleteStudentMutate, clearSelection]);
 
   const handleBulkDelete = useCallback(() => {
     if (selectedIds.length === 0) return;
@@ -170,7 +170,7 @@ const Students: React.FC = () => {
         setIsBulkDeleteModalOpen(false);
       },
     });
-  }, [selectedIds, deleteBulkStudentsMutate, t]);
+  }, [selectedIds, deleteBulkStudentsMutate, t, clearSelection]);
 
   const handleExportExcel = () => {
     const columns: ExportColumn<Student>[] = [

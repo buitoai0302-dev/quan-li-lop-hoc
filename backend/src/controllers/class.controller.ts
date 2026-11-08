@@ -1,4 +1,3 @@
-import { logger } from '../utils/logger';
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ClassService } from '../services/class.service';
@@ -21,7 +20,12 @@ export const getClassById = async (req: AuthRequest, res: Response, next: NextFu
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
 
-    const result = await ClassService.getClassById(tenantId as string, id as string);
+    const result = await ClassService.getClassById(
+      tenantId as string,
+      id as string,
+      req.user?.role,
+      req.user?.email
+    );
     res.json(result);
   } catch (error) {
     next(error);
@@ -34,9 +38,8 @@ export const createClass = async (req: AuthRequest, res: Response, next: NextFun
 
     const result = await ClassService.createClass(tenantId as string, req.body);
     res.status(201).json(result);
-  } catch (error: any) {
-    logger.error(error, 'CREATE CLASS ERROR:');
-    res.status(500).json({ error: error.message, stack: error.stack });
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -46,8 +49,14 @@ export const getRecurringSchedules = async (
   next: NextFunction
 ) => {
   try {
+    const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
-    const result = await ClassService.getRecurringSchedules(id as string);
+    const result = await ClassService.getRecurringSchedules(
+      tenantId as string,
+      id as string,
+      req.user?.role,
+      req.user?.email
+    );
     res.json(result);
   } catch (error) {
     next(error);
@@ -61,13 +70,8 @@ export const updateClass = async (req: AuthRequest, res: Response, next: NextFun
 
     const result = await ClassService.updateClass(tenantId as string, id as string, req.body);
     res.json(result);
-  } catch (error: any) {
-    logger.error(error, 'UPDATE CLASS ERROR:');
-    res.status(500).json({
-      error: 'INTERNAL_ERROR',
-      message: error.message,
-      detail: error.detail || error.hint || null,
-    });
+  } catch (error) {
+    next(error);
   }
 };
 
@@ -88,7 +92,12 @@ export const getEnrollments = async (req: AuthRequest, res: Response, next: Next
     const tenantId = req.tenantId || req.user?.tenantId;
     const { id } = req.params;
 
-    const result = await ClassService.getEnrollments(tenantId as string, id as string);
+    const result = await ClassService.getEnrollments(
+      tenantId as string,
+      id as string,
+      req.user?.role,
+      req.user?.email
+    );
     res.json(result);
   } catch (error) {
     next(error);

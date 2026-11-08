@@ -22,9 +22,24 @@ describe('Auth Integration Tests', () => {
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.error).toBe('VALIDATION_ERROR');
-    expect(res.body.details).toHaveProperty('email');
-    expect(res.body.details).toHaveProperty('password');
+    expect(res.body.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('rejects an unsupported signup billing cycle before writing data', async () => {
+    const res = await request(app).post('/api/auth/register').send({
+      email: 'new@example.test', password: 'ValidPass1', fullName: 'New Admin',
+      tenantName: 'Sample Center', intendedPlanCode: 'PRO', billingCycle: 'WEEKLY',
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('VALIDATION_ERROR');
+  });
+
+  it('requires a nonblank center name when one is supplied', async () => {
+    const res = await request(app).post('/api/auth/register').send({
+      email: 'new@example.test', password: 'ValidPass1', fullName: 'New Admin', tenantName: '   ',
+    });
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('VALIDATION_ERROR');
   });
 
   // We mock pool for actual db queries or run against a test DB

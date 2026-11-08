@@ -1,4 +1,5 @@
 import { logger } from '../utils/logger';
+import { ROLES } from '../utils/constants';
 /**
  * Backup Jobs — dùng pg-boss thay thế node-cron
  * Chạy mỗi giờ, lưu vào DB để không bỏ lỡ khi server restart
@@ -17,7 +18,9 @@ async function runTenantBackups() {
   logger.info('[Jobs] Bắt đầu quét các thiết lập backup của trung tâm...');
 
   try {
-    const saResult = await pool.query("SELECT id FROM users WHERE role = 'super_admin' LIMIT 1");
+    const saResult = await pool.query('SELECT id FROM users WHERE role = $1 LIMIT 1', [
+      ROLES.SUPER_ADMIN,
+    ]);
     const superAdminId = saResult.rows[0]?.id;
 
     if (!superAdminId) {
@@ -25,7 +28,7 @@ async function runTenantBackups() {
       return;
     }
 
-    const tenantsRes = await pool.query('SELECT id, name, email, settings FROM tenants');
+    const tenantsRes = await pool.query('SELECT id, settings FROM tenants');
     const now = new Date();
     const currentHour = now.getHours().toString().padStart(2, '0');
 
@@ -51,14 +54,14 @@ async function runTenantBackups() {
           }
 
           if (shouldRun) {
-            logger.info(`[Jobs] Bắt đầu sao lưu cho trung tâm: ${tenant.name} (${tenant.email})`);
+            logger.info({ tenantId: tenant.id }, '[Jobs] Bắt đầu sao lưu trung tâm');
             const timestamp =
               new Date().toISOString().replace(/[-:T]/g, '').replace(/\..+/, '') +
               '_' +
               new Date().getMilliseconds();
-            const fileName = `backup_${timestamp}.zip`;
+            const fileName = `backup_${timestamp}.zip.enc`;
             const filePath = path.join(__dirname, '../../', fileName);
-            const folderName = tenant.email || `tenant_${tenant.id}`;
+            const folderName = `tenant_${tenant.id}`;
 
             try {
               await exportTenantData(tenant.id, filePath);
@@ -75,9 +78,9 @@ async function runTenantBackups() {
                 tenant.id,
               ]);
 
-              logger.info(`[Jobs] Sao lưu thành công cho trung tâm: ${tenant.name}`);
+              logger.info({ tenantId: tenant.id }, '[Jobs] Sao lưu trung tâm thành công');
             } catch (err) {
-              logger.error(err, `[Jobs] Lỗi sao lưu cho trung tâm ${tenant.name}:`);
+              logger.error({ err, tenantId: tenant.id }, '[Jobs] Lỗi sao lưu trung tâm');
               if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
               throw err; // pg-boss sẽ retry
             }

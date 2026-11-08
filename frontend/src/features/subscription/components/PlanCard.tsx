@@ -10,6 +10,7 @@ interface PlanCardProps {
   isVi: boolean;
   isSubmitting: boolean;
   pendingPlanId: string | null;
+  isSignupSelection?: boolean;
   billingCycle: 'MONTHLY' | 'YEARLY';
   onUpgrade: (planId: string, planName: string) => void;
   t: TFunction;
@@ -21,6 +22,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
   isVi,
   isSubmitting,
   pendingPlanId,
+  isSignupSelection,
   billingCycle,
   onUpgrade,
   t,
@@ -66,13 +68,20 @@ const PlanCard: React.FC<PlanCardProps> = ({
       className={`relative flex flex-col p-6 sm:p-8 bg-white dark:bg-gray-800 rounded-3xl border transition-all duration-500 group ${
         isCurrent
           ? 'border-primary ring-4 ring-primary/5 shadow-2xl lg:scale-[1.02] z-10'
-          : 'border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1'
+          : isSignupSelection
+            ? 'border-indigo-500 ring-4 ring-indigo-500/20'
+            : 'border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1'
       }`}
     >
       {isCurrent && (
         <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-[10px] font-black px-5 py-1.5 rounded-full uppercase tracking-widest shadow-xl">
           {t('subscription.currentPlan')}
         </div>
+      )}
+      {isSignupSelection && !isCurrent && (
+        <p className="mb-4 rounded-lg bg-indigo-50 px-3 py-2 text-sm font-bold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200">
+          {t('landing.selectedPlan', 'Gói đã chọn')}
+        </p>
       )}
 
       <div className="flex justify-between items-start mb-8">
@@ -92,11 +101,6 @@ const PlanCard: React.FC<PlanCardProps> = ({
           {isBusiness && <Shield size={24} fill="currentColor" />}
           {isEnterprise && <Crown size={24} fill="currentColor" />}
         </div>
-        {!isFree && (
-          <span className="px-3 py-1 bg-primary/10 text-primary rounded-lg text-[9px] font-black uppercase tracking-widest">
-            {t('subscription.popular')}
-          </span>
-        )}
       </div>
 
       <div className="mb-8">

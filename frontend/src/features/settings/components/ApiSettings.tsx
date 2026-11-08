@@ -2,6 +2,7 @@ import React from 'react';
 import { ShieldCheck, Copy, RefreshCw } from 'lucide-react';
 import toast from 'react-hot-toast';
 import type { TFunction } from 'i18next';
+import ActionHint from '@/components/common/ActionHint';
 
 interface ApiSettingsProps {
   hasApiAccess: boolean;
@@ -78,19 +79,19 @@ const ApiSettings: React.FC<ApiSettingsProps> = ({
               </div>
               <div className="flex gap-4">
                 {apiKey && (
-                  <button
-                    onClick={() => copyToClipboard(apiKey)}
-                    className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm active:scale-95"
-                    title="Copy Key"
-                  >
-                    <Copy size={24} className="text-gray-500" />
-                  </button>
+                  <ActionHint label={t('settings.copyKey', 'Copy API key')}>
+                    <button
+                      onClick={() => copyToClipboard(apiKey)}
+                      className="p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all shadow-sm active:scale-95"
+                    >
+                      <Copy size={24} className="text-gray-500" />
+                    </button>
+                  </ActionHint>
                 )}
                 <button
                   onClick={onGenerateKey}
                   disabled={generatingKey}
                   className="flex-1 sm:flex-none p-4 bg-primary hover:bg-primary-dark text-white rounded-xl transition-all shadow-xl shadow-primary/20 disabled:opacity-50 active:scale-95 flex items-center justify-center gap-2"
-                  title={t('settings.generate')}
                 >
                   <RefreshCw size={24} className={generatingKey ? 'animate-spin' : ''} />
                   <span className="sm:hidden font-black uppercase text-[10px] tracking-widest">

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { getBillingInvoiceStatus } from '../api/subscription.api';
 
 const BillingReturn: React.FC = () => {
   const { t } = useTranslation();
@@ -11,39 +12,43 @@ const BillingReturn: React.FC = () => {
   const [message, setMessage] = useState('');
 
   useEffect(() => {
-    // Both MoMo and VNPay redirect to this frontend page after processing.
-    // They pass parameters in the URL.
-    // VNPay usually has vnp_ResponseCode
-    // MoMo usually has resultCode
-    const urlStatus = searchParams.get('status');
-    const vnpResponse = searchParams.get('vnp_ResponseCode');
-    const momoResult = searchParams.get('resultCode');
-    const customMessage = searchParams.get('message');
-
-    if (urlStatus === 'success') {
-      setStatus('success');
-    } else if (urlStatus === 'failed' || urlStatus === 'error') {
-      setStatus(urlStatus as 'failed' | 'error');
-      setMessage(customMessage || 'Thanh toán không thành công');
-    } else if (vnpResponse) {
-      if (vnpResponse === '00') {
-        setStatus('success');
-      } else {
-        setStatus('failed');
-        setMessage(`Mã lỗi VNPay: ${vnpResponse}`);
-      }
-    } else if (momoResult) {
-      if (momoResult === '0') {
-        setStatus('success');
-      } else {
-        setStatus('failed');
-        setMessage(`Mã lỗi MoMo: ${momoResult}`);
-      }
-    } else {
-      // Missing params, wait a bit or show error
+    const orderId = searchParams.get('orderId');
+    if (!orderId) {
       setStatus('error');
-      setMessage('Không tìm thấy kết quả giao dịch hợp lệ.');
+      setMessage('Không tìm thấy mã giao dịch.');
+      return;
     }
+
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    let attempts = 0;
+    const checkInvoice = async () => {
+      try {
+        const invoice = await getBillingInvoiceStatus(orderId);
+        if (cancelled) return;
+        if (invoice.status === 'paid') {
+          setStatus('success');
+        } else if (invoice.status !== 'pending') {
+          setStatus('failed');
+          setMessage('Thanh toán không thành công.');
+        } else if (++attempts < 10) {
+          timer = setTimeout(checkInvoice, 3000);
+        } else {
+          setStatus('error');
+          setMessage('Chưa xác nhận được giao dịch. Vui lòng kiểm tra lại sau.');
+        }
+      } catch {
+        if (!cancelled) {
+          setStatus('error');
+          setMessage('Không thể kiểm tra trạng thái giao dịch.');
+        }
+      }
+    };
+    void checkInvoice();
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, [searchParams]);
 
   return (

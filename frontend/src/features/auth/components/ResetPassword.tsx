@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { resetPassword } from '@/features/auth';
 import toast from 'react-hot-toast';
+import type { AxiosError } from 'axios';
+import { getApiErrorMessage, type ApiErrorData } from '@/utils/errorHelper';
 import { useTranslation } from 'react-i18next';
 import { Lock, Eye, EyeOff, CheckCircle } from 'lucide-react';
 import { Input, Button, Label } from '@/components/common/UI';
@@ -53,7 +55,7 @@ const ResetPassword: React.FC = () => {
       setSuccess(true);
       setTimeout(() => navigate('/login'), 3000);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || t('common.error'));
+      toast.error(getApiErrorMessage(error as AxiosError<ApiErrorData>, t));
     } finally {
       setIsLoading(false);
     }

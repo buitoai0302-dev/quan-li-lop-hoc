@@ -34,6 +34,12 @@ const AdminUsers = lazy(() => import('./features/admin/components/AdminUsers'));
 const AdminSettings = lazy(() => import('./features/admin/components/AdminSettings'));
 const ActivityLog = lazy(() => import('./features/admin/components/ActivityLog'));
 const Landing = lazy(() => import('./features/landing/index'));
+const PrivacyPage = lazy(() =>
+  import('./features/landing/LegalPage').then((module) => ({ default: module.PrivacyPage }))
+);
+const TermsPage = lazy(() =>
+  import('./features/landing/LegalPage').then((module) => ({ default: module.TermsPage }))
+);
 const BillingReturn = lazy(() => import('./features/subscription/components/BillingReturn'));
 
 import { USER_ROLES, ROUTES, PREMIUM_FEATURES } from './utils/constants';
@@ -78,6 +84,8 @@ export const appRoutes = [
     path: ROUTES.HOME,
     element: <Landing />,
   },
+  { path: ROUTES.PRIVACY, element: <PrivacyPage /> },
+  { path: ROUTES.TERMS, element: <TermsPage /> },
   {
     path: ROUTES.LOGIN,
     element: <Login />,

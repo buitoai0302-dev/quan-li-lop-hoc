@@ -167,7 +167,7 @@ const Rooms: React.FC = () => {
         setIsBulkDeleteModalOpen(false);
       },
     });
-  }, [selectedIds, deleteBulkRoomsMutate, t]);
+  }, [selectedIds, deleteBulkRoomsMutate, t, clearSelection]);
 
   const handleExportExcel = () => {
     const columns: ExportColumn<Room>[] = [

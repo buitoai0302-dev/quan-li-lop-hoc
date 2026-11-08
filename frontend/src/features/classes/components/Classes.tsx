@@ -46,6 +46,7 @@ const Classes: React.FC = () => {
   const navigate = useNavigate();
   const startDateRef = React.useRef<HTMLInputElement>(null);
   const endDateRef = React.useRef<HTMLInputElement>(null);
+  const originalSchedules = React.useRef('[]');
 
   const { classes, branches, teachers, rooms, allStudents, loading, refreshClasses } = useClasses();
 
@@ -87,37 +88,43 @@ const Classes: React.FC = () => {
   const { selectedIds, handleSelectAll, handleSelectOne, clearSelection } =
     useSelection(paginatedClasses);
 
-  const handleOpenModal = useCallback(async (cls?: ClassData) => {
-    if (cls) {
-      setEditingId(cls.id);
-      setEditingClass({
-        name: cls.name,
-        max_capacity: cls.max_capacity,
-        branch_id: cls.branch_id,
-        teacher_id: cls.teacher_id || '',
-        start_date: cls.start_date ? cls.start_date.substring(0, 10) : '',
-        end_date: cls.end_date ? cls.end_date.substring(0, 10) : '',
-      });
+  const handleOpenModal = useCallback(
+    async (cls?: ClassData) => {
+      if (cls) {
+        setEditingId(cls.id);
+        setEditingClass({
+          name: cls.name,
+          max_capacity: cls.max_capacity,
+          branch_id: cls.branch_id,
+          teacher_id: cls.teacher_id || '',
+          start_date: cls.start_date ? cls.start_date.substring(0, 10) : '',
+          end_date: cls.end_date ? cls.end_date.substring(0, 10) : '',
+        });
 
-      // Fetch additional details for editing
-      try {
-        const [schedulesData, enrollmentsData] = await Promise.all([
-          getClassSchedules(cls.id),
-          getClassEnrollments(cls.id),
-        ]);
-        setRecurringSchedules(schedulesData);
-        setEnrollments(enrollmentsData);
-      } catch (error) {
-        console.error('Error fetching class details:', error);
+        // Fetch additional details for editing
+        try {
+          const [schedulesData, enrollmentsData] = await Promise.all([
+            getClassSchedules(cls.id),
+            getClassEnrollments(cls.id),
+          ]);
+          originalSchedules.current = JSON.stringify(schedulesData);
+          setRecurringSchedules(schedulesData);
+          setEnrollments(enrollmentsData);
+        } catch (error) {
+          handleApiError(error as AxiosError<ApiErrorData>, t);
+          return;
+        }
+      } else {
+        setEditingId(null);
+        setEditingClass(null);
+        originalSchedules.current = '[]';
+        setRecurringSchedules([]);
+        setEnrollments([]);
       }
-    } else {
-      setEditingId(null);
-      setEditingClass(null);
-      setRecurringSchedules([]);
-      setEnrollments([]);
-    }
-    setIsModalOpen(true);
-  }, []);
+      setIsModalOpen(true);
+    },
+    [t]
+  );
 
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false);
@@ -135,9 +142,24 @@ const Classes: React.FC = () => {
 
   const handleSubmit = useCallback(
     (data: ClassBasicFormData) => {
+      const scheduleChanged = JSON.stringify(recurringSchedules) !== originalSchedules.current;
+      const scheduleDatesOrTeacherChanged =
+        editingClass &&
+        (data.teacher_id !== editingClass.teacher_id ||
+          data.start_date !== editingClass.start_date ||
+          data.end_date !== editingClass.end_date);
+      const sendSchedule =
+        scheduleChanged || (recurringSchedules.length > 0 && scheduleDatesOrTeacherChanged);
       const payload = {
         ...data,
-        schedules: recurringSchedules,
+        teacher_id: data.teacher_id || null,
+        recurring_schedules: sendSchedule
+          ? recurringSchedules.map((schedule) => ({
+              ...schedule,
+              day_of_week: String(schedule.day_of_week),
+              room_id: schedule.room_id || null,
+            }))
+          : undefined,
         enrollments: enrollments.map((e) => e.id),
       };
 
@@ -168,6 +190,7 @@ const Classes: React.FC = () => {
     },
     [
       editingId,
+      editingClass,
       recurringSchedules,
       enrollments,
       t,

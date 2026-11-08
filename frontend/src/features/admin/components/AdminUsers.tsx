@@ -9,10 +9,8 @@ import {
   CheckCircle,
   KeyRound,
   Plus,
-  Copy,
   Lock,
   Unlock,
-  Zap,
   Upload,
 } from 'lucide-react';
 import { Modal, Card, Button, Input, Select } from '@/components/common/UI';
@@ -20,6 +18,7 @@ import { USER_ROLES } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
 import Pagination from '@/components/common/Pagination';
+import ActionHint from '@/components/common/ActionHint';
 import FilterBar from '@/components/common/FilterBar';
 import FilterSelect from '@/components/common/FilterSelect';
 import ImportUsersModal from './ImportUsersModal';
@@ -97,10 +96,8 @@ const AdminUsers: React.FC = () => {
     password: '',
   });
 
-  const [resetPasswordInput, setResetPasswordInput] = useState('');
   const [newlyCreatedPassword, setNewlyCreatedPassword] = useState<{
     email: string;
-    password: string;
   } | null>(null);
 
   const resetForm = () => {
@@ -126,7 +123,7 @@ const AdminUsers: React.FC = () => {
     createMutation.mutate(formData, {
       onSuccess: (data) => {
         toast.success(t('admin.users.messages.create_success'));
-        setNewlyCreatedPassword({ email: data.user.email, password: data.rawPassword });
+        setNewlyCreatedPassword({ email: data.user.email });
       },
       onError: (error: any) => handleApiError(error, t),
     });
@@ -136,19 +133,12 @@ const AdminUsers: React.FC = () => {
     e.preventDefault();
     if (!selectedUser) return;
 
-    if (resetPasswordInput && resetPasswordInput.length > 0 && resetPasswordInput.length < 8) {
-      toast.error(
-        t('admin.users.messages.password_min_length', 'Mật khẩu phải có ít nhất 8 ký tự.')
-      );
-      return;
-    }
-
     resetPasswordMutation.mutate(
-      { id: selectedUser.id, data: { password: resetPasswordInput || undefined } },
+      { id: selectedUser.id, data: {} },
       {
-        onSuccess: (data) => {
+        onSuccess: () => {
           toast.success(t('admin.users.messages.reset_success'));
-          setNewlyCreatedPassword({ email: selectedUser.email, password: data.rawPassword });
+          setNewlyCreatedPassword({ email: selectedUser.email });
         },
         onError: (error: any) => handleApiError(error, t),
       }
@@ -172,20 +162,6 @@ const AdminUsers: React.FC = () => {
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    toast.success(t('admin.users.messages.copy_success'));
-  };
-
-  const generateRandomPassword = () => {
-    const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
-    let pass = '';
-    for (let i = 0; i < 10; i++) {
-      pass += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return pass;
-  };
-
   if (loading) return <PageLoading />;
 
   return (
@@ -194,38 +170,43 @@ const AdminUsers: React.FC = () => {
         icon={Users}
         actions={
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsFilterVisible(!isFilterVisible)}
-              className={`h-9 w-9 px-0 rounded-lg transition-all ${isFilterVisible ? 'bg-primary/10 border-primary/30 text-primary' : ''}`}
-              title={t('common.filter')}
-            >
-              <Search size={16} />
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsImportModalOpen(true)}
-              className="h-9 w-9 sm:w-auto px-0 sm:px-4 rounded-lg text-[10px] font-black uppercase tracking-widest gap-2 group"
-            >
-              <Upload size={16} className="shrink-0" />
-              <span className="hidden sm:inline">
-                {t('admin.users.buttons.import', 'Nhập danh sách')}
-              </span>
-            </Button>
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleOpenCreate}
-              className="h-9 w-9 sm:w-auto px-0 sm:px-4 rounded-lg text-[10px] font-black uppercase tracking-widest gap-2 group"
-            >
-              <Plus
-                size={16}
-                className="shrink-0 transition-transform duration-300 group-hover:rotate-90"
-              />
-              <span className="hidden sm:inline">{t('admin.users.buttons.create')}</span>
-            </Button>
+            <ActionHint label={t('common.filter')}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsFilterVisible(!isFilterVisible)}
+                className={`h-9 w-9 px-0 rounded-lg transition-all ${isFilterVisible ? 'bg-primary/10 border-primary/30 text-primary' : ''}`}
+              >
+                <Search size={16} />
+              </Button>
+            </ActionHint>
+            <ActionHint label={t('admin.users.buttons.import')}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsImportModalOpen(true)}
+                className="h-9 w-9 sm:w-auto px-0 sm:px-4 rounded-lg text-[10px] font-black uppercase tracking-widest gap-2 group"
+              >
+                <Upload size={16} className="shrink-0" />
+                <span className="hidden sm:inline">
+                  {t('admin.users.buttons.import', 'Nhập danh sách')}
+                </span>
+              </Button>
+            </ActionHint>
+            <ActionHint label={t('admin.users.buttons.create')}>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleOpenCreate}
+                className="h-9 w-9 sm:w-auto px-0 sm:px-4 rounded-lg text-[10px] font-black uppercase tracking-widest gap-2 group"
+              >
+                <Plus
+                  size={16}
+                  className="shrink-0 transition-transform duration-300 group-hover:rotate-90"
+                />
+                <span className="hidden sm:inline">{t('admin.users.buttons.create')}</span>
+              </Button>
+            </ActionHint>
           </div>
         }
       >
@@ -349,33 +330,36 @@ const AdminUsers: React.FC = () => {
                         </td>
                         <td className="px-3 py-3 sm:px-4 sm:py-4 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => {
-                                setSelectedUser(user);
-                                setResetPasswordInput('');
-                                setNewlyCreatedPassword(null);
-                                setIsResetModalOpen(true);
-                              }}
-                              className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                              title={t('admin.users.tooltip.reset')}
-                            >
-                              <KeyRound size={16} />
-                            </button>
-                            <button
-                              onClick={() => handleToggleStatus(user)}
-                              className={`p-2 rounded-lg transition-colors ${
-                                user.is_active
-                                  ? 'text-rose-500 hover:bg-rose-50'
-                                  : 'text-emerald-500 hover:bg-emerald-50'
-                              }`}
-                              title={
+                            <ActionHint label={t('admin.users.tooltip.reset')}>
+                              <button
+                                onClick={() => {
+                                  setSelectedUser(user);
+                                  setNewlyCreatedPassword(null);
+                                  setIsResetModalOpen(true);
+                                }}
+                                className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
+                              >
+                                <KeyRound size={16} />
+                              </button>
+                            </ActionHint>
+                            <ActionHint
+                              label={
                                 user.is_active
                                   ? t('admin.users.tooltip.lock')
                                   : t('admin.users.tooltip.unlock')
                               }
                             >
-                              {user.is_active ? <Lock size={16} /> : <Unlock size={16} />}
-                            </button>
+                              <button
+                                onClick={() => handleToggleStatus(user)}
+                                className={`p-2 rounded-lg transition-colors ${
+                                  user.is_active
+                                    ? 'text-rose-500 hover:bg-rose-50'
+                                    : 'text-emerald-500 hover:bg-emerald-50'
+                                }`}
+                              >
+                                {user.is_active ? <Lock size={16} /> : <Unlock size={16} />}
+                              </button>
+                            </ActionHint>
                           </div>
                         </td>
                       </tr>
@@ -409,22 +393,9 @@ const AdminUsers: React.FC = () => {
                 {t('admin.users.modal.user_created', { email: newlyCreatedPassword.email })}
               </p>
 
-              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 flex items-center justify-between mt-4">
-                <div className="text-left">
-                  <p className="text-[10px] uppercase text-gray-400 font-bold mb-1">
-                    {t('admin.users.modal.password_label')}
-                  </p>
-                  <p className="text-lg font-mono font-bold text-gray-900 dark:text-white">
-                    {newlyCreatedPassword.password}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => copyToClipboard(newlyCreatedPassword.password)}
-                >
-                  <Copy size={16} className="mr-2" /> Copy
-                </Button>
-              </div>
+              <p className="text-sm text-gray-500">
+                Liên kết đặt mật khẩu đã được gửi đến email này.
+              </p>
 
               <Button className="w-full mt-6" onClick={() => setIsCreateModalOpen(false)}>
                 {t('admin.users.buttons.close')}
@@ -499,9 +470,6 @@ const AdminUsers: React.FC = () => {
                   required
                 >
                   <option value={USER_ROLES.ADMIN}>{t('admin.users.roles.admin')}</option>
-                  <option value={USER_ROLES.SUPER_ADMIN}>
-                    {t('admin.users.roles.super_admin')}
-                  </option>
                   <option value={USER_ROLES.STAFF}>{t('admin.users.roles.staff')}</option>
                   <option value={USER_ROLES.TEACHER}>{t('admin.users.roles.teacher')}</option>
                   <option value={USER_ROLES.STUDENT}>{t('admin.users.roles.student')}</option>
@@ -533,25 +501,7 @@ const AdminUsers: React.FC = () => {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
-                  {t('admin.users.modal.password_label')}
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder={t('admin.users.modal.password_placeholder')}
-                    value={formData.password}
-                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setFormData({ ...formData, password: generateRandomPassword() })}
-                  >
-                    <Zap size={16} className="mr-1" /> Ngẫu nhiên
-                  </Button>
-                </div>
-              </div>
+              <p className="text-sm text-gray-500">Người dùng sẽ nhận email để tự đặt mật khẩu.</p>
 
               <div className="flex gap-3 pt-4">
                 <Button
@@ -590,22 +540,9 @@ const AdminUsers: React.FC = () => {
                 {t('admin.users.modal.password_created', { email: newlyCreatedPassword.email })}
               </p>
 
-              <div className="bg-gray-50 dark:bg-gray-900 p-4 rounded-xl border border-gray-200 dark:border-gray-800 flex items-center justify-between mt-4">
-                <div className="text-left">
-                  <p className="text-[10px] uppercase text-gray-400 font-bold mb-1">
-                    {t('admin.users.modal.new_password_label')}
-                  </p>
-                  <p className="text-lg font-mono font-bold text-gray-900 dark:text-white">
-                    {newlyCreatedPassword.password}
-                  </p>
-                </div>
-                <Button
-                  variant="outline"
-                  onClick={() => copyToClipboard(newlyCreatedPassword.password)}
-                >
-                  <Copy size={16} className="mr-2" /> Copy
-                </Button>
-              </div>
+              <p className="text-sm text-gray-500">
+                Liên kết đặt lại mật khẩu đã được gửi đến email này.
+              </p>
 
               <Button className="w-full mt-6" onClick={() => setIsResetModalOpen(false)}>
                 {t('admin.users.buttons.close')}
@@ -620,25 +557,9 @@ const AdminUsers: React.FC = () => {
                 </span>
               </p>
 
-              <div>
-                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
-                  {t('admin.users.modal.new_password_label')}
-                </label>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder={t('admin.users.modal.password_placeholder')}
-                    value={resetPasswordInput}
-                    onChange={(e) => setResetPasswordInput(e.target.value)}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setResetPasswordInput(generateRandomPassword())}
-                  >
-                    <Zap size={16} />
-                  </Button>
-                </div>
-              </div>
+              <p className="text-sm text-gray-500">
+                Xác nhận để gửi liên kết đặt lại mật khẩu; phiên hiện tại sẽ bị thu hồi.
+              </p>
 
               <div className="flex gap-3 pt-4">
                 <Button

@@ -1,8 +1,17 @@
 import { logger } from '../utils/logger';
 import { Request, Response, NextFunction } from 'express';
-import { AppError } from '../utils/errors';
+import { AppError, ScheduleConflictError } from '../utils/errors';
+import { ERROR_CODES } from '../utils/constants';
 
 export const errorMiddleware = (err: any, req: Request, res: Response, next: NextFunction) => {
+  if (err instanceof ScheduleConflictError) {
+    return res.status(409).json({
+      success: false,
+      error: ERROR_CODES.SCHEDULE_CONFLICT,
+      conflicts: err.conflicts,
+      ...(err.slot && { slot: err.slot }),
+    });
+  }
   err.statusCode = err.statusCode || 500;
   err.status = err.status || 'error';
 
@@ -10,8 +19,10 @@ export const errorMiddleware = (err: any, req: Request, res: Response, next: Nex
     status: err.status,
     message: err.message,
     error: err.message, // Keep for backward compatibility with frontend toast.error(error.response.data.error)
-    code: err.errorCode || 'INTERNAL_ERROR',
+    code: err.errorCode || ERROR_CODES.INTERNAL_ERROR,
   };
+
+  if (err instanceof AppError && err.params) response.params = err.params;
 
   if (process.env.NODE_ENV === 'development') {
     response.stack = err.stack;
@@ -23,7 +34,7 @@ export const errorMiddleware = (err: any, req: Request, res: Response, next: Nex
     return res.status(500).json({
       status: 'error',
       message: 'Something went very wrong!',
-      code: 'INTERNAL_ERROR',
+      code: ERROR_CODES.INTERNAL_ERROR,
     });
   }
 

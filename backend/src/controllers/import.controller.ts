@@ -6,7 +6,8 @@ import crypto from 'crypto';
 import { sendTeacherWelcomeEmail } from '../services/email.service';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ValidationError } from '../utils/errors';
-import { IMPORT_TYPES, ROLES } from '../utils/constants';
+import { ERROR_CODES, IMPORT_TYPES, ROLES } from '../utils/constants';
+import { assertTenantReferences } from '../services/tenant-reference.service';
 
 export const importData = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
@@ -15,15 +16,23 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
     const { data } = req.body; // array of objects
 
     if (!Array.isArray(data) || data.length === 0) {
-      throw new ValidationError('No data provided', 'MISSING_REQUIRED_FIELDS');
+      throw new ValidationError('No data provided', ERROR_CODES.MISSING_REQUIRED_FIELDS);
     }
 
     if (data.length > 500) {
       throw new ValidationError(
         'Import batch too large. Maximum 500 records per request.',
-        'IMPORT_BATCH_TOO_LARGE'
+        ERROR_CODES.IMPORT_BATCH_TOO_LARGE
       );
     }
+
+    // Reject a batch before any writes if a branch belongs to another center.
+    await assertTenantReferences(
+      pool,
+      tenantId as string,
+      'branches',
+      data.map((row) => row?.branch_id)
+    );
 
     let successCount = 0;
     let skipCount = 0;
@@ -76,9 +85,7 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
 
           if (result.rowCount && result.rowCount > 0) {
             // Teacher created, now create user
-            const defaultPassword = email.split('@')[0];
-            const salt = await bcrypt.genSalt(10);
-            const passwordHash = await bcrypt.hash(defaultPassword, salt);
+            const passwordHash = await bcrypt.hash(crypto.randomBytes(32).toString('hex'), 10);
             const verificationToken = crypto.randomUUID();
             const tokenExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
@@ -88,8 +95,8 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
 
             if (existingUser.rows.length === 0) {
               await client.query(
-                `INSERT INTO users (tenant_id, branch_id, email, password_hash, full_name, role, is_email_verified, verification_token, verification_token_expires, onboarding_completed) 
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+                `INSERT INTO users (tenant_id, branch_id, email, password_hash, full_name, role, is_email_verified, verification_token, verification_token_expires, reset_password_token, reset_password_expires, onboarding_completed)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)`,
                 [
                   tenantId,
                   branch_id,
@@ -98,6 +105,8 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
                   full_name,
                   ROLES.TEACHER,
                   false,
+                  verificationToken,
+                  tokenExpires,
                   verificationToken,
                   tokenExpires,
                   true,
@@ -210,7 +219,7 @@ export const importData = async (req: AuthRequest, res: Response, next: NextFunc
         }
       }
     } else {
-      throw new ValidationError('Unsupported import type', 'INVALID_IMPORT_TYPE');
+      throw new ValidationError('Unsupported import type', ERROR_CODES.INVALID_IMPORT_TYPE);
     }
 
     res.json({

@@ -27,27 +27,51 @@ export const getPlans = async (req: Request, res: Response) => {
 export const createPlanRequest = async (req: Request, res: Response) => {
   const { planId, notes, billingCycle } = req.body;
   const tenantId = (req as any).user.tenantId;
+  const client = await pool.connect();
 
   try {
+    await client.query('BEGIN');
+    if (!planId || !['MONTHLY', 'YEARLY'].includes(billingCycle || 'MONTHLY')) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Invalid plan or billing cycle.' });
+    }
+    const activePlan = await client.query(
+      'SELECT id FROM plan_definitions WHERE id = $1 AND is_active = true FOR SHARE',
+      [planId]
+    );
+    if (!activePlan.rows.length) {
+      await client.query('ROLLBACK');
+      return res.status(400).json({ error: 'Selected plan is unavailable.' });
+    }
+    await client.query('SELECT id FROM tenants WHERE id = $1 FOR UPDATE', [tenantId]);
     // Check if there is already a pending request for this tenant
-    const existing = await pool.query(
+    const existing = await client.query(
       'SELECT id FROM plan_requests WHERE tenant_id = $1 AND status = $2',
       [tenantId, 'pending']
     );
 
     if (existing.rows.length > 0) {
+      await client.query('ROLLBACK');
       return res.status(400).json({ error: 'You already have a pending upgrade request.' });
     }
 
-    const result = await pool.query(
+    const result = await client.query(
       'INSERT INTO plan_requests (tenant_id, requested_plan_id, notes, billing_cycle) VALUES ($1, $2, $3, $4) RETURNING *',
       [tenantId, planId, notes || null, billingCycle || 'MONTHLY']
     );
+    await client.query(
+      'UPDATE tenants SET signup_plan_id = NULL, signup_billing_cycle = NULL WHERE id = $1',
+      [tenantId]
+    );
+    await client.query('COMMIT');
 
     res.status(201).json(result.rows[0]);
   } catch (err) {
+    await client.query('ROLLBACK');
     logger.error(err, 'Error in createPlanRequest:');
     res.status(500).json({ error: 'Internal server error' });
+  } finally {
+    client.release();
   }
 };
 

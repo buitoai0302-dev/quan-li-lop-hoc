@@ -265,32 +265,38 @@ const Dashboard: React.FC = () => {
                       </h3>
                       <p className="text-xs text-gray-400 mt-1">{t('dashboard.forecastNote')}</p>
                     </div>
-                    <div className="flex bg-gray-50 dark:bg-gray-900/50 p-1 rounded-lg">
-                      <button
-                        onClick={() => canViewYearly && setChartPeriod('yearly')}
-                        disabled={!canViewYearly}
-                        className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
-                          !canViewYearly
-                            ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
-                            : chartPeriod === 'yearly'
+                    <div>
+                      <div className="flex bg-gray-50 dark:bg-gray-900/50 p-1 rounded-lg">
+                        <button
+                          onClick={() => canViewYearly && setChartPeriod('yearly')}
+                          disabled={!canViewYearly}
+                          className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all flex items-center gap-1.5 ${
+                            !canViewYearly
+                              ? 'text-gray-300 dark:text-gray-600 cursor-not-allowed'
+                              : chartPeriod === 'yearly'
+                                ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600'
+                                : 'text-gray-400 hover:text-gray-600'
+                          }`}
+                        >
+                          {!canViewYearly && <Zap size={10} className="text-amber-400" />}
+                          {t('dashboard.yearly')}
+                        </button>
+                        <button
+                          onClick={() => setChartPeriod('6months')}
+                          className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${
+                            chartPeriod === '6months'
                               ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600'
                               : 'text-gray-400 hover:text-gray-600'
-                        }`}
-                        title={!canViewYearly ? t('dashboard.yearlyLocked') : ''}
-                      >
-                        {!canViewYearly && <Zap size={10} className="text-amber-400" />}
-                        {t('dashboard.yearly')}
-                      </button>
-                      <button
-                        onClick={() => setChartPeriod('6months')}
-                        className={`px-4 py-1.5 rounded-md text-[10px] font-black uppercase tracking-wider transition-all ${
-                          chartPeriod === '6months'
-                            ? 'bg-white dark:bg-gray-800 shadow-sm text-indigo-600'
-                            : 'text-gray-400 hover:text-gray-600'
-                        }`}
-                      >
-                        {t('dashboard.last6Months')}
-                      </button>
+                          }`}
+                        >
+                          {t('dashboard.last6Months')}
+                        </button>
+                      </div>
+                      {!canViewYearly && (
+                        <p className="mt-1 text-xs text-amber-700 dark:text-amber-300">
+                          {t('dashboard.yearlyLocked')}
+                        </p>
+                      )}
                     </div>
                   </div>
 

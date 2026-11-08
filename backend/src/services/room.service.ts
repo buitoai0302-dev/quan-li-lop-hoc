@@ -1,7 +1,9 @@
+import { ERROR_CODES } from '../utils/constants';
 import pool from '../db';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { checkPlanLimit } from '../utils/limitChecker';
 import { FeatureFlagService } from './feature-flag.service';
+import { assertTenantReferences } from './tenant-reference.service';
 
 export interface CreateRoomDTO {
   branch_id: string;
@@ -39,10 +41,14 @@ export class RoomService {
 
   static async createRoom(tenantId: string, data: CreateRoomDTO) {
     if (!data.branch_id || !data.name) {
-      throw new ValidationError('Vui lòng điền tên phòng và chi nhánh', 'MISSING_REQUIRED_FIELDS');
+      throw new ValidationError(
+        'Vui lòng điền tên phòng và chi nhánh',
+        ERROR_CODES.MISSING_REQUIRED_FIELDS
+      );
     }
 
     await checkPlanLimit(tenantId, 'max_rooms', 'rooms', 'LIMIT_EXCEEDED');
+    await assertTenantReferences(pool, tenantId, 'branches', [data.branch_id]);
 
     const result = await pool.query(
       `INSERT INTO rooms (tenant_id, branch_id, name, capacity, room_type) 
@@ -54,6 +60,7 @@ export class RoomService {
   }
 
   static async updateRoom(tenantId: string, roomId: string, data: UpdateRoomDTO) {
+    await assertTenantReferences(pool, tenantId, 'branches', [data.branch_id]);
     const result = await pool.query(
       `UPDATE rooms 
        SET branch_id = COALESCE($1, branch_id),
@@ -66,7 +73,7 @@ export class RoomService {
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy phòng học', 'ROOM_NOT_FOUND');
+      throw new NotFoundError('Không tìm thấy phòng học', ERROR_CODES.ROOM_NOT_FOUND);
     }
 
     return result.rows[0];
@@ -79,7 +86,7 @@ export class RoomService {
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy phòng học', 'ROOM_NOT_FOUND');
+      throw new NotFoundError('Không tìm thấy phòng học', ERROR_CODES.ROOM_NOT_FOUND);
     }
 
     return true;

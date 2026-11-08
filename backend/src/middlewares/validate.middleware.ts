@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { ValidationError } from '../utils/errors';
+import { ERROR_CODES } from '../utils/constants';
 
 export const validate = (schema: any) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
@@ -13,9 +14,9 @@ export const validate = (schema: any) => {
       next();
     } catch (error: any) {
       if (error && error.issues && error.issues.length > 0) {
-        next(new ValidationError(error.issues[0].message, 'VALIDATION_ERROR'));
+        next(new ValidationError(error.issues[0].message, ERROR_CODES.VALIDATION_ERROR));
       } else if (error && error.errors && error.errors.length > 0) {
-        next(new ValidationError(error.errors[0].message, 'VALIDATION_ERROR'));
+        next(new ValidationError(error.errors[0].message, ERROR_CODES.VALIDATION_ERROR));
       } else {
         next(error);
       }
@@ -37,7 +38,11 @@ export const validateUUID = (params: string[]) => {
       const value = req.params[param];
       if (typeof value === 'string' && !UUID_REGEX.test(value)) {
         next(
-          new ValidationError(`Invalid ID format for parameter '${param}'`, 'INVALID_ID_FORMAT')
+          new ValidationError(
+            `Invalid ID format for parameter '${param}'`,
+            ERROR_CODES.INVALID_ID_FORMAT,
+            { field: param }
+          )
         );
         return;
       }
@@ -55,7 +60,13 @@ export const validateBodyUUID = (fields: string[]) => {
     for (const field of fields) {
       const value = req.body[field];
       if (typeof value === 'string' && !UUID_REGEX.test(value)) {
-        next(new ValidationError(`Invalid UUID format for field '${field}'`, 'INVALID_ID_FORMAT'));
+        next(
+          new ValidationError(
+            `Invalid UUID format for field '${field}'`,
+            ERROR_CODES.INVALID_ID_FORMAT,
+            { field }
+          )
+        );
         return;
       }
     }

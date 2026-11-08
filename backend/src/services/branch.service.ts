@@ -1,3 +1,4 @@
+import { ERROR_CODES } from '../utils/constants';
 import pool from '../db';
 import { NotFoundError, ValidationError } from '../utils/errors';
 import { checkPlanLimit } from '../utils/limitChecker';
@@ -33,7 +34,7 @@ export class BranchService {
 
   static async createBranch(tenantId: string, data: CreateBranchDTO) {
     if (!data.name) {
-      throw new ValidationError('Vui lòng điền tên chi nhánh', 'MISSING_REQUIRED_FIELDS');
+      throw new ValidationError('Vui lòng điền tên chi nhánh', ERROR_CODES.MISSING_REQUIRED_FIELDS);
     }
 
     await checkPlanLimit(tenantId, 'max_branches', 'branches', 'LIMIT_EXCEEDED');
@@ -59,7 +60,7 @@ export class BranchService {
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy chi nhánh', 'BRANCH_NOT_FOUND');
+      throw new NotFoundError('Không tìm thấy chi nhánh', ERROR_CODES.BRANCH_NOT_FOUND);
     }
 
     return result.rows[0];
@@ -72,7 +73,7 @@ export class BranchService {
     );
 
     if (result.rows.length === 0) {
-      throw new NotFoundError('Không tìm thấy chi nhánh', 'BRANCH_NOT_FOUND');
+      throw new NotFoundError('Không tìm thấy chi nhánh', ERROR_CODES.BRANCH_NOT_FOUND);
     }
 
     return true;
@@ -80,7 +81,10 @@ export class BranchService {
 
   static async updateFirstBranch(tenantId: string, data: CreateBranchDTO) {
     if (!data.name) {
-      throw new ValidationError('Tên chi nhánh không được để trống', 'MISSING_REQUIRED_FIELDS');
+      throw new ValidationError(
+        'Tên chi nhánh không được để trống',
+        ERROR_CODES.MISSING_REQUIRED_FIELDS
+      );
     }
 
     const findResult = await pool.query(

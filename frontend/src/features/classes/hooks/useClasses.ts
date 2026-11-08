@@ -65,12 +65,11 @@ export const useClasses = () => {
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { getClasses, createClass, updateClass, deleteClass } from '../api/classes.api';
-import type { ClassBasicFormData } from '@/types/schemas';
 
 export const useCreateClass = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: ClassBasicFormData) => createClass(data),
+    mutationFn: createClass,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['classes'] });
     },
@@ -80,7 +79,8 @@ export const useCreateClass = () => {
 export const useUpdateClass = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: ClassBasicFormData }) => updateClass(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof updateClass>[1] }) =>
+      updateClass(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['classes'] });
     },

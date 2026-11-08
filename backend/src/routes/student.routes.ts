@@ -1,3 +1,4 @@
+import { ACCESS } from '../utils/permissions';
 import { Router } from 'express';
 import {
   getStudents,
@@ -10,24 +11,18 @@ import { requireRole } from '../middlewares/auth.middleware';
 import { validateUUID, validate } from '../middlewares/validate.middleware';
 import { z } from 'zod';
 
-const createStudentSchema = z.object({
-  body: z.object({
-    full_name: z.string().min(1, 'Họ và tên không được để trống'),
-    email: z.string().email('Email không hợp lệ'),
-    phone: z.string().optional().nullable(),
-    parent_phone: z.string().optional().nullable(),
-    date_of_birth: z.string().optional().nullable(),
-    branch_id: z.string().uuid('ID chi nhánh không hợp lệ'),
-  }),
+const studentBodySchema = z.object({
+  full_name: z.string().min(1, 'Họ và tên không được để trống'),
+  email: z.string().email('Email không hợp lệ'),
+  phone: z.string().optional().nullable(),
+  parent_phone: z.string().optional().nullable(),
+  date_of_birth: z.string().optional().nullable(),
+  branch_id: z.string().uuid('ID chi nhánh không hợp lệ'),
 });
+const createStudentSchema = z.object({ body: studentBodySchema });
 
 const updateStudentSchema = z.object({
-  body: z.object({
-    full_name: z.string().min(1).optional(),
-    phone: z.string().optional().nullable(),
-    parent_phone: z.string().optional().nullable(),
-    date_of_birth: z.string().optional().nullable(),
-    branch_id: z.string().uuid().optional(),
+  body: studentBodySchema.omit({ email: true }).partial().extend({
     is_active: z.boolean().optional(),
   }),
 });
@@ -51,10 +46,10 @@ import { enforceLimit } from '../middlewares/feature.middleware';
 
 const router = Router();
 
-router.get('/', requireRole(['admin', 'staff', 'teacher']), getStudents);
+router.get('/', requireRole(ACCESS.ADMIN_STAFF_TEACHER), getStudents);
 router.post(
   '/',
-  requireRole(['admin', 'staff']),
+  requireRole(ACCESS.ADMIN_STAFF),
   enforceLimit(
     'max_students',
     'SELECT COUNT(*) FROM students WHERE tenant_id = $1 AND is_deleted = false'
@@ -62,14 +57,14 @@ router.post(
   validate(createStudentSchema),
   createStudent
 );
-router.post('/bulk', requireRole(['admin', 'staff']), validate(bulkImportSchema), bulkImport);
+router.post('/bulk', requireRole(ACCESS.ADMIN_STAFF), validate(bulkImportSchema), bulkImport);
 router.put(
   '/:id',
-  requireRole(['admin', 'staff']),
+  requireRole(ACCESS.ADMIN_STAFF),
   validateUUID(['id']),
   validate(updateStudentSchema),
   updateStudent
 );
-router.delete('/:id', requireRole(['admin', 'staff']), validateUUID(['id']), deleteStudent);
+router.delete('/:id', requireRole(ACCESS.ADMIN_STAFF), validateUUID(['id']), deleteStudent);
 
 export default router;

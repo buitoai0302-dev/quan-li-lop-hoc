@@ -1,3 +1,4 @@
+import { ACCESS } from '../utils/permissions';
 import { Router, Request, Response } from 'express';
 import {
   getSystemStats,
@@ -14,6 +15,7 @@ import {
 import { authMiddleware, requireRole } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validate.middleware';
 import { z } from 'zod';
+import { ROLES } from '../utils/constants';
 
 const UpdateAdminTenantSchema = z.object({
   body: z
@@ -44,7 +46,7 @@ const UpdatePlanSchema = z.object({
 const CreateUserSchema = z.object({
   body: z.object({
     email: z.string().email(),
-    role: z.enum(['admin', 'staff', 'teacher', 'student']),
+    role: z.enum([ROLES.ADMIN, ROLES.STAFF, ROLES.TEACHER, ROLES.STUDENT]),
     full_name: z.string().min(1),
     tenant_id: z.string().uuid().or(z.literal('NEW')),
     new_tenant_name: z.string().optional(),
@@ -62,7 +64,7 @@ const ResetPasswordSchema = z.object({
 const router = Router();
 
 // All admin routes require super_admin role
-router.use(authMiddleware, requireRole(['super_admin']));
+router.use(authMiddleware, requireRole(ACCESS.SYSTEM));
 
 router.get('/stats', getSystemStats);
 router.get('/tenants', getAllTenants);

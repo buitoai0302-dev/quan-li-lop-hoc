@@ -2,6 +2,7 @@ import { Edit2, Trash2 } from 'lucide-react';
 import type { ClassTableProps } from '../types';
 import { CLASS_STATUS } from '@/utils/constants';
 import { Badge } from '@/components/common/UI';
+import ActionHint from '@/components/common/ActionHint';
 
 const ClassTable: React.FC<ClassTableProps> = ({
   classes,
@@ -101,20 +102,22 @@ const ClassTable: React.FC<ClassTableProps> = ({
               </td>
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                 <div className="flex justify-end gap-1 sm:gap-2">
-                  <button
-                    onClick={() => onEdit(cls)}
-                    className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all active:scale-90"
-                    title={t('common.edit')}
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  <button
-                    onClick={() => onDelete(cls.id)}
-                    className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all active:scale-90"
-                    title={t('common.delete')}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <ActionHint label={t('common.edit')}>
+                    <button
+                      onClick={() => onEdit(cls)}
+                      className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all active:scale-90"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  </ActionHint>
+                  <ActionHint label={t('common.delete')}>
+                    <button
+                      onClick={() => onDelete(cls.id)}
+                      className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all active:scale-90"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </ActionHint>
                 </div>
               </td>
             </tr>

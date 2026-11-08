@@ -120,3 +120,83 @@ input::-webkit-calendar-picker-indicator {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+.action-hint {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.action-hint--full {
+  width: 100%;
+}
+
+.action-hint--full > :is(button, a) {
+  width: 100%;
+}
+
+.action-hint > :is(button, a):focus-visible {
+  outline: 2px solid var(--color-primary, #6366f1);
+  outline-offset: 2px;
+}
+
+.action-hint > :is(button, a) {
+  touch-action: manipulation;
+}
+
+.action-hint__touch-label {
+  display: none;
+  max-width: 4.5rem;
+  color: #64748b;
+  font-size: 0.625rem;
+  font-weight: 600;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  text-align: center;
+}
+
+.dark .action-hint__touch-label {
+  color: #cbd5e1;
+}
+
+.action-hint__popup {
+  position: fixed;
+  z-index: 9999;
+  max-width: min(16rem, calc(100vw - 1rem));
+  padding: 0.4rem 0.65rem;
+  border-radius: 0.5rem;
+  background: #1e293b;
+  color: white;
+  box-shadow: 0 8px 24px rgb(15 23 42 / 0.2);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.25;
+  pointer-events: none;
+  white-space: normal;
+}
+
+.dark .action-hint__popup {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+@media (min-width: 1024px) {
+  .sidebar--collapsed .action-hint__touch-label {
+    display: none;
+  }
+}
+
+@media (max-width: 639px), (hover: none) {
+  .action-hint > :is(button, a) {
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+  .action-hint__touch-label {
+    display: block;
+  }
+  .action-hint__popup {
+    display: none;
+  }
+}

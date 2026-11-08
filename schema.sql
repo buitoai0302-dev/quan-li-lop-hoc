@@ -380,12 +380,12 @@ CREATE TRIGGER trg_recurring_schedules_updated_at BEFORE UPDATE ON class_recurri
 -- 0. Insert System Settings
 INSERT INTO system_settings (setting_key, setting_value, description) VALUES 
     ('SYSTEM_NAME', 'EduSchedule', 'Tên hệ thống'),
-    ('CONTACT_EMAIL', 'contact@eduschedule.com', 'Email liên hệ'),
-    ('CONTACT_PHONE', '0901234567', 'Số điện thoại hotline'),
-    ('CONTACT_ZALO', 'https://zalo.me/0901234567', 'Đường dẫn Zalo liên hệ'),
-    ('CONTACT_ADDRESS', '123 Đường ABC, Quận XYZ, TP.HCM', 'Địa chỉ trụ sở'),
-    ('TAX_CODE', '0123456789', 'Mã số thuế doanh nghiệp'),
-    ('POSTAL_CODE', '700000', 'Mã bưu chính (Zip code)')
+    ('CONTACT_EMAIL', '', 'Email liên hệ'),
+    ('CONTACT_PHONE', '', 'Số điện thoại hotline'),
+    ('CONTACT_ZALO', '', 'Đường dẫn Zalo liên hệ'),
+    ('CONTACT_ADDRESS', '', 'Địa chỉ trụ sở'),
+    ('TAX_CODE', '', 'Mã số thuế doanh nghiệp'),
+    ('POSTAL_CODE', '', 'Mã bưu chính (Zip code)')
 ON CONFLICT (setting_key) DO NOTHING;
 
 -- 1. Insert Plans
@@ -441,28 +441,6 @@ INSERT INTO plan_features (plan_id, feature_key, is_enabled) VALUES
     ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'advanced_reports', TRUE),
     ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'api_access', TRUE),
     ('64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'sso_saml', TRUE);
-
--- 4. Insert Tenants
--- Tenant 1: Enterprise
-INSERT INTO tenants (id, plan_id, name, domain) 
-VALUES ('00000000-0000-0000-0000-000000000001', '64d77ca0-65b0-4bd9-9a2a-91322f50d2b8', 'Premium Education Center', 'premium-edu');
-
--- Tenant 2: Free
-INSERT INTO tenants (id, plan_id, name, domain) 
-VALUES ('00000000-0000-0000-0000-000000000002', '1c0fd778-0f94-44c1-86da-19bdafb1d9b3', 'Local Math Tutor', 'local-math');
-
--- 5. Insert Branches
-INSERT INTO branches (id, tenant_id, name, address, phone) VALUES
-    ('11111111-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'Downtown Campus', '123 Main St', '555-0101'),
-    ('11111111-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'Westside Campus', '456 West Ave', '555-0202'),
-    ('11111111-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000002', 'Main Office', '789 Home St', '555-0303');
-
--- 6. Insert Users
--- Password for all seed users is '123456' (bcrypt hash)
-INSERT INTO users (id, tenant_id, branch_id, email, password_hash, full_name, role) VALUES
-    ('22222222-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', NULL, 'admin@premium-edu.com', '$2b$10$tEfz1SbXlnQgoItiSSbapew27RHf7IwqjSNjWmzOoE1nScWQiq.qO', 'Admin User', 'admin'),
-    ('22222222-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000002', NULL, 'admin@local-math.com', '$2b$10$tEfz1SbXlnQgoItiSSbapew27RHf7IwqjSNjWmzOoE1nScWQiq.qO', 'Admin Tutor', 'admin');
-
 
 -- Migration: create_tuitions_payments
 -- Quản lý học phí nội bộ của các Trung tâm

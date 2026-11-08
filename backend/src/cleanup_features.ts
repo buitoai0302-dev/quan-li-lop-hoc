@@ -1,9 +1,9 @@
+import 'dotenv/config';
 import { Pool } from 'pg';
 
-const pool = new Pool({
-  connectionString:
-    'postgresql://neondb_owner:npg_ywmDuHrp1x3Y@ep-red-salad-ao9yjh83-pooler.c-2.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require',
-});
+const databaseUrl = process.env.DATABASE_URL;
+if (!databaseUrl) throw new Error('DATABASE_URL is required');
+const pool = new Pool({ connectionString: databaseUrl });
 
 async function main() {
   const client = await pool.connect();

@@ -47,7 +47,10 @@ export const useScheduleBoard = () => {
   // Persistence for viewMode
   const [viewMode, setViewModeState] = useState<ViewMode>(() => {
     const saved = localStorage.getItem('scheduleViewMode');
-    return (saved as ViewMode) || VIEW_MODES.WEEK;
+    return (
+      (saved as ViewMode) ||
+      (window.matchMedia('(max-width: 767px)').matches ? VIEW_MODES.DAY : VIEW_MODES.WEEK)
+    );
   });
 
   const setViewMode = (mode: ViewMode) => {

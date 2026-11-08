@@ -4,6 +4,9 @@ import * as path from 'path';
 
 async function initDatabase() {
   try {
+    if (process.env.NODE_ENV === 'production' || process.env.ALLOW_DESTRUCTIVE_DB_INIT !== 'yes') {
+      throw new Error('db:init destroys the public schema. Use only on a disposable DB with ALLOW_DESTRUCTIVE_DB_INIT=yes.');
+    }
     console.log('--- Starting Database Initialization ---');
 
     // Path to schema.sql (adjust if necessary)

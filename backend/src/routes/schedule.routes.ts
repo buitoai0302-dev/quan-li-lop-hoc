@@ -1,3 +1,4 @@
+import { ACCESS } from '../utils/permissions';
 import { Router } from 'express';
 import {
   getWeeklySchedule,
@@ -48,23 +49,23 @@ const updateSessionSchema = z.object({
   }),
 });
 
-router.get('/weekly', requireRole(['admin', 'teacher', 'student', 'staff']), getWeeklySchedule);
+router.get('/weekly', requireRole(ACCESS.ADMIN_STAFF_TEACHER_STUDENT_API), getWeeklySchedule);
 router.post(
   '/sessions',
-  requireRole(['admin', 'staff']),
+  requireRole(ACCESS.ADMIN_STAFF),
   validate(createSessionSchema),
   createSession
 );
 router.put(
   '/sessions/:id',
-  requireRole(['admin', 'staff']),
+  requireRole(ACCESS.ADMIN_STAFF),
   validateUUID(['id']),
   validate(updateSessionSchema),
   updateSession
 );
 router.delete(
   '/sessions/:id',
-  requireRole(['admin', 'staff']),
+  requireRole(ACCESS.ADMIN_STAFF),
   validateUUID(['id']),
   deleteSession
 );

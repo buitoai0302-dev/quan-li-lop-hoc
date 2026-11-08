@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { resendVerification } from '@/features/auth';
 import toast from 'react-hot-toast';
+import type { AxiosError } from 'axios';
+import { getApiErrorMessage, type ApiErrorData } from '@/utils/errorHelper';
 import { useTranslation } from 'react-i18next';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-react';
 
@@ -18,7 +20,7 @@ const ResendVerification: React.FC = () => {
       await resendVerification(email);
       setSent(true);
     } catch (error: any) {
-      toast.error(error.response?.data?.error || t('common.error'));
+      toast.error(getApiErrorMessage(error as AxiosError<ApiErrorData>, t));
     } finally {
       setIsLoading(false);
     }

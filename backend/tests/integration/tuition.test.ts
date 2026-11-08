@@ -64,8 +64,8 @@ describe('Tuition Integration Tests', () => {
       const res = await request(app)
         .post('/api/tuitions')
         .send({
-          class_id: 'class-1',
-          student_id: 'student-1',
+          class_id: '11111111-1111-4111-8111-111111111111',
+          student_id: '22222222-2222-4222-8222-222222222222',
           title: 'New Tuition',
           amount: 500000,
           due_date: '2023-12-31'
@@ -89,7 +89,7 @@ describe('Tuition Integration Tests', () => {
 
       // Assuming zod validation is in place on the route
       expect(res.status).toBe(400);
-      expect(res.body.error).toBe('VALIDATION_ERROR');
+      expect(res.body.code).toBe('VALIDATION_ERROR');
     });
   });
 });

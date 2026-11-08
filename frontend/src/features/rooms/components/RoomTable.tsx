@@ -2,6 +2,8 @@ import React from 'react';
 import { Edit2, Trash2 } from 'lucide-react';
 import type { RoomTableProps } from '../types';
 import { ROOM_TYPES } from '@/utils/constants';
+import ActiveIndicator from '@/components/common/ActiveIndicator';
+import ActionHint from '@/components/common/ActionHint';
 
 const RoomTable: React.FC<RoomTableProps> = ({
   rooms,
@@ -67,10 +69,7 @@ const RoomTable: React.FC<RoomTableProps> = ({
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs shrink-0 relative">
                     {room.name.charAt(0).toUpperCase()}
-                    <span
-                      className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-white dark:border-slate-900 rounded-full ${room.is_active ? 'bg-green-500' : 'bg-red-500'}`}
-                      title={room.is_active ? t('common.active') : t('common.inactive')}
-                    />
+                    <ActiveIndicator active={Boolean(room.is_active)} />
                   </div>
                   <div className="min-w-0">
                     <div className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-primary transition-colors">
@@ -94,20 +93,22 @@ const RoomTable: React.FC<RoomTableProps> = ({
 
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                 <div className="flex justify-end gap-1 sm:gap-2">
-                  <button
-                    onClick={() => onEdit(room)}
-                    className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all active:scale-90"
-                    title={t('common.edit')}
-                  >
-                    <Edit2 size={16} />
-                  </button>
-                  <button
-                    onClick={() => onDelete(room.id)}
-                    className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all active:scale-90"
-                    title={t('common.delete')}
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <ActionHint label={t('common.edit')}>
+                    <button
+                      onClick={() => onEdit(room)}
+                      className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all active:scale-90"
+                    >
+                      <Edit2 size={16} />
+                    </button>
+                  </ActionHint>
+                  <ActionHint label={t('common.delete')}>
+                    <button
+                      onClick={() => onDelete(room.id)}
+                      className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all active:scale-90"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </ActionHint>
                 </div>
               </td>
             </tr>

@@ -18,11 +18,13 @@ import PaymentModal from './PaymentModal';
 import TuitionReceiptModal from './TuitionReceiptModal';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
+import ActionHint from '@/components/common/ActionHint';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import { handleApiError } from '@/utils/errorHelper';
 import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
 import { TUITION_STATUS } from '@/utils/constants';
+import { formatCurrency, formatDate } from '@/utils/formatters';
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> = {
   unpaid: {
@@ -47,11 +49,8 @@ const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> 
   },
 };
 
-const formatCurrency = (amount: number | string) =>
-  new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(Number(amount));
-
 const TuitionPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState('');
@@ -108,7 +107,7 @@ const TuitionPage: React.FC = () => {
         { header: t('tuition.paid'), accessor: 'amount_paid' as const },
         {
           header: t('tuition.dueDate'),
-          accessor: (r: Tuition) => new Date(r.due_date).toLocaleDateString('vi-VN'),
+          accessor: (r: Tuition) => formatDate(r.due_date, i18n.language),
         },
         {
           header: t('tuition.status'),
@@ -118,7 +117,7 @@ const TuitionPage: React.FC = () => {
       exportToExcel(
         selected,
         columns,
-        `${t('tuition.title', 'Học phí')}_${new Date().toLocaleDateString('vi-VN').replace(/\//g, '-')}`
+        `${t('tuition.title', 'Học phí')}_${formatDate(new Date(), i18n.language).replace(/\//g, '-')}`
       );
     });
   };
@@ -136,14 +135,14 @@ const TuitionPage: React.FC = () => {
         { header: t('tuition.paid'), accessor: 'amount_paid' as const },
         {
           header: t('tuition.dueDate'),
-          accessor: (r: Tuition) => new Date(r.due_date).toLocaleDateString('vi-VN'),
+          accessor: (r: Tuition) => formatDate(r.due_date, i18n.language),
         },
         {
           header: t('tuition.status'),
           accessor: (r: Tuition) => t(`tuition.statusLabels.${r.status}`),
         },
       ];
-      const dateLabel = new Date().toLocaleDateString('vi-VN').replace(/\//g, '-');
+      const dateLabel = formatDate(new Date(), i18n.language).replace(/\//g, '-');
       await exportToPDF(
         selected,
         columns,
@@ -229,8 +228,86 @@ const TuitionPage: React.FC = () => {
           />
         </div>
 
+        <div className="grid gap-3 lg:hidden">
+          {filtered.length === 0 && (
+            <p className="rounded-xl bg-white p-6 text-center text-slate-500 dark:bg-slate-900">
+              {t('tuition.emptyState')}
+            </p>
+          )}
+          {filtered.map((tuition) => {
+            const statusCfg = STATUS_CONFIG[tuition.status] || STATUS_CONFIG.unpaid;
+            return (
+              <article
+                key={tuition.id}
+                className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h3 className="truncate font-bold text-slate-900 dark:text-white">
+                      {tuition.student_name}
+                    </h3>
+                    <p className="text-sm text-slate-500 dark:text-slate-300">
+                      {tuition.class_name} · {tuition.billing_period}
+                    </p>
+                  </div>
+                  <input
+                    type="checkbox"
+                    aria-label={`${t('common.select', 'Chọn')} ${tuition.student_name}`}
+                    className="h-5 w-5 shrink-0"
+                    checked={selectedIds.includes(tuition.id)}
+                    onChange={() => handleToggleSelect(tuition.id)}
+                  />
+                </div>
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
+                  <span className="text-xl font-black text-slate-900 dark:text-white">
+                    {formatCurrency(tuition.amount_due)}
+                  </span>
+                  <span className={`rounded-full px-3 py-1 text-xs font-bold ${statusCfg.color}`}>
+                    {t(`tuition.statusLabels.${tuition.status}`)}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs text-slate-500 dark:text-slate-300">
+                  {t('tuition.paid')}: {formatCurrency(tuition.amount_paid)} ·{' '}
+                  {t('tuition.dueDate')}: {formatDate(tuition.due_date, i18n.language)}
+                </p>
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
+                  {tuition.status !== TUITION_STATUS.PAID &&
+                    tuition.status !== TUITION_STATUS.WAIVED && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedTuition(tuition);
+                          setShowPaymentModal(true);
+                        }}
+                        className="min-h-11 rounded-lg bg-indigo-600 px-3 text-sm font-bold text-white"
+                      >
+                        {t('tuition.collectMoney')}
+                      </button>
+                    )}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTuition(tuition);
+                      setShowReceiptModal(true);
+                    }}
+                    className="min-h-11 rounded-lg bg-slate-100 px-3 text-sm font-bold text-slate-800 dark:bg-slate-700 dark:text-white"
+                  >
+                    {t('tuition.viewReceipt')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeleteId(tuition.id)}
+                    className="min-h-11 rounded-lg px-3 text-sm font-bold text-rose-600"
+                  >
+                    {t('common.delete', 'Xóa')}
+                  </button>
+                </div>
+              </article>
+            );
+          })}
+        </div>
         {/* Table */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full border-separate border-spacing-0 sm:min-w-[700px] min-w-full">
               <thead className="bg-gray-50 dark:bg-slate-800 sticky top-0 z-10">
@@ -332,7 +409,7 @@ const TuitionPage: React.FC = () => {
                         <span
                           className={`text-sm font-medium ${isOverdue && tuition.status !== TUITION_STATUS.PAID ? 'text-rose-500 font-bold' : 'text-gray-600 dark:text-gray-400'}`}
                         >
-                          {new Date(tuition.due_date).toLocaleDateString('vi-VN')}
+                          {formatDate(tuition.due_date, i18n.language)}
                         </span>
                       </td>
                       <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
@@ -370,25 +447,26 @@ const TuitionPage: React.FC = () => {
                             <Receipt size={14} />
                             <span className="hidden sm:inline">{t('tuition.viewReceipt')}</span>
                           </button>
-                          <button
-                            onClick={() => setDeleteId(tuition.id)}
-                            className="p-1.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
-                            title="Xóa"
-                          >
-                            <svg
-                              className="w-3.5 h-3.5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
+                          <ActionHint label={t('common.delete')}>
+                            <button
+                              onClick={() => setDeleteId(tuition.id)}
+                              className="p-1.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
                             >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                              />
-                            </svg>
-                          </button>
+                              <svg
+                                className="w-3.5 h-3.5"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="currentColor"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </ActionHint>
                         </div>
                       </td>
                     </tr>

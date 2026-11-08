@@ -21,6 +21,7 @@ import { Modal, Card, Button, Badge } from '@/components/common/UI';
 import { TENANT_STATUS, PLAN_CODES, TENANT_ACTIONS, SYSTEM_DOMAIN } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
+import ActionHint from '@/components/common/ActionHint';
 import type { Tenant } from '@/types';
 
 import { useAdminTenants, useAdminPlans, useAdminStats, useUpdateTenant } from '../hooks/useAdmin';
@@ -309,66 +310,75 @@ const AdminTenants: React.FC = () => {
                                   </button>
                                 )}
                                 {tenant.status === TENANT_STATUS.ACTIVE && (
-                                  <button
-                                    onClick={() => {
-                                      localStorage.setItem('impersonatedTenantId', tenant.id);
-                                      localStorage.setItem('impersonatedTenantName', tenant.name);
-                                      window.location.href = '/';
-                                    }}
-                                    className="px-2 sm:px-3 h-8 sm:h-9 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/20 flex items-center justify-center"
-                                    title={t('admin.loginAsTenant', 'Đăng nhập với quyền đối tác')}
+                                  <ActionHint
+                                    label={t('admin.loginAsTenant')}
+                                    touchLabel={t('landing.login')}
                                   >
-                                    <LogIn size={14} className="mr-0 sm:mr-1.5" />
-                                    <span className="hidden sm:inline">
-                                      {t('admin.login', 'Đăng nhập')}
-                                    </span>
-                                  </button>
+                                    <button
+                                      onClick={() => {
+                                        localStorage.setItem('impersonatedTenantId', tenant.id);
+                                        localStorage.setItem('impersonatedTenantName', tenant.name);
+                                        window.location.href = '/';
+                                      }}
+                                      className="px-2 sm:px-3 h-8 sm:h-9 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/20 flex items-center justify-center"
+                                    >
+                                      <LogIn size={14} className="mr-0 sm:mr-1.5" />
+                                      <span className="hidden sm:inline">
+                                        {t('admin.login', 'Đăng nhập')}
+                                      </span>
+                                    </button>
+                                  </ActionHint>
                                 )}
                                 {tenant.status !== TENANT_STATUS.PENDING && (
                                   <>
-                                    <button
-                                      onClick={() => handleOpenPlanModal(tenant)}
-                                      className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg transition-all shrink-0"
-                                      title={t('admin.changePlan')}
-                                    >
-                                      <Zap size={16} className="sm:w-[18px] sm:h-[18px]" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleOpenBackupModal(tenant)}
-                                      className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-all shrink-0"
-                                      title={t('admin.backup.tooltip')}
-                                    >
-                                      <Cloud size={16} className="sm:w-[18px] sm:h-[18px]" />
-                                    </button>
+                                    <ActionHint label={t('admin.changePlan')}>
+                                      <button
+                                        onClick={() => handleOpenPlanModal(tenant)}
+                                        className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg transition-all shrink-0"
+                                      >
+                                        <Zap size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                      </button>
+                                    </ActionHint>
+                                    <ActionHint label={t('admin.backup.tooltip')}>
+                                      <button
+                                        onClick={() => handleOpenBackupModal(tenant)}
+                                        className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-all shrink-0"
+                                      >
+                                        <Cloud size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                      </button>
+                                    </ActionHint>
                                   </>
                                 )}
-                                <button
-                                  onClick={() =>
-                                    setConfirmModal({
-                                      isOpen: true,
-                                      tenant,
-                                      action:
-                                        tenant.status === TENANT_STATUS.ACTIVE ||
-                                        tenant.status === TENANT_STATUS.PENDING
-                                          ? TENANT_ACTIONS.SUSPEND
-                                          : TENANT_ACTIONS.ACTIVATE,
-                                    })
-                                  }
-                                  className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg transition-all shrink-0 ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
-                                  title={
+                                <ActionHint
+                                  label={
                                     tenant.status === TENANT_STATUS.ACTIVE ||
                                     tenant.status === TENANT_STATUS.PENDING
                                       ? t('admin.deactivate')
                                       : t('admin.activate')
                                   }
                                 >
-                                  {tenant.status === TENANT_STATUS.ACTIVE ||
-                                  tenant.status === TENANT_STATUS.PENDING ? (
-                                    <XCircle size={18} />
-                                  ) : (
-                                    <CheckCircle size={18} />
-                                  )}
-                                </button>
+                                  <button
+                                    onClick={() =>
+                                      setConfirmModal({
+                                        isOpen: true,
+                                        tenant,
+                                        action:
+                                          tenant.status === TENANT_STATUS.ACTIVE ||
+                                          tenant.status === TENANT_STATUS.PENDING
+                                            ? TENANT_ACTIONS.SUSPEND
+                                            : TENANT_ACTIONS.ACTIVATE,
+                                      })
+                                    }
+                                    className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg transition-all shrink-0 ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
+                                  >
+                                    {tenant.status === TENANT_STATUS.ACTIVE ||
+                                    tenant.status === TENANT_STATUS.PENDING ? (
+                                      <XCircle size={18} />
+                                    ) : (
+                                      <CheckCircle size={18} />
+                                    )}
+                                  </button>
+                                </ActionHint>
                               </>
                             )}
                           </div>

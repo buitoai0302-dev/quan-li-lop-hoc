@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { Globe, Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { handleApiError } from '@/utils/errorHelper';
 import { GoogleLogin } from '@react-oauth/google';
-import { ERROR_CODES, THEMES } from '@/utils/constants';
+import { ERROR_CODES, THEMES, USER_ROLES } from '@/utils/constants';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Input, Button, Label } from '@/components/common/UI';
 
@@ -23,7 +23,13 @@ const Login: React.FC = () => {
   const { theme: currentTheme } = useTheme();
 
   if (loading) return null;
-  if (user) return <Navigate to="/dashboard" replace />;
+  if (user)
+    return (
+      <Navigate
+        to={user.role === USER_ROLES.ADMIN && user.signup_plan_id ? '/subscription' : '/dashboard'}
+        replace
+      />
+    );
 
   const toggleLanguage = () => {
     i18n.changeLanguage(i18n.language.startsWith('en') ? 'vi' : 'en');
@@ -36,7 +42,11 @@ const Login: React.FC = () => {
       const data = await googleLogin(credential);
       login(data.token, data.user);
       toast.success(t('auth.loginSuccess'));
-      navigate('/dashboard');
+      navigate(
+        data.user?.role === USER_ROLES.ADMIN && data.user?.signup_plan_id
+          ? '/subscription'
+          : '/dashboard'
+      );
     } catch (error: any) {
       handleApiError(error as any, t, 'auth.googleLoginError');
     } finally {
@@ -52,10 +62,16 @@ const Login: React.FC = () => {
       const data = await loginApi({ email, password });
       login(data.token, data.user);
       toast.success(t('auth.loginSuccess'));
-      navigate('/dashboard');
+      navigate(
+        data.user?.role === USER_ROLES.ADMIN && data.user?.signup_plan_id
+          ? '/subscription'
+          : '/dashboard'
+      );
     } catch (error: any) {
       if (error.response?.data?.code === ERROR_CODES.EMAIL_NOT_VERIFIED) {
         setEmailNotVerified(true);
+      } else if (!error.response) {
+        toast.error(t('auth.networkError', 'Không thể kết nối máy chủ. Vui lòng thử lại.'));
       } else {
         handleApiError(error as any, t, 'auth.loginError');
       }
@@ -123,7 +139,7 @@ const Login: React.FC = () => {
 
           <form className="space-y-4" onSubmit={handleSubmit}>
             <div className="space-y-1.5">
-              <Label className="text-[9px] text-slate-400 dark:text-gray-500  ml-1">
+              <Label htmlFor="email" className="text-xs text-slate-600 dark:text-gray-300 ml-1">
                 {t('auth.email')}
               </Label>
               <Input
@@ -141,7 +157,10 @@ const Login: React.FC = () => {
 
             <div className="space-y-1.5">
               <div className="flex items-center ml-1">
-                <Label className="text-[9px] text-slate-400 dark:text-gray-500 mb-0">
+                <Label
+                  htmlFor="password"
+                  className="text-xs text-slate-600 dark:text-gray-300 mb-0"
+                >
                   {t('auth.password')}
                 </Label>
               </div>
@@ -160,6 +179,11 @@ const Login: React.FC = () => {
                 />
                 <button
                   type="button"
+                  aria-label={
+                    showPassword
+                      ? t('auth.hidePassword', 'Ẩn mật khẩu / Hide password')
+                      : t('auth.showPassword', 'Hiện mật khẩu / Show password')
+                  }
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors z-10"
                 >
@@ -168,27 +192,7 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-between ml-1">
-              <label className="flex items-center gap-3 cursor-pointer group">
-                <div className="relative flex items-center justify-center">
-                  <input type="checkbox" className="peer sr-only" />
-                  <div className="w-4 h-4 bg-gray-100 dark:bg-gray-900 border border-gray-100 dark:border-gray-700 rounded-md peer-checked:bg-primary peer-checked:border-primary transition-all"></div>
-                  <div className="absolute text-white opacity-0 peer-checked:opacity-100 transition-opacity">
-                    <svg
-                      className="w-3 h-3"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    >
-                      <path d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                </div>
-                <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wide group-hover:text-gray-700 dark:group-hover:text-gray-200 transition-colors">
-                  {t('auth.rememberMe')}
-                </span>
-              </label>
+            <div className="flex items-center justify-end ml-1">
               <Link
                 to="/forgot-password"
                 className="text-[9px] font-black text-primary hover:text-primary-dark uppercase tracking-wider transition-colors"
@@ -246,6 +250,17 @@ const Login: React.FC = () => {
       </div>
 
       {/* Footer Branding */}
+      <nav
+        aria-label={t('legal.documents')}
+        className="relative z-10 mt-4 flex justify-center gap-4 text-xs text-slate-600 dark:text-slate-300"
+      >
+        <Link to="/privacy" className="underline">
+          {t('landing.privacy')}
+        </Link>
+        <Link to="/terms" className="underline">
+          {t('landing.terms')}
+        </Link>
+      </nav>
       <div className="mt-4 text-center opacity-30 select-none">
         <p className="text-[8px] font-black uppercase tracking-[0.5em] text-gray-400">
           Powered by EduSchedule Cloud

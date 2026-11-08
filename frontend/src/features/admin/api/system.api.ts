@@ -2,6 +2,13 @@ import api from '@/api';
 
 export type SystemSettings = {
   SYSTEM_NAME?: string;
+  LEGAL_ENTITY_NAME?: string;
+  LEGAL_EFFECTIVE_DATE?: string;
+  LEGAL_PUBLISHED?: string;
+  PRIVACY_POLICY_VI?: string;
+  PRIVACY_POLICY_EN?: string;
+  TERMS_OF_SERVICE_VI?: string;
+  TERMS_OF_SERVICE_EN?: string;
   CONTACT_EMAIL?: string;
   CONTACT_PHONE?: string;
   CONTACT_ZALO?: string;

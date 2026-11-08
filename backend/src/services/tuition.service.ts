@@ -1,5 +1,7 @@
+import { ERROR_CODES } from '../utils/constants';
 import pool from '../db';
 import { NotFoundError, ValidationError } from '../utils/errors';
+import { assertTenantReferences } from './tenant-reference.service';
 import {
   TuitionFilters,
   CreateTuitionDto,
@@ -121,8 +123,11 @@ export class TuitionService {
     } = data;
 
     if (!student_id || !amount || !due_date) {
-      throw new ValidationError('MISSING_REQUIRED_FIELDS', 'MISSING_REQUIRED_FIELDS');
+      throw new ValidationError('MISSING_REQUIRED_FIELDS', ERROR_CODES.MISSING_REQUIRED_FIELDS);
     }
+
+    await assertTenantReferences(pool, tenantId, 'students', [student_id]);
+    await assertTenantReferences(pool, tenantId, 'classes', [class_id]);
 
     const result = await pool.query(
       `INSERT INTO tuitions (tenant_id, student_id, class_id, amount, discount, due_date, billing_cycle, billing_period, notes, created_by)
@@ -164,7 +169,7 @@ export class TuitionService {
       } = data;
 
       if (!class_id || !amount || !due_date || !billing_period) {
-        throw new ValidationError('MISSING_REQUIRED_FIELDS', 'MISSING_REQUIRED_FIELDS');
+        throw new ValidationError('MISSING_REQUIRED_FIELDS', ERROR_CODES.MISSING_REQUIRED_FIELDS);
       }
 
       await client.query('BEGIN');
@@ -177,7 +182,7 @@ export class TuitionService {
       );
 
       if (studentsResult.rows.length === 0) {
-        throw new ValidationError('NO_STUDENTS_FOUND', 'NO_STUDENTS_FOUND');
+        throw new ValidationError('NO_STUDENTS_FOUND', ERROR_CODES.NO_STUDENTS_FOUND);
       }
 
       let created = 0;
@@ -243,7 +248,8 @@ export class TuitionService {
       [amount, discount, due_date, status, notes, id, tenantId]
     );
 
-    if (result.rows.length === 0) throw new NotFoundError('TUITION_NOT_FOUND', 'TUITION_NOT_FOUND');
+    if (result.rows.length === 0)
+      throw new NotFoundError('TUITION_NOT_FOUND', ERROR_CODES.TUITION_NOT_FOUND);
     return result.rows[0];
   }
 
@@ -252,14 +258,15 @@ export class TuitionService {
       id,
     ]);
     if (parseInt(paymentCheck.rows[0].count) > 0) {
-      throw new ValidationError('HAS_PAYMENTS', 'HAS_PAYMENTS');
+      throw new ValidationError('HAS_PAYMENTS', ERROR_CODES.HAS_PAYMENTS);
     }
 
     const result = await pool.query(
       `DELETE FROM tuitions WHERE id = $1 AND tenant_id = $2 RETURNING id`,
       [id, tenantId]
     );
-    if (result.rows.length === 0) throw new NotFoundError('TUITION_NOT_FOUND', 'TUITION_NOT_FOUND');
+    if (result.rows.length === 0)
+      throw new NotFoundError('TUITION_NOT_FOUND', ERROR_CODES.TUITION_NOT_FOUND);
 
     return true;
   }
@@ -284,43 +291,59 @@ export class TuitionService {
   ) {
     const { amount_paid, payment_date, payment_method = 'cash', reference_code, notes } = data;
 
-    if (!amount_paid || Number(amount_paid) <= 0) {
-      throw new ValidationError('INVALID_AMOUNT', 'INVALID_AMOUNT');
+    const amount = Number(amount_paid);
+    if (!Number.isFinite(amount) || amount <= 0) {
+      throw new ValidationError('INVALID_AMOUNT', ERROR_CODES.INVALID_AMOUNT);
     }
 
-    const tuitionResult = await pool.query(
-      `SELECT * FROM tuitions WHERE id = $1 AND tenant_id = $2`,
-      [tuitionId, tenantId]
-    );
-    if (tuitionResult.rows.length === 0)
-      throw new NotFoundError('TUITION_NOT_FOUND', 'TUITION_NOT_FOUND');
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const tuitionResult = await client.query(
+        `SELECT status, round($3::numeric, 2) AS payment_amount,
+                round($3::numeric, 2) > 0 AS positive,
+                round($3::numeric, 2) > amount_due - amount_paid AS exceeds_balance
+         FROM tuitions WHERE id = $1 AND tenant_id = $2 FOR UPDATE`,
+        [tuitionId, tenantId, amount]
+      );
+      const tuition = tuitionResult.rows[0];
+      if (!tuition) throw new NotFoundError('TUITION_NOT_FOUND', ERROR_CODES.TUITION_NOT_FOUND);
+      if (tuition.status === 'paid') {
+        throw new ValidationError('ALREADY_PAID', ERROR_CODES.ALREADY_PAID);
+      }
+      if (!tuition.positive) {
+        throw new ValidationError('INVALID_AMOUNT', ERROR_CODES.INVALID_AMOUNT);
+      }
+      if (tuition.exceeds_balance) {
+        throw new ValidationError('PAYMENT_EXCEEDS_BALANCE', ERROR_CODES.PAYMENT_EXCEEDS_BALANCE);
+      }
 
-    const tuition = tuitionResult.rows[0];
-    if (tuition.status === 'paid') {
-      throw new ValidationError('ALREADY_PAID', 'ALREADY_PAID');
+      const result = await client.query(
+        `INSERT INTO payments (tenant_id, tuition_id, amount_paid, payment_date, payment_method, reference_code, notes, received_by)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         RETURNING *`,
+        [
+          tenantId,
+          tuitionId,
+          tuition.payment_amount,
+          payment_date || new Date().toISOString().split('T')[0],
+          payment_method,
+          reference_code || null,
+          notes || null,
+          userId,
+        ]
+      );
+      const updatedTuition = await client.query(
+        'SELECT * FROM tuitions WHERE id = $1 AND tenant_id = $2',
+        [tuitionId, tenantId]
+      );
+      await client.query('COMMIT');
+      return { payment: result.rows[0], tuition: updatedTuition.rows[0] };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
-
-    const result = await pool.query(
-      `INSERT INTO payments (tenant_id, tuition_id, amount_paid, payment_date, payment_method, reference_code, notes, received_by)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       RETURNING *`,
-      [
-        tenantId,
-        tuitionId,
-        amount_paid,
-        payment_date || new Date().toISOString().split('T')[0],
-        payment_method,
-        reference_code || null,
-        notes || null,
-        userId,
-      ]
-    );
-
-    const updatedTuition = await pool.query(`SELECT * FROM tuitions WHERE id = $1`, [tuitionId]);
-
-    return {
-      payment: result.rows[0],
-      tuition: updatedTuition.rows[0],
-    };
   }
 }
