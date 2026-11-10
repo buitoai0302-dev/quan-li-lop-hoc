@@ -157,6 +157,39 @@ describePostgres('data integrity on PostgreSQL', () => {
       .resolves.toMatchObject({ success: true });
   });
 
+  it('rolls back conflicting batches and accepts only one concurrent booking', async () => {
+    const date = '2090-03-15';
+    const slot = {
+      classId: a.classId, roomId: a.room, teacherId: a.teacher,
+      sessionDate: date, startTime: '08:00', endTime: '09:00',
+    };
+    const list = () => pool.query(
+      'SELECT id FROM schedule_sessions WHERE tenant_id = $1 AND class_id = $2 AND session_date = $3',
+      [a.tenant, a.classId, date]
+    );
+    await expect(ScheduleService.createSessions(a.tenant, undefined, [
+      slot, { ...slot, startTime: '08:30', endTime: '09:30' },
+    ])).rejects.toMatchObject({
+      errorCode: 'SCHEDULE_CONFLICT',
+      slot: { index: 1, date, startTime: '08:30', endTime: '09:30' },
+    });
+    expect((await list()).rows).toHaveLength(0);
+
+    const batch = [slot, { ...slot, startTime: '09:00', endTime: '10:00' }];
+    const results = await Promise.allSettled([
+      ScheduleService.createSessions(a.tenant, undefined, batch),
+      ScheduleService.createSessions(a.tenant, undefined, batch),
+    ]);
+    expect(results.filter(({ status }) => status === 'fulfilled')).toHaveLength(1);
+    expect(results.find(({ status }) => status === 'rejected')).toMatchObject({
+      reason: { errorCode: 'SCHEDULE_CONFLICT', slot: { index: 0 } },
+    });
+    expect((await list()).rows).toHaveLength(2);
+    await expect(ScheduleService.createSessions(a.tenant, undefined, [
+      { ...slot, roomId: b.room },
+    ])).rejects.toMatchObject({ errorCode: 'INVALID_TENANT_REFERENCE' });
+  });
+
   it('rolls back the whole recurring edit and retains an exact attended session', async () => {
     const date = '2090-02-06';
     const day = String(new Date(date).getUTCDay());

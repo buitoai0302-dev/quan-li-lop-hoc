@@ -17,6 +17,7 @@ const getBranchSchema = (t: any) =>
 type BranchSchemaType = z.infer<ReturnType<typeof getBranchSchema>>;
 
 const BranchForm: React.FC<BranchFormProps> = ({ id, initialData, onSubmit, t }) => {
+  const fieldPrefix = React.useId();
   const schema = getBranchSchema(t);
   const {
     register,
@@ -33,26 +34,35 @@ const BranchForm: React.FC<BranchFormProps> = ({ id, initialData, onSubmit, t })
   }, [initialData, reset]);
 
   return (
-    <form id={id} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form id={id} onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
       <div>
-        <Label required className="ml-1">
+        <Label htmlFor={fieldPrefix + '-name'} required className="ml-1">
           {t('branches.name')}
         </Label>
         <Input
+          aria-invalid={!!errors.name}
+          aria-describedby={errors.name ? fieldPrefix + '-name-error' : undefined}
+          id={fieldPrefix + '-name'}
+          aria-required="true"
           variant="muted"
           placeholder={t('branches.namePlaceholder')}
           className={errors.name ? 'ring-2 ring-red-500' : ''}
           {...register('name')}
         />
         {errors.name && (
-          <p className="text-red-500 text-[10px] mt-1.5 ml-1 font-bold">{errors.name.message}</p>
+          <p id={fieldPrefix + '-name-error'} className="form-field-error">
+            {errors.name.message}
+          </p>
         )}
       </div>
 
       <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-5">
         <div className="space-y-1.5">
-          <Label className="ml-1">{t('branches.address')}</Label>
+          <Label htmlFor={fieldPrefix + '-address'} className="ml-1">
+            {t('branches.address')}
+          </Label>
           <Input
+            id={fieldPrefix + '-address'}
             variant="white"
             placeholder={t('branches.addressPlaceholder')}
             icon={<MapPin />}
@@ -61,8 +71,11 @@ const BranchForm: React.FC<BranchFormProps> = ({ id, initialData, onSubmit, t })
         </div>
         <div className="grid grid-cols-2 gap-5">
           <div className="space-y-1.5">
-            <Label className="ml-1">{t('branches.phone')}</Label>
+            <Label htmlFor={fieldPrefix + '-phone'} className="ml-1">
+              {t('branches.phone')}
+            </Label>
             <Input
+              id={fieldPrefix + '-phone'}
               variant="white"
               placeholder="024xxx..."
               icon={<Phone />}
@@ -70,8 +83,11 @@ const BranchForm: React.FC<BranchFormProps> = ({ id, initialData, onSubmit, t })
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="ml-1">{t('common.status')}</Label>
+            <Label htmlFor={fieldPrefix + '-is_active'} className="ml-1">
+              {t('common.status')}
+            </Label>
             <Select
+              id={fieldPrefix + '-is_active'}
               variant="white"
               {...register('is_active', { setValueAs: (v) => v === 'true' || v === true })}
             >

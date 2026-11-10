@@ -79,15 +79,17 @@ const Subscription: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
-      <PageHeader icon={CreditCard}>
-        <div className="flex justify-center w-full lg:absolute lg:left-1/2 lg:top-1/2 lg:-translate-x-1/2 lg:-translate-y-1/2 lg:w-auto">
-          <div className="relative flex bg-gray-100 dark:bg-gray-800/80 rounded-full p-1 border border-gray-200/50 dark:border-gray-700/50 w-[310px] sm:w-[350px]">
+      <PageHeader
+        icon={CreditCard}
+        actions={
+          <div className="relative flex min-w-0 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-700 dark:bg-slate-800 sm:w-80">
             <div
-              className={`absolute top-1 bottom-1 w-[calc(50%-4px)] bg-primary rounded-full shadow-md transition-all duration-300 ease-out ${billingCycle === PLAN_BILLING_CYCLE.YEARLY ? 'left-1/2 ml-[2px]' : 'left-1'}`}
+              className={`pointer-events-none absolute inset-y-1 left-1 w-[calc(50%-4px)] rounded-lg bg-primary motion-safe:transition-transform motion-safe:duration-200 ${billingCycle === PLAN_BILLING_CYCLE.YEARLY ? 'translate-x-full' : ''}`}
             />
             <button
               onClick={() => setBillingCycle(PLAN_BILLING_CYCLE.MONTHLY)}
-              className={`relative z-10 flex-1 py-1.5 sm:py-2 rounded-full text-[10px] sm:text-xs font-black transition-colors uppercase tracking-wider flex items-center justify-center ${
+              aria-pressed={billingCycle === PLAN_BILLING_CYCLE.MONTHLY}
+              className={`relative z-10 flex min-h-11 flex-1 items-center justify-center rounded-lg px-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-primary sm:min-h-10 ${
                 billingCycle === PLAN_BILLING_CYCLE.MONTHLY
                   ? 'text-white drop-shadow-sm'
                   : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
@@ -98,7 +100,8 @@ const Subscription: React.FC = () => {
 
             <button
               onClick={() => setBillingCycle(PLAN_BILLING_CYCLE.YEARLY)}
-              className={`relative z-10 flex-1 py-1 rounded-full text-[10px] sm:text-xs font-black transition-colors uppercase tracking-wider flex flex-col items-center justify-center gap-0.5 ${
+              aria-pressed={billingCycle === PLAN_BILLING_CYCLE.YEARLY}
+              className={`relative z-10 flex min-h-11 flex-1 flex-col items-center justify-center gap-0.5 rounded-lg px-2 text-xs font-semibold transition-colors focus-visible:outline-2 focus-visible:outline-primary sm:min-h-10 ${
                 billingCycle === PLAN_BILLING_CYCLE.YEARLY
                   ? 'text-white drop-shadow-sm'
                   : 'text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white'
@@ -118,10 +121,10 @@ const Subscription: React.FC = () => {
               )}
             </button>
           </div>
-        </div>
-      </PageHeader>
+        }
+      />
 
-      <div className="flex-1 overflow-auto custom-scrollbar px-1 pt-4">
+      <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-1 pb-4 pt-1">
         <div className="max-w-7xl mx-auto space-y-8">
           {user?.signup_plan_id && !pendingPlanId && (
             <div className="mx-2 rounded-2xl border border-indigo-200 bg-indigo-50 p-4 text-sm text-indigo-900 dark:border-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-100">
@@ -132,7 +135,7 @@ const Subscription: React.FC = () => {
             </div>
           )}
           {/* Pricing Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 px-2">
+          <div className="grid grid-cols-1 gap-4 px-1 md:grid-cols-2 xl:grid-cols-4">
             {plans
               .filter((p) => p.is_active || p.id === currentTenantPlanId)
               .map((plan) => (

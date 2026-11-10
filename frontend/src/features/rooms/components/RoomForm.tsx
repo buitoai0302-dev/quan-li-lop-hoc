@@ -18,6 +18,7 @@ const getRoomSchema = (t: any) =>
 type RoomSchemaType = z.infer<ReturnType<typeof getRoomSchema>>;
 
 const RoomForm: React.FC<RoomFormProps> = ({ id, initialData, onSubmit, branches, t }) => {
+  const fieldPrefix = React.useId();
   const schema = getRoomSchema(t);
   const {
     register,
@@ -51,24 +52,34 @@ const RoomForm: React.FC<RoomFormProps> = ({ id, initialData, onSubmit, branches
     <form id={id} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="sm:col-span-2">
-          <Label required className="ml-1">
+          <Label htmlFor={fieldPrefix + '-name'} required className="ml-1">
             {t('rooms.name')}
           </Label>
           <Input
+            aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? fieldPrefix + '-name-error' : undefined}
+            id={fieldPrefix + '-name'}
+            aria-required="true"
             variant="muted"
             placeholder={t('rooms.namePlaceholder')}
             className={errors.name ? 'ring-2 ring-red-500' : ''}
             {...register('name')}
           />
           {errors.name && (
-            <p className="text-red-500 text-[10px] mt-1.5 ml-1 font-bold">{errors.name.message}</p>
+            <p id={fieldPrefix + '-name-error'} className="form-field-error">
+              {errors.name.message}
+            </p>
           )}
         </div>
         <div>
-          <Label required className="ml-1">
+          <Label htmlFor={fieldPrefix + '-branch_id'} required className="ml-1">
             {t('classes.branch')}
           </Label>
           <Select
+            aria-invalid={!!errors.branch_id}
+            aria-describedby={errors.branch_id ? fieldPrefix + '-branch_id-error' : undefined}
+            id={fieldPrefix + '-branch_id'}
+            aria-required="true"
             variant="muted"
             className={errors.branch_id ? 'ring-2 ring-red-500' : ''}
             {...register('branch_id')}
@@ -83,14 +94,16 @@ const RoomForm: React.FC<RoomFormProps> = ({ id, initialData, onSubmit, branches
             ))}
           </Select>
           {errors.branch_id && (
-            <p className="text-red-500 text-[10px] mt-1.5 ml-1 font-bold">
+            <p id={fieldPrefix + '-branch_id-error'} className="form-field-error">
               {errors.branch_id.message}
             </p>
           )}
         </div>
         <div>
-          <Label className="ml-1">{t('rooms.type')}</Label>
-          <Select variant="muted" {...register('room_type')}>
+          <Label htmlFor={fieldPrefix + '-room_type'} className="ml-1">
+            {t('rooms.type')}
+          </Label>
+          <Select id={fieldPrefix + '-room_type'} variant="muted" {...register('room_type')}>
             <option value={ROOM_TYPES.CLASSROOM}>{t('rooms.classroom')}</option>
             <option value={ROOM_TYPES.LAB}>{t('rooms.lab')}</option>
             <option value={ROOM_TYPES.MEETING}>{t('rooms.meeting')}</option>
@@ -101,8 +114,13 @@ const RoomForm: React.FC<RoomFormProps> = ({ id, initialData, onSubmit, branches
       <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-5">
         <div className="grid grid-cols-2 gap-5">
           <div>
-            <Label className="ml-1">{t('rooms.capacity')}</Label>
+            <Label htmlFor={fieldPrefix + '-capacity'} className="ml-1">
+              {t('rooms.capacity')}
+            </Label>
             <Input
+              aria-invalid={!!errors.capacity}
+              aria-describedby={errors.capacity ? fieldPrefix + '-capacity-error' : undefined}
+              id={fieldPrefix + '-capacity'}
               type="number"
               min="1"
               variant="white"
@@ -110,14 +128,17 @@ const RoomForm: React.FC<RoomFormProps> = ({ id, initialData, onSubmit, branches
               {...register('capacity', { valueAsNumber: true })}
             />
             {errors.capacity && (
-              <p className="text-red-500 text-[10px] mt-1.5 ml-1 font-bold">
+              <p id={fieldPrefix + '-capacity-error'} className="form-field-error">
                 {errors.capacity.message}
               </p>
             )}
           </div>
           <div className="flex flex-col">
-            <Label className="ml-1">{t('common.status')}</Label>
+            <Label htmlFor={fieldPrefix + '-is_active'} className="ml-1">
+              {t('common.status')}
+            </Label>
             <Select
+              id={fieldPrefix + '-is_active'}
               variant="white"
               {...register('is_active', { setValueAs: (v) => v === 'true' || v === true })}
             >

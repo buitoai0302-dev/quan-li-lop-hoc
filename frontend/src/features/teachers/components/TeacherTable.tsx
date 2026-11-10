@@ -1,7 +1,7 @@
 import React from 'react';
 import { Edit2, Trash2, KeyRound } from 'lucide-react';
 import type { TeacherTableProps } from '../types';
-import ActionHint from '@/components/common/ActionHint';
+import RowActions from '@/components/common/RowActions';
 
 const TeacherTable: React.FC<TeacherTableProps & { onResetPassword?: (teacher: any) => void }> = ({
   teachers,
@@ -17,7 +17,7 @@ const TeacherTable: React.FC<TeacherTableProps & { onResetPassword?: (teacher: a
 
   return (
     <div className="w-full overflow-x-auto">
-      <table className="w-full border-separate border-spacing-0">
+      <table className="management-table w-full border-separate border-spacing-0">
         <thead className="bg-gray-50 dark:bg-slate-900 sticky top-0 z-20 transition-colors">
           <tr>
             <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left w-12 border-b border-gray-100 dark:border-slate-800 shadow-sm">
@@ -86,34 +86,31 @@ const TeacherTable: React.FC<TeacherTableProps & { onResetPassword?: (teacher: a
               </td>
 
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
-                <div className="flex justify-end gap-1 sm:gap-2">
-                  {onResetPassword && (
-                    <ActionHint label={t('admin.users.tooltip.reset')}>
-                      <button
-                        onClick={() => onResetPassword(teacher)}
-                        className="p-2 text-blue-500 hover:text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-all active:scale-90"
-                      >
-                        <KeyRound size={16} />
-                      </button>
-                    </ActionHint>
-                  )}
-                  <ActionHint label={t('common.edit')}>
-                    <button
-                      onClick={() => onEdit(teacher)}
-                      className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all active:scale-90"
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                  </ActionHint>
-                  <ActionHint label={t('common.delete')}>
-                    <button
-                      onClick={() => onDelete(teacher.id)}
-                      className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all active:scale-90"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </ActionHint>
-                </div>
+                <RowActions
+                  actions={[
+                    ...(onResetPassword
+                      ? [
+                          {
+                            label: t('admin.users.tooltip.reset'),
+                            icon: <KeyRound size={16} />,
+                            onClick: () => onResetPassword(teacher),
+                          },
+                        ]
+                      : []),
+                    {
+                      label: t('common.edit'),
+                      icon: <Edit2 size={16} />,
+                      onClick: () => onEdit(teacher),
+                      mobilePrimary: true,
+                    },
+                    {
+                      label: t('common.delete'),
+                      icon: <Trash2 size={16} />,
+                      onClick: () => onDelete(teacher.id),
+                      tone: 'danger',
+                    },
+                  ]}
+                />{' '}
               </td>
             </tr>
           ))}

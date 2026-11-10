@@ -60,6 +60,7 @@ EduSchedule quản lý hoạt động hằng ngày của trung tâm giáo dục 
 - JSON dùng cấu trúc hiện có theo endpoint. Một số trả mảng/đối tượng trực tiếp và một số dùng `{ success, data }`. Frontend kiểm tra response theo hợp đồng riêng với request.
 - Lỗi nghiệp vụ qua middleware có `code`, `message`, `error` tương thích và `params` tùy trường hợp. Dùng mã trong `ERROR_CODES` và bản dịch Việt/Anh. Một số middleware cũ trả `error` hoặc `message` trực tiếp.
 - Xung đột lịch trả HTTP 409 với `{ success: false, error: 'SCHEDULE_CONFLICT', conflicts }`. Lịch định kỳ bổ sung `slot` chứa ngày và giờ. Payload tạo/sửa lớp gửi danh sách dưới `recurring_schedules`.
+- `POST /api/schedule/sessions/bulk` nhận `{ sessions: [...] }` cho Admin/Staff và trả HTTP 201 với `{ success: true, data }` sau khi commit toàn bộ. Giới hạn nhóm do `GET /api/schedule/weekly` công bố qua `data.maxBatchSessions`. Xung đột bổ sung `slot.index` đếm từ 0 cùng ngày và giờ của ca lỗi. Đồng bộ Google của nhóm chạy sau commit, ngoài phản hồi HTTP.
 - `/health` xác nhận tiến trình đang chạy. `/ready` xác nhận DB truy cập được và job đã khởi tạo hoặc đã được tắt theo cấu hình. API cấp ID yêu cầu và loại token truy vấn khỏi log.
 
 ## 6. Cấu hình, vận hành và phục hồi

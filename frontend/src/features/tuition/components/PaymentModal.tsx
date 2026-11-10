@@ -27,6 +27,9 @@ const getPaymentMethods = (t: import('i18next').TFunction) => [
 ];
 
 const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
+  const [isOpen, setIsOpen] = React.useState(true);
+  const closePanel = () => setIsOpen(false);
+  const fieldPrefix = React.useId();
   const { t } = useTranslation();
   const formId = React.useId();
   const remaining = Number(tuition.amount_due) - Number(tuition.amount_paid);
@@ -47,7 +50,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
 
   const onSubmit = (data: RecordPaymentDto) => {
     mutate(data, {
-      onSuccess: onClose,
+      onSuccess: closePanel,
       onError: (err) => handleApiError(err as AxiosError<ApiErrorData>, t),
     });
   };
@@ -57,8 +60,9 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
 
   return (
     <Modal
-      isOpen
-      onClose={onClose}
+      isOpen={isOpen}
+      onClose={closePanel}
+      onAfterClose={onClose}
       placement="right"
       width="clamp(480px, 44vw, 560px)"
       title={t('tuition.payment.title')}
@@ -107,11 +111,13 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
         <div>
           <label
             htmlFor="payment-amount"
-            className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+            className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
           >
             {t('tuition.payment.amount')} *
           </label>
           <input
+            aria-invalid={!!errors.amount_paid}
+            aria-describedby={errors.amount_paid ? fieldPrefix + '-amount_paid-error' : undefined}
             id="payment-amount"
             type="number"
             min={1}
@@ -123,7 +129,9 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
             className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
           />
           {errors.amount_paid && (
-            <p className="text-rose-500 text-xs mt-1">{errors.amount_paid.message}</p>
+            <p id={fieldPrefix + '-amount_paid-error'} className="form-field-error">
+              {errors.amount_paid.message}
+            </p>
           )}
         </div>
 
@@ -131,7 +139,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
           <div>
             <label
               htmlFor="payment-date"
-              className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+              className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
             >
               {t('tuition.receipt.date')}
             </label>
@@ -145,7 +153,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
           <div>
             <label
               htmlFor="payment-method"
-              className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+              className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
             >
               {t('tuition.payment.method')}
             </label>
@@ -169,7 +177,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
           <div>
             <label
               htmlFor="payment-reference"
-              className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+              className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
             >
               {t('tuition.payment.reference')}
             </label>
@@ -186,7 +194,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
         <div>
           <label
             htmlFor="payment-notes"
-            className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+            className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
           >
             {t('tuition.bulk.notes')}
           </label>

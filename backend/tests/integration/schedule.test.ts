@@ -5,6 +5,8 @@ import scheduleRoutes from '../../src/routes/schedule.routes';
 import { errorMiddleware } from '../../src/middlewares/error.middleware';
 import { logger } from '../../src/utils/logger';
 import { ScheduleService } from '../../src/services/schedule.service';
+import { ScheduleConflictError } from '../../src/utils/errors';
+import { MAX_BATCH_SESSIONS } from '../../src/utils/constants';
 
 jest.mock('../../src/services/schedule.service');
 
@@ -39,6 +41,38 @@ describe('Schedule Integration Tests', () => {
     jest.clearAllMocks();
   });
 
+  describe('POST /api/schedule/sessions/bulk', () => {
+    const slot = {
+      classId: '11111111-1111-4111-8111-111111111111',
+      teacherId: '22222222-2222-4222-8222-222222222222',
+      roomId: '33333333-3333-4333-8333-333333333333',
+      sessionDate: '2026-11-12',
+      startTime: '10:00',
+      endTime: '11:00',
+    };
+
+    it('returns the index and time of the conflicting row', async () => {
+      const conflicts = [{ conflict_type: 'ROOM_CONFLICT' }];
+      const conflictSlot = { index: 1, date: slot.sessionDate, startTime: slot.startTime, endTime: slot.endTime };
+      jest.mocked(ScheduleService.createSessions).mockRejectedValueOnce(
+        new ScheduleConflictError(conflicts, conflictSlot)
+      );
+      const sessions = [{ ...slot, sessionDate: '2026-11-11' }, slot];
+      const response = await request(app).post('/api/schedule/sessions/bulk').send({ sessions });
+      expect(response.status).toBe(409);
+      expect(response.body).toMatchObject({ error: 'SCHEDULE_CONFLICT', slot: conflictSlot, conflicts });
+      expect(ScheduleService.createSessions).toHaveBeenCalledWith('test-tenant-id', 'test-user-id', sessions);
+    });
+
+    it('rejects impossible dates and reversed times before calling the service', async () => {
+      for (const invalid of [{ ...slot, sessionDate: '2026-02-30' }, { ...slot, endTime: '09:00' }]) {
+        const response = await request(app).post('/api/schedule/sessions/bulk').send({ sessions: [invalid] });
+        expect(response.status).toBe(400);
+      }
+      expect(ScheduleService.createSessions).not.toHaveBeenCalled();
+    });
+  });
+
   describe('GET /api/schedule/weekly', () => {
     it('should return 200 and a list of sessions', async () => {
       const mockData = [
@@ -50,6 +84,7 @@ describe('Schedule Integration Tests', () => {
 
       expect(res.status).toBe(200);
       expect(res.body.data.sessions).toEqual(mockData);
+      expect(res.body.data.maxBatchSessions).toBe(MAX_BATCH_SESSIONS);
       expect(ScheduleService.getWeeklySchedule).toHaveBeenCalledWith(
         'test-tenant-id', expect.objectContaining({ startDate: '2023-01-01' }), 'admin', undefined
       );

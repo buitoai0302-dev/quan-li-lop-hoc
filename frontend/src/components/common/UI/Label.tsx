@@ -3,12 +3,12 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/utils/cn';
 
 const labelVariants = cva(
-  'font-black uppercase tracking-widest text-gray-500 dark:text-gray-400 mb-1 block transition-colors group-focus-within:text-primary',
+  'mb-1.5 block font-semibold text-slate-700 transition-colors group-focus-within:text-primary dark:text-slate-200',
   {
     variants: {
       size: {
-        default: 'text-[11px]',
-        xs: 'text-[10px]',
+        default: 'text-sm',
+        xs: 'text-xs',
         sm: 'text-xs',
       },
     },
@@ -28,7 +28,11 @@ const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
     return (
       <label ref={ref} className={cn(labelVariants({ size, className }))} {...props}>
         {children}
-        {required && <span className="text-red-500 ml-1">*</span>}
+        {required && (
+          <span aria-hidden="true" className="ml-1 text-red-600 dark:text-red-400">
+            *
+          </span>
+        )}
       </label>
     );
   }

@@ -121,6 +121,8 @@ export const TUITION_STATUS = {
   WAIVED: 'waived',
 } as const;
 
+export const MAX_BATCH_SESSIONS = 30;
+
 export const CLASS_STATUS = {
   ACTIVE: 'active',
   COMPLETED: 'completed',

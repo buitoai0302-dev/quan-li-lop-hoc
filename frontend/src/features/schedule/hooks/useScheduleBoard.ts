@@ -4,6 +4,7 @@ import {
   getWeeklySchedule,
   updateSession,
   createSession,
+  createSessions,
   deleteSession,
 } from '../api/schedule.api';
 import { getBranches } from '@/features/branches';
@@ -108,7 +109,7 @@ export const useScheduleBoard = () => {
         selectedTeacher,
         selectedClass
       );
-      return data.sessions as Session[];
+      return data;
     },
   });
 
@@ -153,6 +154,15 @@ export const useScheduleBoard = () => {
       setIsModalOpen(false);
     },
     onError: (error: AxiosError<ApiErrorData>) => handleApiError(error, t),
+  });
+
+  const createSessionsMutation = useMutation({
+    mutationFn: createSessions,
+    onSuccess: () => {
+      toast.success(t('common.success'));
+      void queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      setIsModalOpen(false);
+    },
   });
 
   const deleteSessionMutation = useMutation({
@@ -207,7 +217,8 @@ export const useScheduleBoard = () => {
   };
 
   return {
-    sessions: sessionsQuery.data || [],
+    sessions: sessionsQuery.data?.sessions || [],
+    maxBatchSessions: sessionsQuery.data?.maxBatchSessions,
     isLoading: sessionsQuery.isLoading,
     selectedDate,
     setSelectedDate,
@@ -253,6 +264,10 @@ export const useScheduleBoard = () => {
       if (editingSession) deleteSessionMutation.mutate(editingSession.id);
     },
     updateSessionMutation,
-    isSessionSubmitting: createSessionMutation.isPending || updateSessionMutation.isPending,
+    submitBatch: createSessionsMutation.mutateAsync,
+    isSessionSubmitting:
+      createSessionMutation.isPending ||
+      createSessionsMutation.isPending ||
+      updateSessionMutation.isPending,
   };
 };

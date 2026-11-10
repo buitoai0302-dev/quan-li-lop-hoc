@@ -44,17 +44,18 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-start justify-end gap-x-1.5 gap-y-2 sm:items-center sm:gap-2">
       {/* Toggle Filter Button */}
       {onToggleFilter && (
-        <ActionHint label={t('common.filter')}>
+        <ActionHint label={t('common.filter')} showTouchLabel={false}>
           <Button
             variant="outline"
             size="sm"
             onClick={onToggleFilter}
-            className={`h-9 w-9 px-0 rounded-lg transition-all ${isFilterVisible ? 'bg-primary/10 border-primary/30 text-primary' : ''}`}
+            aria-expanded={Boolean(isFilterVisible)}
+            className={`h-11 w-11 sm:h-9 sm:w-9 px-0 rounded-lg transition-colors ${isFilterVisible ? 'bg-primary/10 border-primary/30 text-primary' : ''}`}
           >
-            <Search size={16} />
+            <Search aria-hidden="true" size={16} />
           </Button>
         </ActionHint>
       )}
@@ -66,7 +67,7 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
             variant="outline"
             size="sm"
             onClick={onBulkDelete}
-            className="h-9 px-2.5 sm:px-4 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all border border-red-200 dark:border-red-800/50 whitespace-nowrap flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 shadow-sm"
+            className="min-h-11 sm:min-h-9 px-2.5 sm:px-4 bg-red-50 hover:bg-red-100 text-red-600 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 rounded-lg text-xs font-semibold transition-all border border-red-200 dark:border-red-800/50 whitespace-nowrap flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 shadow-sm"
           >
             <Trash2 size={14} />
             <span className="hidden sm:inline">
@@ -81,18 +82,19 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
         <ExportMenu
           onExportExcel={onExportExcel || (() => {})}
           onExportPDF={onExportPDF || (() => {})}
+          onImport={onImport}
           disabled={isExportDisabled}
         />
       )}
 
       {/* Import Button */}
-      {onImport && (
-        <ActionHint label={t('common.import')}>
+      {onImport && !onExportExcel && !onExportPDF && (
+        <ActionHint label={t('common.import')} touchLabel={t('common.importShort')}>
           <Button
             variant="outline"
             size="sm"
             onClick={onImport}
-            className="h-9 w-9 sm:w-auto px-0 sm:px-4 rounded-lg text-[10px] font-black uppercase tracking-widest gap-2"
+            className="h-11 w-11 sm:h-9 sm:w-9 sm:w-auto px-0 sm:px-4 rounded-lg text-xs font-semibold gap-2"
           >
             <Upload size={14} />
             <span className="hidden sm:inline">{t('common.import')}</span>
@@ -102,20 +104,19 @@ const TableToolbar: React.FC<TableToolbarProps> = ({
 
       {/* Add Button */}
       {onAdd && (
-        <ActionHint label={addLabel || t('common.add')}>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={onAdd}
-            className="h-9 w-9 sm:w-auto px-0 sm:px-4 rounded-lg text-[10px] font-black uppercase tracking-widest gap-2 group"
-          >
-            <AddIcon
-              size={16}
-              className="shrink-0 transition-transform duration-300 group-hover:rotate-90"
-            />
-            {addLabel && <span className="hidden sm:inline">{addLabel}</span>}
-          </Button>
-        </ActionHint>
+        <Button
+          variant="default"
+          size="sm"
+          onClick={onAdd}
+          className="add-action h-11 gap-1.5 rounded-lg px-2.5 text-xs font-semibold sm:h-9 sm:gap-2 sm:px-4 pointer-coarse:min-h-11"
+        >
+          <AddIcon
+            aria-hidden="true"
+            size={16}
+            className={AddIcon === Plus ? 'add-action-icon shrink-0' : 'shrink-0'}
+          />
+          {addLabel || t('common.add')}
+        </Button>
       )}
     </div>
   );

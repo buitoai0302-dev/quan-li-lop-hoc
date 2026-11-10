@@ -8,7 +8,7 @@ import {
   Monitor,
   HelpCircle,
   MessageSquarePlus,
-  Ellipsis,
+  SlidersHorizontal,
 } from 'lucide-react';
 import { getMenuItems } from '../routes';
 import { useAuth } from '../contexts/AuthContext';
@@ -138,17 +138,16 @@ const MainLayout: React.FC = () => {
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <NotificationPopover />
             <div className="relative sm:hidden" ref={quickActionsRef}>
-              <ActionHint label={t('common.moreActions')} showTouchLabel={false}>
+              <ActionHint label={t('common.quickSettings')} showTouchLabel={false}>
                 <button
                   ref={quickActionsButtonRef}
                   type="button"
                   onClick={() => setIsQuickActionsOpen((open) => !open)}
-                  aria-label={t('common.moreActions')}
                   aria-expanded={isQuickActionsOpen}
                   aria-controls="mobile-quick-actions"
                   className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-primary dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-600"
                 >
-                  <Ellipsis size={20} aria-hidden="true" />
+                  <SlidersHorizontal size={18} aria-hidden="true" />
                 </button>
               </ActionHint>
               {isQuickActionsOpen && (

@@ -21,6 +21,8 @@ export interface BulkEnrollModalProps {
 }
 
 export interface ClassTableProps extends BaseTableProps<ClassData> {
+  highlightedClassId?: string | null;
+  onHighlightEnd?: () => void;
   classes: ClassData[];
 }
 

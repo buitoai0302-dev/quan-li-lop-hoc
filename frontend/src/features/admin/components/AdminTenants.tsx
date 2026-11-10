@@ -20,13 +20,14 @@ import { Modal, Card, Button, Badge } from '@/components/common/UI';
 import { TENANT_STATUS, PLAN_CODES, TENANT_ACTIONS, SYSTEM_DOMAIN } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
-import ActionHint from '@/components/common/ActionHint';
+import RowActions from '@/components/common/RowActions';
 import type { Tenant } from '@/types';
 
 import { useAdminTenants, useAdminPlans, useAdminStats, useUpdateTenant } from '../hooks/useAdmin';
 import { BACKUP_CYCLES } from '@/utils/constants';
 
 const AdminTenants: React.FC = () => {
+  const fieldPrefix = React.useId();
   const { t } = useTranslation();
 
   const { data: tenants = [], isLoading: loadingTenants } = useAdminTenants();
@@ -192,7 +193,7 @@ const AdminTenants: React.FC = () => {
 
           <Card className="flex-1 min-h-0 overflow-hidden" scrollable={true}>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="w-full table-fixed text-left sm:table-auto">
                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 shadow-sm">
                   <tr>
                     <th className="px-2 py-2 sm:px-4 sm:py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
@@ -204,10 +205,10 @@ const AdminTenants: React.FC = () => {
                     <th className="hidden sm:table-cell px-2 py-2 sm:px-4 sm:py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.userCount')} / {t('admin.branchCount')}
                     </th>
-                    <th className="px-2 py-2 sm:px-4 sm:py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="px-2 py-2 sm:px-4 sm:py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest max-sm:w-24 max-sm:tracking-normal">
                       {t('admin.status')}
                     </th>
-                    <th className="px-2 py-2 sm:px-4 sm:py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+                    <th className="whitespace-nowrap px-2 py-2 sm:px-4 sm:py-3 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right max-sm:w-16 max-sm:pr-1 max-sm:tracking-normal">
                       {t('common.actions')}
                     </th>
                   </tr>
@@ -295,71 +296,67 @@ const AdminTenants: React.FC = () => {
                                 </span>
                               </div>
                             ) : (
-                              <>
-                                {tenant.status === TENANT_STATUS.PENDING && (
-                                  <button
-                                    onClick={() =>
-                                      setConfirmModal({
-                                        isOpen: true,
-                                        tenant,
-                                        action: TENANT_ACTIONS.ACTIVATE,
-                                      })
-                                    }
-                                    className="px-2 py-1.5 sm:px-4 sm:py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg font-black text-[9px] sm:text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-emerald-500/20"
-                                  >
-                                    {t('admin.activate', 'Duyệt')}
-                                  </button>
-                                )}
-                                {tenant.status === TENANT_STATUS.ACTIVE && (
-                                  <ActionHint
-                                    label={t('admin.loginAsTenant')}
-                                    touchLabel={t('landing.login')}
-                                  >
-                                    <button
-                                      onClick={() => {
-                                        localStorage.setItem('impersonatedTenantId', tenant.id);
-                                        localStorage.setItem('impersonatedTenantName', tenant.name);
-                                        window.location.href = '/';
-                                      }}
-                                      className="px-2 sm:px-3 h-8 sm:h-9 bg-indigo-500 hover:bg-indigo-600 text-white rounded-lg font-black text-[10px] uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-lg shadow-indigo-500/20 flex items-center justify-center"
-                                    >
-                                      <LogIn size={14} className="mr-0 sm:mr-1.5" />
-                                      <span className="hidden sm:inline">
-                                        {t('admin.login', 'Đăng nhập')}
-                                      </span>
-                                    </button>
-                                  </ActionHint>
-                                )}
-                                {tenant.status !== TENANT_STATUS.PENDING && (
-                                  <>
-                                    <ActionHint label={t('admin.changePlan')}>
-                                      <button
-                                        onClick={() => handleOpenPlanModal(tenant)}
-                                        className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-primary hover:bg-primary/10 rounded-lg transition-all shrink-0"
-                                      >
-                                        <Zap size={16} className="sm:w-[18px] sm:h-[18px]" />
-                                      </button>
-                                    </ActionHint>
-                                    <ActionHint label={t('admin.backup.tooltip')}>
-                                      <button
-                                        onClick={() => handleOpenBackupModal(tenant)}
-                                        className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg transition-all shrink-0"
-                                      >
-                                        <Cloud size={16} className="sm:w-[18px] sm:h-[18px]" />
-                                      </button>
-                                    </ActionHint>
-                                  </>
-                                )}
-                                <ActionHint
-                                  label={
-                                    tenant.status === TENANT_STATUS.ACTIVE ||
-                                    tenant.status === TENANT_STATUS.PENDING
-                                      ? t('admin.deactivate')
-                                      : t('admin.activate')
-                                  }
-                                >
-                                  <button
-                                    onClick={() =>
+                              <RowActions
+                                actions={[
+                                  ...(tenant.status === TENANT_STATUS.PENDING
+                                    ? [
+                                        {
+                                          label: t('admin.activate'),
+                                          icon: <CheckCircle size={16} />,
+                                          onClick: () =>
+                                            setConfirmModal({
+                                              isOpen: true,
+                                              tenant,
+                                              action: TENANT_ACTIONS.ACTIVATE,
+                                            }),
+                                        },
+                                      ]
+                                    : []),
+                                  ...(tenant.status === TENANT_STATUS.ACTIVE
+                                    ? [
+                                        {
+                                          label: t('admin.loginAsTenant'),
+                                          icon: <LogIn size={16} />,
+                                          onClick: () => {
+                                            localStorage.setItem('impersonatedTenantId', tenant.id);
+                                            localStorage.setItem(
+                                              'impersonatedTenantName',
+                                              tenant.name
+                                            );
+                                            window.location.href = '/';
+                                          },
+                                        },
+                                      ]
+                                    : []),
+                                  ...(tenant.status !== TENANT_STATUS.PENDING
+                                    ? [
+                                        {
+                                          label: t('admin.changePlan'),
+                                          icon: <Zap size={16} />,
+                                          onClick: () => handleOpenPlanModal(tenant),
+                                        },
+                                        {
+                                          label: t('admin.backup.tooltip'),
+                                          icon: <Cloud size={16} />,
+                                          onClick: () => handleOpenBackupModal(tenant),
+                                        },
+                                      ]
+                                    : []),
+                                  {
+                                    label: t(
+                                      tenant.status === TENANT_STATUS.ACTIVE ||
+                                        tenant.status === TENANT_STATUS.PENDING
+                                        ? 'admin.deactivate'
+                                        : 'admin.activate'
+                                    ),
+                                    icon:
+                                      tenant.status === TENANT_STATUS.ACTIVE ||
+                                      tenant.status === TENANT_STATUS.PENDING ? (
+                                        <XCircle size={16} />
+                                      ) : (
+                                        <CheckCircle size={16} />
+                                      ),
+                                    onClick: () =>
                                       setConfirmModal({
                                         isOpen: true,
                                         tenant,
@@ -368,19 +365,15 @@ const AdminTenants: React.FC = () => {
                                           tenant.status === TENANT_STATUS.PENDING
                                             ? TENANT_ACTIONS.SUSPEND
                                             : TENANT_ACTIONS.ACTIVATE,
-                                      })
-                                    }
-                                    className={`w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg transition-all shrink-0 ${tenant.status === TENANT_STATUS.ACTIVE || tenant.status === TENANT_STATUS.PENDING ? 'text-rose-500 hover:bg-rose-50' : 'text-emerald-500 hover:bg-emerald-50'}`}
-                                  >
-                                    {tenant.status === TENANT_STATUS.ACTIVE ||
-                                    tenant.status === TENANT_STATUS.PENDING ? (
-                                      <XCircle size={18} />
-                                    ) : (
-                                      <CheckCircle size={18} />
-                                    )}
-                                  </button>
-                                </ActionHint>
-                              </>
+                                      }),
+                                    tone:
+                                      tenant.status === TENANT_STATUS.ACTIVE ||
+                                      tenant.status === TENANT_STATUS.PENDING
+                                        ? 'danger'
+                                        : undefined,
+                                  },
+                                ]}
+                              />
                             )}
                           </div>
                         </td>
@@ -613,10 +606,14 @@ const AdminTenants: React.FC = () => {
             {backupSettings.enabled && (
               <div className="grid grid-cols-2 gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-900/50">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    htmlFor={fieldPrefix + '-field-1'}
+                    className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     {t('admin.backup.cycle')}
                   </label>
                   <select
+                    id={fieldPrefix + '-field-1'}
                     value={backupSettings.cycle}
                     onChange={(e) =>
                       setBackupSettings({ ...backupSettings, cycle: e.target.value })
@@ -629,10 +626,14 @@ const AdminTenants: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1">
+                  <label
+                    htmlFor={fieldPrefix + '-field-2'}
+                    className="block text-xs font-bold text-gray-700 dark:text-gray-300 mb-1"
+                  >
                     {t('admin.backup.time')}
                   </label>
                   <input
+                    id={fieldPrefix + '-field-2'}
                     type="time"
                     step="3600"
                     value={backupSettings.time}
@@ -690,9 +691,12 @@ const StatusBadge: React.FC<{ status: string; t: any }> = ({ status, t }) => {
     return (
       <Badge
         variant="success"
-        className="gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-3 sm:py-1 text-[8px] sm:text-[10px] whitespace-nowrap"
+        className="gap-1 whitespace-nowrap px-1.5 py-0.5 text-[10px] max-sm:font-semibold max-sm:normal-case max-sm:tracking-normal sm:gap-1.5 sm:px-3 sm:py-1"
       >
-        <CheckCircle size={10} className="sm:w-3 sm:h-3" /> {t('admin.statusActive')}
+        <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-current sm:hidden" />
+        <span className="sm:hidden">{t('admin.statusActiveShort')}</span>
+        <CheckCircle aria-hidden="true" size={12} className="hidden sm:block" />
+        <span className="hidden sm:inline">{t('admin.statusActive')}</span>
       </Badge>
     );
   }

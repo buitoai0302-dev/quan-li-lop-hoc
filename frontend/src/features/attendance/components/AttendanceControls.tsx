@@ -50,121 +50,98 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
   const { t } = useTranslation();
 
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800/50 shrink-0 transition-all duration-300 relative z-[60]">
-      <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-3 p-3 sm:p-4 bg-gray-50/30 dark:bg-slate-900/50 border-b border-gray-100 dark:border-slate-800/50 rounded-t-xl">
-        {/* Left: Title (Clickable) */}
-        <div
-          className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity shrink-0 lg:flex-1"
-          onClick={() => setIsControlsExpanded(!isControlsExpanded)}
-        >
-          <div className="p-1.5 bg-primary/10 text-primary rounded-lg">
-            <ClipboardCheck size={14} />
+    <div className="relative z-[60] shrink-0 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex flex-wrap items-center gap-2 p-3">
+        <div className="flex w-full items-center gap-1.5 sm:w-auto">
+          <button
+            type="button"
+            onClick={handlePrevDay}
+            aria-label={t('common.previous')}
+            className="grid size-11 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-primary dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:size-9"
+          >
+            <ChevronLeft aria-hidden="true" size={16} />
+          </button>
+          <div className="relative min-w-0 flex-1 sm:w-36 sm:flex-none">
+            <input
+              ref={dateInputRef}
+              type="date"
+              aria-label={t('schedule.selectDate')}
+              value={selectedDate}
+              onChange={(e) => handleDateChange(e.target.value)}
+              onClick={(e) => e.currentTarget.showPicker?.()}
+              className={`h-11 w-full min-w-0 cursor-pointer rounded-lg border pl-7 pr-1 text-xs font-semibold tabular-nums text-slate-900 focus-visible:outline-2 focus-visible:outline-primary dark:text-white sm:h-9 ${
+                isFutureDate
+                  ? 'border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/10'
+                  : isReadOnly
+                    ? 'border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/10'
+                    : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-950'
+              }`}
+            />
+            <CalendarIcon
+              aria-hidden="true"
+              size={14}
+              className="pointer-events-none absolute left-2 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
+            />
           </div>
-          <h3 className="hidden md:block text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 whitespace-nowrap">
-            {t('attendance.stats')}
-          </h3>
+          <button
+            type="button"
+            onClick={handleNextDay}
+            aria-label={t('common.next')}
+            className="grid size-11 shrink-0 place-items-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-primary dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:size-9"
+          >
+            <ChevronRight aria-hidden="true" size={16} />
+          </button>
+          <button
+            type="button"
+            onClick={handleToday}
+            className="min-h-11 shrink-0 rounded-lg bg-primary/10 px-2.5 text-xs font-semibold text-indigo-700 hover:bg-primary/15 focus-visible:outline-2 focus-visible:outline-primary dark:text-indigo-200 sm:min-h-9"
+          >
+            {t('common.today')}
+          </button>
         </div>
 
-        {/* Middle: Filters (Date + Search) */}
-        <div
-          className="flex flex-1 flex-col xl:flex-row items-center justify-center gap-2 sm:gap-3 min-w-0"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto shrink-0">
-            <div className="flex items-center gap-1.5 flex-1 sm:flex-none sm:w-56 min-w-0">
-              <button
-                onClick={handlePrevDay}
-                className="p-1.5 sm:p-2 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700 shrink-0 text-slate-600 dark:text-slate-300"
-              >
-                <ChevronLeft size={16} />
-              </button>
-              <div
-                className="relative flex-1 group cursor-pointer min-w-0"
-                onClick={() => {
-                  const input = dateInputRef.current as HTMLInputElement;
-                  if (input) {
-                    if (typeof (input as any).showPicker === 'function') {
-                      (input as any).showPicker();
-                    } else {
-                      input.click();
-                    }
-                  }
-                }}
-              >
-                <input
-                  ref={dateInputRef}
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => handleDateChange(e.target.value)}
-                  className={`w-full pl-7 sm:pl-8 pr-1 sm:pr-2 py-1.5 sm:py-2 ${
-                    isFutureDate
-                      ? 'bg-amber-50/30 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800 focus:ring-amber-500/20'
-                      : isReadOnly
-                        ? 'bg-blue-50/30 dark:bg-blue-900/10 border-blue-200 dark:border-blue-800 focus:ring-blue-500/20'
-                        : 'bg-white dark:bg-slate-950 border-gray-200 dark:border-slate-700 focus:ring-primary/20'
-                  } border rounded-lg text-[10px] sm:text-xs font-bold outline-none dark:text-white cursor-pointer truncate`}
-                />
-                <CalendarIcon
-                  size={12}
-                  className={`absolute left-2 sm:left-2.5 top-1/2 -translate-y-1/2 ${
-                    isFutureDate
-                      ? 'text-amber-500'
-                      : isReadOnly
-                        ? 'text-blue-500'
-                        : 'text-slate-500 dark:text-slate-400 group-hover:text-primary'
-                  } transition-colors`}
-                />
-              </div>
-              <button
-                onClick={handleNextDay}
-                className="p-1.5 sm:p-2 bg-white dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm transition-colors hover:bg-gray-50 dark:hover:bg-slate-700 shrink-0 text-slate-600 dark:text-slate-300"
-              >
-                <ChevronRight size={16} />
-              </button>
-            </div>
-            <button
-              onClick={handleToday}
-              className="px-2 sm:px-3 py-1.5 sm:py-2 bg-primary/5 dark:bg-primary/10 text-[9px] sm:text-[10px] font-black uppercase tracking-widest text-primary rounded-lg border border-primary/10 hover:bg-primary/10 transition-all active:scale-95 shrink-0"
-            >
-              {t('common.today')}
-            </button>
-          </div>
-
-          <div
-            className={`relative flex-1 w-full min-w-[150px] max-w-sm transition-opacity ${!selectedSession ? 'opacity-50 pointer-events-none' : ''}`}
-          >
+        {selectedSession && (
+          <div className="relative w-full sm:min-w-40 sm:max-w-sm sm:flex-1">
             <Search
-              className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
+              aria-hidden="true"
+              className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
               size={14}
             />
             <input
-              type="text"
+              type="search"
+              aria-label={t('common.search')}
               placeholder={t('common.search')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              disabled={!selectedSession}
-              className="w-full pl-8 pr-3 py-1.5 sm:py-2 bg-white dark:bg-slate-950 border border-gray-200 dark:border-slate-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-primary/20 outline-none disabled:bg-gray-100 dark:disabled:bg-slate-900 disabled:cursor-not-allowed"
+              className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-base text-slate-900 placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-primary dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-400 sm:h-9 sm:text-xs"
             />
           </div>
-        </div>
+        )}
 
-        {/* Right: Actions + Chevron toggle */}
-        <div className="flex items-center gap-2 shrink-0 w-full lg:flex-1 justify-end">
+        <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
           {headerActions}
-          <button
-            onClick={() => setIsControlsExpanded(!isControlsExpanded)}
-            className="p-1.5 bg-white dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-blue-400 border border-gray-200 dark:border-slate-700 rounded-lg transition-all active:scale-95 shadow-sm shrink-0"
-          >
-            {isControlsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-          </button>
+          {selectedSession && (
+            <button
+              type="button"
+              onClick={() => setIsControlsExpanded(!isControlsExpanded)}
+              aria-expanded={isControlsExpanded}
+              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-primary dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:min-h-9"
+            >
+              <ClipboardCheck aria-hidden="true" size={15} />
+              {t('attendance.stats')}
+              {isControlsExpanded ? (
+                <ChevronUp aria-hidden="true" size={14} />
+              ) : (
+                <ChevronDown aria-hidden="true" size={14} />
+              )}
+            </button>
+          )}
         </div>
       </div>
 
-      <div
-        className={`transition-all duration-300 ease-in-out ${isControlsExpanded ? 'max-h-[500px] opacity-100 border-t border-gray-50 dark:border-slate-800/50 p-3 sm:p-4' : 'max-h-0 opacity-0 overflow-hidden'}`}
-      >
-        {selectedSession && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-4 pb-4 border-b border-gray-100 dark:border-gray-700/50">
+      {selectedSession && isControlsExpanded && (
+        <div className="filter-enter border-t border-slate-200 p-3 dark:border-slate-800">
+          <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             {[
               {
                 key: ATTENDANCE_STATUS.PRESENT,
@@ -229,8 +206,8 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
               )
             )}
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

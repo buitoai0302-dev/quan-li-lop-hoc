@@ -4,7 +4,7 @@ import toast from 'react-hot-toast';
 import { handleApiError } from '@/utils/errorHelper';
 import {
   Users,
-  Search,
+  ListFilter,
   Building,
   CheckCircle,
   KeyRound,
@@ -18,6 +18,7 @@ import { USER_ROLES } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
 import Pagination from '@/components/common/Pagination';
+import RowActions from '@/components/common/RowActions';
 import ActionHint from '@/components/common/ActionHint';
 import FilterBar from '@/components/common/FilterBar';
 import FilterSelect from '@/components/common/FilterSelect';
@@ -33,6 +34,7 @@ import {
 } from '../hooks/useAdmin';
 
 const AdminUsers: React.FC = () => {
+  const fieldPrefix = React.useId();
   const { t } = useTranslation();
   const createFormId = React.useId();
 
@@ -170,44 +172,43 @@ const AdminUsers: React.FC = () => {
       <PageHeader
         icon={Users}
         actions={
-          <div className="flex items-center gap-2">
-            <ActionHint label={t('common.filter')}>
+          <div className="flex flex-wrap items-center justify-end gap-1.5 sm:gap-2">
+            <ActionHint label={t('common.filter')} showTouchLabel={false}>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsFilterVisible(!isFilterVisible)}
-                className={`h-9 w-9 px-0 rounded-lg transition-all ${isFilterVisible ? 'bg-primary/10 border-primary/30 text-primary' : ''}`}
+                aria-expanded={isFilterVisible}
+                className={`size-11 rounded-lg px-0 transition-colors sm:size-9 ${isFilterVisible ? 'bg-primary/10 border-primary/30 text-primary' : ''}`}
               >
-                <Search size={16} />
+                <ListFilter size={16} aria-hidden="true" />
               </Button>
             </ActionHint>
-            <ActionHint label={t('admin.users.buttons.import')}>
+            <ActionHint label={t('admin.users.buttons.import')} showTouchLabel={false}>
               <Button
                 variant="outline"
                 size="sm"
                 onClick={() => setIsImportModalOpen(true)}
-                className="h-9 w-9 sm:w-auto px-0 sm:px-4 rounded-lg text-[10px] font-black uppercase tracking-widest gap-2 group"
+                className="h-11 w-11 gap-1.5 rounded-lg px-0 text-xs font-semibold sm:h-9 sm:w-auto sm:px-4"
               >
-                <Upload size={16} className="shrink-0" />
+                <Upload size={16} aria-hidden="true" className="shrink-0" />
                 <span className="hidden sm:inline">
                   {t('admin.users.buttons.import', 'Nhập danh sách')}
                 </span>
               </Button>
             </ActionHint>
-            <ActionHint label={t('admin.users.buttons.create')}>
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleOpenCreate}
-                className="h-9 w-9 sm:w-auto px-0 sm:px-4 rounded-lg text-[10px] font-black uppercase tracking-widest gap-2 group"
-              >
-                <Plus
-                  size={16}
-                  className="shrink-0 transition-transform duration-300 group-hover:rotate-90"
-                />
-                <span className="hidden sm:inline">{t('admin.users.buttons.create')}</span>
-              </Button>
-            </ActionHint>
+
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleOpenCreate}
+              aria-label={t('admin.users.buttons.create')}
+              className="add-action h-11 gap-1.5 rounded-lg px-2.5 text-xs font-semibold sm:h-9 sm:px-4"
+            >
+              <Plus size={16} aria-hidden="true" className="add-action-icon shrink-0" />
+              <span className="min-[375px]:hidden">{t('admin.users.buttons.createShort')}</span>
+              <span className="hidden min-[375px]:inline">{t('admin.users.buttons.create')}</span>
+            </Button>
           </div>
         }
       >
@@ -221,6 +222,7 @@ const AdminUsers: React.FC = () => {
           searchPlaceholder={t('admin.users.search_placeholder')}
         >
           <FilterSelect
+            label={t('admin.users.table.role')}
             value={roleFilter}
             onChange={(e) => setRoleFilter(e.target.value)}
             placeholder={t('admin.users.all_roles')}
@@ -233,6 +235,7 @@ const AdminUsers: React.FC = () => {
             ]}
           />
           <FilterSelect
+            label={t('admin.tenantName')}
             value={tenantFilter}
             onChange={(e) => setTenantFilter(e.target.value)}
             placeholder={t('admin.users.all_tenants')}
@@ -260,7 +263,7 @@ const AdminUsers: React.FC = () => {
             }
           >
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="w-full table-fixed text-left sm:table-auto">
                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800">
                   <tr>
                     <th className="px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
@@ -272,7 +275,7 @@ const AdminUsers: React.FC = () => {
                     <th className="hidden sm:table-cell px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
                       {t('admin.users.table.tenant')}
                     </th>
-                    <th className="px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+                    <th className="px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right max-sm:w-24 max-sm:tracking-normal">
                       {t('admin.users.table.actions')}
                     </th>
                   </tr>
@@ -296,8 +299,8 @@ const AdminUsers: React.FC = () => {
                                 title={user.is_active ? 'Đang hoạt động' : 'Đã khóa'}
                               />
                             </div>
-                            <div className="flex flex-col">
-                              <span className="text-sm font-bold text-gray-900 dark:text-white leading-tight">
+                            <div className="flex min-w-0 flex-col">
+                              <span className="truncate text-sm font-bold text-gray-900 dark:text-white leading-tight">
                                 {user.full_name}
                               </span>
                               <span className="text-[10px] sm:text-xs text-gray-500 truncate mt-0.5">
@@ -330,38 +333,29 @@ const AdminUsers: React.FC = () => {
                           </div>
                         </td>
                         <td className="px-3 py-3 sm:px-4 sm:py-4 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <ActionHint label={t('admin.users.tooltip.reset')}>
-                              <button
-                                onClick={() => {
+                          <RowActions
+                            actions={[
+                              {
+                                label: t('admin.users.tooltip.reset'),
+                                icon: <KeyRound size={16} />,
+                                onClick: () => {
                                   setSelectedUser(user);
                                   setNewlyCreatedPassword(null);
                                   setIsResetModalOpen(true);
-                                }}
-                                className="p-2 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors"
-                              >
-                                <KeyRound size={16} />
-                              </button>
-                            </ActionHint>
-                            <ActionHint
-                              label={
-                                user.is_active
-                                  ? t('admin.users.tooltip.lock')
-                                  : t('admin.users.tooltip.unlock')
-                              }
-                            >
-                              <button
-                                onClick={() => handleToggleStatus(user)}
-                                className={`p-2 rounded-lg transition-colors ${
+                                },
+                              },
+                              {
+                                label: t(
                                   user.is_active
-                                    ? 'text-rose-500 hover:bg-rose-50'
-                                    : 'text-emerald-500 hover:bg-emerald-50'
-                                }`}
-                              >
-                                {user.is_active ? <Lock size={16} /> : <Unlock size={16} />}
-                              </button>
-                            </ActionHint>
-                          </div>
+                                    ? 'admin.users.tooltip.lock'
+                                    : 'admin.users.tooltip.unlock'
+                                ),
+                                icon: user.is_active ? <Lock size={16} /> : <Unlock size={16} />,
+                                onClick: () => handleToggleStatus(user),
+                                tone: user.is_active ? 'danger' : undefined,
+                              },
+                            ]}
+                          />{' '}
                         </td>
                       </tr>
                     ))
@@ -422,10 +416,14 @@ const AdminUsers: React.FC = () => {
           ) : (
             <form id={createFormId} onSubmit={handleCreateSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor={fieldPrefix + '-field-1'}
+                  className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300"
+                >
                   {t('admin.users.modal.tenant')}
                 </label>
                 <Select
+                  id={fieldPrefix + '-field-1'}
                   value={formData.tenant_id}
                   onChange={(e) => setFormData({ ...formData, tenant_id: e.target.value })}
                   required
@@ -447,10 +445,14 @@ const AdminUsers: React.FC = () => {
               {formData.tenant_id === 'NEW' && (
                 <div className="space-y-4 p-4 bg-primary/5 rounded-xl border border-primary/20">
                   <div>
-                    <label className="block text-sm font-semibold mb-1 text-primary dark:text-blue-400">
+                    <label
+                      htmlFor={fieldPrefix + '-field-2'}
+                      className="block text-sm font-semibold mb-1 text-primary dark:text-blue-400"
+                    >
                       {t('admin.users.modal.new_tenant_name')}
                     </label>
                     <Input
+                      id={fieldPrefix + '-field-2'}
                       required
                       placeholder={t('admin.users.modal.new_tenant_placeholder')}
                       value={formData.new_tenant_name}
@@ -460,10 +462,14 @@ const AdminUsers: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold mb-1 text-primary dark:text-blue-400">
+                    <label
+                      htmlFor={fieldPrefix + '-field-3'}
+                      className="block text-sm font-semibold mb-1 text-primary dark:text-blue-400"
+                    >
                       {t('admin.users.modal.plan')}
                     </label>
                     <Select
+                      id={fieldPrefix + '-field-3'}
                       value={formData.plan_id}
                       onChange={(e) => setFormData({ ...formData, plan_id: e.target.value })}
                       required
@@ -479,10 +485,14 @@ const AdminUsers: React.FC = () => {
               )}
 
               <div>
-                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor={fieldPrefix + '-field-4'}
+                  className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300"
+                >
                   {t('admin.users.table.role')}
                 </label>
                 <Select
+                  id={fieldPrefix + '-field-4'}
                   value={formData.role}
                   onChange={(e) => setFormData({ ...formData, role: e.target.value })}
                   required
@@ -495,10 +505,14 @@ const AdminUsers: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor={fieldPrefix + '-field-5'}
+                  className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300"
+                >
                   {t('admin.users.modal.fullname')}
                 </label>
                 <Input
+                  id={fieldPrefix + '-field-5'}
                   required
                   placeholder={t('admin.users.modal.fullname_placeholder')}
                   value={formData.full_name}
@@ -507,10 +521,14 @@ const AdminUsers: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300">
+                <label
+                  htmlFor={fieldPrefix + '-field-6'}
+                  className="block text-sm font-semibold mb-1 text-gray-700 dark:text-gray-300"
+                >
                   {t('admin.users.modal.email')}
                 </label>
                 <Input
+                  id={fieldPrefix + '-field-6'}
                   required
                   type="email"
                   placeholder={t('admin.users.modal.email_placeholder')}

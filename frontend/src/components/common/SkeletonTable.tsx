@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface SkeletonTableProps {
   rows?: number;
@@ -6,28 +7,31 @@ interface SkeletonTableProps {
 }
 
 const SkeletonTable: React.FC<SkeletonTableProps> = ({ rows = 5, columns = 5 }) => {
+  const { t } = useTranslation();
+
   return (
-    <div className="w-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
-      <div className="overflow-x-auto">
+    <div
+      role="status"
+      className="w-full overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800"
+    >
+      <span className="sr-only">{t('common.loadingData')}</span>
+      <div aria-hidden="true" className="overflow-hidden motion-safe:animate-pulse">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
               {Array.from({ length: columns }).map((_, i) => (
-                <th key={`th-${i}`} className="p-4">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-24"></div>
+                <th key={`th-${i}`} className="p-2 sm:p-4">
+                  <div className="h-4 w-full max-w-24 rounded bg-gray-200 dark:bg-gray-700" />
                 </th>
               ))}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
             {Array.from({ length: rows }).map((_, rowIndex) => (
-              <tr key={`tr-${rowIndex}`} className="hover:bg-gray-50/30 dark:hover:bg-gray-800/30 transition-colors">
+              <tr key={`tr-${rowIndex}`}>
                 {Array.from({ length: columns }).map((_, colIndex) => (
-                  <td key={`td-${rowIndex}-${colIndex}`} className="p-4">
-                    <div 
-                      className="h-4 bg-gray-100 dark:bg-gray-800 rounded animate-pulse" 
-                      style={{ width: `${Math.floor(Math.random() * 40) + 40}%` }}
-                    ></div>
+                  <td key={`td-${rowIndex}-${colIndex}`} className="p-2 sm:p-4">
+                    <div className="h-4 w-3/4 rounded bg-gray-100 dark:bg-gray-700" />
                   </td>
                 ))}
               </tr>
@@ -35,13 +39,15 @@ const SkeletonTable: React.FC<SkeletonTableProps> = ({ rows = 5, columns = 5 }) 
           </tbody>
         </table>
       </div>
-      {/* Pagination Skeleton */}
-      <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
-        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-32"></div>
+      <div
+        aria-hidden="true"
+        className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-200 p-3 motion-safe:animate-pulse dark:border-gray-700 sm:p-4"
+      >
+        <div className="h-4 w-24 rounded bg-gray-200 dark:bg-gray-700" />
         <div className="flex gap-2">
-          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
-          <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse"></div>
+          <div className="size-11 rounded-lg bg-gray-200 dark:bg-gray-700" />
+          <div className="h-11 w-24 rounded-lg bg-gray-100 dark:bg-gray-700" />
+          <div className="size-11 rounded-lg bg-gray-200 dark:bg-gray-700" />
         </div>
       </div>
     </div>

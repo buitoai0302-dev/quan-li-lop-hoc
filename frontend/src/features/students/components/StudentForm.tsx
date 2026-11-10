@@ -8,6 +8,9 @@ import type { StudentFormProps } from '../types';
 import type { StudentFormData } from '@/types/schemas';
 import { Input, Select, Label } from '@/components/common/UI';
 
+const FIELD_LABEL_CLASS =
+  'mb-1.5 text-sm font-semibold normal-case tracking-normal text-slate-700 dark:text-slate-200';
+
 // 1. Zod Schema
 const getStudentSchema = (t: TFunction) =>
   z.object({
@@ -67,6 +70,8 @@ const StudentForm: React.FC<StudentFormProps> = ({
   }, [initialData, reset, branches]);
 
   const { ref: dobRef, ...dobRegisterRest } = register('date_of_birth');
+  const fieldId = (name: keyof StudentFormData) => `${id}-${name}`;
+  const errorId = (name: keyof StudentFormData) => `${fieldId(name)}-error`;
 
   const handleShowPicker = () => {
     const input = dobInputRef?.current as (HTMLInputElement & { showPicker?: () => void }) | null;
@@ -77,27 +82,35 @@ const StudentForm: React.FC<StudentFormProps> = ({
   };
 
   return (
-    <form id={id} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form id={id} onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="sm:col-span-2">
-          <Label required className="ml-1">
+          <Label htmlFor={fieldId('full_name')} required className={FIELD_LABEL_CLASS}>
             {t('students.name')}
           </Label>
           <Input
+            id={fieldId('full_name')}
+            aria-required="true"
+            aria-invalid={!!errors.full_name}
+            aria-describedby={errors.full_name ? errorId('full_name') : undefined}
+            autoComplete="name"
             variant="muted"
             placeholder={t('students.namePlaceholder')}
             className={errors.full_name ? 'ring-2 ring-red-500' : ''}
             {...register('full_name')}
           />
           {errors.full_name && (
-            <p className="text-red-500 text-[10px] mt-1.5 ml-1 font-bold">
+            <p id={errorId('full_name')} className="form-field-error">
               {errors.full_name.message}
             </p>
           )}
         </div>
         <div>
-          <Label className="ml-1">{t('students.dob')}</Label>
+          <Label htmlFor={fieldId('date_of_birth')} className={FIELD_LABEL_CLASS}>
+            {t('students.dob')}
+          </Label>
           <Input
+            id={fieldId('date_of_birth')}
             type="date"
             variant="muted"
             icon={<Calendar />}
@@ -113,10 +126,14 @@ const StudentForm: React.FC<StudentFormProps> = ({
           />
         </div>
         <div>
-          <Label required className="ml-1">
+          <Label htmlFor={fieldId('branch_id')} required className={FIELD_LABEL_CLASS}>
             {t('classes.branch')}
           </Label>
           <Select
+            id={fieldId('branch_id')}
+            aria-required="true"
+            aria-invalid={!!errors.branch_id}
+            aria-describedby={errors.branch_id ? errorId('branch_id') : undefined}
             variant="muted"
             className={errors.branch_id ? 'ring-2 ring-red-500' : ''}
             {...register('branch_id')}
@@ -131,20 +148,25 @@ const StudentForm: React.FC<StudentFormProps> = ({
             ))}
           </Select>
           {errors.branch_id && (
-            <p className="text-red-500 text-[10px] mt-1.5 ml-1 font-bold">
+            <p id={errorId('branch_id')} className="form-field-error">
               {errors.branch_id.message}
             </p>
           )}
         </div>
       </div>
 
-      <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-5">
+      <div className="space-y-5 rounded-2xl border border-primary/10 bg-primary/5 p-4 sm:p-6">
         <div>
-          <Label required className="ml-1">
+          <Label htmlFor={fieldId('email')} required className={FIELD_LABEL_CLASS}>
             {t('students.email')}
           </Label>
           <Input
+            id={fieldId('email')}
             type="email"
+            autoComplete="email"
+            aria-required="true"
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? errorId('email') : undefined}
             variant={editingId ? 'muted' : 'white'}
             disabled={!!editingId}
             placeholder="example@email.com"
@@ -153,13 +175,19 @@ const StudentForm: React.FC<StudentFormProps> = ({
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-red-500 text-[10px] mt-1.5 ml-1 font-bold">{errors.email.message}</p>
+            <p id={errorId('email')} className="form-field-error">
+              {errors.email.message}
+            </p>
           )}
         </div>
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
           <div>
-            <Label className="ml-1">{t('students.phone')}</Label>
+            <Label htmlFor={fieldId('phone')} className={FIELD_LABEL_CLASS}>
+              {t('students.phone')}
+            </Label>
             <Input
+              id={fieldId('phone')}
+              type="tel"
               variant="white"
               placeholder="09xxx..."
               icon={<Phone size={14} />}
@@ -167,8 +195,12 @@ const StudentForm: React.FC<StudentFormProps> = ({
             />
           </div>
           <div>
-            <Label className="ml-1">{t('students.parentPhone')}</Label>
+            <Label htmlFor={fieldId('parent_phone')} className={FIELD_LABEL_CLASS}>
+              {t('students.parentPhone')}
+            </Label>
             <Input
+              id={fieldId('parent_phone')}
+              type="tel"
               variant="white"
               placeholder="09xxx..."
               icon={<PhoneCall size={14} />}
@@ -180,8 +212,11 @@ const StudentForm: React.FC<StudentFormProps> = ({
 
       {editingId && (
         <div>
-          <Label className="ml-1">{t('common.status')}</Label>
+          <Label htmlFor={fieldId('is_active')} className={FIELD_LABEL_CLASS}>
+            {t('common.status')}
+          </Label>
           <Select
+            id={fieldId('is_active')}
             variant="muted"
             {...register('is_active', { setValueAs: (v) => v === 'true' || v === true })}
           >

@@ -52,6 +52,8 @@ const ScheduleBoard: React.FC = () => {
     handleOpenModal,
     handleCloseModal,
     handleSubmit,
+    submitBatch,
+    maxBatchSessions,
     isSessionSubmitting,
     handleDelete,
     handlePrev,
@@ -307,6 +309,8 @@ const ScheduleBoard: React.FC = () => {
         rooms={rooms}
         teachers={teachers}
         onSubmit={handleSubmit}
+        onSubmitBatch={submitBatch}
+        maxBatchSessions={maxBatchSessions}
         onDelete={() => setIsDeleteModalOpen(true)}
         onClassChange={handleClassChange}
         t={t}

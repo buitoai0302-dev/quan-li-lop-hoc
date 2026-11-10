@@ -1,11 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import {
-  getClassSchedules,
-  getClassEnrollments,
-  enrollStudent,
-  unenrollStudent,
-  enrollBulk,
-} from '@/features/classes';
+import { getClassSchedules, getClassEnrollments } from '@/features/classes';
 import { Modal, Card, Button, FormPanelActions } from '@/components/common/UI';
 import { BookOpen } from 'lucide-react';
 import ConfirmModal from '@/components/common/ConfirmModal';
@@ -49,7 +43,7 @@ const Classes: React.FC = () => {
   const endDateRef = React.useRef<HTMLInputElement>(null);
   const [originalSchedules, setOriginalSchedules] = useState('[]');
 
-  const { classes, branches, teachers, rooms, allStudents, loading, refreshClasses } = useClasses();
+  const { classes, branches, teachers, rooms, allStudents, loading } = useClasses();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -58,6 +52,7 @@ const Classes: React.FC = () => {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [recurringSchedules, setRecurringSchedules] = useState<RecurringSchedule[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [originalEnrollmentIds, setOriginalEnrollmentIds] = useState<Set<string>>(() => new Set());
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [isBulkEnrollOpen, setIsBulkEnrollOpen] = useState(false);
 
@@ -65,6 +60,7 @@ const Classes: React.FC = () => {
   const [branchFilter, setBranchFilter] = useState('');
 
   const [editingClass, setEditingClass] = useState<ClassBasicFormData | null>(null);
+  const [highlightedClassId, setHighlightedClassId] = useState<string | null>(null);
 
   const filteredClasses = React.useMemo(() => {
     return classes.filter((cls) => {
@@ -111,6 +107,7 @@ const Classes: React.FC = () => {
           setOriginalSchedules(JSON.stringify(schedulesData));
           setRecurringSchedules(schedulesData);
           setEnrollments(enrollmentsData);
+          setOriginalEnrollmentIds(new Set(enrollmentsData.map(({ id }) => id)));
         } catch (error) {
           handleApiError(error as AxiosError<ApiErrorData>, t);
           return;
@@ -121,7 +118,9 @@ const Classes: React.FC = () => {
         setOriginalSchedules('[]');
         setRecurringSchedules([]);
         setEnrollments([]);
+        setOriginalEnrollmentIds(new Set());
       }
+      setSelectedStudentId('');
       setIsModalOpen(true);
     },
     [t]
@@ -140,6 +139,9 @@ const Classes: React.FC = () => {
   const { mutate: deleteBulkClassesMutate } = useDeleteBulkClasses();
 
   const isSubmitting = isCreating || isUpdating;
+  const enrollmentsChanged =
+    enrollments.length !== originalEnrollmentIds.size ||
+    enrollments.some(({ id }) => !originalEnrollmentIds.has(id));
 
   const handleSubmit = useCallback(
     (data: ClassBasicFormData) => {
@@ -161,7 +163,7 @@ const Classes: React.FC = () => {
               room_id: schedule.room_id || null,
             }))
           : undefined,
-        enrollments: enrollments.map((e) => e.id),
+        enrollments: enrollmentsChanged ? enrollments.map(({ id }) => id) : undefined,
       };
 
       if (editingId) {
@@ -169,6 +171,7 @@ const Classes: React.FC = () => {
           { id: editingId, data: payload },
           {
             onSuccess: () => {
+              setHighlightedClassId(editingId);
               toast.success(t('common.success'));
               handleCloseModal();
             },
@@ -179,7 +182,8 @@ const Classes: React.FC = () => {
         );
       } else {
         createClassMutate(payload, {
-          onSuccess: () => {
+          onSuccess: ({ data: savedClass }) => {
+            if (typeof savedClass?.id === 'string') setHighlightedClassId(savedClass.id);
             toast.success(t('common.success'));
             handleCloseModal();
           },
@@ -195,6 +199,7 @@ const Classes: React.FC = () => {
       recurringSchedules,
       originalSchedules,
       enrollments,
+      enrollmentsChanged,
       t,
       handleCloseModal,
       createClassMutate,
@@ -230,90 +235,37 @@ const Classes: React.FC = () => {
     });
   }, [selectedIds, deleteBulkClassesMutate, t, clearSelection]);
 
-  const handleEnrollStudent = useCallback(async () => {
+  const addDraftEnrollments = useCallback(
+    (studentIds: string[]) => {
+      const selectedIds = new Set(studentIds);
+      const enrolledAt = new Date().toISOString();
+      setEnrollments((current) => {
+        const enrolledIds = new Set(current.map(({ id }) => id));
+        const additions = allStudents
+          .filter(({ id }) => selectedIds.has(id) && !enrolledIds.has(id))
+          .map(({ id, full_name, email }) => ({ id, full_name, email, enrolled_at: enrolledAt }));
+        return [...current, ...additions];
+      });
+    },
+    [allStudents]
+  );
+
+  const handleEnrollStudent = () => {
     if (!selectedStudentId) return;
+    addDraftEnrollments([selectedStudentId]);
+    setSelectedStudentId('');
+  };
 
-    if (editingId) {
-      try {
-        await enrollStudent(editingId, selectedStudentId);
-        toast.success(t('common.success'));
-        // Refresh local enrollments
-        const data = await getClassEnrollments(editingId);
-        setEnrollments(data);
-        setSelectedStudentId('');
-        refreshClasses();
-      } catch (error: unknown) {
-        handleApiError(error as AxiosError<ApiErrorData>, t);
-      }
-    } else {
-      const student = allStudents.find((s) => String(s.id) === String(selectedStudentId));
-      if (student && !enrollments.find((e) => String(e.id) === String(student.id))) {
-        setEnrollments([
-          ...enrollments,
-          {
-            id: student.id,
-            full_name: student.full_name,
-            email: student.email,
-            enrolled_at: new Date().toISOString(),
-          },
-        ]);
-        setSelectedStudentId('');
-      }
-    }
-  }, [editingId, selectedStudentId, enrollments, allStudents, t, refreshClasses]);
+  const handleBulkEnroll = (studentIds: string[]) => {
+    if (studentIds.length === 0) return;
+    addDraftEnrollments(studentIds);
+    setIsBulkEnrollOpen(false);
+  };
 
-  const handleBulkEnroll = useCallback(
-    async (studentIds: string[]) => {
-      if (studentIds.length === 0) return;
+  const handleUnenrollStudent = (studentId: string) => {
+    setEnrollments((current) => current.filter(({ id }) => id !== studentId));
+  };
 
-      if (editingId) {
-        try {
-          await enrollBulk(editingId, studentIds);
-          toast.success(t('common.success'));
-          const data = await getClassEnrollments(editingId);
-          setEnrollments(data);
-          setIsBulkEnrollOpen(false);
-          refreshClasses();
-        } catch (error: unknown) {
-          handleApiError(error as AxiosError<ApiErrorData>, t);
-        }
-      } else {
-        const newEnrollments = [...enrollments];
-        studentIds.forEach((id) => {
-          const student = allStudents.find((s) => s.id === id);
-          if (student && !newEnrollments.find((e) => e.id === student.id)) {
-            newEnrollments.push({
-              id: student.id,
-              full_name: student.full_name,
-              email: student.email,
-              enrolled_at: new Date().toISOString(),
-            });
-          }
-        });
-        setEnrollments(newEnrollments);
-        setIsBulkEnrollOpen(false);
-      }
-    },
-    [editingId, enrollments, allStudents, t, refreshClasses]
-  );
-
-  const handleUnenrollStudent = useCallback(
-    async (studentId: string) => {
-      if (editingId) {
-        try {
-          await unenrollStudent(editingId, studentId);
-          toast.success(t('common.success'));
-          setEnrollments(enrollments.filter((e) => e.id !== studentId));
-          refreshClasses();
-        } catch (error: unknown) {
-          handleApiError(error as AxiosError<ApiErrorData>, t);
-        }
-      } else {
-        setEnrollments(enrollments.filter((e) => e.id !== studentId));
-      }
-    },
-    [editingId, enrollments, t, refreshClasses]
-  );
   const handleExportExcel = () => {
     const columns: ExportColumn<any>[] = [
       { header: t('classes.name'), accessor: 'name' },
@@ -362,6 +314,7 @@ const Classes: React.FC = () => {
           }}
         >
           <FilterSelect
+            label={t('classes.branch')}
             value={branchFilter}
             onChange={(e) => setBranchFilter(e.target.value)}
             placeholder={t('import.selectBranch')}
@@ -417,6 +370,8 @@ const Classes: React.FC = () => {
             />
           ) : (
             <ClassTable
+              highlightedClassId={highlightedClassId}
+              onHighlightEnd={() => setHighlightedClassId(null)}
               classes={paginatedClasses}
               onEdit={handleOpenModal}
               onDelete={(id) => setDeletingId(id)}
@@ -435,12 +390,12 @@ const Classes: React.FC = () => {
         title={editingId ? t('classes.editClass') : t('classes.addClass')}
         placement="right"
         width="clamp(600px, 58vw, 860px)"
+        bodyClassName="hide-scrollbar"
         closeLabel={t('common.close')}
         closeBlocked={isSubmitting}
         confirmCloseMessage={t('common.discardPanelChanges')}
         hasUnsavedChanges={
-          JSON.stringify(recurringSchedules) !== originalSchedules ||
-          (!editingId && enrollments.length > 0)
+          JSON.stringify(recurringSchedules) !== originalSchedules || enrollmentsChanged
         }
         footer={(requestClose) => (
           <FormPanelActions formId={formId} onCancel={requestClose} isSubmitting={isSubmitting} />

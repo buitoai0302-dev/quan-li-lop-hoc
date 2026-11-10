@@ -65,28 +65,23 @@ const PlanCard: React.FC<PlanCardProps> = ({
 
   return (
     <div
-      className={`relative flex flex-col p-6 sm:p-8 bg-white dark:bg-gray-800 rounded-3xl border transition-all duration-500 group ${
+      className={`flex min-w-0 flex-col rounded-2xl border bg-white p-5 shadow-sm dark:bg-slate-900 sm:p-6 ${
         isCurrent
-          ? 'border-primary ring-4 ring-primary/5 shadow-2xl lg:scale-[1.02] z-10'
+          ? 'border-primary ring-1 ring-primary/20'
           : isSignupSelection
-            ? 'border-indigo-500 ring-4 ring-indigo-500/20'
-            : 'border-gray-100 dark:border-gray-700 hover:shadow-xl hover:-translate-y-1'
+            ? 'border-indigo-500 ring-1 ring-indigo-500/20'
+            : 'border-slate-200 dark:border-slate-700'
       }`}
     >
-      {isCurrent && (
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-primary text-white text-[10px] font-black px-5 py-1.5 rounded-full uppercase tracking-widest shadow-xl">
-          {t('subscription.currentPlan')}
-        </div>
-      )}
       {isSignupSelection && !isCurrent && (
         <p className="mb-4 rounded-lg bg-indigo-50 px-3 py-2 text-sm font-bold text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-200">
           {t('landing.selectedPlan', 'Gói đã chọn')}
         </p>
       )}
 
-      <div className="flex justify-between items-start mb-8">
+      <div className="mb-4 flex items-center gap-3">
         <div
-          className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-transform group-hover:scale-110 ${
+          className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
             isFree
               ? 'bg-gray-100 text-gray-400'
               : isPro
@@ -101,22 +96,27 @@ const PlanCard: React.FC<PlanCardProps> = ({
           {isBusiness && <Shield size={24} fill="currentColor" />}
           {isEnterprise && <Crown size={24} fill="currentColor" />}
         </div>
-      </div>
-
-      <div className="mb-8">
-        <div className="flex justify-between items-end mb-2">
-          <h3 className="text-xl font-black text-gray-900 dark:text-white tracking-tight uppercase">
+        <div className="min-w-0">
+          <h3 className="break-words text-lg font-bold tracking-tight text-slate-900 dark:text-white">
             {plan.name}
           </h3>
-          {discountPercentage > 0 && (
-            <span className="text-[10px] bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-black">
-              -{discountPercentage}%
+          {isCurrent && (
+            <span className="text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+              {t('subscription.currentPlan')}
             </span>
           )}
         </div>
+        {discountPercentage > 0 && (
+          <span className="ml-auto shrink-0 rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700 dark:bg-emerald-400/10 dark:text-emerald-300">
+            -{discountPercentage}%
+          </span>
+        )}
+      </div>
+
+      <div className="mb-5">
         <div className="flex flex-col">
-          <div className="flex items-baseline gap-1 whitespace-nowrap flex-nowrap overflow-hidden">
-            <span className="text-3xl xl:text-4xl font-black text-gray-900 dark:text-white tracking-tighter shrink-0 truncate">
+          <div className="flex flex-wrap items-baseline gap-x-1">
+            <span className="min-w-0 break-words text-3xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-white">
               {isVi
                 ? new Intl.NumberFormat('vi-VN').format(
                     isYearly && yearlyPrice > 0 ? monthlyEquivalent : displayPrice
@@ -128,12 +128,12 @@ const PlanCard: React.FC<PlanCardProps> = ({
             <span className="text-lg font-black text-gray-900 dark:text-white shrink-0">
               {isVi ? 'đ' : '$'}
             </span>
-            <span className="text-gray-400 dark:text-gray-500 text-[10px] font-black uppercase tracking-widest ml-1 shrink-0">
+            <span className="ml-1 text-xs font-medium text-slate-600 dark:text-slate-300">
               /{t('common.month')}
             </span>
           </div>
           {isYearly && monthlyPrice > 0 && (
-            <div className="text-[11px] text-gray-400 font-medium mt-1 flex items-center gap-1">
+            <div className="mt-1 flex flex-wrap items-baseline gap-x-1 text-xs text-slate-600 dark:text-slate-300">
               Thanh toán{' '}
               <span className="font-bold text-gray-600 dark:text-gray-300">
                 {isVi ? new Intl.NumberFormat('vi-VN').format(yearlyPrice) : yearlyPrice}
@@ -145,11 +145,11 @@ const PlanCard: React.FC<PlanCardProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 space-y-8 mb-10">
-        <div className="space-y-4">
+      <div className="mb-5 flex-1 space-y-4">
+        <div className="space-y-2.5">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 flex items-center gap-2 uppercase tracking-tight">
-              <Building size={16} className="text-primary opacity-60" />{' '}
+            <span className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <Building size={16} className="shrink-0 text-indigo-600 dark:text-indigo-300" />{' '}
               {t('admin.limitLabels.max_branches')}
             </span>
             <span className="text-sm font-black text-gray-900 dark:text-white">
@@ -157,8 +157,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 flex items-center gap-2 uppercase tracking-tight">
-              <Layout size={16} className="text-primary opacity-60" />{' '}
+            <span className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <Layout size={16} className="shrink-0 text-indigo-600 dark:text-indigo-300" />{' '}
               {t('admin.limitLabels.max_classes')}
             </span>
             <span className="text-sm font-black text-gray-900 dark:text-white">
@@ -166,8 +166,8 @@ const PlanCard: React.FC<PlanCardProps> = ({
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-[11px] font-bold text-gray-400 dark:text-gray-500 flex items-center gap-2 uppercase tracking-tight">
-              <Users size={16} className="text-primary opacity-60" />{' '}
+            <span className="flex items-center gap-2 text-xs font-medium text-slate-600 dark:text-slate-300">
+              <Users size={16} className="shrink-0 text-indigo-600 dark:text-indigo-300" />{' '}
               {t('admin.limitLabels.max_teachers')}
             </span>
             <span className="text-sm font-black text-gray-900 dark:text-white">
@@ -178,9 +178,9 @@ const PlanCard: React.FC<PlanCardProps> = ({
 
         <div className="h-px bg-gray-50 dark:bg-gray-700/50 w-full" />
 
-        <ul className="space-y-4">
+        <ul className="space-y-2.5">
           <li
-            className={`flex items-center gap-3 text-xs font-bold transition-colors ${hasFeature(plan, 'multi_branch') ? 'text-gray-700 dark:text-gray-300' : 'text-gray-300 dark:text-gray-600'}`}
+            className={`flex items-center gap-3 text-xs font-bold transition-colors ${hasFeature(plan, 'multi_branch') ? 'text-gray-700 dark:text-gray-300' : 'text-slate-500 dark:text-slate-400'}`}
           >
             <div
               className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${hasFeature(plan, 'multi_branch') ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-300'}`}
@@ -190,7 +190,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
             {t('admin.featureLabels.multi_branch')}
           </li>
           <li
-            className={`flex items-center gap-3 text-xs font-bold transition-colors ${hasFeature(plan, 'advanced_reports') ? 'text-gray-700 dark:text-gray-300' : 'text-gray-300 dark:text-gray-600'}`}
+            className={`flex items-center gap-3 text-xs font-bold transition-colors ${hasFeature(plan, 'advanced_reports') ? 'text-gray-700 dark:text-gray-300' : 'text-slate-500 dark:text-slate-400'}`}
           >
             <div
               className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${hasFeature(plan, 'advanced_reports') ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-300'}`}
@@ -200,7 +200,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
             {t('admin.featureLabels.advanced_reports')}
           </li>
           <li
-            className={`flex items-center gap-3 text-xs font-bold transition-colors ${hasFeature(plan, 'api_access') ? 'text-gray-700 dark:text-gray-300' : 'text-gray-300 dark:text-gray-600'}`}
+            className={`flex items-center gap-3 text-xs font-bold transition-colors ${hasFeature(plan, 'api_access') ? 'text-gray-700 dark:text-gray-300' : 'text-slate-500 dark:text-slate-400'}`}
           >
             <div
               className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${hasFeature(plan, 'api_access') ? 'bg-emerald-500 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-300'}`}
@@ -215,7 +215,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
       {isSubmitting || plan.id === pendingPlanId || isCurrent ? (
         <button
           disabled
-          className={`w-full py-4 px-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl bg-gray-100 dark:bg-gray-700 text-gray-400 dark:text-gray-500 cursor-default shadow-none`}
+          className="min-h-11 w-full rounded-xl bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-300"
         >
           {isSubmitting
             ? t('common.sending')
@@ -226,14 +226,14 @@ const PlanCard: React.FC<PlanCardProps> = ({
       ) : isFree ? (
         <button
           onClick={() => onUpgrade(plan.id, plan.name)}
-          className="w-full py-4 px-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl bg-primary text-white hover:bg-primary-dark hover:scale-[1.02] active:scale-95 shadow-primary/20"
+          className="min-h-11 w-full rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           {t('subscription.downgrade')}
         </button>
       ) : (
         <button
           onClick={() => onUpgrade(plan.id, plan.name)}
-          className="w-full py-4 px-6 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-xl bg-primary text-white hover:bg-primary-dark hover:scale-[1.02] active:scale-95 shadow-primary/20"
+          className="min-h-11 w-full rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-dark focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
         >
           {t('subscription.upgrade')}
         </button>

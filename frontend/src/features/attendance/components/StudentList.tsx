@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ClipboardCheck, Search } from 'lucide-react';
+import { Check, ClipboardCheck, Search } from 'lucide-react';
 import { Card } from '@/components/common/UI';
 import PageLoading from '@/components/common/PageLoading';
 import EmptyState from '@/components/common/EmptyState';
@@ -23,6 +23,10 @@ const StudentList: React.FC<StudentListProps> = ({
   handleStatusChange,
 }) => {
   const { t } = useTranslation();
+  const [changedStatus, setChangedStatus] = React.useState<{
+    studentId: string;
+    status: AttendanceRecord['status'];
+  } | null>(null);
 
   return (
     <Card className="flex-1 min-h-0" scrollable>
@@ -66,9 +70,19 @@ const StudentList: React.FC<StudentListProps> = ({
                   ].map((status) => (
                     <button
                       key={status}
-                      onClick={() => handleStatusChange(record.student_id, status as any)}
+                      type="button"
+                      aria-pressed={record.status === status}
+                      onClick={() => {
+                        if (record.status === status) return;
+                        setChangedStatus({ studentId: record.student_id, status });
+                        handleStatusChange(record.student_id, status);
+                      }}
                       disabled={isReadOnly}
-                      className={`flex-1 sm:flex-none px-2.5 sm:px-3 py-2 rounded-lg text-[9px] sm:text-[10px] font-black uppercase tracking-tighter transition-all border disabled:opacity-40 disabled:cursor-not-allowed ${
+                      className={`inline-flex flex-1 items-center justify-center gap-0.5 rounded-lg border px-1.5 py-2 text-[9px] font-bold uppercase tracking-tight disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none sm:gap-1 sm:px-3 sm:text-[10px] ${
+                        changedStatus?.studentId === record.student_id
+                          ? 'motion-safe:transition-colors motion-safe:duration-150'
+                          : ''
+                      } ${
                         record.status === status
                           ? status === ATTENDANCE_STATUS.PRESENT
                             ? 'bg-green-500 border-green-500 text-white shadow-md'
@@ -80,6 +94,18 @@ const StudentList: React.FC<StudentListProps> = ({
                           : 'bg-white dark:bg-slate-800 border-gray-100 dark:border-slate-700 text-gray-400 hover:border-primary/30 dark:hover:border-primary/50'
                       }`}
                     >
+                      {record.status === status && (
+                        <Check
+                          aria-hidden="true"
+                          size={11}
+                          className={`shrink-0 ${
+                            changedStatus?.studentId === record.student_id &&
+                            changedStatus.status === status
+                              ? 'motion-safe:animate-[attendance-check-in_160ms_ease-out]'
+                              : ''
+                          }`}
+                        />
+                      )}
                       {t(`attendance.${status}`)}
                     </button>
                   ))}

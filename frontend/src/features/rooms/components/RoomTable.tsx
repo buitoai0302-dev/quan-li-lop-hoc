@@ -18,7 +18,7 @@ const RoomTable: React.FC<RoomTableProps> = ({
 
   return (
     <div className="w-full overflow-x-auto">
-      <table className="w-full border-separate border-spacing-0">
+      <table className="management-table w-full border-separate border-spacing-0">
         <thead className="bg-gray-50 dark:bg-slate-900 sticky top-0 z-20 transition-colors">
           <tr>
             <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left w-12 border-b border-gray-100 dark:border-slate-800 shadow-sm">
@@ -93,18 +93,18 @@ const RoomTable: React.FC<RoomTableProps> = ({
 
               <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
                 <div className="flex justify-end gap-1 sm:gap-2">
-                  <ActionHint label={t('common.edit')}>
+                  <ActionHint label={t('common.edit')} showTouchLabel={false}>
                     <button
                       onClick={() => onEdit(room)}
-                      className="p-2 text-indigo-500 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all active:scale-90"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center p-2 text-indigo-600 sm:min-h-8 sm:min-w-8 dark:text-indigo-300 hover:text-indigo-600 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 rounded-lg transition-all active:scale-90"
                     >
                       <Edit2 size={16} />
                     </button>
                   </ActionHint>
-                  <ActionHint label={t('common.delete')}>
+                  <ActionHint label={t('common.delete')} showTouchLabel={false}>
                     <button
                       onClick={() => onDelete(room.id)}
-                      className="p-2 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all active:scale-90"
+                      className="inline-flex min-h-11 min-w-11 items-center justify-center p-2 text-red-600 sm:min-h-8 sm:min-w-8 dark:text-red-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all active:scale-90"
                     >
                       <Trash2 size={16} />
                     </button>

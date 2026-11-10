@@ -1,8 +1,15 @@
-import { ERROR_CODES } from '../utils/constants';
+import { ERROR_CODES, SESSION_STATUS } from '../utils/constants';
 import pool from '../db';
-import { ValidationError, NotFoundError, scheduleWriteError } from '../utils/errors';
+import {
+  ValidationError,
+  NotFoundError,
+  ScheduleConflictError,
+  scheduleWriteError,
+} from '../utils/errors';
 import { syncEventToGoogle, deleteEventFromGoogle } from './google.service';
 import { lockScheduleWrites } from './schedule-write.service';
+import { assertTenantReferences } from './tenant-reference.service';
+import { logger } from '../utils/logger';
 
 export interface GetScheduleParams {
   startDate: string;
@@ -115,79 +122,128 @@ export class ScheduleService {
   }
 
   static async createSession(tenantId: string, userId: string | undefined, data: CreateSessionDTO) {
+    try {
+      const [session] = await ScheduleService.insertSessions(tenantId, [data]);
+      if (userId) await ScheduleService.syncCreatedSessions(tenantId, userId, [session.id]);
+      return { success: true, data: session };
+    } catch (error) {
+      if (error instanceof ScheduleConflictError) {
+        return { success: false, conflicts: error.conflicts };
+      }
+      throw error;
+    }
+  }
+
+  static async createSessions(
+    tenantId: string,
+    userId: string | undefined,
+    sessions: CreateSessionDTO[]
+  ) {
+    const created = await ScheduleService.insertSessions(tenantId, sessions);
+    if (userId) {
+      void ScheduleService.syncCreatedSessions(
+        tenantId,
+        userId,
+        created.map(({ id }) => id)
+      );
+    }
+    return created;
+  }
+
+  private static async insertSessions(tenantId: string, sessions: CreateSessionDTO[]) {
     const client = await pool.connect();
-    let sessionData;
+    const created = [];
+    let slot: ScheduleConflictError['slot'];
     try {
       await client.query('BEGIN');
       await lockScheduleWrites(client, tenantId);
-
-      const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)`;
-      const conflictParams = [
+      await assertTenantReferences(
+        client,
         tenantId,
-        data.teacherId,
-        data.roomId,
-        data.classId,
-        data.sessionDate,
-        data.startTime,
-        data.endTime,
-      ];
+        'classes',
+        sessions.map(({ classId }) => classId)
+      );
+      await assertTenantReferences(
+        client,
+        tenantId,
+        'rooms',
+        sessions.map(({ roomId }) => roomId)
+      );
+      await assertTenantReferences(
+        client,
+        tenantId,
+        'teachers',
+        sessions.map(({ teacherId }) => teacherId)
+      );
 
-      const conflictResult = await client.query(conflictSql, conflictParams);
+      for (const [index, data] of sessions.entries()) {
+        slot = { index, date: data.sessionDate, startTime: data.startTime, endTime: data.endTime };
+        const params = [
+          tenantId,
+          data.teacherId,
+          data.roomId,
+          data.classId,
+          data.sessionDate,
+          data.startTime,
+          data.endTime,
+        ];
+        const conflicts = await client.query(
+          'SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)',
+          params
+        );
+        if (conflicts.rows.length) throw new ScheduleConflictError(conflicts.rows, slot);
 
-      if (conflictResult.rows.length > 0) {
-        await client.query('ROLLBACK');
-        return { success: false, conflicts: conflictResult.rows };
+        const result = await client.query(
+          `INSERT INTO schedule_sessions
+             (tenant_id, teacher_id, room_id, class_id, session_date, start_time, end_time, session_type, notes)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           RETURNING *, session_date::text AS session_date`,
+          [...params, data.sessionType || 'lecture', data.notes || '']
+        );
+        created.push(result.rows[0]);
       }
-
-      const insertSql = `
-        INSERT INTO schedule_sessions 
-          (tenant_id, class_id, room_id, teacher_id, session_date, start_time, end_time, session_type, notes)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING *, session_date::text as session_date
-      `;
-      const insertParams = [
-        tenantId,
-        data.classId,
-        data.roomId,
-        data.teacherId,
-        data.sessionDate,
-        data.startTime,
-        data.endTime,
-        data.sessionType || 'lecture',
-        data.notes || '',
-      ];
-
-      const newSession = await client.query(insertSql, insertParams);
-      sessionData = newSession.rows[0];
 
       await client.query('COMMIT');
     } catch (error) {
       await client.query('ROLLBACK');
-      throw scheduleWriteError(error);
+      throw scheduleWriteError(error, slot);
     } finally {
       client.release();
     }
 
-    if (userId) {
-      const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [data.classId]);
-      const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [data.roomId]);
-      const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [
-        data.teacherId,
-      ]);
+    return created;
+  }
 
-      await syncEventToGoogle(userId, {
-        id: sessionData.id,
-        className: classRes.rows[0]?.name || 'Class',
-        roomName: roomRes.rows[0]?.name || 'Room',
-        teacherName: teacherRes.rows[0]?.full_name,
-        teacherId: data.teacherId,
-        notes: sessionData.notes,
-        date: sessionData.session_date,
-        startTime: sessionData.start_time,
-        endTime: sessionData.end_time,
-      });
+  private static async syncCreatedSessions(tenantId: string, userId: string, sessionIds: string[]) {
+    for (const sessionId of sessionIds) {
+      try {
+        const result = await pool.query(
+          `SELECT s.teacher_id, s.notes, s.session_date::text AS session_date, s.start_time, s.end_time,
+                    c.name AS class_name, r.name AS room_name, t.full_name AS teacher_name
+             FROM schedule_sessions s
+             JOIN classes c ON c.tenant_id = s.tenant_id AND c.id = s.class_id
+             JOIN rooms r ON r.tenant_id = s.tenant_id AND r.id = s.room_id
+             JOIN teachers t ON t.tenant_id = s.tenant_id AND t.id = s.teacher_id
+             WHERE s.tenant_id = $1 AND s.id = $2 AND s.status <> $3`,
+          [tenantId, sessionId, SESSION_STATUS.CANCELLED]
+        );
+        const session = result.rows[0];
+        if (!session) continue;
+        await syncEventToGoogle(userId, {
+          id: sessionId,
+          className: session.class_name,
+          roomName: session.room_name,
+          teacherName: session.teacher_name,
+          teacherId: session.teacher_id,
+          notes: session.notes,
+          date: session.session_date,
+          startTime: session.start_time,
+          endTime: session.end_time,
+        });
+      } catch {
+        logger.warn({ tenantId, sessionId }, 'Schedule Google sync failed after commit');
+      }
     }
-    return { success: true, data: sessionData };
   }
 
   static async updateSession(

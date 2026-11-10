@@ -1,8 +1,10 @@
 import { ACCESS } from '../utils/permissions';
+import { MAX_BATCH_SESSIONS } from '../utils/constants';
 import { Router } from 'express';
 import {
   getWeeklySchedule,
   createSession,
+  createSessions,
   updateSession,
   deleteSession,
 } from '../controllers/schedule.controller';
@@ -49,12 +51,39 @@ const updateSessionSchema = z.object({
   }),
 });
 
+const createSessionsSchema = z.object({
+  body: z.object({
+    sessions: z
+      .array(
+        createSessionSchema.shape.body.refine(({ sessionDate, startTime, endTime }) => {
+          const date = new Date(`${sessionDate}T00:00:00Z`);
+          const timePattern = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+          return (
+            Number.isFinite(date.valueOf()) &&
+            date.toISOString().slice(0, 10) === sessionDate &&
+            timePattern.test(startTime) &&
+            timePattern.test(endTime) &&
+            endTime > startTime
+          );
+        })
+      )
+      .min(1)
+      .max(MAX_BATCH_SESSIONS),
+  }),
+});
+
 router.get('/weekly', requireRole(ACCESS.ADMIN_STAFF_TEACHER_STUDENT_API), getWeeklySchedule);
 router.post(
   '/sessions',
   requireRole(ACCESS.ADMIN_STAFF),
   validate(createSessionSchema),
   createSession
+);
+router.post(
+  '/sessions/bulk',
+  requireRole(ACCESS.ADMIN_STAFF),
+  validate(createSessionsSchema),
+  createSessions
 );
 router.put(
   '/sessions/:id',

@@ -250,6 +250,7 @@ const Teachers: React.FC = () => {
           }}
         >
           <FilterSelect
+            label={t('classes.branch')}
             value={branchFilter}
             onChange={(e) => setBranchFilter(e.target.value)}
             placeholder={t('import.selectBranch')}

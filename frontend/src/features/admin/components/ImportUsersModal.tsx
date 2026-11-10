@@ -17,6 +17,7 @@ interface ImportUsersModalProps {
 }
 
 export const ImportUsersModal: React.FC<ImportUsersModalProps> = ({ isOpen, onClose }) => {
+  const fieldPrefix = React.useId();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [file, setFile] = useState<File | null>(null);
@@ -223,11 +224,15 @@ export const ImportUsersModal: React.FC<ImportUsersModalProps> = ({ isOpen, onCl
 
       <div className="space-y-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label
+            htmlFor={fieldPrefix + '-field-1'}
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             {t('admin.users.modal.select_tenant', 'Chọn Trung tâm (Tenant)')}{' '}
             <span className="text-red-500">*</span>
           </label>
           <select
+            id={fieldPrefix + '-field-1'}
             value={selectedTenant}
             onChange={(e) => setSelectedTenant(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
@@ -259,11 +264,15 @@ export const ImportUsersModal: React.FC<ImportUsersModalProps> = ({ isOpen, onCl
         </div>
 
         <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+          <label
+            htmlFor={fieldPrefix + '-field-2'}
+            className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          >
             {t('import.data_file', 'File dữ liệu')} <span className="text-red-500">*</span>
           </label>
           <div className="relative border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-8 text-center hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
             <input
+              id={fieldPrefix + '-field-2'}
               type="file"
               accept=".xlsx, .xls, .csv"
               onChange={handleFileChange}

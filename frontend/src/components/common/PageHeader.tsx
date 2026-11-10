@@ -10,7 +10,7 @@ interface PageHeaderProps {
 
 const PageHeader: React.FC<PageHeaderProps> = ({ icon: Icon, actions, children }) => {
   return (
-    <div className="relative z-[60] w-full shrink-0 py-2.5 animate-in fade-in slide-in-from-top-2 duration-500 border border-gray-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm p-4 mb-3 rounded-xl shadow-sm">
+    <div className="relative z-[60] mb-3 w-full shrink-0 py-2.5 animate-in fade-in slide-in-from-top-2 duration-500 border border-gray-100 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm p-4 rounded-xl shadow-sm">
       <div className="flex flex-col">
         {/* Main Row: Icon + Desktop Filters + Actions */}
         <div className="flex flex-row items-center gap-2 sm:gap-4">
@@ -21,17 +21,19 @@ const PageHeader: React.FC<PageHeaderProps> = ({ icon: Icon, actions, children }
           </div>
 
           {/* Desktop Filters - Hidden on mobile, shown in middle on desktop */}
-          {children && <div className="hidden lg:block flex-1 max-w-2xl px-4">{children}</div>}
+          {children && (
+            <div className="hidden min-w-0 flex-1 max-w-2xl px-4 lg:block">{children}</div>
+          )}
 
           {actions && (
-            <div className="ml-auto flex items-center gap-1.5 sm:gap-2 overflow-x-auto min-w-0 pb-1 -mb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+            <div className="ml-auto -my-1 -mr-1 flex min-w-0 flex-wrap items-center justify-end gap-1.5 p-1 sm:flex-nowrap sm:gap-2 sm:overflow-x-auto lg:shrink-0 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
               {actions}
             </div>
           )}
         </div>
 
         {/* Mobile Filters - Shown below title on mobile and tablet only if children exist */}
-        {children && <div className="lg:hidden pt-2">{children}</div>}
+        {children && <div className="pt-2 empty:hidden lg:hidden">{children}</div>}
       </div>
     </div>
   );

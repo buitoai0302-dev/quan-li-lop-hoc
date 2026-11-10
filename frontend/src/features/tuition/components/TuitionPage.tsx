@@ -177,17 +177,19 @@ const TuitionPage: React.FC = () => {
               className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400"
             />
             <input
-              type="text"
+              type="search"
+              aria-label={t('tuition.searchPlaceholder')}
               placeholder={t('tuition.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-8 pr-3 py-1.5 sm:py-2 text-[10px] sm:text-xs text-gray-900 dark:text-white bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30"
+              className="min-h-11 w-full pl-8 pr-3 py-1.5 sm:py-2 text-base sm:text-sm text-gray-900 dark:text-white bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
           </div>
           <select
+            aria-label={t('common.status')}
             value={filters.status || ''}
             onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))}
-            className="flex-none w-[110px] sm:w-[130px] text-[10px] sm:text-xs text-gray-900 dark:text-white bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-lg sm:rounded-xl px-2 sm:px-3 py-1.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="min-h-11 flex-none w-[110px] sm:w-[130px] text-base sm:text-sm text-gray-900 dark:text-white bg-white/50 dark:bg-slate-800/50 border border-gray-200 dark:border-slate-700 rounded-lg sm:rounded-xl px-2 sm:px-3 py-1.5 sm:py-2 focus:outline-none focus:ring-2 focus:ring-primary/30"
           >
             <option value="">{t('tuition.allStatus')}</option>
             {Object.keys(STATUS_CONFIG).map((key) => (
@@ -309,7 +311,7 @@ const TuitionPage: React.FC = () => {
         {/* Table */}
         <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full border-separate border-spacing-0 sm:min-w-[700px] min-w-full">
+            <table className="management-table w-full border-separate border-spacing-0 sm:min-w-[700px] min-w-full">
               <thead className="bg-gray-50 dark:bg-slate-800 sticky top-0 z-10">
                 <tr>
                   <th className="px-3 sm:px-4 py-3 border-b border-gray-100 dark:border-slate-700 w-10">
@@ -371,7 +373,9 @@ const TuitionPage: React.FC = () => {
                           {tuition.student_name}
                         </div>
                         {tuition.parent_phone && (
-                          <div className="text-[10px] text-gray-400">{tuition.parent_phone}</div>
+                          <div className="text-xs text-slate-600 dark:text-slate-300">
+                            {tuition.parent_phone}
+                          </div>
                         )}
                       </td>
                       <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
@@ -379,7 +383,9 @@ const TuitionPage: React.FC = () => {
                           {tuition.class_name || '—'}
                         </div>
                         {tuition.billing_period && (
-                          <div className="text-[10px] text-gray-400">{tuition.billing_period}</div>
+                          <div className="text-xs text-slate-600 dark:text-slate-300">
+                            {tuition.billing_period}
+                          </div>
                         )}
                       </td>
                       <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
@@ -447,7 +453,7 @@ const TuitionPage: React.FC = () => {
                             <Receipt size={14} />
                             <span className="hidden sm:inline">{t('tuition.viewReceipt')}</span>
                           </button>
-                          <ActionHint label={t('common.delete')}>
+                          <ActionHint label={t('common.delete')} showTouchLabel={false}>
                             <button
                               onClick={() => setDeleteId(tuition.id)}
                               className="p-1.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"

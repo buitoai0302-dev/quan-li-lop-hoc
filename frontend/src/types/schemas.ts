@@ -94,6 +94,11 @@ export const SessionSchema = z.object({
   branch_name: nullableString,
 });
 
+export const CreatedSessionsResponseSchema = z.object({
+  success: z.literal(true),
+  data: z.array(SessionSchema),
+});
+
 export const EnrollmentSchema = z.object({
   id: z.string(),
   full_name: z.string(),

@@ -1,4 +1,4 @@
-import { ERROR_CODES } from '../utils/constants';
+import { ERROR_CODES, MAX_BATCH_SESSIONS } from '../utils/constants';
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ScheduleConflictError, ValidationError } from '../utils/errors';
@@ -57,6 +57,7 @@ export const getWeeklySchedule = async (
         startDate: queryStartDate,
         endDate: queryEndDate,
         sessions,
+        maxBatchSessions: MAX_BATCH_SESSIONS,
       },
     });
   } catch (error) {
@@ -83,6 +84,20 @@ export const createSession = async (
       success: true,
       data: result.data,
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createSessions = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const tenantId = req.tenantId || req.user?.tenantId;
+    const data = await ScheduleService.createSessions(
+      tenantId as string,
+      req.user?.userId,
+      req.body.sessions
+    );
+    res.status(201).json({ success: true, data });
   } catch (error) {
     next(error);
   }
