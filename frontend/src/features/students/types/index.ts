@@ -4,6 +4,7 @@ import type { BaseTableProps } from '@/types';
 
 export interface StudentTableProps extends BaseTableProps<Student> {
   students: Student[];
+  onProfile?: (student: Student) => void;
   selectedIds?: string[];
   onSelectAll?: (checked: boolean) => void;
   onSelectOne?: (id: string, checked: boolean) => void;

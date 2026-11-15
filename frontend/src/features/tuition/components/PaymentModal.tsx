@@ -13,6 +13,7 @@ import { formatCurrency } from '@/utils/formatters';
 interface Props {
   tuition: Tuition;
   onClose: () => void;
+  backLabel?: string;
 }
 
 const PAYMENT_AMOUNT_STEP_VND = 0.01;
@@ -28,7 +29,7 @@ const getPaymentMethods = (t: import('i18next').TFunction) => [
   { value: PAYMENT_METHODS.OTHER, label: `🔧 ${t('tuition.paymentMethods.other')}` },
 ];
 
-const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
+const PaymentModal: React.FC<Props> = ({ tuition, onClose, backLabel }) => {
   const [isOpen, setIsOpen] = React.useState(true);
   const closePanel = () => setIsOpen(false);
   const fieldPrefix = React.useId();
@@ -76,6 +77,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
         <FormPanelActions
           formId={formId}
           onCancel={requestClose}
+          cancelLabel={backLabel}
           isSubmitting={isPending}
           submitLabel={t('tuition.payment.submit')}
           submittingLabel={t('tuition.payment.submitting')}

@@ -1381,5 +1381,36 @@
     "title": "Premium feature",
     "description": "Upgrade your plan to use this feature.",
     "upgradeBtn": "Upgrade now"
+  },
+  "workflow": {
+    "refresh": "Refresh",
+    "viewAll": "View all ({{count}})",
+    "workItems": {
+      "title": "Work to do",
+      "attendance": "Today's attendance",
+      "tuition": "Tuition due",
+      "classes": "Classes to complete",
+      "empty": "All done here.",
+      "missingTeacher": "Teacher not assigned",
+      "missingSessions": "No sessions in the next 7 days",
+      "missingBoth": "Teacher and schedule missing"
+    },
+    "profile": {
+      "title": "Student profile",
+      "classes": "Classes",
+      "attendance": "Attendance",
+      "tuition": "Tuition",
+      "payments": "Receipts",
+      "paid": "Total received",
+      "outstanding": "Outstanding",
+      "empty": "No records here yet.",
+      "back": "Back to profile",
+      "collect": "Collect tuition",
+      "receipt": "View receipt",
+      "viewSchedule": "View schedule",
+      "unavailable": "Unable to load this tuition. Please try again.",
+      "confirmPayment": "Open a payment form for {{name}}. Current balance: {{amount}}. You will review and confirm the amount before recording it.",
+      "allTuition": "View all tuition"
+    }
   }
 }

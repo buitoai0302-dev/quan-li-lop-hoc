@@ -14,6 +14,7 @@ import receiptPrintCss from './tuition-receipt-print.css?raw';
 interface Props {
   tuition: Tuition;
   onClose: () => void;
+  backLabel?: string;
 }
 
 const AMOUNT_ROW_CLASS =
@@ -29,7 +30,7 @@ const getPaymentMethodLabels = (t: import('i18next').TFunction): Record<string, 
   [PAYMENT_METHODS.OTHER]: t('tuition.paymentMethods.other'),
 });
 
-const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
+const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose, backLabel }) => {
   const dialogRef = useDialogFocus(onClose);
   const { user } = useAuth();
   const { t, i18n } = useTranslation();
@@ -137,6 +138,15 @@ const TuitionReceiptModal: React.FC<Props> = ({ tuition, onClose }) => {
           </div>
         </div>
 
+        {backLabel && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="mx-5 mt-3 min-h-11 text-left text-sm font-medium text-primary"
+          >
+            {backLabel}
+          </button>
+        )}
         {isPending && (
           <p role="status" className="px-5 pt-3 text-sm">
             {t('tuition.receipt.loadingPayments')}

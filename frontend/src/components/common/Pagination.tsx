@@ -13,6 +13,7 @@ interface PaginationProps {
   itemsPerPage: number;
   onPageChange: (page: number) => void;
   onItemsPerPageChange: (limit: number) => void;
+  pageSizeOptions?: readonly number[];
 }
 
 const Pagination: React.FC<PaginationProps> = ({
@@ -21,6 +22,7 @@ const Pagination: React.FC<PaginationProps> = ({
   itemsPerPage,
   onPageChange,
   onItemsPerPageChange,
+  pageSizeOptions = PAGE_SIZE_OPTIONS,
 }) => {
   const { t } = useTranslation();
 
@@ -28,7 +30,7 @@ const Pagination: React.FC<PaginationProps> = ({
   const startIndex = (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
 
-  if (totalItems <= PAGE_SIZE_OPTIONS[0] && currentPage === 1) return null;
+  if (totalItems <= pageSizeOptions[0] && currentPage === 1) return null;
 
   return (
     <nav
@@ -43,7 +45,7 @@ const Pagination: React.FC<PaginationProps> = ({
             onChange={(event) => onItemsPerPageChange(Number(event.target.value))}
             className="min-h-11 min-w-14 appearance-none rounded-lg border border-gray-200 bg-white py-1 pl-2 pr-6 text-sm font-semibold tabular-nums text-gray-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100 sm:min-w-17 sm:pl-3 sm:pr-8"
           >
-            {PAGE_SIZE_OPTIONS.map((pageSize) => (
+            {pageSizeOptions.map((pageSize) => (
               <option key={pageSize} value={pageSize}>
                 {pageSize}
               </option>

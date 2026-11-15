@@ -41,6 +41,7 @@ import QuickStat from '@/features/dashboard/components/QuickStat';
 import { useDashboard } from '@/features/dashboard/hooks/useDashboard';
 import UsageBar from '@/features/dashboard/components/UsageBar';
 import SetupChecklist from '@/features/dashboard/components/SetupChecklist';
+import WorkItems from './components/WorkItems';
 
 const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
@@ -104,6 +105,9 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
+        {user?.role !== USER_ROLES.STUDENT &&
+          (user?.role !== USER_ROLES.SUPER_ADMIN ||
+            localStorage.getItem('impersonatedTenantId')) && <WorkItems />}
         {[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
           <SetupChecklist
             hasBranches={(stats?.usage?.branches?.used || 0) > 0}

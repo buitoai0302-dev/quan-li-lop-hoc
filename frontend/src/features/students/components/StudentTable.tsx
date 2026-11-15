@@ -5,6 +5,7 @@ import ActionHint from '@/components/common/ActionHint';
 
 const StudentTable: React.FC<StudentTableProps> = ({
   students,
+  onProfile,
   onEdit,
   onDelete,
   selectedIds = [],
@@ -73,7 +74,17 @@ const StudentTable: React.FC<StudentTableProps> = ({
                       />
                     </div>
                     <div className="min-w-0 whitespace-normal break-words font-semibold text-gray-900 dark:text-white text-sm">
-                      {student.full_name}
+                      {onProfile ? (
+                        <button
+                          type="button"
+                          className="min-h-11 text-left font-semibold text-primary hover:underline focus-visible:outline-2 focus-visible:outline-primary dark:text-indigo-300"
+                          onClick={() => onProfile(student)}
+                        >
+                          {student.full_name}
+                        </button>
+                      ) : (
+                        student.full_name
+                      )}
                     </div>
                   </div>
 

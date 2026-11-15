@@ -1383,5 +1383,36 @@
     "title": "Tính năng nâng cao",
     "description": "Nâng cấp gói để sử dụng tính năng này.",
     "upgradeBtn": "Nâng cấp ngay"
+  },
+  "workflow": {
+    "refresh": "Làm mới",
+    "viewAll": "Xem tất cả ({{count}})",
+    "workItems": {
+      "title": "Việc cần làm",
+      "attendance": "Điểm danh hôm nay",
+      "tuition": "Học phí đến hạn",
+      "classes": "Lớp cần bổ sung",
+      "empty": "Đã hoàn tất mục này.",
+      "missingTeacher": "Chưa có giáo viên",
+      "missingSessions": "Chưa có buổi trong 7 ngày tới",
+      "missingBoth": "Chưa có giáo viên và lịch học"
+    },
+    "profile": {
+      "title": "Hồ sơ học viên",
+      "classes": "Lớp học",
+      "attendance": "Điểm danh",
+      "tuition": "Học phí",
+      "payments": "Biên lai",
+      "paid": "Tổng đã thu",
+      "outstanding": "Còn phải thu",
+      "empty": "Chưa có dữ liệu ở mục này.",
+      "back": "Trở lại hồ sơ",
+      "collect": "Thu học phí",
+      "receipt": "Xem biên lai",
+      "viewSchedule": "Xem lịch học",
+      "unavailable": "Không thể tải khoản học phí. Vui lòng thử lại.",
+      "confirmPayment": "Mở phiếu thu cho {{name}}. Số dư hiện tại: {{amount}}. Bạn sẽ kiểm tra số tiền và xác nhận trước khi ghi nhận.",
+      "allTuition": "Xem tất cả học phí"
+    }
   }
 }

@@ -2,6 +2,32 @@ import { z } from 'zod';
 import { PAYMENT_METHODS, TUITION_STATUS } from '../utils/constants';
 
 const MAX_TUITION_AMOUNT_VND = 9_999_999_999_999.99;
+export const tuitionListQuerySchema = z.object({
+  tuition_id: z
+    .uuid()
+    .or(z.literal(''))
+    .transform((value) => value || undefined)
+    .optional(),
+  student_id: z
+    .uuid()
+    .or(z.literal(''))
+    .transform((value) => value || undefined)
+    .optional(),
+  class_id: z
+    .uuid()
+    .or(z.literal(''))
+    .transform((value) => value || undefined)
+    .optional(),
+  status: z
+    .enum(TUITION_STATUS)
+    .or(z.literal(''))
+    .transform((value) => value || undefined)
+    .optional(),
+  billing_period: z.string().max(100).optional(),
+  limit: z.coerce.number().int().min(1).max(1000).default(100),
+  offset: z.coerce.number().int().min(0).max(1000000).default(0),
+});
+export const TuitionListSchema = z.object({ query: tuitionListQuerySchema });
 const tuitionAmount = z
   .union([z.number(), z.string().regex(/^\d+(?:\.\d+)?$/)])
   .refine((amount) => Number(amount) >= 0 && Number(amount) <= MAX_TUITION_AMOUNT_VND);

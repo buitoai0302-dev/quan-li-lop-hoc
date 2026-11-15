@@ -10,7 +10,7 @@ import Pagination from '@/components/common/Pagination';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import PageHeader from '@/components/common/PageHeader';
 import { exportToExcel, exportToPDF } from '@/utils/export';
 import type { ExportColumn } from '@/utils/export';
@@ -43,6 +43,7 @@ const Classes: React.FC = () => {
   const formId = React.useId();
   const panelRequestId = React.useRef(0);
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
   const { user } = useAuth();
   const canManageClasses =
     user?.role === USER_ROLES.ADMIN ||
@@ -153,6 +154,16 @@ const Classes: React.FC = () => {
     setRecurringSchedules([]);
     setEnrollments([]);
   }, []);
+
+  React.useEffect(() => {
+    const classId = params.get('classId');
+    if (!classId || loading || !canManageClasses) return;
+    const cls = classes.find((item) => item.id === classId);
+    const next = new URLSearchParams(params);
+    next.delete('classId');
+    setParams(next, { replace: true });
+    if (cls) void handleOpenModal(cls);
+  }, [params, setParams, classes, loading, canManageClasses, handleOpenModal]);
 
   const { mutate: createClassMutate, isPending: isCreating } = useCreateClass();
   const { mutate: updateClassMutate, isPending: isUpdating } = useUpdateClass();

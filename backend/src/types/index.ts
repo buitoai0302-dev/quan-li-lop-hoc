@@ -10,6 +10,7 @@ export interface BaseFilters extends PaginationFilters {
 }
 
 export interface TuitionFilters extends PaginationFilters {
+  tuition_id?: string;
   status?: string;
   class_id?: string;
   billing_period?: string;

@@ -1,13 +1,17 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { TuitionService } from '../services/tuition.service';
+import { tuitionListQuerySchema } from '../validators/tuition.validator';
 
 // ─── GET /api/tuitions ─────────────────────────────────────────────────────
 // Lấy danh sách học phí có filter: status, class_id, billing_period, student_id
 export const getTuitions = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     const tenantId = req.tenantId || req.user?.tenantId;
-    const result = await TuitionService.getTuitions(tenantId as string, req.query);
+    const result = await TuitionService.getTuitions(
+      tenantId as string,
+      tuitionListQuerySchema.parse(req.query)
+    );
     res.json(result);
   } catch (error) {
     next(error);

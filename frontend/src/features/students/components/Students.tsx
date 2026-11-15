@@ -9,7 +9,11 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
 import { Users } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { USER_ROLES } from '@/utils/constants';
+import StudentProfile from './StudentProfile';
+import { isProfileTab } from '../api/student-profile.api';
 import PageHeader from '@/components/common/PageHeader';
 import SkeletonTable from '@/components/common/SkeletonTable';
 import FilterBar from '@/components/common/FilterBar';
@@ -40,6 +44,24 @@ const Students: React.FC = () => {
   const { t } = useTranslation();
   const studentFormId = useId();
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const { user } = useAuth();
+  const canManage = [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].some(
+    (role) => role === user?.role
+  );
+  const [profileStudentId, setProfileStudentId] = useState<string | null>(null);
+  const requestedStudentId = params.get('studentId');
+  const initialTab = params.get('tab');
+  const closeProfile = () => {
+    setProfileStudentId(null);
+    if (requestedStudentId) {
+      const next = new URLSearchParams(params);
+      next.delete('studentId');
+      next.delete('tab');
+      next.delete('tuitionId');
+      setParams(next, { replace: true });
+    }
+  };
   const dobInputRef = React.useRef<HTMLInputElement>(null);
   const { students, loading: studentsLoading, query: studentsQuery } = useStudents();
   const { branches, loading: branchesLoading, query: branchesQuery } = useBranches();
@@ -168,7 +190,7 @@ const Students: React.FC = () => {
         handleApiError(error as AxiosError<ApiErrorData>, t);
       },
     });
-  }, [deletingId, t, deleteStudentMutate, clearSelection]);
+  }, [deletingId, t, deleteStudentMutate, clearSelection, setDeletingId]);
 
   const handleBulkDelete = useCallback(() => {
     if (selectedIds.length === 0) return;
@@ -183,7 +205,7 @@ const Students: React.FC = () => {
         setIsBulkDeleteModalOpen(false);
       },
     });
-  }, [selectedIds, deleteBulkStudentsMutate, t, clearSelection]);
+  }, [selectedIds, deleteBulkStudentsMutate, t, clearSelection, setIsBulkDeleteModalOpen]);
 
   const handleExportExcel = () => {
     const columns: ExportColumn<Student>[] = [
@@ -327,6 +349,7 @@ const Students: React.FC = () => {
         ) : (
           <StudentTable
             students={paginatedStudents}
+            onProfile={canManage ? (student) => setProfileStudentId(student.id) : undefined}
             onEdit={handleOpenModal}
             onDelete={setDeletingId}
             selectedIds={selectedIds}
@@ -337,6 +360,15 @@ const Students: React.FC = () => {
         )}
       </Card>
 
+      {canManage && (profileStudentId || requestedStudentId) && (
+        <StudentProfile
+          key={profileStudentId || requestedStudentId!}
+          studentId={(profileStudentId || requestedStudentId)!}
+          initialTab={isProfileTab(initialTab) ? initialTab : undefined}
+          tuitionId={params.get('tuitionId') || undefined}
+          onClose={closeProfile}
+        />
+      )}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

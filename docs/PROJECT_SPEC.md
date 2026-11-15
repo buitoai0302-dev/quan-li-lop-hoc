@@ -97,6 +97,12 @@ Backend và frontend yêu cầu Node.js từ 22.12.0; CI dùng Node 22. Cài dep
 
 ## 7. Kiểm thử và điều kiện nghiệm thu
 
+### Cải tiến luồng công việc — giai đoạn 2
+
+- `GET /api/dashboard/work-items` trả nhóm điểm danh hôm nay còn thiếu, học phí chưa miễn có số dư và đến hạn, lớp đang hoạt động thiếu giáo viên hoặc lịch trong bảy ngày. Ngày theo Việt Nam; số dư tính bằng NUMERIC từ sổ payments. Giáo viên chỉ nhận buổi của mình; buổi không có học viên không tạo việc. Mặc định xem trước năm mục, phân trang từng nhóm tối đa 50 mục bằng `group`, `limit`, `offset`.
+- `GET /api/students/:id/profile` và `/history?type=classes|attendance|payments` chỉ dành cho quản lý/staff theo tenant. Hồ sơ nằm trong panel phải, nhớ tab/trang/vị trí cuộn; lịch sử tải khi mở tab. Học phí tái sử dụng API với `student_id`, `tuition_id`, `limit`, `offset`. Các số tổng tính từ sổ thanh toán, không suy ra từ một trang lịch sử.
+- Đi từ việc cần làm sẽ mở đúng buổi điểm danh, lớp cần sửa hoặc khoản học phí trong hồ sơ. Mở phiếu thu cần xác nhận; vẫn dùng luồng lưu/biên lai hiện hữu, có nút trở lại hồ sơ. Mutation thành công làm mới nhóm việc và hồ sơ. Giai đoạn 2 không có migration mới; backend cần migration điểm danh của giai đoạn 1.
+
 ### Cải tiến luồng công việc — giai đoạn 1
 
 - Lịch, Điểm danh, Học viên và Học phí nhớ ngữ cảnh trên trình duyệt theo phiên bản, tài khoản và tenant hiệu lực. Tham số điều hướng được ưu tiên; bộ lọc sai bị bỏ và trang được giới hạn theo dữ liệu. Chỉ lưu tùy chọn vào localStorage; tìm kiếm/vị trí cuộn dùng sessionStorage. Không lưu bản nháp hoặc dữ liệu nghiệp vụ. Đổi tài khoản/tenant hủy request cũ, xóa cache và dựng lại màn hình.

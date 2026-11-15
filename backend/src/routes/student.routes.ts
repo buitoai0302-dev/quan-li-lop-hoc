@@ -32,10 +32,25 @@ const bulkImportSchema = z.object({
   body: bulkStudentImportSchema,
 });
 import { enforceLimit } from '../middlewares/feature.middleware';
+import { getStudentProfile, getStudentHistory } from '../controllers/workflow.controller';
+import { studentHistoryRequestSchema } from '../validators/workflow.validator';
 
 const router = Router();
 
 router.get('/', requireRole(ACCESS.ADMIN_STAFF_TEACHER), getStudents);
+router.get(
+  '/:id/profile',
+  requireRole(ACCESS.ADMIN_STAFF),
+  validateUUID(['id']),
+  getStudentProfile
+);
+router.get(
+  '/:id/history',
+  requireRole(ACCESS.ADMIN_STAFF),
+  validateUUID(['id']),
+  validate(studentHistoryRequestSchema),
+  getStudentHistory
+);
 router.post(
   '/',
   requireRole(ACCESS.ADMIN_STAFF),

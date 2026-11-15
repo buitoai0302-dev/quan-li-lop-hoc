@@ -3,6 +3,7 @@ import { Router } from 'express';
 import { authMiddleware, requireRole } from '../middlewares/auth.middleware';
 import { validate, validateUUID } from '../middlewares/validate.middleware';
 import {
+  TuitionListSchema,
   CreateTuitionSchema,
   RecordPaymentSchema,
   UpdateTuitionSchema,
@@ -25,7 +26,7 @@ const router = Router();
 router.use(authMiddleware);
 
 // Danh sách học phí & tổng kết
-router.get('/', requireRole(ACCESS.ADMIN_STAFF), getTuitions);
+router.get('/', requireRole(ACCESS.ADMIN_STAFF), validate(TuitionListSchema), getTuitions);
 router.get('/overdue', requireRole(ACCESS.ADMIN_STAFF), getOverdueTuitions);
 
 // CRUD học phí

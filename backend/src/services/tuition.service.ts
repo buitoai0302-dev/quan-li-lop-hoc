@@ -23,7 +23,15 @@ async function lockTuition(client: PoolClient, tenantId: string, tuitionId: stri
 
 export class TuitionService {
   static async getTuitions(tenantId: string, filters: TuitionFilters) {
-    const { status, class_id, billing_period, student_id, limit = 100, offset = 0 } = filters;
+    const {
+      status,
+      class_id,
+      billing_period,
+      student_id,
+      tuition_id,
+      limit = 100,
+      offset = 0,
+    } = filters;
 
     const effectiveStatus = `CASE WHEN t.status = ANY($4::text[])
       AND t.amount_due > t.amount_paid
@@ -50,6 +58,10 @@ export class TuitionService {
     `;
     const params: unknown[] = [...baseParams];
     let idx = params.length + 1;
+    if (tuition_id) {
+      query += ` AND t.id = $${idx++}`;
+      params.push(tuition_id);
+    }
 
     if (status) {
       query += ` AND (${effectiveStatus}) = $${idx++}`;
@@ -76,6 +88,9 @@ export class TuitionService {
     // Tổng kết tài chính
     const summaryParams: unknown[] = [...baseParams];
     let summaryWhere = '';
+    if (tuition_id) {
+      summaryWhere += ` AND t.id = $${summaryParams.push(tuition_id)}`;
+    }
     if (status) {
       summaryWhere += ` AND t.status = $${summaryParams.push(status)}`;
     }
@@ -91,7 +106,7 @@ export class TuitionService {
 
     const summaryResult = await pool.query(
       `WITH tenant_tuitions AS (
-        SELECT t.amount_due, t.amount_paid, t.class_id, t.billing_period, t.student_id,
+        SELECT t.id, t.amount_due, t.amount_paid, t.class_id, t.billing_period, t.student_id,
                ${effectiveStatus} AS status
         FROM tuitions t
         WHERE t.tenant_id = $1

@@ -2,6 +2,9 @@ import { randomUUID } from 'node:crypto';
 import pool from '../../src/db';
 import { AttendanceService } from '../../src/services/attendance.service';
 import { ROLES } from '../../src/utils/constants';
+import { WorkItemsService } from '../../src/services/work-items.service';
+import { StudentProfileService } from '../../src/services/student-profile.service';
+import { TuitionService } from '../../src/services/tuition.service';
 
 jest.mock('../../src/db', () => {
   const { Pool } = jest.requireActual<typeof import('pg')>('pg');
@@ -95,5 +98,44 @@ describePostgres('workflow data integrity', () => {
     expect((await pool.query('SELECT attendance_version FROM schedule_sessions WHERE tenant_id=$1 AND id=$2', [f.tenantId, f.today])).rows[0].attendance_version).toBe(0);
     expect((await pool.query('SELECT 1 FROM attendance WHERE tenant_id=$1 AND session_id=$2', [f.tenantId, f.today])).rows).toEqual([]);
     expect((await pool.query('SELECT 1 FROM attendance_session_students WHERE tenant_id=$1 AND session_id=$2', [f.tenantId, f.today])).rows).toEqual([]);
+  });
+
+  it('returns only actionable daily work, excludes empty/deleted rosters and scopes teachers', async () => {
+    const f = await fixture(); const other = await fixture();
+    const options = { limit: 5, offset: 0 };
+    const before = await WorkItemsService.getWorkItems(f.tenantId, f.actor, options);
+    expect(before.groups.find(group => group.type === 'attendance')?.items.map(item => item.id)).toEqual([f.today]);
+    expect((await WorkItemsService.getWorkItems(f.tenantId, { ...f.actor, role: ROLES.TEACHER }, options)).groups.map(group => group.type)).toEqual(['attendance']);
+    expect((await WorkItemsService.getWorkItems(f.tenantId, { userId: other.userId, role: ROLES.TEACHER }, options)).groups[0].total).toBe(0);
+    await expect(WorkItemsService.getWorkItems(f.tenantId, { ...f.actor, role: ROLES.TEACHER }, { ...options, group: 'tuition' })).rejects.toMatchObject({ statusCode: 403 });
+    await pool.query('DELETE FROM class_students WHERE tenant_id=$1', [f.tenantId]);
+    expect((await WorkItemsService.getWorkItems(f.tenantId, f.actor, options)).groups[0].total).toBe(0);
+    await pool.query('INSERT INTO attendance_session_students (tenant_id, session_id, student_id) VALUES ($1,$2,$3)', [f.tenantId,f.today,f.students[0]]);
+    await pool.query('UPDATE students SET is_deleted=true WHERE tenant_id=$1 AND id=$2', [f.tenantId,f.students[0]]);
+    expect((await WorkItemsService.getWorkItems(f.tenantId, f.actor, options)).groups[0].total).toBe(0);
+    await pool.query('UPDATE classes SET teacher_id=NULL WHERE tenant_id=$1 AND id=$2', [f.tenantId,f.classId]);
+    expect((await WorkItemsService.getWorkItems(f.tenantId, f.actor, { ...options, group:'classes' })).groups[0].items[0]).toMatchObject({id:f.classId,missing_teacher:true,missing_sessions:false});
+    await pool.query("UPDATE schedule_sessions SET status='cancelled' WHERE tenant_id=$1", [f.tenantId]);
+    expect((await WorkItemsService.getWorkItems(f.tenantId, f.actor, { ...options, group:'classes' })).groups[0].items[0]).toMatchObject({missing_sessions:true});
+  });
+
+  it('uses the payment ledger, excludes waived/future debt and paginates student histories', async () => {
+    const f = await fixture(); const other = await fixture();
+    const tuitionIds: string[] = [];
+    for (const [days, status] of [[0,'unpaid'],[-1,'waived'],[1,'unpaid']] as const) tuitionIds.push((await pool.query("INSERT INTO tuitions (tenant_id,student_id,class_id,amount,due_date,status) VALUES ($1,$2,$3,1000.25,(CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date+$4::int,$5) RETURNING id",[f.tenantId,f.students[0],f.classId,days,status])).rows[0].id);
+    await TuitionService.recordPayment(f.tenantId, f.userId, tuitionIds[0], { amount_paid:250.10 });
+    const work = await WorkItemsService.getWorkItems(f.tenantId, f.actor, {group:'tuition',limit:5,offset:0});
+    expect(work.groups[0]).toMatchObject({total:1,items:[{id:tuitionIds[0],outstanding_vnd:'750.15'}]});
+    expect((await WorkItemsService.getWorkItems(f.tenantId, f.actor, {group:'tuition',limit:5,offset:20})).groups[0]).toMatchObject({total:1,items:[]});
+    expect(await StudentProfileService.getProfile(f.tenantId, f.students[0], ROLES.STAFF)).toMatchObject({outstanding_vnd:'1750.40',paid_vnd:'250.10'});
+    expect(await StudentProfileService.getHistory(f.tenantId, f.students[0], ROLES.ADMIN, {type:'payments',limit:1,offset:0})).toMatchObject({total:1,items:[{tuition_id:tuitionIds[0],amount_vnd:'250.10'}]});
+    expect(await StudentProfileService.getHistory(f.tenantId, f.students[0], ROLES.ADMIN, {type:'classes',limit:1,offset:1})).toMatchObject({total:1,items:[]});
+    expect((await TuitionService.getTuitions(f.tenantId,{student_id:f.students[0],tuition_id:tuitionIds[0]})).data.map(item => item.id)).toEqual([tuitionIds[0]]);
+    expect((await TuitionService.getTuitions(other.tenantId,{tuition_id:tuitionIds[0]})).data).toEqual([]);
+    await expect(StudentProfileService.getProfile(other.tenantId, f.students[0], ROLES.ADMIN)).rejects.toMatchObject({errorCode:'STUDENT_NOT_FOUND'});
+    await expect(StudentProfileService.getHistory(other.tenantId, f.students[0], ROLES.ADMIN, {type:'attendance',limit:10,offset:0})).rejects.toMatchObject({errorCode:'STUDENT_NOT_FOUND'});
+    await expect(StudentProfileService.getProfile(f.tenantId, f.students[0], ROLES.TEACHER)).rejects.toMatchObject({statusCode:403});
+    await TuitionService.recordPayment(f.tenantId, f.userId, tuitionIds[0], { amount_paid:750.15 });
+    expect((await WorkItemsService.getWorkItems(f.tenantId, f.actor, {group:'tuition',limit:5,offset:0})).groups[0].total).toBe(0);
   });
 });
