@@ -21,8 +21,10 @@ import FeedbackModal from './FeedbackModal';
 import ActionHint from './common/ActionHint';
 import { useFCM } from '@/features/notifications/hooks/useFCM';
 import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '@/hooks/useMediaQuery';
+import { useWorkflowScope } from '@/hooks/useWorkflowState';
 
 const MainLayout: React.FC = () => {
+  const workflowScope = useWorkflowScope();
   useFCM(); // Initialize FCM notifications
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -248,7 +250,7 @@ const MainLayout: React.FC = () => {
         </header>
 
         <div className="flex-1 overflow-hidden p-3 md:p-5 flex flex-col">
-          <Outlet />
+          <Outlet key={workflowScope} />
         </div>
         <HelpWidget isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
         <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />

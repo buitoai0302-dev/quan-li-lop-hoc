@@ -29,6 +29,7 @@ import SessionFormModal from './SessionFormModal';
 import { useScheduleBoard } from '../hooks/useScheduleBoard';
 import PageError from '@/components/common/PageError';
 import PageLoading from '@/components/common/PageLoading';
+import { useWorkflowScroll } from '@/hooks/useWorkflowState';
 import {
   SCHEDULE_DRAG_ACTIVATION,
   SCHEDULE_DRAG_TYPES,
@@ -87,6 +88,7 @@ const ScheduleBoard: React.FC = () => {
     handleNext,
     updateSessionMutation,
   } = useScheduleBoard();
+  const scrollRef = useWorkflowScroll('schedule', !isLoading && !sessionsLoading);
 
   const [draggedSessionId, setDraggedSessionId] = useState<string | null>(null);
   const dragInProgress = useRef(false);
@@ -241,6 +243,7 @@ const ScheduleBoard: React.FC = () => {
 
   return (
     <Card
+      ref={scrollRef}
       className="flex flex-col flex-1 h-full min-h-0 overflow-hidden shadow-none border-none bg-transparent"
       scrollable={false}
     >

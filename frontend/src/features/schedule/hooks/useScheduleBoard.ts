@@ -1,4 +1,7 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import { isDateKey, isText, useWorkflowScope, useWorkflowState } from '@/hooks/useWorkflowState';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   getWeeklySchedule,
@@ -36,6 +39,8 @@ export const useScheduleBoard = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const scope = useWorkflowScope();
+  const [params] = useSearchParams();
 
   const canEdit =
     user?.role === USER_ROLES.ADMIN ||
@@ -43,29 +48,44 @@ export const useScheduleBoard = () => {
     user?.role === USER_ROLES.SUPER_ADMIN;
 
   // State
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-
-  // Persistence for viewMode
-  const [viewMode, setViewModeState] = useState<ViewMode>(() => {
-    const saved = localStorage.getItem('scheduleViewMode');
-    return (
-      (saved as ViewMode) ||
-      (window.matchMedia('(max-width: 767px)').matches ? VIEW_MODES.DAY : VIEW_MODES.WEEK)
+  const [dateKey, setDateKey] = useWorkflowState(
+    'schedule',
+    'date',
+    format(new Date(), 'yyyy-MM-dd'),
+    isDateKey,
+    false,
+    params.get('date') || undefined
+  );
+  const selectedDate = useMemo(() => new Date(`${dateKey}T00:00:00`), [dateKey]);
+  const setSelectedDate: Dispatch<SetStateAction<Date>> = (next) =>
+    setDateKey((current) =>
+      format(
+        typeof next === 'function' ? next(new Date(`${current}T00:00:00`)) : next,
+        'yyyy-MM-dd'
+      )
     );
-  });
-
-  const setViewMode = (mode: ViewMode) => {
-    setViewModeState(mode);
-    localStorage.setItem('scheduleViewMode', mode);
-  };
-
-  const [selectedBranch, setSelectedBranch] = useState<string>(
-    user?.role === USER_ROLES.STUDENT ? '' : user?.branch_id || ''
+  const [viewMode, setViewMode] = useWorkflowState<ViewMode>(
+    'schedule',
+    'view',
+    window.matchMedia('(max-width: 767px)').matches ? VIEW_MODES.DAY : VIEW_MODES.WEEK,
+    (value): value is ViewMode =>
+      typeof value === 'string' && Object.values(VIEW_MODES).some((mode) => mode === value)
   );
-  const [selectedTeacher, setSelectedTeacher] = useState<string>(
-    user?.role === USER_ROLES.TEACHER ? user.id : ''
+  const [selectedBranch, setSelectedBranch] = useWorkflowState(
+    'schedule',
+    'branch',
+    user?.role === USER_ROLES.STUDENT ? '' : user?.branch_id || '',
+    isText
   );
-  const [selectedClass, setSelectedClass] = useState<string>('');
+  const [selectedTeacher, setSelectedTeacher] = useWorkflowState('schedule', 'teacher', '', isText);
+  const [selectedClass, setSelectedClass] = useWorkflowState(
+    'schedule',
+    'class',
+    '',
+    isText,
+    false,
+    params.get('classId') || undefined
+  );
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -100,8 +120,16 @@ export const useScheduleBoard = () => {
 
   // Queries
   const sessionsQuery = useQuery({
-    queryKey: ['sessions', selectedDate, viewMode, selectedBranch, selectedTeacher, selectedClass],
-    queryFn: async () => {
+    queryKey: [
+      'sessions',
+      scope,
+      selectedDate,
+      viewMode,
+      selectedBranch,
+      selectedTeacher,
+      selectedClass,
+    ],
+    queryFn: async ({ signal }) => {
       const startDateStr = format(daysToShow[0], 'yyyy-MM-dd');
       const endDateStr = format(daysToShow[daysToShow.length - 1], 'yyyy-MM-dd');
       const data = await getWeeklySchedule(
@@ -109,31 +137,32 @@ export const useScheduleBoard = () => {
         endDateStr,
         selectedBranch,
         selectedTeacher,
-        selectedClass
+        selectedClass,
+        signal
       );
       return data;
     },
   });
 
   const branchesQuery = useQuery({
-    queryKey: ['branches'],
+    queryKey: ['branches', scope],
     queryFn: () => getBranches(),
     enabled: canEdit || user?.role === USER_ROLES.TEACHER,
   });
 
   const teachersQuery = useQuery({
-    queryKey: ['teachers'],
+    queryKey: ['teachers', scope],
     queryFn: () => getTeachers(),
     enabled: canEdit || user?.role === USER_ROLES.TEACHER,
   });
 
   const classesQuery = useQuery({
-    queryKey: ['classes'],
+    queryKey: ['classes', scope],
     queryFn: () => getClasses(),
   });
 
   const roomsQuery = useQuery({
-    queryKey: ['rooms'],
+    queryKey: ['rooms', scope],
     queryFn: () => getRooms(),
     enabled: canEdit || user?.role === USER_ROLES.TEACHER,
   });
@@ -145,6 +174,39 @@ export const useScheduleBoard = () => {
       ? [branchesQuery, teachersQuery, roomsQuery]
       : []),
   ];
+
+  useEffect(() => {
+    if (
+      branchesQuery.data &&
+      selectedBranch &&
+      !branchesQuery.data.some((branch) => branch.id === selectedBranch)
+    )
+      setSelectedBranch('');
+    if (
+      teachersQuery.data &&
+      selectedTeacher &&
+      !teachersQuery.data.some((teacher) => teacher.id === selectedTeacher)
+    )
+      setSelectedTeacher('');
+    if (
+      classesQuery.data &&
+      selectedClass &&
+      !classesQuery.data.some(
+        (cls) => cls.id === selectedClass && (!selectedBranch || cls.branch_id === selectedBranch)
+      )
+    )
+      setSelectedClass('');
+  }, [
+    branchesQuery.data,
+    teachersQuery.data,
+    classesQuery.data,
+    selectedBranch,
+    selectedTeacher,
+    selectedClass,
+    setSelectedBranch,
+    setSelectedTeacher,
+    setSelectedClass,
+  ]);
 
   // Mutations
   const updateSessionMutation = useMutation({

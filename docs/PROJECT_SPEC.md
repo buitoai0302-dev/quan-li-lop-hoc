@@ -97,6 +97,14 @@ Backend và frontend yêu cầu Node.js từ 22.12.0; CI dùng Node 22. Cài dep
 
 ## 7. Kiểm thử và điều kiện nghiệm thu
 
+### Cải tiến luồng công việc — giai đoạn 1
+
+- Lịch, Điểm danh, Học viên và Học phí nhớ ngữ cảnh trên trình duyệt theo phiên bản, tài khoản và tenant hiệu lực. Tham số điều hướng được ưu tiên; bộ lọc sai bị bỏ và trang được giới hạn theo dữ liệu. Chỉ lưu tùy chọn vào localStorage; tìm kiếm/vị trí cuộn dùng sessionStorage. Không lưu bản nháp hoặc dữ liệu nghiệp vụ. Đổi tài khoản/tenant hủy request cũ, xóa cache và dựng lại màn hình.
+- GET điểm danh trả thêm `version` và `editingPolicy`; ngày nghiệp vụ lấy từ PostgreSQL theo `Asia/Ho_Chi_Minh`. Giáo viên chỉ sửa buổi của mình hôm nay. Admin/staff và superadmin trong tenant được sửa ngày cũ khi có lý do, phiên bản và xác nhận học viên bổ sung. Không điểm danh buổi tương lai/đã hủy.
+- POST giữ payload cũ cho hôm nay; giao diện mới gửi `expectedVersion`, `reason`, `confirmedStudentIds`. Ghi dữ liệu, ảnh chụp danh sách và audit trong một giao dịch; xung đột phiên bản trả 409 `ATTENDANCE_VERSION_CONFLICT`, thiếu lý do trả 400 `ATTENDANCE_REASON_REQUIRED`. Giá trị không thay đổi không tạo audit. GET `/api/attendance/session/:sessionId/history` phân trang 50 dòng cho quản lý/staff.
+- Danh sách buổi cũ lấy từ điểm danh/ảnh chụp đã ghi nhận, không suy ra từ ghi danh hiện tại. Xác nhận bổ sung không đổi ghi danh. Hàng loạt chỉ đánh dấu `none`, có hoàn tác trước lưu. “Lưu & buổi tiếp theo” chỉ chuyển sau thành công sang buổi khác còn thiếu điểm danh; buổi không có học viên không tính là thiếu. Refetch/lỗi giữ bản nháp cho đến khi người dùng chọn tải lại.
+- Migration `20261115_attendance_workflow.sql` cần chạy trước backend tương ứng, giới hạn chờ khóa 5 giây. Backfill chỉ từ attendance hiện hữu. Sao lưu/khôi phục thử trên DB riêng trước rollout có dữ liệu; đo thời gian khóa tại staging. Rollback giữ schema/audit bổ sung và dùng backend tương thích.
+
 - **CI** kiểm tra đường dẫn và mẫu secret trong index, tính bất biến migration SQL, ranh giới source và quyền API reader, parity role/mã lỗi/locale, TypeScript, Jest, PostgreSQL 16 (toàn vẹn dữ liệu và bảo mật phiên), parser nhập tệp và build frontend/PWA.
 - **Đã xác nhận cục bộ cho bản sửa này** gồm migration trên DB PostgreSQL 16 giả lập, cạnh tranh khi thu học phí và xếp lịch, rollback định kỳ, giữ buổi điểm danh, giữ buổi thủ công và trường hợp DB có lịch trùng. Bộ kiểm thử staging PostgreSQL có thể chạy độc lập theo hướng dẫn QA.
 - **Cần xác nhận trên staging trước khi phát hành** gồm quyền và dữ liệu giữa nhiều tenant qua HTTP, email/OAuth, trình duyệt và thiết bị, thời gian migration trên dữ liệu đại diện, tải 50 người dùng, backup/restore, và sandbox VNPay/MoMo trước khi bật thanh toán online.

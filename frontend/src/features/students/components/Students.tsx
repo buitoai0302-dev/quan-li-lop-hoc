@@ -1,5 +1,6 @@
 import PageError from '@/components/common/PageError';
-import React, { useState, useMemo, useCallback, useId } from 'react';
+import React, { useState, useMemo, useCallback, useId, useEffect } from 'react';
+import { isText, useWorkflowState, useWorkflowScroll } from '@/hooks/useWorkflowState';
 
 import { Modal, Card, FormPanelActions } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
@@ -51,8 +52,18 @@ const Students: React.FC = () => {
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [branchFilter, setBranchFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useWorkflowState('students', 'search', '', isText, true);
+  const [branchFilter, setBranchFilter] = useWorkflowState('students', 'branch', '', isText);
+  const scrollRef = useWorkflowScroll('students', !loading);
+  useEffect(() => {
+    if (
+      !branchesLoading &&
+      branchesQuery.isSuccess &&
+      branchFilter &&
+      !branches.some((branch) => branch.id === branchFilter)
+    )
+      setBranchFilter('');
+  }, [branchesLoading, branchesQuery.isSuccess, branchFilter, branches, setBranchFilter]);
 
   const [editingStudent, setEditingStudent] = useState<StudentFormData | null>(null);
 
@@ -77,7 +88,7 @@ const Students: React.FC = () => {
     itemsPerPage,
     setItemsPerPage,
     paginatedItems: paginatedStudents,
-  } = usePagination(filteredStudents);
+  } = usePagination(filteredStudents, 'students', !loading);
   const { selectedIds, handleSelectAll, handleSelectOne, clearSelection } =
     useSelection(paginatedStudents);
 
@@ -233,7 +244,7 @@ const Students: React.FC = () => {
     );
 
   return (
-    <div className="h-full flex flex-col overflow-hidden relative">
+    <div ref={scrollRef} className="h-full flex flex-col overflow-hidden relative">
       <PageHeader
         icon={Users}
         actions={

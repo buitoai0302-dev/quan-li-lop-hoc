@@ -23,13 +23,14 @@ export const getWeeklySchedule = (
   endDate: string,
   branchId?: string,
   teacherId?: string,
-  classId?: string
+  classId?: string,
+  signal?: AbortSignal
 ): Promise<SessionsPayload> => {
   let url = `/schedule/weekly?startDate=${startDate}&endDate=${endDate}`;
   if (branchId) url += `&branchId=${branchId}`;
   if (teacherId) url += `&teacherId=${teacherId}`;
   if (classId) url += `&classId=${classId}`;
-  return api.get<{ data: unknown }>(url).then((res) => {
+  return api.get<{ data: unknown }>(url, { signal }).then((res) => {
     const raw = res.data.data as { sessions?: unknown; maxBatchSessions?: unknown };
     const limit = raw?.maxBatchSessions;
     return {

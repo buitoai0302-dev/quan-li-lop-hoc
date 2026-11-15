@@ -53,11 +53,20 @@ export class ScheduleService {
              c.name as class_name, 
              t.full_name as teacher_name, 
              r.name as room_name,
-             r.branch_id
+             r.branch_id,
+             (SELECT count(DISTINCT student_id)::int FROM (
+                SELECT ars.student_id FROM attendance_session_students ars
+                  JOIN students st ON st.id = ars.student_id AND st.tenant_id = ars.tenant_id AND NOT st.is_deleted
+                  WHERE ars.tenant_id = s.tenant_id AND ars.session_id = s.id
+                UNION SELECT student_id FROM attendance a WHERE a.tenant_id = s.tenant_id AND a.session_id = s.id
+                UNION SELECT cs.student_id FROM class_students cs JOIN students st ON st.id = cs.student_id AND st.tenant_id = cs.tenant_id AND NOT st.is_deleted
+                  WHERE cs.tenant_id = s.tenant_id AND cs.class_id = s.class_id AND s.session_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
+             ) roster) AS student_count,
+             (SELECT count(*)::int FROM attendance a WHERE a.tenant_id = s.tenant_id AND a.session_id = s.id) AS attendance_count
       FROM schedule_sessions s
-      JOIN classes c ON s.class_id = c.id AND c.is_deleted = false
-      JOIN teachers t ON s.teacher_id = t.id AND t.is_deleted = false
-      JOIN rooms r ON s.room_id = r.id AND r.is_deleted = false
+      JOIN classes c ON s.class_id = c.id AND c.tenant_id = s.tenant_id AND c.is_deleted = false
+      JOIN teachers t ON s.teacher_id = t.id AND t.tenant_id = s.tenant_id AND t.is_deleted = false
+      JOIN rooms r ON s.room_id = r.id AND r.tenant_id = s.tenant_id AND r.is_deleted = false
       WHERE s.tenant_id = $1 
         AND s.session_date >= $2 
         AND s.session_date <= $3
@@ -91,7 +100,7 @@ export class ScheduleService {
       );
       if (studentRes.rows.length > 0) {
         sqlParams.push(studentRes.rows[0].id);
-        sql += ` AND s.class_id IN (SELECT class_id FROM class_students WHERE student_id = $${sqlParams.length})`;
+        sql += ` AND s.class_id IN (SELECT class_id FROM class_students WHERE tenant_id = $1 AND student_id = $${sqlParams.length})`;
         if (params.classId) {
           sqlParams.push(params.classId);
           sql += ` AND s.class_id = $${sqlParams.length}`;

@@ -671,7 +671,20 @@
     "unsavedTitle": "Thay đổi chưa lưu!",
     "unsavedDesc": "Bạn có dữ liệu điểm danh chưa được lưu. Nếu rời đi bây giờ, các thay đổi của bạn sẽ bị mất.",
     "futureSessionWarning": "Chưa diễn ra",
-    "pastSessionWarning": "Chế độ xem"
+    "pastSessionWarning": "Chế độ xem",
+    "markUnmarked": "Có mặt: {{count}} chưa điểm danh",
+    "undo": "Hoàn tác lần đánh dấu vừa rồi",
+    "saveNext": "Lưu & buổi tiếp theo",
+    "noNextSession": "Không còn buổi khác chưa hoàn tất trong ngày này.",
+    "reason": "Lý do sửa điểm danh",
+    "confirmedAddition": "Học viên được xác nhận bổ sung cho buổi này",
+    "addHistoricalStudent": "Bổ sung học viên cho buổi cũ",
+    "historicalRosterNotice": "Danh sách cũ chỉ có học viên đã được ghi nhận. Bổ sung tại đây không thay đổi ghi danh hiện tại.",
+    "chooseStudent": "Chọn học viên",
+    "confirmHistoricalStudent": "Tôi xác nhận học viên này thuộc buổi học đang sửa.",
+    "reloadTitle": "Tải lại để đối chiếu",
+    "reloadNotice": "Bỏ các thay đổi chưa lưu và tải điểm danh mới nhất?",
+    "none": "Chưa điểm danh"
   },
   "schedule": {
     "title": "Quản lý Lịch học",
@@ -1039,7 +1052,11 @@
     "INVALID_REFRESH_TOKEN": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
     "ONLINE_PAYMENTS_DISABLED": "Trung tâm chưa bật thanh toán trực tuyến.",
     "PAYMENT_MISMATCH": "Thông tin thanh toán không khớp với hóa đơn.",
-    "INVOICE_NOT_PENDING": "Hóa đơn này không còn chờ thanh toán."
+    "INVOICE_NOT_PENDING": "Hóa đơn này không còn chờ thanh toán.",
+    "ATTENDANCE_VERSION_CONFLICT": "Điểm danh đã thay đổi. Tải lại để đối chiếu trước khi lưu.",
+    "ATTENDANCE_REASON_REQUIRED": "Vui lòng nhập lý do sửa điểm danh cũ.",
+    "SESSION_DATE_RESTRICTED": "Không được điểm danh buổi tương lai, đã hủy hoặc ngoài quyền chỉnh sửa.",
+    "FEATURE_DISABLED": "Tính năng chưa được bật cho trung tâm."
   },
   "validation": {
     "nameMin": "Tên phải có ít nhất 2 ký tự",

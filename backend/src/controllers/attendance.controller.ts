@@ -20,10 +20,6 @@ export const getAttendanceBySession = async (
       actor
     );
 
-    if (!result.success) {
-      return res.status(403).json(result);
-    }
-
     res.json(result.data);
   } catch (error) {
     next(error);
@@ -36,20 +32,34 @@ export const recordAttendance = async (req: AuthRequest, res: Response, next: Ne
     if (!actor) throw new AuthenticationError();
     const tenantId = req.tenantId || actor.tenantId;
     const { sessionId } = req.params;
-    const { records } = req.body;
+    const { records, expectedVersion, reason, confirmedStudentIds } = req.body;
 
     const result = await AttendanceService.recordAttendance(
       tenantId,
       sessionId as string,
       records,
-      actor
+      actor,
+      { expectedVersion, reason, confirmedStudentIds }
     );
 
-    if (!result.success) {
-      return res.status(result.error === 'SESSION_DATE_RESTRICTED' ? 400 : 403).json(result);
-    }
-
     res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAttendanceHistory = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const actor = req.user;
+    if (!actor) throw new AuthenticationError();
+    res.json(
+      await AttendanceService.getHistory(
+        req.tenantId || actor.tenantId,
+        req.params.sessionId as string,
+        actor,
+        Number(req.query.offset || 0)
+      )
+    );
   } catch (error) {
     next(error);
   }

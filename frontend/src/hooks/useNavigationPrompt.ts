@@ -34,7 +34,9 @@ export const useNavigationPrompt = (isDirty: boolean) => {
   // 2. Handle internal navigation (React Router blocker)
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
-      isDirty && currentLocation.pathname !== nextLocation.pathname
+      isDirty &&
+      (currentLocation.pathname !== nextLocation.pathname ||
+        currentLocation.search !== nextLocation.search)
   );
 
   return blocker;

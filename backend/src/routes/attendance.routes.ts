@@ -1,6 +1,10 @@
 import { ACCESS } from '../utils/permissions';
 import { Router } from 'express';
-import { getAttendanceBySession, recordAttendance } from '../controllers/attendance.controller';
+import {
+  getAttendanceBySession,
+  getAttendanceHistory,
+  recordAttendance,
+} from '../controllers/attendance.controller';
 import { requireRole } from '../middlewares/auth.middleware';
 import { validateUUID, validate } from '../middlewares/validate.middleware';
 import { z } from 'zod';
@@ -16,9 +20,23 @@ const recordAttendanceSchema = z.object({
           status: z.enum(['present', 'absent', 'late', 'excused']),
         })
       )
-      .min(1, 'Danh sách điểm danh không được trống'),
+      .min(1, 'Danh sách điểm danh không được trống')
+      .max(1000),
+    expectedVersion: z.number().int().min(0).optional(),
+    reason: z.string().trim().max(1000).optional(),
+    confirmedStudentIds: z.array(z.string().uuid()).max(1000).optional(),
   }),
 });
+
+router.get(
+  '/session/:sessionId/history',
+  requireRole(ACCESS.ADMIN_STAFF),
+  validateUUID(['sessionId']),
+  validate(
+    z.object({ query: z.object({ offset: z.coerce.number().int().min(0).max(100000).optional() }) })
+  ),
+  getAttendanceHistory
+);
 
 router.get(
   '/session/:sessionId',

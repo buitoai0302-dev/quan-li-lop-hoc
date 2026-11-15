@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,12 +17,17 @@ import StudentList from '@/features/attendance/components/StudentList';
 import { exportToExcel, exportToPDF } from '@/utils/export';
 import type { ExportColumn } from '@/utils/export';
 import type { AttendanceRecord } from '@/features/attendance/types';
+import { useWorkflowScroll } from '@/hooks/useWorkflowState';
+import HistoricalAttendance from './HistoricalAttendance';
+import AttendanceHistory from './AttendanceHistory';
 
 const AttendancePage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const dateInputRef = useRef<HTMLInputElement>(null);
   const isAttendanceEnabled = user?.tenant_settings?.menu?.attendance !== false;
+  const [showHistory, setShowHistory] = useState(false);
+  const [confirmReload, setConfirmReload] = useState(false);
 
   const {
     sessions,
@@ -56,7 +61,16 @@ const AttendancePage: React.FC = () => {
     confirmLeave,
     cancelLeave,
     fetchAttendance,
+    unmarkedCount,
+    canUndo,
+    handleUndo,
+    policy,
+    reason,
+    setReason,
+    confirmStudent,
+    reloadAttendance,
   } = useAttendance(isAttendanceEnabled);
+  const scrollRef = useWorkflowScroll('attendance', !attendanceLoading && !sessionsLoading);
 
   const handleExportExcel = () => {
     if (!filteredAttendance.length) return;
@@ -144,7 +158,20 @@ const AttendancePage: React.FC = () => {
     );
 
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-3 sm:gap-4 overflow-hidden">
+    <div ref={scrollRef} className="flex-1 min-h-0 flex flex-col gap-3 sm:gap-4 overflow-hidden">
+      <ConfirmModal
+        isOpen={confirmReload}
+        onClose={() => setConfirmReload(false)}
+        onConfirm={() => {
+          setConfirmReload(false);
+          void reloadAttendance();
+        }}
+        title={t('attendance.reloadTitle')}
+        message={t('attendance.reloadNotice')}
+      />
+      {showHistory && selectedSession && (
+        <AttendanceHistory sessionId={selectedSession.id} onClose={() => setShowHistory(false)} />
+      )}
       <ConfirmModal
         isOpen={!!(blocker.state === 'blocked' || pendingAction)}
         onClose={cancelLeave}
@@ -179,13 +206,47 @@ const AttendancePage: React.FC = () => {
             isReadOnly={isReadOnly}
             isFutureDate={isFutureDate}
             handleMarkAllAsPresent={handleMarkAllAsPresent}
-            handleSave={handleSave}
+            handleSave={() => handleSave()}
+            handleSaveNext={() => handleSave(true)}
+            unmarkedCount={unmarkedCount}
+            canUndo={canUndo}
+            handleUndo={handleUndo}
             onExportExcel={handleExportExcel}
             onExportPDF={handleExportPDF}
           />
         }
       />
 
+      {selectedSession && (
+        <div className="flex shrink-0 flex-wrap gap-3 text-xs">
+          {user?.role !== USER_ROLES.TEACHER && (
+            <button
+              type="button"
+              className="min-h-9 text-primary"
+              onClick={() => setShowHistory(true)}
+            >
+              {t('attendance.history')}
+            </button>
+          )}
+          <button
+            type="button"
+            disabled={saving}
+            className="min-h-9 text-primary"
+            onClick={() => setConfirmReload(true)}
+          >
+            {t('attendance.reloadTitle')}
+          </button>
+        </div>
+      )}
+      {policy?.reasonRequired && (
+        <HistoricalAttendance
+          reason={reason}
+          setReason={setReason}
+          existingIds={attendance.map((record) => record.student_id)}
+          confirmStudent={confirmStudent}
+          disabled={saving}
+        />
+      )}
       <div className="flex-1 flex flex-col lg:flex-row gap-3 sm:gap-4 overflow-hidden min-h-0">
         <SessionList
           sessions={sessions}
@@ -200,7 +261,7 @@ const AttendancePage: React.FC = () => {
           attendanceLoading={attendanceLoading}
           selectedSession={selectedSession}
           filteredAttendance={filteredAttendance}
-          isReadOnly={isReadOnly}
+          isReadOnly={isReadOnly || saving}
           handleStatusChange={handleStatusChange}
         />
       </div>

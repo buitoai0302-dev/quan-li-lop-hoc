@@ -1,6 +1,13 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ClipboardCheck, Calendar as CalendarIcon, CheckCircle, Save } from 'lucide-react';
+import {
+  ClipboardCheck,
+  Calendar as CalendarIcon,
+  CheckCircle,
+  Save,
+  Undo2,
+  ArrowRight,
+} from 'lucide-react';
 import type { Session, AttendanceRecord } from '../types';
 import ExportMenu from '@/components/common/ExportMenu';
 
@@ -12,6 +19,10 @@ interface AttendanceHeaderProps {
   isFutureDate: boolean;
   handleMarkAllAsPresent: () => void;
   handleSave: () => void;
+  handleSaveNext: () => void;
+  handleUndo: () => void;
+  canUndo: boolean;
+  unmarkedCount: number;
   onExportExcel: () => void | Promise<void>;
   onExportPDF: () => void | Promise<void>;
 }
@@ -24,6 +35,10 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
   isFutureDate,
   handleMarkAllAsPresent,
   handleSave,
+  handleSaveNext,
+  handleUndo,
+  canUndo,
+  unmarkedCount,
   onExportExcel,
   onExportPDF,
 }) => {
@@ -60,13 +75,24 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
           <button
             type="button"
             onClick={handleMarkAllAsPresent}
-            disabled={saving || attendance.length === 0}
+            disabled={saving || unmarkedCount === 0}
             className="inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-emerald-700 text-white rounded-lg font-semibold text-xs hover:bg-emerald-800 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             <CheckCircle size={14} />
-            <span className="hidden sm:inline">{t('attendance.quickMarkAll')}</span>
-            <span className="sm:hidden">{t('attendance.quickMarkAllShort')}</span>
+            <span>{t('attendance.markUnmarked', { count: unmarkedCount })}</span>
           </button>
+          {canUndo && (
+            <button
+              type="button"
+              onClick={handleUndo}
+              disabled={saving}
+              aria-label={t('attendance.undo')}
+              title={t('attendance.undo')}
+              className="inline-flex size-11 items-center justify-center rounded-lg border border-slate-300 dark:border-slate-600"
+            >
+              <Undo2 size={16} />
+            </button>
+          )}
           <button
             type="button"
             onClick={handleSave}
@@ -79,6 +105,15 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
               <Save size={14} />
             )}
             {t('common.save')}
+          </button>
+          <button
+            type="button"
+            onClick={handleSaveNext}
+            disabled={saving || attendance.length === 0}
+            className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-primary px-3 text-xs font-semibold text-primary disabled:opacity-50"
+          >
+            {t('attendance.saveNext')}
+            <ArrowRight size={14} aria-hidden="true" />
           </button>
         </div>
       )}

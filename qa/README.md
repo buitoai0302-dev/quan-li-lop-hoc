@@ -53,6 +53,12 @@ Các bộ test tạo và dọn tenant giả riêng. CI chạy cùng hai bộ tes
 
 ## Nghiệm thu dữ liệu và luồng nghiệp vụ
 
+### Ngữ cảnh và điểm danh
+
+Chạy thêm `tests/staging/workflow.staging.test.ts` cùng biến môi trường PostgreSQL cô lập nêu trên. Bộ test kiểm tra hai kết nối lưu cùng phiên bản chỉ có một thành công, rollback khi audit thất bại, chỉ audit giá trị thay đổi, giữ học viên đã rời lớp, không suy luận danh sách quá khứ từ ghi danh hiện tại, xác nhận học viên cùng tenant không ghi danh lại, và từ chối giáo viên/tenant/ngày không hợp lệ. Migration mới cần thử trên DB rỗng lẫn DB có attendance giả trước khi rollout.
+
+Trình duyệt: thay trạng thái rồi kích hoạt refetch/lỗi 409 phải giữ bản nháp; hàng loạt giữ các trạng thái đã có, hiển thị số ảnh hưởng và hoàn tác đúng một lần; lưu tiếp chỉ đổi buổi sau thành công. Kiểm tra lịch sử/lý do Việt–Anh. Trở lại bốn màn hình sau panel/đổi route phải giữ lọc, ngày, trang và cuộn; link điều hướng thắng dữ liệu nhớ. Thử hai tài khoản/tenant, storage sai định dạng, lựa chọn đã xóa, pagination rỗng, 320/390/768/1440 px, sáng/tối, bàn phím và giảm chuyển động. Chặn tất cả API thật trước khi mở trang local.
+
 `data-integrity.staging.test.ts` còn kiểm tra hai yêu cầu cùng sinh học phí theo lớp/kỳ, tổng hợp theo học viên và trạng thái, đọc quá hạn lặp lại không sửa DB, rollback import khi đầy lớp, hai import tranh chỗ cuối, ngày sinh/số điện thoại sau import và hai import lớp cùng tên. Các ca này dùng DB PostgreSQL cô lập đã nêu ở trên; không trỏ vào DB pilot. Kiểm thử Calendar bằng mock xác nhận cập nhật sự kiện đã liên kết và chỉ đếm lần thành công, không thay thế nghiệm thu OAuth/provider thật hoặc phục hồi đồng bộ sau restart.
 
 Trên bản sao staging có lịch, xác nhận quyền cài `btree_gist` và đo thời gian

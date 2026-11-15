@@ -86,6 +86,8 @@ export const SessionSchema = z.object({
   start_time: z.string(),
   end_time: z.string(),
   session_type: z.string(),
+  student_count: z.number().optional(),
+  attendance_count: z.number().optional(),
   status: z.string(),
   notes: nullableString,
   class_name: nullableString,

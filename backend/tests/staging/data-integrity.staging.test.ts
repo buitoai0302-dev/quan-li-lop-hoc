@@ -368,7 +368,7 @@ describePostgres('data integrity on PostgreSQL', () => {
     ).rejects.toMatchObject({ errorCode: 'SESSION_NOT_FOUND' });
     await expect(
       AttendanceService.recordAttendance(a.tenant, sessionId, records, assigned)
-    ).resolves.toEqual({ success: true, count: 1 });
+    ).resolves.toMatchObject({ success: true, count: 1, version: 1, changed: 1 });
     await expect(
       AttendanceService.getAttendanceBySession(a.tenant, sessionId, admin)
     ).resolves.toMatchObject({
@@ -377,7 +377,7 @@ describePostgres('data integrity on PostgreSQL', () => {
     await ScheduleService.deleteSession(a.tenant, undefined, sessionId);
     await expect(
       AttendanceService.recordAttendance(a.tenant, sessionId, records, assigned)
-    ).rejects.toMatchObject({ errorCode: 'SESSION_NOT_FOUND' });
+    ).rejects.toMatchObject({ errorCode: 'SESSION_DATE_RESTRICTED' });
   });
 
   it('rolls back conflicting batches and accepts only one concurrent booking', async () => {

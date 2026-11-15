@@ -28,6 +28,19 @@ import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
 import { TUITION_STATUS, USER_ROLES } from '@/utils/constants';
 import { formatCurrency, formatDate } from '@/utils/formatters';
+import { useSearchParams } from 'react-router-dom';
+import { isText, useWorkflowScroll, useWorkflowState } from '@/hooks/useWorkflowState';
+
+const isTuitionFilters = (value: unknown): value is Record<string, string> =>
+  !!value &&
+  typeof value === 'object' &&
+  !Array.isArray(value) &&
+  Object.entries(value).every(
+    ([key, item]) =>
+      ['status', 'student_id', 'class_id', 'billing_period', 'limit', 'offset'].includes(key) &&
+      isText(item) &&
+      (key !== 'status' || !item || Object.values(TUITION_STATUS).some((status) => status === item))
+  );
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> = {
   unpaid: {
@@ -55,6 +68,7 @@ const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> 
 const TuitionPage: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
+  const [params] = useSearchParams();
   const canDelete = user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.SUPER_ADMIN;
   const getTuitionActions = (tuition: Tuition) => {
     const canCollect =
@@ -95,8 +109,15 @@ const TuitionPage: React.FC = () => {
     ];
   };
 
-  const [filters, setFilters] = useState<Record<string, string>>({});
-  const [searchQuery, setSearchQuery] = useState('');
+  const [filters, setFilters] = useWorkflowState<Record<string, string>>(
+    'tuition',
+    'filters',
+    {},
+    isTuitionFilters,
+    false,
+    params.get('student_id') ? { student_id: params.get('student_id')! } : undefined
+  );
+  const [searchQuery, setSearchQuery] = useWorkflowState('tuition', 'search', '', isText, true);
   const [showBulkGenerate, setShowBulkGenerate] = useState(false);
   const [selectedTuition, setSelectedTuition] = useState<Tuition | null>(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -106,6 +127,7 @@ const TuitionPage: React.FC = () => {
 
   const pageQuery = useTuitions(filters);
   const { data, isLoading } = pageQuery;
+  const scrollRef = useWorkflowScroll('tuition', !isLoading);
   const { mutate: deleteTuition, isPending: isDeleting } = useDeleteTuition();
 
   const tuitions = data?.data || [];
@@ -208,7 +230,7 @@ const TuitionPage: React.FC = () => {
     );
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
+    <div ref={scrollRef} className="h-full flex flex-col overflow-hidden">
       <PageHeader
         icon={DollarSign}
         actions={

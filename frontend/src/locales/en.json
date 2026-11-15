@@ -662,13 +662,26 @@
     "totalLate": "Late",
     "quickMarkAll": "Mark all as Present",
     "quickMarkAllShort": "All present",
-    "history": "Attendance History",
+    "history": "Attendance history",
     "save": "Save Attendance",
     "noSessionsDesc": "No classes scheduled for this day. Try another date or check the schedule.",
     "unsavedTitle": "Unsaved Changes!",
     "unsavedDesc": "You have unsaved attendance data. If you leave now, your changes will be lost.",
     "futureSessionWarning": "Future Session",
-    "pastSessionWarning": "Read-only"
+    "pastSessionWarning": "Read-only",
+    "markUnmarked": "Present: {{count}} unmarked",
+    "undo": "Undo last bulk marking",
+    "saveNext": "Save & next session",
+    "noNextSession": "No other incomplete sessions on this date.",
+    "reason": "Reason for changing attendance",
+    "confirmedAddition": "Student explicitly confirmed for this session",
+    "addHistoricalStudent": "Add a student to this past session",
+    "historicalRosterNotice": "Historical membership only includes recorded evidence. Adding here does not change current enrollment.",
+    "chooseStudent": "Select a student",
+    "confirmHistoricalStudent": "I confirm this student belonged to this session.",
+    "reloadTitle": "Reload to review",
+    "reloadNotice": "Discard unsaved changes and load the latest attendance?",
+    "none": "Unmarked"
   },
   "schedule": {
     "title": "Schedule Management",
@@ -1037,7 +1050,11 @@
     "INVALID_REFRESH_TOKEN": "Your session has expired. Please sign in again.",
     "ONLINE_PAYMENTS_DISABLED": "Online payments are unavailable for this center.",
     "PAYMENT_MISMATCH": "Payment details do not match the invoice.",
-    "INVOICE_NOT_PENDING": "This invoice can no longer be paid."
+    "INVOICE_NOT_PENDING": "This invoice can no longer be paid.",
+    "ATTENDANCE_VERSION_CONFLICT": "Attendance has changed. Reload and review before saving.",
+    "ATTENDANCE_REASON_REQUIRED": "Enter a reason for changing past attendance.",
+    "SESSION_DATE_RESTRICTED": "This session is in the future, cancelled, or outside your editing permissions.",
+    "FEATURE_DISABLED": "This feature is not enabled for your center."
   },
   "validation": {
     "nameMin": "Name must be at least 2 characters",
