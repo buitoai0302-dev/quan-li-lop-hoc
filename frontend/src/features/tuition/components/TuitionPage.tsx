@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -9,6 +10,7 @@ import {
   Search,
   Receipt,
   CreditCard,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/common/UI';
 import { useTuitions, useDeleteTuition } from '../hooks/useTuition';
@@ -18,12 +20,13 @@ import PaymentModal from './PaymentModal';
 import TuitionReceiptModal from './TuitionReceiptModal';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
-import ActionHint from '@/components/common/ActionHint';
+import RowActions from '@/components/common/RowActions';
+import { useAuth } from '@/contexts/AuthContext';
 import ConfirmModal from '@/components/common/ConfirmModal';
 import { handleApiError } from '@/utils/errorHelper';
 import type { AxiosError } from 'axios';
 import type { ApiErrorData } from '@/utils/errorHelper';
-import { TUITION_STATUS } from '@/utils/constants';
+import { TUITION_STATUS, USER_ROLES } from '@/utils/constants';
 import { formatCurrency, formatDate } from '@/utils/formatters';
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> = {
@@ -51,6 +54,46 @@ const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> 
 
 const TuitionPage: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const { user } = useAuth();
+  const canDelete = user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.SUPER_ADMIN;
+  const getTuitionActions = (tuition: Tuition) => {
+    const canCollect =
+      tuition.status !== TUITION_STATUS.PAID && tuition.status !== TUITION_STATUS.WAIVED;
+    return [
+      ...(canCollect
+        ? [
+            {
+              label: t('tuition.collectMoney'),
+              icon: <DollarSign size={16} />,
+              mobilePrimary: true,
+              onClick: () => {
+                setSelectedTuition(tuition);
+                setShowPaymentModal(true);
+              },
+            },
+          ]
+        : []),
+      {
+        label: t('tuition.viewReceipt'),
+        icon: <Receipt size={16} />,
+        mobilePrimary: !canCollect,
+        onClick: () => {
+          setSelectedTuition(tuition);
+          setShowReceiptModal(true);
+        },
+      },
+      ...(canDelete
+        ? [
+            {
+              label: t('common.delete'),
+              icon: <Trash2 size={16} />,
+              tone: 'danger' as const,
+              onClick: () => setDeleteId(tuition.id),
+            },
+          ]
+        : []),
+    ];
+  };
 
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [searchQuery, setSearchQuery] = useState('');
@@ -61,7 +104,8 @@ const TuitionPage: React.FC = () => {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const { data, isLoading } = useTuitions(filters);
+  const pageQuery = useTuitions(filters);
+  const { data, isLoading } = pageQuery;
   const { mutate: deleteTuition, isPending: isDeleting } = useDeleteTuition();
 
   const tuitions = data?.data || [];
@@ -154,6 +198,15 @@ const TuitionPage: React.FC = () => {
 
   if (isLoading) return <PageLoading />;
 
+  const failedQueries = [pageQuery].filter((query) => query.isError && query.data === undefined);
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <PageHeader
@@ -230,7 +283,7 @@ const TuitionPage: React.FC = () => {
           />
         </div>
 
-        <div className="grid gap-3 lg:hidden">
+        <div className="grid gap-3 xl:hidden">
           {filtered.length === 0 && (
             <p className="rounded-xl bg-white p-6 text-center text-slate-500 dark:bg-slate-900">
               {t('tuition.emptyState')}
@@ -254,8 +307,8 @@ const TuitionPage: React.FC = () => {
                   </div>
                   <input
                     type="checkbox"
-                    aria-label={`${t('common.select', 'Chọn')} ${tuition.student_name}`}
                     className="h-5 w-5 shrink-0"
+                    aria-label={t('common.selectItem', { name: tuition.student_name })}
                     checked={selectedIds.includes(tuition.id)}
                     onChange={() => handleToggleSelect(tuition.id)}
                   />
@@ -272,53 +325,28 @@ const TuitionPage: React.FC = () => {
                   {t('tuition.paid')}: {formatCurrency(tuition.amount_paid)} ·{' '}
                   {t('tuition.dueDate')}: {formatDate(tuition.due_date, i18n.language)}
                 </p>
-                <div className="mt-4 flex flex-wrap gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-                  {tuition.status !== TUITION_STATUS.PAID &&
-                    tuition.status !== TUITION_STATUS.WAIVED && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedTuition(tuition);
-                          setShowPaymentModal(true);
-                        }}
-                        className="min-h-11 rounded-lg bg-indigo-600 px-3 text-sm font-bold text-white"
-                      >
-                        {t('tuition.collectMoney')}
-                      </button>
-                    )}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedTuition(tuition);
-                      setShowReceiptModal(true);
-                    }}
-                    className="min-h-11 rounded-lg bg-slate-100 px-3 text-sm font-bold text-slate-800 dark:bg-slate-700 dark:text-white"
-                  >
-                    {t('tuition.viewReceipt')}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteId(tuition.id)}
-                    className="min-h-11 rounded-lg px-3 text-sm font-bold text-rose-600"
-                  >
-                    {t('common.delete', 'Xóa')}
-                  </button>
+                <div className="flex justify-end border-t border-slate-100 pt-2 dark:border-slate-700">
+                  <RowActions actions={getTuitionActions(tuition)} />
                 </div>
               </article>
             );
           })}
         </div>
         {/* Table */}
-        <div className="hidden lg:block bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div className="hidden xl:block bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="management-table w-full border-separate border-spacing-0 sm:min-w-[700px] min-w-full">
+            <table className="management-table w-full table-fixed border-separate border-spacing-0">
               <thead className="bg-gray-50 dark:bg-slate-800 sticky top-0 z-10">
                 <tr>
-                  <th className="px-3 sm:px-4 py-3 border-b border-gray-100 dark:border-slate-700 w-10">
+                  <th className="px-3 sm:px-4 py-3 border-b border-gray-100 dark:border-slate-700 w-12">
                     <input
                       type="checkbox"
                       className="rounded border-gray-300 text-primary focus:ring-primary"
-                      checked={filtered.length > 0 && selectedIds.length === filtered.length}
+                      aria-label={t('common.selectAll')}
+                      checked={
+                        filtered.length > 0 &&
+                        filtered.every((item) => selectedIds.includes(item.id))
+                      }
                       onChange={handleToggleSelectAll}
                     />
                   </th>
@@ -333,7 +361,7 @@ const TuitionPage: React.FC = () => {
                   ].map((h, i) => (
                     <th
                       key={h}
-                      className={`px-3 sm:px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700 ${[1, 3, 4].includes(i) ? 'hidden sm:table-cell' : ''}`}
+                      className={`px-3 sm:px-4 py-3 text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-700 ${['', 'w-[18%]', 'w-32', 'w-36', 'w-28', 'w-28', 'w-32'][i]}`}
                     >
                       {h}
                     </th>
@@ -364,11 +392,12 @@ const TuitionPage: React.FC = () => {
                         <input
                           type="checkbox"
                           className="rounded border-gray-300 text-primary focus:ring-primary"
+                          aria-label={t('common.selectItem', { name: tuition.student_name })}
                           checked={selectedIds.includes(tuition.id)}
                           onChange={() => handleToggleSelect(tuition.id)}
                         />
                       </td>
-                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 py-3 break-words">
                         <div className="font-semibold text-sm text-gray-900 dark:text-white">
                           {tuition.student_name}
                         </div>
@@ -378,7 +407,7 @@ const TuitionPage: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
+                      <td className="px-3 py-3 break-words hidden sm:table-cell">
                         <div className="text-sm text-gray-700 dark:text-gray-300">
                           {tuition.class_name || '—'}
                         </div>
@@ -388,8 +417,8 @@ const TuitionPage: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                        <div className="font-bold text-sm text-gray-900 dark:text-white">
+                      <td className="px-3 py-3 break-words">
+                        <div className="font-bold text-sm tabular-nums text-gray-900 dark:text-white">
                           {formatCurrency(tuition.amount_due)}
                         </div>
                         {tuition.discount > 0 && (
@@ -398,12 +427,12 @@ const TuitionPage: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
-                        <div className="font-semibold text-sm text-emerald-600">
+                      <td className="px-3 py-3 break-words hidden sm:table-cell">
+                        <div className="font-semibold text-sm tabular-nums text-emerald-700 dark:text-emerald-300">
                           {formatCurrency(tuition.amount_paid)}
                         </div>
                         {tuition.amount_due > tuition.amount_paid && (
-                          <div className="text-[10px] text-rose-500">
+                          <div className="text-xs text-rose-700 dark:text-rose-300">
                             {t('tuition.remaining')}:{' '}
                             {formatCurrency(
                               Number(tuition.amount_due) - Number(tuition.amount_paid)
@@ -411,69 +440,23 @@ const TuitionPage: React.FC = () => {
                           </div>
                         )}
                       </td>
-                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
+                      <td className="px-3 py-3 break-words hidden sm:table-cell">
                         <span
                           className={`text-sm font-medium ${isOverdue && tuition.status !== TUITION_STATUS.PAID ? 'text-rose-500 font-bold' : 'text-gray-600 dark:text-gray-400'}`}
                         >
                           {formatDate(tuition.due_date, i18n.language)}
                         </span>
                       </td>
-                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
+                      <td className="px-3 py-3 break-words">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider ${StatusIcon ? statusCfg.color : 'bg-gray-100 text-gray-700'}`}
+                          className={`inline-flex max-w-full items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold ${StatusIcon ? statusCfg.color : 'bg-gray-100 text-gray-700'}`}
                         >
                           {StatusIcon && <StatusIcon size={12} strokeWidth={3} />}
                           {t(`tuition.statusLabels.${tuition.status}`)}
                         </span>
                       </td>
-                      <td className="px-3 sm:px-4 py-3 whitespace-nowrap">
-                        <div className="flex items-center gap-1">
-                          {tuition.status !== TUITION_STATUS.PAID &&
-                            tuition.status !== TUITION_STATUS.WAIVED && (
-                              <button
-                                onClick={() => {
-                                  setSelectedTuition(tuition);
-                                  setShowPaymentModal(true);
-                                }}
-                                className="px-3 py-1.5 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg font-bold text-xs transition-colors flex items-center gap-1.5"
-                              >
-                                <DollarSign size={14} />
-                                <span className="hidden sm:inline">
-                                  {t('tuition.collectMoney')}
-                                </span>
-                              </button>
-                            )}
-                          <button
-                            onClick={() => {
-                              setSelectedTuition(tuition);
-                              setShowReceiptModal(true);
-                            }}
-                            className="px-3 py-1.5 bg-gray-100 text-gray-700 dark:bg-slate-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-slate-600 rounded-lg font-bold text-xs transition-colors flex items-center gap-1.5"
-                          >
-                            <Receipt size={14} />
-                            <span className="hidden sm:inline">{t('tuition.viewReceipt')}</span>
-                          </button>
-                          <ActionHint label={t('common.delete')} showTouchLabel={false}>
-                            <button
-                              onClick={() => setDeleteId(tuition.id)}
-                              className="p-1.5 text-gray-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-900/20 rounded-lg transition-colors"
-                            >
-                              <svg
-                                className="w-3.5 h-3.5"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="currentColor"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={2}
-                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                                />
-                              </svg>
-                            </button>
-                          </ActionHint>
-                        </div>
+                      <td className="px-3 py-3 break-words">
+                        <RowActions actions={getTuitionActions(tuition)} />
                       </td>
                     </tr>
                   );
@@ -488,7 +471,9 @@ const TuitionPage: React.FC = () => {
       {selectedIds.length > 0 && (
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
           <div className="bg-slate-900 dark:bg-slate-800 text-white px-4 sm:px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-3 sm:gap-4">
-            <span className="font-bold text-sm">Đã chọn {selectedIds.length}</span>
+            <span className="font-bold text-sm">
+              {t('common.selectedCount', { count: selectedIds.length })}
+            </span>
             <div className="w-px h-6 bg-slate-700" />
             <div className="flex gap-2">
               <button
@@ -496,7 +481,7 @@ const TuitionPage: React.FC = () => {
                 className="px-3 sm:px-4 py-1.5 bg-primary hover:bg-primary-dark text-white rounded-lg font-bold text-xs sm:text-sm transition-colors flex items-center gap-2"
               >
                 <Receipt size={16} />
-                <span className="hidden sm:inline">Xuất Excel</span>
+                <span className="hidden sm:inline">{t('export.excel')}</span>
                 <span className="sm:hidden">Excel</span>
               </button>
               <button
@@ -504,7 +489,7 @@ const TuitionPage: React.FC = () => {
                 className="px-3 sm:px-4 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded-lg font-bold text-xs sm:text-sm transition-colors flex items-center gap-2"
               >
                 <Receipt size={16} />
-                <span className="hidden sm:inline">Xuất PDF</span>
+                <span className="hidden sm:inline">{t('export.pdf')}</span>
                 <span className="sm:hidden">PDF</span>
               </button>
             </div>

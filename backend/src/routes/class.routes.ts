@@ -14,45 +14,11 @@ import {
 import { enforceLimit } from '../middlewares/feature.middleware';
 import { requireRole } from '../middlewares/auth.middleware';
 import { validateUUID, validate } from '../middlewares/validate.middleware';
-import { z } from 'zod';
-
-const recurringScheduleSchema = z.object({
-  day_of_week: z.string().min(1),
-  start_time: z.string().min(1),
-  end_time: z.string().min(1),
-  room_id: z.string().uuid().optional().nullable(),
-  notes: z.string().optional().nullable(),
-});
-
-const classBodySchema = z.object({
-  branch_id: z.string().uuid('ID chi nhánh không hợp lệ'),
-  subject_id: z.string().uuid().optional().nullable(),
-  teacher_id: z.string().uuid().optional().nullable(),
-  name: z.string().min(1, 'Tên lớp không được để trống'),
-  max_capacity: z.number().int().positive().optional(),
-  start_date: z.string().optional().nullable(),
-  end_date: z.string().optional().nullable(),
-  recurring_schedules: z.array(recurringScheduleSchema).optional(),
-  enrollments: z.array(z.string().uuid()).optional(),
-});
-const createClassSchema = z.object({ body: classBodySchema });
-
-const updateClassSchema = z.object({
-  body: classBodySchema.partial().extend({
-    status: z.string().optional(),
-  }),
-});
-
-const enrollStudentSchema = z.object({
-  body: z
-    .object({
-      student_id: z.string().uuid().optional(),
-      student_ids: z.array(z.string().uuid()).optional(),
-    })
-    .refine((data) => data.student_id || (data.student_ids && data.student_ids.length > 0), {
-      message: 'Vui lòng cung cấp ít nhất một học sinh (student_id hoặc student_ids)',
-    }),
-});
+import {
+  createClassSchema,
+  updateClassSchema,
+  enrollStudentSchema,
+} from '../validators/class.validator';
 
 const router = Router();
 

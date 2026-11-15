@@ -1,75 +1,78 @@
 import { logger } from '../utils/logger';
-import { Request, Response } from 'express';
-import { getAuthUrl, handleCallback, syncAllSessionsToGoogle } from '../services/google.service';
-import pool from '../db';
-
-import jwt from 'jsonwebtoken';
-
+import { type Response, type NextFunction, type CookieOptions } from 'express';
+import type { AuthRequest } from '../middlewares/auth.middleware';
+import { syncAllSessionsToGoogle } from '../services/google.service';
+import {
+  startGoogleConnection,
+  completeGoogleConnection,
+  disconnectGoogleConnection,
+  GOOGLE_OAUTH_LIFETIME_MS,
+} from '../services/google-oauth.service';
 import { config } from '../utils/config';
-import { ROLES } from '../utils/constants';
+import { ERROR_CODES } from '../utils/constants';
+import { AppError, AuthenticationError } from '../utils/errors';
 
-export const googleAuthUrl = (req: Request, res: Response) => {
-  const userId = (req as any).user?.userId;
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+const GOOGLE_OAUTH_COOKIE = 'eduschedule_google_oauth';
+const oauthCookieOptions = (): CookieOptions => ({
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+  path: '/api/google',
+});
 
-  // Sign the state to prevent CSRF
-  const state = jwt.sign({ userId }, config.jwtSecret(), { expiresIn: '15m' });
-
-  const url = getAuthUrl(state, (req as any).user?.role === ROLES.SUPER_ADMIN);
-  res.json({ url });
-};
-
-export const googleCallback = async (req: Request, res: Response) => {
-  const { code, state } = req.query;
-
-  if (!code || !state || typeof state !== 'string') {
-    return res.status(400).send('Invalid callback parameters');
-  }
-
+export const googleAuthUrl = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    // Verify the signed state
-    const decoded = jwt.verify(state, config.jwtSecret()) as { userId: string };
-    const userId = decoded.userId;
-
-    await handleCallback(code as string, userId);
-    // Sau khi lưu token xong, redirect về frontend setting page
-    const frontendUrl = config.frontendUrl();
-    res.redirect(`${frontendUrl}/settings?google_sync=success`);
+    if (!req.user) throw new AuthenticationError();
+    const { url, browserNonce } = await startGoogleConnection(req.user);
+    res.cookie(GOOGLE_OAUTH_COOKIE, browserNonce, {
+      ...oauthCookieOptions(),
+      maxAge: GOOGLE_OAUTH_LIFETIME_MS,
+    });
+    res.setHeader('Cache-Control', 'no-store');
+    res.json({ url });
   } catch (error) {
-    logger.error(error, 'Google callback error:');
-    res.status(500).send('Lỗi khi kết nối Google Calendar');
+    next(error);
   }
 };
 
-export const disconnectGoogle = async (req: Request, res: Response) => {
-  const userId = (req as any).user?.userId;
-  if (!userId) return res.status(401).json({ error: 'Unauthorized' });
-
+export const googleCallback = async (req: AuthRequest, res: Response) => {
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.clearCookie(GOOGLE_OAUTH_COOKIE, oauthCookieOptions());
   try {
-    await pool.query(
-      'UPDATE users SET google_access_token = NULL, google_refresh_token = NULL, google_calendar_id = NULL WHERE id = $1',
-      [userId]
+    await completeGoogleConnection(
+      req.query.code,
+      req.query.state,
+      req.cookies?.[GOOGLE_OAUTH_COOKIE]
     );
+    res.redirect(`${config.frontendUrl()}/settings?google_sync=success`);
+  } catch (error) {
+    const code =
+      error instanceof AppError && error.errorCode === ERROR_CODES.GOOGLE_OAUTH_INVALID_STATE
+        ? ERROR_CODES.GOOGLE_OAUTH_INVALID_STATE
+        : ERROR_CODES.GOOGLE_CONNECTION_FAILED;
+    // Provider errors may contain authorization codes/client secrets. Log metadata only.
+    logger.warn({ operation: 'GOOGLE_OAUTH_CALLBACK_FAILED', code }, 'Google connection rejected');
+    res.redirect(`${config.frontendUrl()}/settings?google_sync=error&code=${code}`);
+  }
+};
+
+export const disconnectGoogle = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) throw new AuthenticationError();
+    await disconnectGoogleConnection(req.user.userId, req.user.tenantId);
     res.json({ message: 'Đã ngắt kết nối Google Calendar' });
   } catch (error) {
-    res.status(500).json({ error: 'Internal server error' });
+    next(error);
   }
 };
 
-export const syncAll = async (req: Request, res: Response) => {
-  const userId = (req as any).user?.userId;
-  const tenantId = (req as any).user?.tenantId;
-  const userRole = (req as any).user?.role;
-
-  logger.info(`[GoogleSync] Request from user ${userId}, role: ${userRole}, tenantId: ${tenantId}`);
-
-  if (!userId || !tenantId) return res.status(401).json({ error: 'Unauthorized' });
-
+export const syncAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const count = await syncAllSessionsToGoogle(userId, tenantId);
+    if (!req.user) throw new AuthenticationError();
+    const count = await syncAllSessionsToGoogle(req.user.userId, req.user.tenantId);
     res.json({ message: `Đã đồng bộ thành công ${count} buổi học lên Google Calendar`, count });
-  } catch (error: any) {
-    logger.error(error, 'Sync all error:');
-    res.status(500).json({ error: error.message || 'Lỗi khi đồng bộ dữ liệu' });
+  } catch (error) {
+    next(error);
   }
 };

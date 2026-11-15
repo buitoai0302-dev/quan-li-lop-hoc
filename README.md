@@ -27,7 +27,7 @@ Các trang giao diện nằm chủ yếu trong `frontend/src/features/`; compone
 
 ## Chạy local
 
-Yêu cầu Node.js 20 và PostgreSQL tương thích (có thể dùng Neon hoặc PostgreSQL local). Các lệnh dưới đây chạy từ thư mục gốc dự án; mở **hai terminal** cho backend và frontend.
+Yêu cầu Node.js từ 22.12 trở lên (CI dùng Node.js 22) và PostgreSQL tương thích (có thể dùng Neon hoặc PostgreSQL local). Các lệnh dưới đây chạy từ thư mục gốc dự án; mở **hai terminal** cho backend và frontend.
 
 ### 1. Cấu hình backend
 

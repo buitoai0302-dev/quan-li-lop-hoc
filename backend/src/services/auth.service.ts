@@ -1,5 +1,4 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import pool from '../db';
 import { OAuth2Client } from 'google-auth-library';
@@ -18,9 +17,10 @@ import {
   NotFoundError,
   TooManyRequestsError,
 } from '../utils/errors';
-import { config } from '../utils/config';
 import { ERROR_CODES, PLAN_CODES, TENANT_STATUS, ROLES } from '../utils/constants';
 import { getFreePlanId } from '../utils/plans';
+import { createSessionTokens, rotateSessionTokens, type SessionUser } from './auth-session.service';
+import { toPublicAuthUser, type AuthUser } from './auth-user';
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -33,27 +33,8 @@ export class AuthService {
     return { valid: true };
   }
 
-  static async issueTokens(user: any) {
-    const payload = {
-      userId: user.id || user.user_id,
-      tenantId: user.tenant_id,
-      branchId: user.branch_id,
-      role: user.role,
-      email: user.email,
-    };
-
-    const accessToken = jwt.sign(payload, config.jwtSecret(), {
-      expiresIn: config.jwtExpiresIn() as any,
-    });
-    const refreshToken = crypto.randomBytes(64).toString('hex');
-    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 ngày
-
-    await pool.query(
-      'INSERT INTO refresh_tokens (user_id, token, expires_at) VALUES ($1, $2, $3)',
-      [payload.userId, refreshToken, expiresAt]
-    );
-
-    return { accessToken, refreshToken };
+  static async issueTokens(user: SessionUser) {
+    return createSessionTokens(user);
   }
 
   static async login(email: string, password: string, ip: string) {
@@ -67,8 +48,12 @@ export class AuthService {
       );
     }
 
-    const result = await pool.query(
-      `SELECT u.*, t.name as tenant_name, t.plan_id, t.is_active as tenant_active, t.settings as tenant_settings, pd.code as plan_code,
+    const result = await pool.query<AuthUser>(
+      `SELECT u.id, u.tenant_id, u.branch_id, u.email, u.full_name, u.role,
+              u.password_hash, u.session_version, u.is_active, u.is_email_verified,
+              u.onboarding_completed, u.notify_upcoming_sessions,
+              (u.google_refresh_token IS NOT NULL) AS is_google_connected,
+              t.name as tenant_name, t.plan_id, t.is_active as tenant_active, t.settings as tenant_settings, pd.code as plan_code,
               t.signup_plan_id, t.signup_billing_cycle, sp.code as signup_plan_code,
               (SELECT COALESCE(json_object_agg(feature_key, is_enabled), '{}'::json) FROM plan_features WHERE plan_id = t.plan_id) as plan_features
        FROM users u 
@@ -126,10 +111,7 @@ export class AuthService {
     await clearAttempts(ip, email);
 
     const { accessToken, refreshToken } = await this.issueTokens(user);
-    const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } =
-      user;
-
-    return { accessToken, refreshToken, user: userWithoutSensitive };
+    return { accessToken, refreshToken, user: toPublicAuthUser(user) };
   }
 
   static async googleLogin(credential: string) {
@@ -145,8 +127,12 @@ export class AuthService {
     const email = payload.email;
     const fullName = payload.name || email.split('@')[0];
 
-    const result = await pool.query(
-      `SELECT u.*, t.name as tenant_name, t.plan_id, t.is_active as tenant_active, t.settings as tenant_settings, pd.code as plan_code,
+    const result = await pool.query<AuthUser>(
+      `SELECT u.id, u.tenant_id, u.branch_id, u.email, u.full_name, u.role,
+              u.password_hash, u.session_version, u.is_active, u.is_email_verified,
+              u.onboarding_completed, u.notify_upcoming_sessions,
+              (u.google_refresh_token IS NOT NULL) AS is_google_connected,
+              t.name as tenant_name, t.plan_id, t.is_active as tenant_active, t.settings as tenant_settings, pd.code as plan_code,
               t.signup_plan_id, t.signup_billing_cycle, sp.code as signup_plan_code,
               (SELECT COALESCE(json_object_agg(feature_key, is_enabled), '{}'::json) FROM plan_features WHERE plan_id = t.plan_id) as plan_features
        FROM users u 
@@ -157,7 +143,7 @@ export class AuthService {
       [email]
     );
 
-    let user;
+    let user: AuthUser;
 
     if (result.rows.length === 0) {
       const client = await pool.connect();
@@ -174,9 +160,12 @@ export class AuthService {
         const newTenant = tenantResult.rows[0];
 
         const dummyPassword = await bcrypt.hash(crypto.randomBytes(16).toString('hex'), 10);
-        const userResult = await client.query(
+        const userResult = await client.query<AuthUser>(
           `INSERT INTO users (tenant_id, email, password_hash, full_name, role, is_email_verified) 
-           VALUES ($1, $2, $3, $4, 'admin', true) RETURNING *`,
+           VALUES ($1, $2, $3, $4, 'admin', true)
+           RETURNING id, tenant_id, branch_id, email, full_name, role, is_active,
+                     is_email_verified, onboarding_completed, notify_upcoming_sessions,
+                     session_version, false AS is_google_connected`,
           [newTenant.id, email, dummyPassword, fullName]
         );
         user = {
@@ -213,14 +202,15 @@ export class AuthService {
     }
 
     if (!user.is_email_verified) {
-      await pool.query('UPDATE users SET is_email_verified = true WHERE id = $1', [user.id]);
+      await pool.query(
+        'UPDATE users SET is_email_verified = true WHERE id = $1 AND tenant_id = $2',
+        [user.id, user.tenant_id]
+      );
+      user.is_email_verified = true;
     }
 
     const { accessToken, refreshToken } = await this.issueTokens(user);
-    const { password_hash, verification_token, reset_password_token, ...userWithoutSensitive } =
-      user;
-
-    return { accessToken, refreshToken, user: userWithoutSensitive };
+    return { accessToken, refreshToken, user: toPublicAuthUser(user) };
   }
 
   static async register(data: any) {
@@ -383,39 +373,40 @@ export class AuthService {
     return { message: 'Sent', code: 'FORGOT_PASSWORD_SENT' };
   }
 
-  static async resetPassword(data: any) {
+  static async resetPassword(data: { token: string; password: string }) {
     const { token, password } = data;
-
     const pwCheck = this.validatePassword(password);
-    if (!pwCheck.valid) {
-      throw new ValidationError('Weak password', pwCheck.errorCode);
+    if (!pwCheck.valid) throw new ValidationError('Weak password', pwCheck.errorCode);
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      // Conditional UPDATE consumes the token once. The password trigger revokes
+      // refresh tokens and increments the access-session version in this transaction.
+      const result = await client.query(
+        `UPDATE users
+         SET password_hash = $1, reset_password_token = NULL, reset_password_expires = NULL,
+             is_email_verified = true, verification_token = NULL, verification_token_expires = NULL
+         WHERE reset_password_token = $2 AND reset_password_expires > clock_timestamp()
+         RETURNING id`,
+        [passwordHash, token]
+      );
+      if (result.rowCount !== 1) {
+        throw new ValidationError('Token expired', ERROR_CODES.RESET_PASSWORD_EXPIRED);
+      }
+      await client.query('COMMIT');
+      return { message: 'Success', code: 'RESET_PASSWORD_SUCCESS' };
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
-
-    const result = await pool.query(
-      'SELECT id FROM users WHERE reset_password_token = $1 AND reset_password_expires > NOW()',
-      [token]
-    );
-
-    if (result.rows.length === 0) {
-      throw new ValidationError('Token expired', ERROR_CODES.RESET_PASSWORD_EXPIRED);
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    const passwordHash = await bcrypt.hash(password, salt);
-
-    await pool.query(
-      `UPDATE users 
-       SET password_hash = $1, reset_password_token = NULL, reset_password_expires = NULL,
-           is_email_verified = true, verification_token = NULL, verification_token_expires = NULL
-       WHERE id = $2`,
-      [passwordHash, result.rows[0].id]
-    );
-
-    return { message: 'Success', code: 'RESET_PASSWORD_SUCCESS' };
   }
 
   static async getMe(userId: string) {
-    const result = await pool.query(
+    const result = await pool.query<AuthUser>(
       `SELECT u.id, u.tenant_id, u.branch_id, u.email, u.full_name, u.role, 
               u.onboarding_completed,
               u.notify_upcoming_sessions,
@@ -460,28 +451,7 @@ export class AuthService {
   }
 
   static async refreshToken(token: string) {
-    const result = await pool.query(
-      `DELETE FROM refresh_tokens rt
-       USING users u, tenants t
-       WHERE rt.token = $1 AND rt.expires_at > NOW()
-         AND rt.user_id = u.id AND u.tenant_id = t.id
-         AND u.is_active = true AND (t.is_active = true OR u.role = 'super_admin')
-       RETURNING u.id AS user_id, u.tenant_id, u.branch_id, u.role, u.email`,
-      [token]
-    );
-
-    if (result.rows.length === 0) {
-      throw new AuthenticationError(
-        'Invalid or expired refresh token',
-        ERROR_CODES.INVALID_REFRESH_TOKEN
-      );
-    }
-
-    const user = result.rows[0];
-
-    const { accessToken, refreshToken: newRefreshToken } = await this.issueTokens(user);
-
-    return { accessToken, refreshToken: newRefreshToken };
+    return rotateSessionTokens(token);
   }
 
   static async logout(token: string | undefined) {

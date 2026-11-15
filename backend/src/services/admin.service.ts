@@ -324,7 +324,7 @@ export class AdminService {
     }
 
     const userEmail = result.rows[0].email;
-    await pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [id]);
+    // Password-change trigger revokes sessions in the same atomic update.
     sendPasswordResetEmail(userEmail, resetToken).catch((err) =>
       logger.error(err, '[Admin] Failed to send reset password email:')
     );

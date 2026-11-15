@@ -18,30 +18,31 @@ const BranchTable: React.FC<BranchTableProps> = ({
 
   return (
     <div className="w-full overflow-x-auto">
-      <table className="management-table w-full border-separate border-spacing-0">
+      <table className="management-table w-full table-fixed border-separate border-spacing-0">
         <thead className="bg-gray-50 dark:bg-slate-900 sticky top-0 z-20 transition-colors">
           <tr>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left w-12 border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-left  border-b border-gray-100 dark:border-slate-800 shadow-sm w-10 sm:w-12">
               {onSelectAll && (
                 <input
                   type="checkbox"
                   className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
+                  aria-label={t('common.selectAll')}
                   checked={allSelected}
                   onChange={(e) => onSelectAll(e.target.checked)}
                 />
               )}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm ">
               {t('branches.name')}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden md:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden xl:table-cell px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm w-[30%]">
               {t('branches.address')}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden sm:table-cell px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm w-32">
               {t('branches.phone')}
             </th>
 
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm w-26 sm:w-28">
               {t('common.actions')}
             </th>
           </tr>
@@ -52,40 +53,41 @@ const BranchTable: React.FC<BranchTableProps> = ({
               key={branch.id}
               className={`hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors group ${selectedIds.includes(branch.id) ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
             >
-              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+              <td className="px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap">
                 {onSelectOne && (
                   <input
                     type="checkbox"
                     className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
+                    aria-label={t('common.selectItem', { name: branch.name })}
                     checked={selectedIds.includes(branch.id)}
                     onChange={(e) => onSelectOne(branch.id, e.target.checked)}
                   />
                 )}
               </td>
-              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs shrink-0 relative">
+              <td className="px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap">
+                <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                  <div className="h-8 w-8 sm:h-10 sm:w-10 bg-primary/10 rounded-xl flex items-center justify-center text-primary font-black text-xs shrink-0 relative">
                     {branch.name.charAt(0).toUpperCase()}
                     <ActiveIndicator active={Boolean(branch.is_active)} />
                   </div>
                   <div className="min-w-0">
-                    <div className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate group-hover:text-primary transition-colors">
+                    <div className="whitespace-normal break-words text-sm font-semibold text-gray-900 dark:text-gray-100 group-hover:text-primary transition-colors">
                       {branch.name}
                     </div>
-                    <div className="text-[10px] text-gray-500 truncate md:hidden">
+                    <div className="text-xs text-slate-600 dark:text-slate-400 truncate xl:hidden">
                       {branch.address}
                     </div>
                   </div>
                 </div>
               </td>
-              <td className="hidden md:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs font-bold text-gray-600 dark:text-gray-400 truncate max-w-xs">
+              <td className="hidden xl:table-cell px-2 sm:px-3 py-3 sm:py-4 whitespace-normal break-words text-xs font-medium text-gray-600 dark:text-gray-400 truncate max-w-xs">
                 {branch.address || '---'}
               </td>
-              <td className="hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
+              <td className="hidden sm:table-cell px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-xs text-gray-600 dark:text-gray-400">
                 {branch.phone || '---'}
               </td>
 
-              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
+              <td className="px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-right">
                 <div className="flex justify-end gap-1 sm:gap-2">
                   <ActionHint label={t('common.edit')} showTouchLabel={false}>
                     <button

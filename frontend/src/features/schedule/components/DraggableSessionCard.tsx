@@ -1,61 +1,68 @@
 import React from 'react';
 import { useDraggable } from '@dnd-kit/core';
-import { CSS } from '@dnd-kit/utilities';
 import { Edit2, GripVertical, User, MapPin } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/common/UI';
 import type { Session } from '@/types';
 
 import { getColorByClassId } from '@/utils/sessionColors';
+import { SCHEDULE_DRAG_TYPES } from '../utils/scheduleDrag';
 
 interface DraggableSessionCardProps {
   session: Session;
   onEdit?: (session: Session) => void;
   onView?: (session: Session) => void;
+  dragDisabled?: boolean;
 }
 
-const DraggableSessionCard: React.FC<DraggableSessionCardProps> = ({ session, onEdit, onView }) => {
+const DraggableSessionCard: React.FC<DraggableSessionCardProps> = ({
+  session,
+  onEdit,
+  onView,
+  dragDisabled = false,
+}) => {
   const { user } = useAuth();
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { t } = useTranslation();
+  const { attributes, listeners, setNodeRef, setActivatorNodeRef, isDragging } = useDraggable({
     id: session.id,
     data: {
-      type: 'Session',
+      type: SCHEDULE_DRAG_TYPES.SESSION,
       session,
     },
-    disabled: !onEdit,
+    disabled: !onEdit || dragDisabled,
   });
-
-  const style = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 100 : 'auto',
-  };
 
   const color = getColorByClassId(session.class_id);
 
   return (
     <div
       ref={setNodeRef}
-      style={style}
-      className={`relative p-1.5 sm:p-2 ${color.bg} bg-opacity-70 dark:bg-opacity-40 backdrop-blur-md border ${color.border} rounded-lg shadow-sm hover:shadow-xl hover:scale-[1.02] transition-all cursor-grab group ${
-        isDragging ? 'drag-overlay opacity-50' : ''
+      data-session-id={session.id}
+      className={`relative min-w-0 p-1.5 sm:p-2 ${color.bg} bg-opacity-70 dark:bg-opacity-40 backdrop-blur-md border ${color.border} rounded-lg shadow-sm hover:shadow-md transition-shadow group ${
+        isDragging ? 'opacity-40' : ''
       }`}
     >
-      {/* Drag Handle - Only for desktop or dedicated drag area */}
-      <button
-        type="button"
-        aria-label={`Kéo buổi học ${session.class_name || ''}`}
-        {...listeners}
-        {...attributes}
-        className="absolute top-1 left-0.5 p-1 text-gray-400 hover:text-primary cursor-grab active:cursor-grabbing z-10"
-      >
-        <GripVertical size={10} />
-      </button>
+      {onEdit && (
+        <button
+          ref={setActivatorNodeRef}
+          type="button"
+          disabled={dragDisabled}
+          data-session-drag-handle
+          aria-label={t('schedule.dragSession', { name: session.class_name })}
+          title={t('schedule.dragToChangeDate')}
+          {...listeners}
+          {...attributes}
+          className="absolute top-1 left-0.5 size-9 sm:size-8 flex items-center justify-center rounded-md text-slate-500 dark:text-slate-300 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary cursor-grab active:cursor-grabbing touch-none disabled:cursor-wait z-10"
+        >
+          <GripVertical size={16} aria-hidden="true" />
+        </button>
+      )}
 
       {onEdit && (
         <button
           type="button"
-          aria-label={`Sửa buổi học ${session.class_name || ''}`}
+          aria-label={t('schedule.editSessionLabel', { name: session.class_name })}
           className={`absolute top-1 right-1 min-h-10 min-w-10 flex items-center justify-center bg-white dark:bg-slate-800 rounded shadow-sm opacity-100 sm:opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-pointer hover:scale-110 z-10`}
           onClick={(e) => {
             e.stopPropagation();
@@ -69,21 +76,22 @@ const DraggableSessionCard: React.FC<DraggableSessionCardProps> = ({ session, on
       <button
         type="button"
         disabled={!onView}
-        aria-label={`Xem buổi học ${session.class_name || ''}`}
-        className="h-full w-full select-none relative pt-4 text-left"
+        aria-label={t('schedule.viewSession', { name: session.class_name })}
+        onMouseDown={(event) => listeners?.onMouseDown?.(event)}
+        className={`h-full w-full select-none relative text-left ${onEdit ? 'pt-9 sm:cursor-grab active:cursor-grabbing' : 'pt-1'}`}
         onClick={() => onView?.(session)}
       >
         <div
           className={`font-black ${color.text} text-xs sm:text-sm truncate pr-3 leading-tight uppercase tracking-tight`}
         >
-          {session.class_name || 'Class'}
+          {session.class_name || t('common.class')}
         </div>
 
         <div className="mt-1.5 flex flex-col gap-1">
           <Badge
             variant="outline"
             size="sm"
-            className={`${color.accent} bg-white/60 dark:bg-black/30 border-none font-black text-[10px] w-fit px-1.5 py-0.5`}
+            className={`${color.accent} bg-white/60 dark:bg-black/30 border-none font-semibold text-[10px] tracking-normal tabular-nums whitespace-nowrap max-w-full w-fit px-1 py-0.5`}
           >
             {session.start_time.substring(0, 5)} - {session.end_time.substring(0, 5)}
           </Badge>

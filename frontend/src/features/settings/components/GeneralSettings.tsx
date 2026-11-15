@@ -1,18 +1,18 @@
-import React from 'react';
-
+import { useId, type FormEvent } from 'react';
 import type { TFunction } from 'i18next';
+import { Button, Input, Label } from '@/components/common/UI';
 
 interface GeneralSettingsProps {
   centerName: string;
   setCenterName: (name: string) => void;
   contactEmail: string;
   setContactEmail: (email: string) => void;
-  onSave: (e: React.FormEvent) => void;
+  onSave: (event: FormEvent) => void;
   saving: boolean;
   t: TFunction;
 }
 
-const GeneralSettings: React.FC<GeneralSettingsProps> = ({
+export default function GeneralSettings({
   centerName,
   setCenterName,
   contactEmail,
@@ -20,55 +20,48 @@ const GeneralSettings: React.FC<GeneralSettingsProps> = ({
   onSave,
   saving,
   t,
-}) => {
+}: GeneralSettingsProps) {
+  const fieldId = useId();
   return (
-    <section className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="border-b border-gray-100 dark:border-gray-700 pb-8">
-        <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+    <form onSubmit={onSave} className="space-y-6">
+      <div className="border-b border-slate-200 pb-4 dark:border-slate-700">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
           {t('settings.basicInfo')}
-        </h3>
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        </h2>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           {t('settings.basicInfoDesc')}
         </p>
       </div>
-
-      <div className="grid grid-cols-1 gap-8">
-        <div className="space-y-2.5">
-          <label className="block text-[11px] font-black uppercase tracking-widest text-gray-400 ml-1">
-            {t('settings.centerName')}
-          </label>
-          <input
-            type="text"
+      <fieldset disabled={saving} className="grid gap-5">
+        <div className="space-y-2">
+          <Label htmlFor={`${fieldId}-name`}>{t('settings.centerName')}</Label>
+          <Input
+            id={`${fieldId}-name`}
+            name="name"
+            autoComplete="organization"
+            required
             value={centerName}
-            onChange={(e) => setCenterName(e.target.value)}
-            className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-6 py-4 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
+            onChange={(event) => setCenterName(event.target.value)}
+            className="text-base sm:text-sm"
           />
         </div>
-
-        <div className="space-y-2.5">
-          <label className="block text-[11px] font-black uppercase tracking-widest text-gray-400 ml-1">
-            {t('settings.contactEmail')}
-          </label>
-          <input
+        <div className="space-y-2">
+          <Label htmlFor={`${fieldId}-email`}>{t('settings.contactEmail')}</Label>
+          <Input
+            id={`${fieldId}-email`}
+            name="contact_email"
             type="email"
+            autoComplete="email"
+            spellCheck={false}
             value={contactEmail}
-            onChange={(e) => setContactEmail(e.target.value)}
-            className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-6 py-4 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
+            onChange={(event) => setContactEmail(event.target.value)}
+            className="text-base sm:text-sm"
           />
         </div>
-      </div>
-
-      <div className="pt-8">
-        <button
-          onClick={onSave}
-          disabled={saving}
-          className="w-full sm:w-auto px-12 py-4 bg-primary hover:bg-primary-dark text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
-        >
-          {saving ? t('common.loading') : t('common.save')}
-        </button>
-      </div>
-    </section>
+      </fieldset>
+      <Button type="submit" loading={saving} className="w-full sm:w-auto">
+        {t('common.save')}
+      </Button>
+    </form>
   );
-};
-
-export default GeneralSettings;
+}

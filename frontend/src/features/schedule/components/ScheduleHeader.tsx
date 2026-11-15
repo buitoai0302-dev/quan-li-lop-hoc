@@ -200,37 +200,39 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
       >
         <div className="min-h-0 overflow-hidden">
           <div className="border-t border-gray-100 bg-gray-50/80 px-4 pb-4 pt-2 dark:border-gray-800 dark:bg-gray-900/80 sm:px-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-2.5">
               {/* Branch Filter */}
-              <div className="flex-1 space-y-2">
-                <Label
-                  htmlFor="schedule-branch"
-                  className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-xs ml-1"
-                >
-                  <MapPin size={12} className="text-primary/70" />
-                  {t('common.branch')}
-                </Label>
-                <Select
-                  id="schedule-branch"
-                  value={selectedBranch}
-                  onChange={(e) => setSelectedBranch(e.target.value)}
-                  size="sm"
-                >
-                  <option value="">{t('common.allBranches')}</option>
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </Select>
-              </div>
+              {user?.role !== USER_ROLES.STUDENT && (
+                <div className="min-w-0 space-y-1.5">
+                  <Label
+                    htmlFor="schedule-branch"
+                    className="flex items-center gap-1.5 text-sm ml-1"
+                  >
+                    <MapPin size={12} className="text-primary/70" />
+                    {t('common.branch')}
+                  </Label>
+                  <Select
+                    id="schedule-branch"
+                    value={selectedBranch}
+                    onChange={(e) => setSelectedBranch(e.target.value)}
+                    size="sm"
+                  >
+                    <option value="">{t('common.allBranches')}</option>
+                    {branches.map((b) => (
+                      <option key={b.id} value={b.id}>
+                        {b.name}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
+              )}
 
               {/* Teacher Filter */}
-              {user?.role !== USER_ROLES.TEACHER && (
-                <div className="flex-1 space-y-2">
+              {user?.role !== USER_ROLES.TEACHER && user?.role !== USER_ROLES.STUDENT && (
+                <div className="min-w-0 space-y-1.5">
                   <Label
                     htmlFor="schedule-teacher"
-                    className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-xs ml-1"
+                    className="flex items-center gap-1.5 text-sm ml-1"
                   >
                     <User size={12} className="text-primary/70" />
                     {t('schedule.teacher')}
@@ -254,11 +256,8 @@ const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
               )}
 
               {/* Class Filter */}
-              <div className="flex-1 space-y-2">
-                <Label
-                  htmlFor="schedule-class"
-                  className="uppercase tracking-[0.15em] flex items-center gap-1.5 text-xs ml-1"
-                >
+              <div className="min-w-0 space-y-1.5">
+                <Label htmlFor="schedule-class" className="flex items-center gap-1.5 text-sm ml-1">
                   <BookOpen size={12} className="text-primary/70" />
                   {t('menu.classes')}
                 </Label>

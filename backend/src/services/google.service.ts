@@ -1,9 +1,16 @@
 import { logger } from '../utils/logger';
-import { google } from 'googleapis';
+import { google, type calendar_v3 } from 'googleapis';
 import pool from '../db';
 import fs from 'fs';
 
 import { config } from '../utils/config';
+import { SESSION_STATUS, VIETNAM_TIME_ZONE, ERROR_CODES, ROLES } from '../utils/constants';
+import { AppError, AuthenticationError } from '../utils/errors';
+import { CodeChallengeMethod } from 'google-auth-library';
+
+const PRIMARY_CALENDAR = 'primary';
+const VIETNAM_UTC_OFFSET = '+07:00';
+const pendingScheduleSyncs = new Map<string, Promise<boolean>>();
 
 const oauth2Client = new google.auth.OAuth2(
   config.google.clientId(),
@@ -11,7 +18,7 @@ const oauth2Client = new google.auth.OAuth2(
   config.google.redirectUri()
 );
 
-export const getAuthUrl = (state: string, includeDrive: boolean) => {
+export const getAuthUrl = (state: string, includeDrive: boolean, codeChallenge: string) => {
   return oauth2Client.generateAuthUrl({
     access_type: 'offline',
     scope: [
@@ -19,29 +26,46 @@ export const getAuthUrl = (state: string, includeDrive: boolean) => {
       ...(includeDrive ? ['https://www.googleapis.com/auth/drive.file'] : []),
     ],
     state: state,
+    code_challenge: codeChallenge,
+    code_challenge_method: CodeChallengeMethod.S256,
     prompt: 'consent', // Để luôn trả về refresh_token
   });
 };
 
-export const handleCallback = async (code: string, userId: string) => {
-  const { tokens } = await oauth2Client.getToken(code);
+export const handleCallback = async (
+  code: string,
+  userId: string,
+  tenantId: string,
+  sessionVersion: number,
+  codeVerifier: string
+) => {
+  const { tokens } = await oauth2Client.getToken({ code, codeVerifier });
 
-  await pool.query(
-    'UPDATE users SET google_access_token = $1, google_refresh_token = $2 WHERE id = $3',
-    [tokens.access_token, tokens.refresh_token, userId]
+  const result = await pool.query(
+    `UPDATE users u SET google_access_token = $1,
+       google_refresh_token = COALESCE($2, u.google_refresh_token)
+     FROM tenants t
+     WHERE u.id = $3 AND u.tenant_id = $4 AND u.session_version = $5
+       AND t.id = u.tenant_id AND u.is_active = true AND (t.is_active = true OR u.role = $6)
+     RETURNING u.id`,
+    [tokens.access_token, tokens.refresh_token, userId, tenantId, sessionVersion, ROLES.SUPER_ADMIN]
   );
-
-  return tokens;
+  if (result.rowCount !== 1) {
+    throw new AuthenticationError(
+      'Google connection session revoked',
+      ERROR_CODES.GOOGLE_OAUTH_INVALID_STATE
+    );
+  }
 };
 
-const getClientForUser = async (userId: string) => {
+const getClientForUser = async (userId: string, tenantId: string) => {
   const result = await pool.query(
-    'SELECT google_access_token, google_refresh_token FROM users WHERE id = $1',
-    [userId]
+    'SELECT google_access_token, google_refresh_token FROM users WHERE id = $1 AND tenant_id = $2 AND is_active = true',
+    [userId, tenantId]
   );
 
   const user = result.rows[0];
-  if (!user || !user.google_access_token) return null;
+  if (!user || (!user.google_access_token && !user.google_refresh_token)) return null;
 
   const client = new google.auth.OAuth2(config.google.clientId(), config.google.clientSecret());
 
@@ -53,16 +77,57 @@ const getClientForUser = async (userId: string) => {
   return google.calendar({ version: 'v3', auth: client });
 };
 
-export const syncEventToGoogle = async (userId: string, sessionData: any) => {
+export const syncEventToGoogle = (userId: string, tenantId: string, sessionId: string) => {
+  const previous = pendingScheduleSyncs.get(sessionId) ?? Promise.resolve();
+  const pending = previous
+    .then(() => syncScheduleEvent(userId, tenantId, sessionId))
+    .finally(() => {
+      if (pendingScheduleSyncs.get(sessionId) === pending) pendingScheduleSyncs.delete(sessionId);
+    });
+  pendingScheduleSyncs.set(sessionId, pending);
+  return pending;
+};
+
+async function syncScheduleEvent(userId: string, tenantId: string, sessionId: string) {
   try {
-    const calendar = await getClientForUser(userId);
-    if (!calendar) return; // Không có liên kết Google
+    const calendar = await getClientForUser(userId, tenantId);
+    if (!calendar) return false;
 
-    // sessionData: id, className, roomName, date, startTime, endTime, teacherName, notes
-    const { id, className, roomName, date, startTime, endTime, teacherName, notes } = sessionData;
-
-    const startDateTime = new Date(`${date}T${startTime}`);
-    const endDateTime = new Date(`${date}T${endTime}`);
+    const {
+      rows: [session],
+    } = await pool.query<{
+      session_date: string;
+      start_time: string;
+      end_time: string;
+      notes: string | null;
+      google_event_id: string | null;
+      class_name: string;
+      room_name: string;
+      teacher_name: string;
+      teacher_email: string;
+    }>(
+      `SELECT s.session_date::text, s.start_time, s.end_time, s.notes, s.google_event_id,
+              c.name AS class_name, r.name AS room_name,
+              t.full_name AS teacher_name, t.email AS teacher_email
+       FROM schedule_sessions s
+       JOIN classes c ON c.id = s.class_id AND c.tenant_id = s.tenant_id AND c.is_deleted = false
+       JOIN rooms r ON r.id = s.room_id AND r.tenant_id = s.tenant_id
+       JOIN teachers t ON t.id = s.teacher_id AND t.tenant_id = s.tenant_id
+       WHERE s.id = $1 AND s.tenant_id = $2 AND s.status <> $3`,
+      [sessionId, tenantId, SESSION_STATUS.CANCELLED]
+    );
+    if (!session) return false;
+    const {
+      class_name: className,
+      room_name: roomName,
+      teacher_name: teacherName,
+      teacher_email: teacherEmail,
+      session_date: date,
+      start_time: startTime,
+      end_time: endTime,
+      notes,
+      google_event_id: existingEventId,
+    } = session;
 
     const description = [
       `🎓 Lớp học (Class): ${className}`,
@@ -76,30 +141,19 @@ export const syncEventToGoogle = async (userId: string, sessionData: any) => {
       .filter(Boolean)
       .join('\n');
 
-    // Fetch teacher email for attendees
-    let attendees = [];
-    if (sessionData.teacherId) {
-      const teacherRes = await pool.query('SELECT email FROM teachers WHERE id = $1', [
-        sessionData.teacherId,
-      ]);
-      if (teacherRes.rows[0]?.email) {
-        attendees.push({ email: teacherRes.rows[0].email });
-      }
-    }
-
-    const event: any = {
+    const event: calendar_v3.Schema$Event = {
       summary: `📚 [${className}] - Lịch học`,
       location: roomName,
-      description: description,
+      description,
       start: {
-        dateTime: startDateTime.toISOString(),
-        timeZone: 'Asia/Ho_Chi_Minh',
+        dateTime: new Date(`${date}T${startTime}${VIETNAM_UTC_OFFSET}`).toISOString(),
+        timeZone: VIETNAM_TIME_ZONE,
       },
       end: {
-        dateTime: endDateTime.toISOString(),
-        timeZone: 'Asia/Ho_Chi_Minh',
+        dateTime: new Date(`${date}T${endTime}${VIETNAM_UTC_OFFSET}`).toISOString(),
+        timeZone: VIETNAM_TIME_ZONE,
       },
-      attendees: attendees,
+      attendees: teacherEmail ? [{ email: teacherEmail }] : [],
       colorId: '5',
       reminders: {
         useDefault: false,
@@ -110,163 +164,110 @@ export const syncEventToGoogle = async (userId: string, sessionData: any) => {
       },
     };
 
-    // Check if session already has a google_event_id
-    const sessionRes = await pool.query(
-      'SELECT google_event_id FROM schedule_sessions WHERE id = $1',
-      [id]
-    );
-    const existingEventId = sessionRes.rows[0]?.google_event_id;
-
-    let response;
     if (existingEventId) {
-      // Update existing event
-      response = await calendar.events.update({
-        calendarId: 'primary',
+      await calendar.events.update({
+        calendarId: PRIMARY_CALENDAR,
         eventId: existingEventId,
         requestBody: event,
       });
-    } else {
-      // Insert new event
-      response = await calendar.events.insert({
-        calendarId: 'primary',
-        requestBody: event,
-      });
-
-      // Save the new event ID to database
-      if (response.data.id) {
-        await pool.query('UPDATE schedule_sessions SET google_event_id = $1 WHERE id = $2', [
-          response.data.id,
-          id,
-        ]);
-      }
+      return true;
     }
-  } catch (error) {
-    logger.error(error, 'Error syncing to Google Calendar:');
-  }
-};
 
-export const deleteEventFromGoogle = async (userId: string, sessionId: string) => {
+    const {
+      data: { id: eventId },
+    } = await calendar.events.insert({
+      calendarId: PRIMARY_CALENDAR,
+      requestBody: event,
+    });
+    if (!eventId) return false;
+
+    const linked = await pool.query(
+      `UPDATE schedule_sessions SET google_event_id = $3
+       WHERE tenant_id = $1 AND id = $2 AND status <> $4 AND google_event_id IS NULL
+       RETURNING id`,
+      [tenantId, sessionId, eventId, SESSION_STATUS.CANCELLED]
+    );
+    if (!linked.rows.length) {
+      await calendar.events.delete({ calendarId: PRIMARY_CALENDAR, eventId });
+      return false;
+    }
+    return true;
+  } catch {
+    logger.warn(
+      { operation: 'GOOGLE_SCHEDULE_SYNC_FAILED', tenantId, sessionId },
+      'Schedule Google sync failed after commit'
+    );
+    return false;
+  }
+}
+
+export const deleteEventFromGoogle = async (
+  userId: string,
+  tenantId: string,
+  sessionId: string
+) => {
   try {
-    const calendar = await getClientForUser(userId);
+    const calendar = await getClientForUser(userId, tenantId);
     if (!calendar) return;
 
-    const result = await pool.query('SELECT google_event_id FROM schedule_sessions WHERE id = $1', [
-      sessionId,
-    ]);
+    const result = await pool.query(
+      'SELECT google_event_id FROM schedule_sessions WHERE tenant_id = $1 AND id = $2',
+      [tenantId, sessionId]
+    );
     const eventId = result.rows[0]?.google_event_id;
 
     if (eventId) {
       await calendar.events.delete({
-        calendarId: 'primary',
+        calendarId: PRIMARY_CALENDAR,
         eventId: eventId,
       });
 
-      // Clear the ID from DB
-      await pool.query('UPDATE schedule_sessions SET google_event_id = NULL WHERE id = $1', [
-        sessionId,
-      ]);
+      await pool.query(
+        'UPDATE schedule_sessions SET google_event_id = NULL WHERE tenant_id = $1 AND id = $2 AND google_event_id = $3',
+        [tenantId, sessionId, eventId]
+      );
     }
-  } catch (error) {
-    logger.error(error, 'Error deleting from Google Calendar:');
+  } catch {
+    logger.warn({ tenantId, sessionId }, 'Google Calendar event deletion failed');
   }
 };
 
 export const syncAllSessionsToGoogle = async (userId: string, tenantId: string) => {
-  const calendar = await getClientForUser(userId);
-  if (!calendar) throw new Error('Google Calendar not connected');
-
-  // Get user role first
-  const userRoleRes = await pool.query('SELECT role, email FROM users WHERE id = $1', [userId]);
-  const { role, email: userEmail } = userRoleRes.rows[0];
-
-  // Lấy các buổi học chưa bị hủy
-  // Nếu là giáo viên, chỉ lấy buổi học của chính họ
-  let query = `
-    SELECT s.id, 
-           s.session_date::text as session_date,
-           s.start_time,
-           s.end_time,
-           s.notes,
-           COALESCE(c.name, 'Lớp học') as class_name, 
-           COALESCE(r.name, 'Phòng học') as room_name,
-           COALESCE(t.full_name, 'Chưa chỉ định') as teacher_name,
-           t.email as teacher_email
-    FROM schedule_sessions s
-    JOIN users u ON s.tenant_id = u.tenant_id
-    LEFT JOIN classes c ON s.class_id = c.id
-    LEFT JOIN rooms r ON s.room_id = r.id
-    LEFT JOIN teachers t ON s.teacher_id = t.id
-    WHERE u.id = $1 AND s.status != 'cancelled'
-  `;
-
-  if (role === 'teacher') {
-    // Tìm teacher_id tương ứng với user này (giả định liên kết qua email hoặc một trường định danh)
-    // Trong hệ thống này, teachers và users thường là 1 hoặc có liên kết email
-    query += ` AND (t.email = $2 OR s.teacher_id = (SELECT id FROM teachers WHERE email = $2 LIMIT 1))`;
+  const calendar = await getClientForUser(userId, tenantId);
+  if (!calendar) {
+    throw new AppError(
+      'Google Calendar is not connected',
+      409,
+      ERROR_CODES.GOOGLE_CONNECTION_FAILED
+    );
   }
-
-  const result = await pool.query(query, role === 'teacher' ? [userId, userEmail] : [userId]);
-
-  const sessions = result.rows;
-  logger.info({ sessions }, `[GoogleSync] Found ${sessions.length} sessions in DB.`);
+  const { rows } = await pool.query<{ id: string }>(
+    `SELECT s.id
+     FROM schedule_sessions s
+     JOIN classes c ON c.id = s.class_id AND c.tenant_id = s.tenant_id AND c.is_deleted = false
+     JOIN users u ON u.id = $1 AND u.tenant_id = s.tenant_id AND u.is_active = true
+     WHERE s.tenant_id = $2 AND s.status <> $3
+       AND (u.role <> $4 OR EXISTS (
+         SELECT 1 FROM teachers t WHERE t.id = s.teacher_id AND t.tenant_id = s.tenant_id
+           AND t.email = u.email AND t.is_deleted = false
+       ))
+     ORDER BY s.session_date, s.start_time, s.id`,
+    [userId, tenantId, SESSION_STATUS.CANCELLED, ROLES.TEACHER]
+  );
   let successCount = 0;
-
-  for (const sessionData of sessions) {
-    try {
-      const { class_name, room_name, session_date, start_time, end_time, teacher_name, notes } =
-        sessionData;
-      const startDateTime = new Date(`${session_date}T${start_time}`);
-      const endDateTime = new Date(`${session_date}T${end_time}`);
-
-      const description = [
-        `🎓 Lớp học (Class): ${class_name}`,
-        `👨‍🏫 Giáo viên (Teacher): ${teacher_name}`,
-        `🏫 Phòng (Room): ${room_name}`,
-        notes ? `📝 Ghi chú (Notes): ${notes}` : '',
-        '------------------',
-        '📅 Được đồng bộ tự động từ hệ thống quản lý EduSchedule',
-        '📅 Automatically synced from EduSchedule Management System',
-      ]
-        .filter(Boolean)
-        .join('\n');
-
-      const response = await calendar.events.insert({
-        calendarId: 'primary',
-        requestBody: {
-          summary: `📚 [${class_name}] - Lịch học`,
-          location: room_name,
-          description: description,
-          start: {
-            dateTime: startDateTime.toISOString(),
-            timeZone: 'Asia/Ho_Chi_Minh',
-          },
-          end: {
-            dateTime: endDateTime.toISOString(),
-            timeZone: 'Asia/Ho_Chi_Minh',
-          },
-          colorId: '5',
-          reminders: {
-            useDefault: false,
-            overrides: [
-              { method: 'popup', minutes: 30 },
-              { method: 'email', minutes: 60 },
-            ],
-          },
-        },
-      });
-
-      if (response.data.id) {
-        await pool.query('UPDATE schedule_sessions SET google_event_id = $1 WHERE id = $2', [
-          response.data.id,
-          sessionData.id,
-        ]);
-      }
-      successCount++;
-    } catch (err) {
-      logger.error(err, `Failed to sync session ${sessionData.id}:`);
-    }
+  for (const session of rows) {
+    if (await syncEventToGoogle(userId, tenantId, session.id)) successCount++;
   }
-
+  logger.info(
+    {
+      operation: 'GOOGLE_SCHEDULE_SYNC_COMPLETED',
+      tenantId,
+      userId,
+      successCount,
+      totalCount: rows.length,
+    },
+    'Calendar synchronization completed'
+  );
   return successCount;
 };
 

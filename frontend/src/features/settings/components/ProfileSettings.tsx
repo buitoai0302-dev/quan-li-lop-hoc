@@ -1,8 +1,8 @@
-import React from 'react';
-
+import { useId } from 'react';
 import type { ProfileSettingsProps } from '@/features/auth';
+import { Button, Input, Label } from '@/components/common/UI';
 
-const ProfileSettings: React.FC<ProfileSettingsProps> = ({
+export default function ProfileSettings({
   fullName,
   setFullName,
   notifySessions,
@@ -10,62 +10,58 @@ const ProfileSettings: React.FC<ProfileSettingsProps> = ({
   onSave,
   saving,
   t,
-}) => {
+}: ProfileSettingsProps) {
+  const fieldId = useId();
   return (
-    <section className="space-y-10 animate-in fade-in slide-in-from-right-4 duration-500">
-      <div className="border-b border-gray-100 dark:border-gray-700 pb-8">
-        <h3 className="text-2xl font-black text-gray-900 dark:text-white tracking-tight">
+    <form
+      onSubmit={(event) => {
+        event.preventDefault();
+        onSave();
+      }}
+      className="space-y-6"
+    >
+      <div className="border-b border-slate-200 pb-4 dark:border-slate-700">
+        <h2 className="text-xl font-semibold text-slate-900 dark:text-white">
           {t('settings.personalSettings')}
-        </h3>
-        <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+        </h2>
+        <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
           {t('settings.personalSettingsDesc')}
         </p>
       </div>
-
-      <div className="grid grid-cols-1 gap-8">
-        <div className="space-y-2.5">
-          <label className="block text-[11px] font-black uppercase tracking-widest text-gray-400 ml-1">
-            {t('settings.displayName')}
-          </label>
-          <input
-            type="text"
+      <fieldset disabled={saving} className="grid gap-5">
+        <div className="space-y-2">
+          <Label htmlFor={`${fieldId}-name`}>{t('settings.displayName')}</Label>
+          <Input
+            id={`${fieldId}-name`}
+            name="full_name"
+            autoComplete="name"
+            required
             value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl px-6 py-4 text-sm font-bold text-gray-900 dark:text-white focus:ring-2 focus:ring-primary outline-none transition-all"
+            onChange={(event) => setFullName(event.target.value)}
+            className="text-base sm:text-sm"
           />
         </div>
-
-        <div className="p-8 bg-gray-50 dark:bg-gray-900/50 rounded-2xl border border-gray-100 dark:border-gray-800 flex items-center justify-between group">
-          <div className="min-w-0">
-            <p className="text-sm font-black text-gray-900 dark:text-white mb-1.5">
+        <label className="flex cursor-pointer items-center gap-4 rounded-xl border border-slate-200 p-4 dark:border-slate-700">
+          <div className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-slate-900 dark:text-white">
               {t('settings.notifications')}
-            </p>
-            <p className="text-xs text-gray-400 leading-relaxed max-w-sm">
+            </span>
+            <span className="mt-1 block text-sm text-slate-600 dark:text-slate-300">
               {t('settings.notificationDesc')}
-            </p>
+            </span>
           </div>
-          <div
-            onClick={() => setNotifySessions(!notifySessions)}
-            className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-4 border-transparent transition-colors duration-300 ease-in-out ${notifySessions ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}
-          >
-            <span
-              className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-lg ring-0 transition duration-300 ease-in-out ${notifySessions ? 'translate-x-5' : 'translate-x-0'}`}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="pt-8">
-        <button
-          onClick={onSave}
-          disabled={saving}
-          className="w-full sm:w-auto px-12 py-4 bg-primary hover:bg-primary-dark text-white text-[10px] font-black uppercase tracking-widest rounded-xl shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
-        >
-          {saving ? t('common.loading') : t('common.save')}
-        </button>
-      </div>
-    </section>
+          <input
+            type="checkbox"
+            name="notify_upcoming_sessions"
+            checked={notifySessions}
+            onChange={(event) => setNotifySessions(event.target.checked)}
+            className="size-5 shrink-0 rounded accent-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+          />
+        </label>
+      </fieldset>
+      <Button type="submit" loading={saving} className="w-full sm:w-auto">
+        {t('common.save')}
+      </Button>
+    </form>
   );
-};
-
-export default ProfileSettings;
+}

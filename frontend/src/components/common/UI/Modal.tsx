@@ -92,6 +92,8 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     const [isConfirmingClose, setIsConfirmingClose] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
     const dirtyRef = useRef(false);
+    const requestCloseRef = useRef<() => void>(() => {});
+    const afterCloseRef = useRef(onAfterClose);
     const [panelContent, setPanelContent] = useState<Pick<
       ModalProps,
       'title' | 'children' | 'footer'
@@ -104,7 +106,6 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     const isModal = backdrop !== 'none';
     const panelWidth = typeof width === 'number' ? `${width}px` : width;
     const panelStyle = { ...style, '--modal-panel-width': panelWidth } as React.CSSProperties;
-    const notifyPanelClosed = React.useEffectEvent(() => onAfterClose?.());
 
     // Retain the last open content when a caller closes and resets its form together.
     if (
@@ -124,7 +125,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       const finish = () => {
         if (cancelled) return;
         setPanelContent(null);
-        notifyPanelClosed();
+        afterCloseRef.current?.();
       };
       const animation =
         panel?.animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -153,7 +154,11 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       }
       onClose();
     };
-    const closeOnEscape = React.useEffectEvent(requestClose);
+    // Keep keyboard handlers current even when retaining panel content causes a render retry.
+    useLayoutEffect(() => {
+      requestCloseRef.current = requestClose;
+      afterCloseRef.current = onAfterClose;
+    });
 
     useEffect(() => {
       if (!isRendered) return;
@@ -164,13 +169,16 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           dialog?.querySelectorAll<HTMLElement>(
             'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
           ) || []
-        ).filter((el) => el.getClientRects().length > 0);
+        ).filter(
+          (el) => el.tabIndex >= 0 && !el.closest('[inert]') && el.getClientRects().length > 0
+        );
       (focusable()[0] || dialog)?.focus();
       if (isModal && scrollLockCount++ === 0) {
         previousBodyOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
       }
       const onKeyDown = (e: KeyboardEvent) => {
+        if (e.defaultPrevented) return;
         const dialogs = document.querySelectorAll('[data-ui-dialog]');
         if (dialogs[dialogs.length - 1] !== dialog) return;
         if (dialog?.inert) {
@@ -180,7 +188,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         if (!isModal && !dialog?.contains(document.activeElement)) return;
         if (e.key === 'Escape') {
           e.preventDefault();
-          closeOnEscape();
+          requestCloseRef.current();
           return;
         }
         if (!isModal || e.key !== 'Tab') return;

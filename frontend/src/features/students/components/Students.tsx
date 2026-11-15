@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React, { useState, useMemo, useCallback, useId } from 'react';
 
 import { Modal, Card, FormPanelActions } from '@/components/common/UI';
@@ -39,8 +40,8 @@ const Students: React.FC = () => {
   const studentFormId = useId();
   const navigate = useNavigate();
   const dobInputRef = React.useRef<HTMLInputElement>(null);
-  const { students, loading: studentsLoading } = useStudents();
-  const { branches, loading: branchesLoading } = useBranches();
+  const { students, loading: studentsLoading, query: studentsQuery } = useStudents();
+  const { branches, loading: branchesLoading, query: branchesQuery } = useBranches();
 
   const loading = studentsLoading || branchesLoading;
 
@@ -219,6 +220,17 @@ const Students: React.FC = () => {
       `${t('export.students')} - ${dateLabel}`
     );
   };
+
+  const failedQueries = [studentsQuery, branchesQuery].filter(
+    (query) => query.isError && query.data === undefined
+  );
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
 
   return (
     <div className="h-full flex flex-col overflow-hidden relative">

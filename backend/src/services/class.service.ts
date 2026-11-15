@@ -1,4 +1,4 @@
-import { ERROR_CODES } from '../utils/constants';
+import { ERROR_CODES, VIETNAM_TIME_ZONE } from '../utils/constants';
 import type { PoolClient } from 'pg';
 import pool from '../db';
 import { checkPlanLimit } from '../utils/limitChecker';
@@ -12,6 +12,7 @@ import { FeatureFlagService } from './feature-flag.service';
 import { CreateClassDto, UpdateClassDto } from '../types';
 import { assertTenantReferences } from './tenant-reference.service';
 import { lockScheduleWrites } from './schedule-write.service';
+import { lockClassForEnrollment, updateClassEnrollments } from './class-enrollment.service';
 
 async function insertRecurringSession(
   client: PoolClient,
@@ -272,15 +273,15 @@ export class ClassService {
         }
       }
 
-      if (enrollments && Array.isArray(enrollments) && enrollments.length > 0) {
-        for (const sid of enrollments) {
-          await client.query(
-            `INSERT INTO class_students (tenant_id, class_id, student_id)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (class_id, student_id) DO NOTHING`,
-            [tenantId, classId, sid]
-          );
-        }
+      if (enrollments?.length) {
+        await updateClassEnrollments(
+          client,
+          tenantId,
+          classId,
+          newClass.rows[0].max_capacity,
+          enrollments,
+          []
+        );
       }
 
       await client.query('COMMIT');
@@ -326,9 +327,17 @@ export class ClassService {
         status,
         recurring_schedules,
         enrollments,
+        enrollment_changes: enrollmentChanges,
       } = data;
 
       if (Array.isArray(recurring_schedules)) await lockScheduleWrites(client, tenantId);
+      const changesEnrollments = enrollments !== undefined || enrollmentChanges !== undefined;
+      const previousCapacity =
+        changesEnrollments || max_capacity !== undefined
+          ? await lockClassForEnrollment(client, tenantId, id)
+          : undefined;
+      const addedIds = enrollmentChanges?.add ?? enrollments ?? [];
+      const removedIds = enrollmentChanges?.remove ?? [];
       await assertTenantReferences(client, tenantId, 'branches', [branch_id]);
       await assertTenantReferences(client, tenantId, 'subjects', [subject_id]);
       await assertTenantReferences(client, tenantId, 'teachers', [teacher_id]);
@@ -338,7 +347,7 @@ export class ClassService {
         'rooms',
         recurring_schedules?.map((schedule) => schedule.room_id) || []
       );
-      await assertTenantReferences(client, tenantId, 'students', enrollments || []);
+      await assertTenantReferences(client, tenantId, 'students', [...addedIds, ...removedIds]);
 
       const result = await client.query(
         `UPDATE classes 
@@ -350,7 +359,7 @@ export class ClassService {
              start_date = COALESCE($6, start_date),
              end_date = COALESCE($7, end_date),
              status = COALESCE($8, status)
-         WHERE id = $9 AND tenant_id = $10
+         WHERE id = $9 AND tenant_id = $10 AND is_deleted = false
          RETURNING *, start_date::text AS schedule_start_date, end_date::text AS schedule_end_date`,
         [
           branch_id,
@@ -386,13 +395,18 @@ export class ClassService {
       }
 
       if (recurring_schedules && Array.isArray(recurring_schedules)) {
-        const today = new Date().toISOString().slice(0, 10);
+        const {
+          rows: [{ today }],
+        } = await client.query<{ today: string }>(
+          'SELECT ((CURRENT_TIMESTAMP AT TIME ZONE $1)::date)::text AS today',
+          [VIETNAM_TIME_ZONE]
+        );
         const syncFrom = today > classStart ? today : classStart;
         await client.query(
           `DELETE FROM schedule_sessions s
            WHERE s.class_id = $1 AND s.tenant_id = $3
              AND s.session_date >= $2 AND s.status = 'scheduled'
-             AND NOT EXISTS (SELECT 1 FROM attendance a WHERE a.session_id = s.id)
+             AND NOT EXISTS (SELECT 1 FROM attendance a WHERE a.session_id = s.id AND a.tenant_id = s.tenant_id)
              AND EXISTS (
                SELECT 1 FROM class_recurring_schedules r
                WHERE r.class_id = s.class_id AND r.room_id = s.room_id
@@ -443,32 +457,19 @@ export class ClassService {
         }
       }
 
-      if (enrollments && Array.isArray(enrollments)) {
-        const existingRes = await client.query(
-          `SELECT student_id FROM class_students WHERE class_id = $1`,
-          [id]
+      if (
+        changesEnrollments ||
+        (previousCapacity !== undefined && updatedClass.max_capacity < previousCapacity)
+      ) {
+        await updateClassEnrollments(
+          client,
+          tenantId,
+          id,
+          updatedClass.max_capacity,
+          addedIds,
+          removedIds,
+          { replace: enrollments !== undefined, previousCapacity }
         );
-        const existingIds = existingRes.rows.map((r: any) => r.student_id);
-
-        for (const sid of enrollments) {
-          if (!existingIds.includes(sid)) {
-            await client.query(
-              `INSERT INTO class_students (tenant_id, class_id, student_id)
-               VALUES ($1, $2, $3)
-               ON CONFLICT (class_id, student_id) DO NOTHING`,
-              [tenantId, id, sid]
-            );
-          }
-        }
-
-        for (const exId of existingIds) {
-          if (!enrollments.includes(exId)) {
-            await client.query(
-              `DELETE FROM class_students WHERE class_id = $1 AND student_id = $2`,
-              [id, exId]
-            );
-          }
-        }
       }
 
       await client.query('COMMIT');
@@ -515,22 +516,6 @@ export class ClassService {
     student_id: string | null,
     student_ids: string[] | null
   ) {
-    const classRes = await pool.query(
-      `SELECT max_capacity FROM classes WHERE id = $1 AND tenant_id = $2`,
-      [id, tenantId]
-    );
-
-    if (classRes.rows.length === 0) {
-      throw new NotFoundError('CLASS_NOT_FOUND', ERROR_CODES.CLASS_NOT_FOUND);
-    }
-
-    const maxCapacity = classRes.rows[0].max_capacity;
-
-    const countRes = await pool.query(`SELECT COUNT(*) FROM class_students WHERE class_id = $1`, [
-      id,
-    ]);
-    const currentCount = parseInt(countRes.rows[0].count);
-
     const idsToAdd = student_ids || (student_id ? [student_id] : []);
 
     if (idsToAdd.length === 0) {
@@ -539,33 +524,43 @@ export class ClassService {
         ERROR_CODES.MISSING_REQUIRED_FIELDS
       );
     }
-    await assertTenantReferences(pool, tenantId, 'students', idsToAdd);
-
-    if (currentCount + idsToAdd.length > maxCapacity) {
-      throw new ValidationError('CAPACITY_EXCEEDED', ERROR_CODES.CAPACITY_EXCEEDED);
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const maxCapacity = await lockClassForEnrollment(client, tenantId, id);
+      await assertTenantReferences(client, tenantId, 'students', idsToAdd);
+      const results = await updateClassEnrollments(client, tenantId, id, maxCapacity, idsToAdd, []);
+      await client.query('COMMIT');
+      return results;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
     }
-
-    const results = [];
-    for (const sid of idsToAdd) {
-      const res = await pool.query(
-        `INSERT INTO class_students (tenant_id, class_id, student_id)
-         VALUES ($1, $2, $3)
-         ON CONFLICT (class_id, student_id) DO NOTHING
-         RETURNING *`,
-        [tenantId, id, sid]
-      );
-      if (res.rows[0]) results.push(res.rows[0]);
-    }
-
-    return results;
   }
 
   static async unenrollStudent(tenantId: string, id: string, studentId: string) {
-    await pool.query(
-      `DELETE FROM class_students 
-       WHERE class_id = $1 AND student_id = $2 AND tenant_id = $3`,
-      [id, studentId, tenantId]
-    );
-    return true;
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      const target = await client.query(
+        'SELECT id FROM classes WHERE tenant_id = $1 AND id = $2 FOR NO KEY UPDATE',
+        [tenantId, id]
+      );
+      if (target.rows.length) {
+        await client.query(
+          'DELETE FROM class_students WHERE tenant_id = $1 AND class_id = $2 AND student_id = $3',
+          [tenantId, id, studentId]
+        );
+      }
+      await client.query('COMMIT');
+      return true;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
   }
 }

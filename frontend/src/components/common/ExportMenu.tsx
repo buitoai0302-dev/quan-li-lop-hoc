@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect, useLayoutEffect } from 'react';
+import React, { useId, useState, useRef, useEffect, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import { Download, FileSpreadsheet, FileText, ChevronDown, Loader2, Upload } from 'lucide-react';
@@ -30,6 +30,22 @@ const ExportMenu: React.FC<ExportMenuProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const focusLastItemRef = useRef(false);
+  const menuId = useId();
+  const triggerId = useId();
+
+  const closeMenu = () => {
+    setOpen(false);
+    buttonRef.current?.focus();
+  };
+
+  useEffect(() => {
+    if (!open) return;
+    const items = dropdownRef.current?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)');
+    const item = focusLastItemRef.current ? items?.[items.length - 1] : items?.[0];
+    (item || dropdownRef.current)?.focus();
+    focusLastItemRef.current = false;
+  }, [open]);
 
   // Close on outside click
   useEffect(() => {
@@ -83,8 +99,8 @@ const ExportMenu: React.FC<ExportMenuProps> = ({
   }, [align, open, t]);
 
   const handleExport = async (type: 'excel' | 'pdf') => {
+    closeMenu();
     setLoading(type);
-    setOpen(false);
     try {
       if (type === 'excel') await onExportExcel();
       else await onExportPDF();
@@ -99,9 +115,18 @@ const ExportMenu: React.FC<ExportMenuProps> = ({
       <ActionHint label={t(onImport ? 'common.actions' : 'export.button')} showTouchLabel={false}>
         <button
           ref={buttonRef}
+          id={triggerId}
           type="button"
+          aria-haspopup="menu"
+          aria-controls={open ? menuId : undefined}
           aria-expanded={open}
           onClick={() => setOpen((prev) => !prev)}
+          onKeyDown={(event) => {
+            if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+            event.preventDefault();
+            focusLastItemRef.current = event.key === 'ArrowUp';
+            setOpen(true);
+          }}
           disabled={(disabled && !onImport) || loading !== null}
           className={`h-11 ${inlineLabel || onImport ? 'px-2.5' : 'w-11'} sm:h-9 sm:w-auto sm:px-4 bg-gray-50 dark:bg-gray-700/50 hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-600 dark:text-gray-300 rounded-lg text-xs font-semibold border border-gray-100 dark:border-gray-700 whitespace-nowrap flex items-center justify-center gap-1 sm:gap-2 disabled:opacity-50 disabled:cursor-not-allowed`}
         >
@@ -130,14 +155,50 @@ const ExportMenu: React.FC<ExportMenuProps> = ({
         typeof document !== 'undefined' &&
         createPortal(
           <div
+            id={menuId}
             ref={dropdownRef}
+            role="menu"
+            aria-labelledby={triggerId}
+            tabIndex={-1}
+            onBlur={(event) => {
+              if (
+                event.relatedTarget !== buttonRef.current &&
+                !event.currentTarget.contains(event.relatedTarget)
+              )
+                setOpen(false);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Escape' || event.key === 'Tab') {
+                if (event.key === 'Escape') {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+                closeMenu();
+                return;
+              }
+              const items = Array.from(
+                event.currentTarget.querySelectorAll<HTMLButtonElement>('button:not(:disabled)')
+              );
+              const currentIndex = items.indexOf(document.activeElement as HTMLButtonElement);
+              let nextIndex: number;
+              if (event.key === 'ArrowDown') nextIndex = (currentIndex + 1) % items.length;
+              else if (event.key === 'ArrowUp')
+                nextIndex = (currentIndex - 1 + items.length) % items.length;
+              else if (event.key === 'Home') nextIndex = 0;
+              else if (event.key === 'End') nextIndex = items.length - 1;
+              else return;
+              event.preventDefault();
+              items[nextIndex]?.focus();
+            }}
             className="menu-enter fixed z-[9999] w-52 max-w-[calc(100vw-1rem)] max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-xl border border-gray-100 bg-white shadow-2xl dark:border-slate-700 dark:bg-slate-800"
           >
             {onImport && (
               <button
                 type="button"
+                role="menuitem"
+                tabIndex={-1}
                 onClick={() => {
-                  setOpen(false);
+                  closeMenu();
                   onImport();
                 }}
                 className="flex min-h-11 w-full items-center gap-3 border-b border-gray-100 px-4 py-3 text-left text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-slate-700 dark:text-gray-200 dark:hover:bg-slate-700"
@@ -147,6 +208,9 @@ const ExportMenu: React.FC<ExportMenuProps> = ({
               </button>
             )}
             <button
+              type="button"
+              role="menuitem"
+              tabIndex={-1}
               disabled={disabled}
               onClick={() => handleExport('excel')}
               className="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors"
@@ -156,6 +220,9 @@ const ExportMenu: React.FC<ExportMenuProps> = ({
             </button>
             <div className="h-px bg-gray-100 dark:bg-slate-700" />
             <button
+              type="button"
+              role="menuitem"
+              tabIndex={-1}
               disabled={disabled}
               onClick={() => handleExport('pdf')}
               className="flex items-center gap-3 w-full px-4 py-3 text-sm font-semibold text-gray-700 dark:text-gray-200 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-400 transition-colors"

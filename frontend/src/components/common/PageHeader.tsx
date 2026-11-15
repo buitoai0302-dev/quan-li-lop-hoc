@@ -14,7 +14,10 @@ const PageHeader: React.FC<PageHeaderProps> = ({ icon: Icon, actions, children }
       <div className="flex flex-col">
         {/* Main Row: Icon + Desktop Filters + Actions */}
         <div className="flex flex-row items-center gap-2 sm:gap-4">
-          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div
+            className="hidden min-[380px]:flex items-center gap-2 sm:gap-3 min-w-0"
+            aria-hidden="true"
+          >
             <div className="w-9 h-9 sm:w-10 sm:h-10 bg-primary/10 rounded-lg text-primary shrink-0 flex items-center justify-center">
               <Icon size={18} className="sm:w-5 sm:h-5" />
             </div>

@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MessageSquare, ArrowRight, Info, CreditCard } from 'lucide-react';
@@ -18,7 +19,8 @@ const Subscription: React.FC = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
 
-  const { data, isLoading: loading } = useSubscriptionData();
+  const pageQuery = useSubscriptionData();
+  const { data, isLoading: loading } = pageQuery;
   const { data: settings } = usePublicSettings();
   const navigate = useNavigate();
 
@@ -76,6 +78,15 @@ const Subscription: React.FC = () => {
   };
 
   if (loading) return <PageLoading />;
+
+  const failedQueries = [pageQuery].filter((query) => query.isError && query.data === undefined);
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -135,7 +146,7 @@ const Subscription: React.FC = () => {
             </div>
           )}
           {/* Pricing Grid */}
-          <div className="grid grid-cols-1 gap-4 px-1 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,17rem),1fr))] gap-4 px-1">
             {plans
               .filter((p) => p.is_active || p.id === currentTenantPlanId)
               .map((plan) => (

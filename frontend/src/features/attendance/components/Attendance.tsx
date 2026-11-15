@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/utils/constants';
 
 import EmptyState from '@/components/common/EmptyState';
+import PageError from '@/components/common/PageError';
 import ConfirmModal from '@/components/common/ConfirmModal';
 
 // Local components
@@ -30,6 +31,8 @@ const AttendancePage: React.FC = () => {
     selectedDate,
     sessionsLoading,
     attendanceLoading,
+    sessionsQuery,
+    attendanceQuery,
     saving,
     searchTerm,
     setSearchTerm,
@@ -128,6 +131,17 @@ const AttendancePage: React.FC = () => {
       />
     );
   }
+
+  const failedQueries = [sessionsQuery, attendanceQuery].filter(
+    (query) => query.isError && query.data === undefined
+  );
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
 
   return (
     <div className="flex-1 min-h-0 flex flex-col gap-3 sm:gap-4 overflow-hidden">

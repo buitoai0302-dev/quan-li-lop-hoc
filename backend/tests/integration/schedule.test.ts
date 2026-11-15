@@ -91,6 +91,44 @@ describe('Schedule Integration Tests', () => {
     });
   });
 
+  describe('PUT /api/schedule/sessions/:id', () => {
+    const sessionId = '44444444-4444-4444-8444-444444444444';
+
+    it('accepts a date-only move without requiring the existing time or resources', async () => {
+      jest.mocked(ScheduleService.updateSession).mockResolvedValueOnce({
+        success: true, data: { id: sessionId, session_date: '2026-11-15' },
+      });
+      const response = await request(app)
+        .put(`/api/schedule/sessions/${sessionId}`)
+        .send({ sessionDate: '2026-11-15' });
+
+      expect(response.status).toBe(200);
+      expect(ScheduleService.updateSession).toHaveBeenCalledWith(
+        'test-tenant-id', 'test-user-id', sessionId, { sessionDate: '2026-11-15' }
+      );
+    });
+
+    it('rejects database TIME strings with seconds rather than silently changing the time', async () => {
+      const response = await request(app)
+        .put(`/api/schedule/sessions/${sessionId}`)
+        .send({ sessionDate: '2026-11-15', startTime: '08:00:00', endTime: '10:00:00' });
+
+      expect(response.status).toBe(400);
+      expect(ScheduleService.updateSession).not.toHaveBeenCalled();
+    });
+
+    it('keeps the existing conflict envelope when a date-only move is blocked', async () => {
+      const conflicts = [{ conflict_type: 'TEACHER_CONFLICT' }];
+      jest.mocked(ScheduleService.updateSession).mockResolvedValueOnce({ success: false, conflicts });
+      const response = await request(app)
+        .put(`/api/schedule/sessions/${sessionId}`)
+        .send({ sessionDate: '2026-11-15' });
+
+      expect(response.status).toBe(409);
+      expect(response.body).toMatchObject({ success: false, error: 'SCHEDULE_CONFLICT', conflicts });
+    });
+  });
+
   describe('POST /api/schedule/sessions', () => {
     it('should create a session and return 201', async () => {
       const mockResponse = { id: '2', title: 'New Session' };

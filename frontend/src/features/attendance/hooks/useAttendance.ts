@@ -139,15 +139,13 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
 
   const filteredAttendance = useMemo(
     () =>
-      localAttendance.filter(
-        (r) => {
-          const normalizedSearch = normalizeSearchStr(searchTerm);
-          return (
-            normalizeSearchStr(r.full_name).includes(normalizedSearch) ||
-            (r.email && normalizeSearchStr(r.email).includes(normalizedSearch))
-          );
-        }
-      ),
+      localAttendance.filter((r) => {
+        const normalizedSearch = normalizeSearchStr(searchTerm);
+        return (
+          normalizeSearchStr(r.full_name).includes(normalizedSearch) ||
+          (r.email && normalizeSearchStr(r.email).includes(normalizedSearch))
+        );
+      }),
     [localAttendance, searchTerm]
   );
 
@@ -202,6 +200,8 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
     isFutureDate,
     sessionsLoading: sessionsQuery.isLoading,
     attendanceLoading: attendanceQuery.isLoading,
+    sessionsQuery,
+    attendanceQuery,
     saving: saveMutation.isPending,
     searchTerm,
     setSearchTerm,

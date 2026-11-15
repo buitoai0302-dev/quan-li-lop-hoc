@@ -58,14 +58,17 @@ const AttendanceHeader: React.FC<AttendanceHeaderProps> = ({
       ) : (
         <div className="flex flex-wrap items-center gap-2">
           <button
+            type="button"
             onClick={handleMarkAllAsPresent}
-            className="inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-green-500 text-white rounded-lg font-bold text-xs shadow-lg shadow-green-500/20 hover:bg-green-600 transition-all active:scale-95 whitespace-nowrap"
+            disabled={saving || attendance.length === 0}
+            className="inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-emerald-700 text-white rounded-lg font-semibold text-xs hover:bg-emerald-800 transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             <CheckCircle size={14} />
             <span className="hidden sm:inline">{t('attendance.quickMarkAll')}</span>
-            <span className="sm:hidden">{t('attendance.present')}</span>
+            <span className="sm:hidden">{t('attendance.quickMarkAllShort')}</span>
           </button>
           <button
+            type="button"
             onClick={handleSave}
             disabled={saving || attendance.length === 0}
             className="inline-flex min-h-11 sm:min-h-9 items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-primary text-white rounded-lg font-bold text-xs shadow-lg shadow-primary/20 hover:bg-primary-dark transition-all active:scale-95 disabled:opacity-50 whitespace-nowrap"

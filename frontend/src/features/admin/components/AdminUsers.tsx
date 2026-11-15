@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -43,9 +44,12 @@ const AdminUsers: React.FC = () => {
   const [tenantFilter, setTenantFilter] = useState('ALL');
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  const { data: users = [], isLoading: loadingUsers } = useAdminUsers();
-  const { data: tenants = [], isLoading: loadingTenants } = useAdminTenants();
-  const { data: plans = [], isLoading: loadingPlans } = useAdminPlans();
+  const usersQuery = useAdminUsers();
+  const { data: users = [], isLoading: loadingUsers } = usersQuery;
+  const tenantsQuery = useAdminTenants();
+  const { data: tenants = [], isLoading: loadingTenants } = tenantsQuery;
+  const plansQuery = useAdminPlans();
+  const { data: plans = [], isLoading: loadingPlans } = plansQuery;
 
   const createMutation = useCreateAdminUser();
   const resetPasswordMutation = useResetAdminUserPassword();
@@ -167,6 +171,17 @@ const AdminUsers: React.FC = () => {
 
   if (loading) return <PageLoading />;
 
+  const failedQueries = [usersQuery, tenantsQuery, plansQuery].filter(
+    (query) => query.isError && query.data === undefined
+  );
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <PageHeader
@@ -263,19 +278,19 @@ const AdminUsers: React.FC = () => {
             }
           >
             <div className="overflow-x-auto">
-              <table className="w-full table-fixed text-left sm:table-auto">
+              <table className="management-table w-full table-fixed text-left">
                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800">
                   <tr>
-                    <th className="px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest ">
                       {t('admin.users.table.user')}
                     </th>
-                    <th className="hidden sm:table-cell px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="hidden sm:table-cell px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-28">
                       {t('admin.users.table.role')}
                     </th>
-                    <th className="hidden sm:table-cell px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="hidden sm:table-cell px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-1/4">
                       {t('admin.users.table.tenant')}
                     </th>
-                    <th className="px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right max-sm:w-24 max-sm:tracking-normal">
+                    <th className="px-3 py-3 sm:px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right w-24 sm:w-28">
                       {t('admin.users.table.actions')}
                     </th>
                   </tr>

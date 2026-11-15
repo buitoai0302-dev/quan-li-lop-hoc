@@ -16,30 +16,31 @@ const StudentTable: React.FC<StudentTableProps> = ({
 
   return (
     <div className="w-full overflow-x-auto">
-      <table className="management-table w-full border-separate border-spacing-0">
+      <table className="management-table w-full table-fixed border-separate border-spacing-0">
         <thead className="bg-gray-50 dark:bg-slate-900 sticky top-0 z-20 transition-colors">
           <tr>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left w-12 border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-left  border-b border-gray-100 dark:border-slate-800 shadow-sm w-10 sm:w-12">
               {onSelectAll && (
                 <input
                   type="checkbox"
                   className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
+                  aria-label={t('common.selectAll')}
                   checked={allSelected}
                   onChange={(e) => onSelectAll(e.target.checked)}
                 />
               )}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm ">
               {t('students.name')}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden xl:table-cell px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm w-1/5">
               {t('classes.branch')}
             </th>
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 hidden sm:table-cell px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-left text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm w-32">
               {t('students.dob')}
             </th>
 
-            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm">
+            <th className="sticky top-0 z-20 bg-gray-50 dark:bg-slate-900 px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-right text-[10px] font-black text-gray-400 uppercase tracking-widest border-b border-gray-100 dark:border-slate-800 shadow-sm w-26 sm:w-28">
               {t('common.actions')}
             </th>
           </tr>
@@ -50,18 +51,19 @@ const StudentTable: React.FC<StudentTableProps> = ({
               key={student.id}
               className={`hover:bg-gray-50 dark:hover:bg-gray-900/50 transition-colors group ${selectedIds.includes(student.id) ? 'bg-primary/5 dark:bg-primary/10' : ''}`}
             >
-              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+              <td className="px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap">
                 {onSelectOne && (
                   <input
                     type="checkbox"
                     className="w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary dark:border-gray-600 dark:bg-gray-700"
+                    aria-label={t('common.selectItem', { name: student.full_name })}
                     checked={selectedIds.includes(student.id)}
                     onChange={(e) => onSelectOne(student.id, e.target.checked)}
                   />
                 )}
               </td>
-              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
-                <div className="flex flex-col">
+              <td className="px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap">
+                <div className="flex min-w-0 flex-col">
                   <div className="flex items-center gap-2 sm:gap-3">
                     <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10 dark:from-primary/30 dark:to-primary/20 flex items-center justify-center text-primary font-bold text-[10px] sm:text-sm shadow-inner relative shrink-0">
                       {student.full_name.charAt(0).toUpperCase()}
@@ -70,23 +72,23 @@ const StudentTable: React.FC<StudentTableProps> = ({
                         title={student.is_active ? t('common.active') : t('common.inactive')}
                       />
                     </div>
-                    <div className="font-bold text-gray-900 dark:text-white text-sm">
+                    <div className="min-w-0 whitespace-normal break-words font-semibold text-gray-900 dark:text-white text-sm">
                       {student.full_name}
                     </div>
                   </div>
 
                   <div className="mt-1.5 flex flex-col gap-1">
                     {student.email && (
-                      <div className="text-[10px] text-gray-500 dark:text-gray-400 flex items-center gap-1 truncate">
+                      <div className="text-xs text-slate-600 dark:text-slate-400 dark:text-gray-400 flex items-center gap-1 truncate">
                         {student.email}
                       </div>
                     )}
                     {(student.phone || student.parent_phone) && (
-                      <div className="text-[10px] text-gray-500 dark:text-gray-400 flex flex-wrap items-center gap-1 sm:gap-2">
+                      <div className="text-xs text-slate-600 dark:text-slate-400 dark:text-gray-400 flex flex-wrap items-center gap-1 sm:gap-2">
                         {student.phone && (
                           <span
                             className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded w-fit"
-                            title="Số điện thoại Học sinh"
+                            title={t('students.phone')}
                           >
                             <Phone size={10} className="text-gray-400" />
                             <span>{student.phone}</span>
@@ -95,7 +97,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
                         {student.parent_phone && (
                           <span
                             className="flex items-center gap-1 bg-gray-100 dark:bg-gray-800 px-1.5 py-0.5 rounded w-fit"
-                            title="Số điện thoại Phụ huynh"
+                            title={t('students.parentPhone')}
                           >
                             <Users size={10} className="text-gray-400" />
                             <span>{student.parent_phone}</span>
@@ -104,15 +106,15 @@ const StudentTable: React.FC<StudentTableProps> = ({
                       </div>
                     )}
                     {/* Mobile Only Info */}
-                    <div className="sm:hidden mt-1 flex flex-wrap items-center gap-2">
+                    <div className="xl:hidden mt-1 flex flex-wrap items-center gap-2">
                       {student.branch_name && (
-                        <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[9px] font-bold rounded flex items-center gap-1">
+                        <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-bold rounded flex items-center gap-1">
                           <span className="w-1 h-1 rounded-full bg-slate-400"></span>
                           {student.branch_name}
                         </span>
                       )}
                       {student.date_of_birth && (
-                        <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[9px] font-bold rounded flex items-center gap-1">
+                        <span className="px-1.5 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 text-[11px] font-bold rounded flex items-center gap-1">
                           <Calendar size={10} className="text-slate-400" />
                           {new Date(student.date_of_birth).toLocaleDateString('vi-VN')}
                         </span>
@@ -121,7 +123,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
                   </div>
                 </div>
               </td>
-              <td className="hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+              <td className="hidden xl:table-cell px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap">
                 {student.branch_name ? (
                   <div className="inline-flex items-center px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-bold shadow-sm">
                     <span className="w-1.5 h-1.5 rounded-full bg-slate-400 mr-1.5"></span>
@@ -131,7 +133,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
                   <span className="text-gray-400 text-sm">-</span>
                 )}
               </td>
-              <td className="hidden sm:table-cell px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap">
+              <td className="hidden sm:table-cell px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap">
                 {student.date_of_birth ? (
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-sky-50 dark:bg-sky-500/10 text-sky-700 dark:text-sky-400 border border-sky-100 dark:border-sky-500/20 shadow-sm text-xs font-bold">
                     <Calendar size={12} className="opacity-70" />
@@ -142,7 +144,7 @@ const StudentTable: React.FC<StudentTableProps> = ({
                 )}
               </td>
 
-              <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-right">
+              <td className="px-2 sm:px-3 py-3 sm:py-4 whitespace-nowrap text-right">
                 <div className="flex items-center justify-end gap-1 sm:gap-2">
                   <ActionHint label={t('common.edit')} showTouchLabel={false}>
                     <button

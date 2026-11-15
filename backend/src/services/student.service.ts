@@ -5,6 +5,9 @@ import { NotFoundError, ValidationError } from '../utils/errors';
 import { FeatureFlagService } from './feature-flag.service';
 import { CreateStudentDto, UpdateStudentDto } from '../types';
 import { assertTenantReferences } from './tenant-reference.service';
+import { lockClassForEnrollment, updateClassEnrollments } from './class-enrollment.service';
+import { lockTenantImport } from './import-lock.service';
+import { bulkStudentImportSchema } from '../validators/import.validator';
 
 export class StudentService {
   static async getStudents(tenantId: string) {
@@ -90,39 +93,33 @@ export class StudentService {
     tenantId: string,
     data: { students: CreateStudentDto[]; branch_id: string }
   ) {
-    let client;
+    const parsed = bulkStudentImportSchema.safeParse(data);
+    if (!parsed.success) {
+      throw new ValidationError('Invalid student import data', ERROR_CODES.INVALID_IMPORT_DATA);
+    }
+    const { students, branch_id } = parsed.data;
+    const client = await pool.connect();
     try {
-      client = await pool.connect();
-      const { students, branch_id } = data;
-
-      if (!students || !Array.isArray(students) || students.length === 0) {
-        throw new ValidationError('INVALID_DATA', ERROR_CODES.INVALID_DATA);
-      }
-
-      if (!branch_id) {
-        throw new ValidationError('MISSING_REQUIRED_FIELDS', ERROR_CODES.MISSING_REQUIRED_FIELDS);
-      }
-
       await client.query('BEGIN');
       await assertTenantReferences(client, tenantId, 'branches', [branch_id]);
+      await lockTenantImport(client, tenantId);
 
       const createdStudents = [];
       const createdClasses = new Map<string, string>();
 
       for (const s of students) {
-        const { full_name, email, phone, class_name } = s;
+        const { full_name, email, phone, class_name, date_of_birth, parent_phone } = s;
 
         if (!full_name || !email) continue;
 
-        let studentId;
         const studentRes = await client.query(
-          `INSERT INTO students (tenant_id, branch_id, full_name, email, phone)
-           VALUES ($1, $2, $3, $4, $5)
+          `INSERT INTO students (tenant_id, branch_id, full_name, email, phone, date_of_birth, parent_phone)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
            ON CONFLICT (tenant_id, email) DO UPDATE SET full_name = EXCLUDED.full_name
            RETURNING id`,
-          [tenantId, branch_id, full_name, email, phone]
+          [tenantId, branch_id, full_name, email, phone, date_of_birth || null, parent_phone]
         );
-        studentId = studentRes.rows[0].id;
+        const studentId = studentRes.rows[0].id as string;
         createdStudents.push(studentId);
 
         if (class_name) {
@@ -130,15 +127,16 @@ export class StudentService {
 
           if (!classId) {
             const classRes = await client.query(
-              `SELECT id FROM classes WHERE name = $1 AND tenant_id = $2 AND branch_id = $3 AND is_deleted = false`,
+              `SELECT id FROM classes WHERE name = $1 AND tenant_id = $2 AND branch_id = $3 AND is_deleted = false
+               ORDER BY created_at, id LIMIT 1 FOR NO KEY UPDATE`,
               [class_name, tenantId, branch_id]
             );
 
             if (classRes.rows.length > 0) {
               classId = classRes.rows[0].id;
             } else {
-              let subjectRes = await client.query(
-                `SELECT id FROM subjects WHERE tenant_id = $1 LIMIT 1`,
+              const subjectRes = await client.query(
+                `SELECT id FROM subjects WHERE tenant_id = $1 ORDER BY created_at, id LIMIT 1`,
                 [tenantId]
               );
 
@@ -149,6 +147,7 @@ export class StudentService {
                 const newSubjectRes = await client.query(
                   `INSERT INTO subjects (tenant_id, name, code)
                    VALUES ($1, 'Chung', 'CHUNG')
+                   ON CONFLICT (tenant_id, code) DO UPDATE SET code = EXCLUDED.code
                    RETURNING id`,
                   [tenantId]
                 );
@@ -172,12 +171,9 @@ export class StudentService {
             }
           }
 
-          await client.query(
-            `INSERT INTO class_students (tenant_id, class_id, student_id)
-             VALUES ($1, $2, $3)
-             ON CONFLICT (class_id, student_id) DO NOTHING`,
-            [tenantId, classId, studentId]
-          );
+          if (!classId) throw new NotFoundError('Class not found', ERROR_CODES.CLASS_NOT_FOUND);
+          const maxCapacity = await lockClassForEnrollment(client, tenantId, classId);
+          await updateClassEnrollments(client, tenantId, classId, maxCapacity, [studentId], []);
         }
       }
 
@@ -188,10 +184,10 @@ export class StudentService {
         classes_count: createdClasses.size,
       };
     } catch (error) {
-      if (client) await client.query('ROLLBACK');
+      await client.query('ROLLBACK');
       throw error;
     } finally {
-      if (client) client.release();
+      client.release();
     }
   }
 }

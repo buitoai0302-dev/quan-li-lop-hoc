@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -14,7 +15,8 @@ import { useAdminPlans, useUpdatePlan } from '../hooks/useAdmin';
 const AdminPlans: React.FC = () => {
   const { t } = useTranslation();
 
-  const { data: fetchedPlans, isLoading: loading } = useAdminPlans();
+  const pageQuery = useAdminPlans();
+  const { data: fetchedPlans, isLoading: loading } = pageQuery;
   const { mutate: updatePlanMutate } = useUpdatePlan();
 
   const [plans, setPlans] = useState<Plan[]>([]);
@@ -74,6 +76,15 @@ const AdminPlans: React.FC = () => {
 
   if (loading) return <PageLoading />;
 
+  const failedQueries = [pageQuery].filter((query) => query.isError && query.data === undefined);
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <PageHeader icon={Settings} />
@@ -124,6 +135,10 @@ const AdminPlans: React.FC = () => {
                         {plan.is_active ? t('common.active') : t('common.inactive')}
                       </span>
                       <button
+                        type="button"
+                        role="switch"
+                        aria-checked={plan.is_active}
+                        aria-label={t('admin.planStatus', { name: plan.name })}
                         onClick={() =>
                           setPlans((prev) =>
                             prev.map((p) =>
@@ -131,7 +146,7 @@ const AdminPlans: React.FC = () => {
                             )
                           )
                         }
-                        className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${plan.is_active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                        className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary ${plan.is_active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
                       >
                         <span
                           className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-all duration-200 ease-in-out ${plan.is_active ? 'left-4.5' : 'left-0.5'}`}
@@ -156,10 +171,14 @@ const AdminPlans: React.FC = () => {
                   <div className="p-5 bg-white dark:bg-gray-800 flex flex-col gap-4 border-b border-gray-50 dark:border-gray-700/50">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-1.5">
-                        <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block truncate">
+                        <label
+                          htmlFor={`${plan.id}-vnd-month`}
+                          className="text-xs font-medium text-slate-600 dark:text-slate-300"
+                        >
                           VND / {t('common.month')}
-                        </span>
+                        </label>
                         <Input
+                          id={`${plan.id}-vnd-month`}
                           type="number"
                           value={plan.price_vnd}
                           onChange={(e) =>
@@ -173,10 +192,14 @@ const AdminPlans: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-1.5 border-l border-gray-50 dark:border-gray-700/50 pl-4">
-                        <span className="text-[10px] text-gray-400 uppercase font-black tracking-widest block truncate">
+                        <label
+                          htmlFor={`${plan.id}-usd-month`}
+                          className="text-xs font-medium text-slate-600 dark:text-slate-300"
+                        >
                           USD / {t('common.month')}
-                        </span>
+                        </label>
                         <Input
+                          id={`${plan.id}-usd-month`}
                           type="number"
                           value={plan.price_usd}
                           onChange={(e) =>
@@ -193,10 +216,14 @@ const AdminPlans: React.FC = () => {
 
                     <div className="grid grid-cols-2 gap-4 border-t border-gray-50 dark:border-gray-700/50 pt-4">
                       <div className="space-y-1.5">
-                        <span className="text-[10px] text-emerald-500 uppercase font-black tracking-widest block truncate">
+                        <label
+                          htmlFor={`${plan.id}-vnd-year`}
+                          className="text-xs font-medium text-slate-600 dark:text-slate-300"
+                        >
                           VND / {t('common.year')}
-                        </span>
+                        </label>
                         <Input
+                          id={`${plan.id}-vnd-year`}
                           type="number"
                           value={plan.yearly_price_vnd || 0}
                           onChange={(e) =>
@@ -212,10 +239,14 @@ const AdminPlans: React.FC = () => {
                         />
                       </div>
                       <div className="space-y-1.5 border-l border-gray-50 dark:border-gray-700/50 pl-4">
-                        <span className="text-[10px] text-emerald-500 uppercase font-black tracking-widest block truncate">
+                        <label
+                          htmlFor={`${plan.id}-usd-year`}
+                          className="text-xs font-medium text-slate-600 dark:text-slate-300"
+                        >
                           USD / {t('common.year')}
-                        </span>
+                        </label>
                         <Input
+                          id={`${plan.id}-usd-year`}
                           type="number"
                           value={plan.yearly_price_usd || 0}
                           onChange={(e) =>
@@ -243,11 +274,15 @@ const AdminPlans: React.FC = () => {
                         {!Array.isArray(plan.limits) &&
                           Object.entries(plan.limits).map(([key, value]) => (
                             <div key={key} className="space-y-1.5">
-                              <label className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight block truncate ml-1">
+                              <label
+                                htmlFor={`${plan.id}-${key}`}
+                                className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-tight block truncate ml-1"
+                              >
                                 {t(`admin.limitLabels.${key}`, key)}
                               </label>
                               <div className="relative">
                                 <input
+                                  id={`${plan.id}-${key}`}
                                   type="number"
                                   value={value}
                                   onChange={(e) =>
@@ -287,10 +322,17 @@ const AdminPlans: React.FC = () => {
                                 {t(`admin.featureLabels.${key}`, key)}
                               </span>
                               <button
+                                type="button"
+                                role="switch"
+                                aria-checked={Boolean(value)}
+                                aria-label={t('admin.planFeature', {
+                                  name: plan.name,
+                                  feature: t(`admin.featureLabels.${key}`, key),
+                                })}
                                 onClick={() =>
                                   handleUpdateField(plan.id, PLAN_FIELDS.FEATURES, key, !value)
                                 }
-                                className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-all duration-300 focus:outline-none ${value ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-gray-300 dark:bg-gray-700'}`}
+                                className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary ${value ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-gray-300 dark:bg-gray-700'}`}
                               >
                                 <span
                                   className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow-md transition-all duration-300 ${value ? 'left-4.5' : 'left-0.5'}`}

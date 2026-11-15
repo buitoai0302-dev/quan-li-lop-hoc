@@ -81,9 +81,14 @@ const ForgotPassword: React.FC = () => {
           ) : (
             <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-1.5">
-                <Label className="text-slate-400 dark:text-gray-500 ml-1">{t('auth.email')}</Label>
+                <Label htmlFor="email" className="text-slate-400 dark:text-gray-500 ml-1">
+                  {t('auth.email')}
+                </Label>
                 <Input
                   id="email"
+                  name="email"
+                  autoComplete="email"
+                  spellCheck={false}
                   type="email"
                   required
                   value={email}

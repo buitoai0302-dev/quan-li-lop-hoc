@@ -3,6 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { FileText, Download } from 'lucide-react';
 import { Button, Modal } from '@/components/common/UI';
 import * as XLSX from 'xlsx';
+import { readImportFile, validateImportFile, importFileErrorKey } from '@/utils/import-file';
+import { IMPORT_FILE_ERROR_PARAMS } from '@/utils/import-file-policy';
 import toast from 'react-hot-toast';
 import { getAdminTenants, importAdminUsers } from '../api/admin.api';
 import type { Tenant } from '@/types';
@@ -24,6 +26,11 @@ export const ImportUsersModal: React.FC<ImportUsersModalProps> = ({ isOpen, onCl
   const [selectedTenant, setSelectedTenant] = useState<string>('');
   const [tenants, setTenants] = useState<Tenant[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
+  const parseController = React.useRef<AbortController | null>(null);
+  useEffect(() => {
+    if (!isOpen) setIsProcessing(false);
+    return () => parseController.current?.abort();
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -37,7 +44,8 @@ export const ImportUsersModal: React.FC<ImportUsersModalProps> = ({ isOpen, onCl
   }, [isOpen, t]);
 
   const importMutation = useMutation({
-    mutationFn: (data: any[]) => importAdminUsers(selectedTenant, data),
+    mutationFn: ({ tenantId, data }: { tenantId: string; data: Record<string, string>[] }) =>
+      importAdminUsers(tenantId, data),
     onSuccess: (res) => {
       toast.success(
         res.message || t('admin.users.messages.import_success', 'Nhập dữ liệu thành công')
@@ -53,17 +61,14 @@ export const ImportUsersModal: React.FC<ImportUsersModalProps> = ({ isOpen, onCl
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
-    if (selectedFile) {
-      const isExcel = selectedFile.name.endsWith('.xlsx') || selectedFile.name.endsWith('.xls');
-      const isCsv = selectedFile.name.endsWith('.csv');
-
-      if (!isExcel && !isCsv) {
-        toast.error(
-          t('import.errors.invalid_file_type', 'Vui lòng chọn file Excel hoặc CSV hợp lệ')
-        );
-        return;
-      }
+    if (!selectedFile || isProcessing) return;
+    setFile(null);
+    try {
+      validateImportFile(selectedFile);
       setFile(selectedFile);
+    } catch (error) {
+      e.target.value = '';
+      toast.error(t(importFileErrorKey(error), IMPORT_FILE_ERROR_PARAMS));
     }
   };
 
@@ -96,6 +101,7 @@ export const ImportUsersModal: React.FC<ImportUsersModalProps> = ({ isOpen, onCl
   };
 
   const handleSubmit = async () => {
+    if (isProcessing) return;
     if (!file || !selectedTenant) {
       toast.error(t('import.errors.missing_file_or_tenant', 'Vui lòng chọn file và trung tâm'));
       return;
@@ -103,82 +109,74 @@ export const ImportUsersModal: React.FC<ImportUsersModalProps> = ({ isOpen, onCl
 
     setIsProcessing(true);
 
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const data = e.target?.result;
-        const workbook = XLSX.read(data, { type: 'binary' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
+    const controller = new AbortController();
+    parseController.current?.abort();
+    parseController.current = controller;
+    try {
+      const { data: jsonData } = await readImportFile(file, controller.signal);
+      if (controller.signal.aborted) return;
 
-        const jsonData = XLSX.utils.sheet_to_json(worksheet) as Record<string, any>[];
-
-        if (jsonData.length === 0) {
-          toast.error(t('import.errors.empty_file', 'File không có dữ liệu'));
-          setIsProcessing(false);
-          return;
-        }
-
-        const getValue = (row: Record<string, unknown>, possibleKeys: string[]) => {
-          const rowKeys = Object.keys(row);
-          for (const key of possibleKeys) {
-            const matchedKey = rowKeys.find((rk) => rk.trim().toLowerCase() === key.toLowerCase());
-            if (matchedKey && row[matchedKey]) return String(row[matchedKey]).trim();
-          }
-          return '';
-        };
-
-        const mappedData = jsonData.map((row) => {
-          let role = getValue(row, [
-            'Role (admin/staff/teacher/student)',
-            'Role (admin/staff)',
-            'Role',
-            'Vai trò',
-            'Quyền',
-          ]).toLowerCase();
-
-          if (!['admin', 'staff', 'teacher', 'student'].includes(role)) {
-            role = 'staff'; // default to staff if invalid
-          }
-
-          return {
-            email: getValue(row, ['Email', 'Thư điện tử']),
-            full_name: getValue(row, ['Họ Tên', 'Họ và tên', 'Name', 'Full Name']),
-            role: role,
-            password: getValue(row, ['Password (Tuỳ chọn)', 'Password', 'Mật khẩu']),
-          };
-        });
-
-        // Filter out empty rows
-        const validData = mappedData.filter((d) => d.email && d.full_name);
-
-        if (validData.length === 0) {
-          toast.error(
-            t(
-              'import.errors.no_valid_data',
-              'Không tìm thấy dữ liệu hợp lệ. Vui lòng kiểm tra lại cột Email và Họ Tên.'
-            )
-          );
-          setIsProcessing(false);
-          return;
-        }
-
-        importMutation.mutate(validData);
-      } catch (error) {
-        toast.error(t('import.errors.read_file_error', 'Lỗi khi đọc file. Vui lòng thử lại.'));
+      if (jsonData.length === 0) {
+        toast.error(t('import.errors.empty_file', 'File không có dữ liệu'));
         setIsProcessing(false);
+        return;
       }
-    };
 
-    reader.onerror = () => {
-      toast.error(t('import.errors.read_file_error', 'Lỗi khi đọc file. Vui lòng thử lại.'));
+      const getValue = (row: Record<string, unknown>, possibleKeys: string[]) => {
+        const rowKeys = Object.keys(row);
+        for (const key of possibleKeys) {
+          const matchedKey = rowKeys.find((rk) => rk.trim().toLowerCase() === key.toLowerCase());
+          if (matchedKey && row[matchedKey]) return String(row[matchedKey]).trim();
+        }
+        return '';
+      };
+
+      const mappedData = jsonData.map((row) => {
+        let role = getValue(row, [
+          'Role (admin/staff/teacher/student)',
+          'Role (admin/staff)',
+          'Role',
+          'Vai trò',
+          'Quyền',
+        ]).toLowerCase();
+
+        if (!['admin', 'staff', 'teacher', 'student'].includes(role)) {
+          role = 'staff'; // default to staff if invalid
+        }
+
+        return {
+          email: getValue(row, ['Email', 'Thư điện tử']),
+          full_name: getValue(row, ['Họ Tên', 'Họ và tên', 'Name', 'Full Name']),
+          role: role,
+          password: getValue(row, ['Password (Tuỳ chọn)', 'Password', 'Mật khẩu']),
+        };
+      });
+
+      // Filter out empty rows
+      const validData = mappedData.filter((d) => d.email && d.full_name);
+
+      if (validData.length === 0) {
+        toast.error(
+          t(
+            'import.errors.no_valid_data',
+            'Không tìm thấy dữ liệu hợp lệ. Vui lòng kiểm tra lại cột Email và Họ Tên.'
+          )
+        );
+        setIsProcessing(false);
+        return;
+      }
+
+      importMutation.mutate({ tenantId: selectedTenant, data: validData });
+    } catch (error) {
+      if (controller.signal.aborted) return;
+      toast.error(t(importFileErrorKey(error), IMPORT_FILE_ERROR_PARAMS));
       setIsProcessing(false);
-    };
-
-    reader.readAsBinaryString(file);
+    }
   };
 
   const handleClose = () => {
+    parseController.current?.abort();
+    setIsProcessing(false);
     setFile(null);
     setSelectedTenant('');
     onClose();
@@ -194,11 +192,16 @@ export const ImportUsersModal: React.FC<ImportUsersModalProps> = ({ isOpen, onCl
       placement="right"
       width="clamp(480px, 46vw, 600px)"
       closeLabel={t('common.close')}
-      closeBlocked={isProcessing}
-      confirmCloseMessage={t('common.discardPanelChanges')}
+      closeBlocked={importMutation.isPending}
+      confirmCloseMessage={isProcessing ? undefined : t('common.discardPanelChanges')}
       footer={(requestClose) => (
         <div className="flex flex-wrap justify-end gap-3">
-          <Button type="button" onClick={requestClose} variant="outline" disabled={isProcessing}>
+          <Button
+            type="button"
+            onClick={requestClose}
+            variant="outline"
+            disabled={importMutation.isPending}
+          >
             {t('common.cancel')}
           </Button>
           <Button
@@ -234,6 +237,7 @@ export const ImportUsersModal: React.FC<ImportUsersModalProps> = ({ isOpen, onCl
           <select
             id={fieldPrefix + '-field-1'}
             value={selectedTenant}
+            disabled={isProcessing}
             onChange={(e) => setSelectedTenant(e.target.value)}
             className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
           >
@@ -274,6 +278,7 @@ export const ImportUsersModal: React.FC<ImportUsersModalProps> = ({ isOpen, onCl
             <input
               id={fieldPrefix + '-field-2'}
               type="file"
+              disabled={isProcessing}
               accept=".xlsx, .xls, .csv"
               onChange={handleFileChange}
               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"

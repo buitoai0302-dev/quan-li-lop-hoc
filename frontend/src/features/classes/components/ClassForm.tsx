@@ -1,11 +1,15 @@
 import React, { useEffect } from 'react';
-import { Calendar, Plus, Search, Users, X } from 'lucide-react';
+import { Plus, Search, Users, X } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import type { ClassFormProps } from '../types';
 import type { TFunction } from 'i18next';
 import { Input, Select, Label, Button, Card, Badge } from '@/components/common/UI';
+import { cn } from '@/utils/cn';
+
+const CLASS_FIELD_CLASS_NAME =
+  'min-w-0 h-11 border border-solid border-slate-200 bg-white text-base sm:h-9 sm:text-sm dark:border-slate-700 dark:bg-slate-950/50';
 
 const getClassSchema = (t: TFunction) =>
   z.object({
@@ -22,6 +26,7 @@ type ClassBasicSchemaType = z.infer<ReturnType<typeof getClassSchema>>;
 const ClassForm: React.FC<ClassFormProps> = ({
   id,
   initialData,
+  isSubmitting,
   onSubmit,
   branches,
   teachers,
@@ -89,8 +94,10 @@ const ClassForm: React.FC<ClassFormProps> = ({
     <form
       id={id}
       onSubmit={handleSubmit((data) => {
-        onSubmit(data);
+        if (!isSubmitting) onSubmit(data);
       })}
+      aria-busy={isSubmitting}
+      inert={isSubmitting}
       className="space-y-4 py-1"
     >
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
@@ -109,7 +116,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 variant="muted"
                 size="sm"
                 placeholder={t('classes.namePlaceholder')}
-                className={errors.name ? 'ring-2 ring-red-500' : ''}
+                className={cn(CLASS_FIELD_CLASS_NAME, errors.name && 'ring-2 ring-red-500')}
                 {...register('name')}
               />
               {errors.name && (
@@ -130,7 +137,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 aria-required="true"
                 variant="muted"
                 size="sm"
-                className={errors.branch_id ? 'ring-2 ring-red-500' : ''}
+                className={cn(CLASS_FIELD_CLASS_NAME, errors.branch_id && 'ring-2 ring-red-500')}
                 {...register('branch_id')}
               >
                 <option value="" disabled>
@@ -155,6 +162,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
               </Label>
               <Input
                 id={fieldPrefix + '-max_capacity'}
+                className={CLASS_FIELD_CLASS_NAME}
                 type="number"
                 variant="muted"
                 size="sm"
@@ -168,6 +176,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
               </Label>
               <Select
                 id={fieldPrefix + '-teacher_id'}
+                className={CLASS_FIELD_CLASS_NAME}
                 variant="muted"
                 size="sm"
                 {...register('teacher_id')}
@@ -181,7 +190,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
               </Select>
             </div>
 
-            <div>
+            <div className="col-span-2 min-[400px]:col-span-1 min-w-0">
               <Label htmlFor={fieldPrefix + '-field-5'} className="ml-1">
                 {t('classes.startDate')}
               </Label>
@@ -190,9 +199,8 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 type="date"
                 variant="muted"
                 size="sm"
-                icon={<Calendar />}
                 onClick={() => handleShowPicker(startDateRef)}
-                className="cursor-pointer"
+                className={cn(CLASS_FIELD_CLASS_NAME, 'cursor-pointer')}
                 {...startRegisterRest}
                 /* eslint-disable react-hooks/immutability */
                 ref={(e) => {
@@ -203,7 +211,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 /* eslint-enable react-hooks/immutability */
               />
             </div>
-            <div>
+            <div className="col-span-2 min-[400px]:col-span-1 min-w-0">
               <Label htmlFor={fieldPrefix + '-field-6'} className="ml-1">
                 {t('classes.endDate')}
               </Label>
@@ -212,9 +220,8 @@ const ClassForm: React.FC<ClassFormProps> = ({
                 type="date"
                 variant="muted"
                 size="sm"
-                icon={<Calendar />}
                 onClick={() => handleShowPicker(endDateRef)}
-                className="cursor-pointer"
+                className={cn(CLASS_FIELD_CLASS_NAME, 'cursor-pointer')}
                 {...endRegisterRest}
                 /* eslint-disable react-hooks/immutability */
                 ref={(e) => {
@@ -289,6 +296,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                     </label>
                     <Select
                       id={fieldPrefix + '-field-7' + '-' + index}
+                      className={CLASS_FIELD_CLASS_NAME}
                       size="xs"
                       variant="muted"
                       value={schedule.day_of_week}
@@ -315,6 +323,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                     </label>
                     <Select
                       id={fieldPrefix + '-field-8' + '-' + index}
+                      className={CLASS_FIELD_CLASS_NAME}
                       size="xs"
                       variant="muted"
                       value={schedule.room_id}
@@ -343,7 +352,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                     <Input
                       id={fieldPrefix + '-field-9' + '-' + index}
                       type="time"
-                      className="min-w-0"
+                      className={CLASS_FIELD_CLASS_NAME}
                       size="xs"
                       variant="muted"
                       value={schedule.start_time}
@@ -365,7 +374,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
                     <Input
                       id={fieldPrefix + '-field-10' + '-' + index}
                       type="time"
-                      className="min-w-0"
+                      className={CLASS_FIELD_CLASS_NAME}
                       size="xs"
                       variant="muted"
                       value={schedule.end_time}
@@ -410,7 +419,7 @@ const ClassForm: React.FC<ClassFormProps> = ({
             icon={<Search />}
             value={selectedStudentId || ''}
             onChange={(e) => setSelectedStudentId(e.target.value)}
-            className="flex-1"
+            className={CLASS_FIELD_CLASS_NAME}
           >
             <option value="">{t('students.selectStudent')}</option>
             {allStudents
@@ -427,22 +436,22 @@ const ClassForm: React.FC<ClassFormProps> = ({
               variant="outline"
               size="sm"
               onClick={onOpenBulkEnroll}
-              className="flex-1 sm:flex-none px-2 sm:px-4 h-9 font-bold bg-white dark:bg-gray-800 shadow-sm text-xs sm:text-sm whitespace-nowrap"
+              className="flex-1 sm:flex-none px-3 sm:px-4 h-11 sm:h-9 font-semibold bg-white dark:bg-gray-800 text-sm whitespace-nowrap"
             >
               <Plus size={14} className="mr-1 shrink-0" />
               <span className="hidden sm:inline">{t('common.bulkAdd')}</span>
-              <span className="sm:hidden">Ghi danh</span>
+              <span className="sm:hidden">{t('common.bulkAddShort')}</span>
             </Button>
             <Button
               type="button"
               onClick={() => onEnrollStudent()}
               disabled={!selectedStudentId}
               size="sm"
-              className="flex-1 sm:flex-none px-2 sm:px-4 h-9 font-bold text-xs sm:text-sm whitespace-nowrap"
+              className="flex-1 sm:flex-none px-3 sm:px-4 h-11 sm:h-9 font-semibold text-sm whitespace-nowrap"
             >
               <Plus size={14} className="mr-1 shrink-0" />
               <span className="hidden sm:inline">{t('students.addClass')}</span>
-              <span className="sm:hidden">Thêm</span>
+              <span className="sm:hidden">{t('common.addShort')}</span>
             </Button>
           </div>
         </div>
@@ -453,20 +462,18 @@ const ClassForm: React.FC<ClassFormProps> = ({
           className="max-h-[180px] lg:max-h-[clamp(7rem,calc(100dvh-34rem),16rem)]"
           bodyClassName="p-3 custom-scrollbar lg:overscroll-contain"
         >
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,14rem),1fr))] gap-2">
             {enrollments.map((s) => (
               <div
                 key={s.id}
                 className="flex items-center justify-between p-2 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 group hover:border-primary/30 transition-all shadow-sm"
               >
                 <div className="min-w-0">
-                  <p className="text-[11px] font-black text-gray-900 dark:text-white truncate">
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                     {s.full_name}
                   </p>
                   {s.email && (
-                    <p className="text-[9px] text-gray-400 dark:text-gray-500 truncate">
-                      {s.email}
-                    </p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{s.email}</p>
                   )}
                 </div>
                 <Button
@@ -475,14 +482,14 @@ const ClassForm: React.FC<ClassFormProps> = ({
                   size="icon"
                   aria-label={t('classes.removeStudent', { name: s.full_name })}
                   onClick={() => onUnenrollStudent(s.id)}
-                  className="h-6 w-6 text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                  className="size-11 shrink-0 sm:size-8 text-gray-500 hover:text-red-600 hover:bg-red-50 transition-colors"
                 >
                   <X size={12} />
                 </Button>
               </div>
             ))}
             {enrollments.length === 0 && (
-              <div className="col-span-full py-4 text-center text-[9px] text-gray-400 font-bold uppercase tracking-widest italic">
+              <div className="col-span-full py-4 text-center text-sm text-gray-500 dark:text-gray-400">
                 {t('classes.noStudents')}
               </div>
             )}

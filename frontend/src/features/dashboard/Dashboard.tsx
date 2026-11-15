@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -49,6 +50,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const {
     stats,
+    statsQuery,
     loading,
     chartPeriod,
     setChartPeriod,
@@ -69,6 +71,15 @@ const Dashboard: React.FC = () => {
   if (loading) {
     return <PageLoading />;
   }
+
+  const failedQueries = [statsQuery].filter((query) => query.isError && query.data === undefined);
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
 
   return (
     <div className="h-full overflow-auto custom-scrollbar px-3 sm:px-4 py-3">

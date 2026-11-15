@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
@@ -25,6 +26,7 @@ const ImportData: React.FC = () => {
     importType,
     setImportType,
     branches,
+    branchesQuery,
     selectedBranch,
     setSelectedBranch,
     file,
@@ -86,6 +88,10 @@ const ImportData: React.FC = () => {
     XLSX.writeFile(wb, `Template_Import_${importType}.xlsx`);
   };
 
+  if (branchesQuery.isError && branchesQuery.data === undefined)
+    return <PageError onRetry={branchesQuery.refetch} retrying={branchesQuery.isFetching} />;
+  if (branchesQuery.isLoading) return <PageLoading />;
+
   return (
     <div className="flex h-full min-h-0 flex-col overflow-hidden">
       <div className="min-h-0 flex-1 overflow-y-auto custom-scrollbar">
@@ -110,11 +116,16 @@ const ImportData: React.FC = () => {
             header={
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                  <label
+                    htmlFor="import-type"
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1"
+                  >
                     {t('import.type')}
                   </label>
                   <select
-                    className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary transition-all text-xs font-bold dark:text-white appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10"
+                    id="import-type"
+                    disabled={isUploading}
+                    className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary transition-colors text-base sm:text-sm font-medium dark:text-white appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10"
                     value={importType}
                     onChange={(e) => {
                       setImportType(e.target.value as ImportType);
@@ -128,11 +139,16 @@ const ImportData: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">
+                  <label
+                    htmlFor="import-branch"
+                    className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1.5 ml-1"
+                  >
                     {t('import.selectBranch')}
                   </label>
                   <select
-                    className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary transition-all text-xs font-bold dark:text-white appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10"
+                    id="import-branch"
+                    disabled={isUploading}
+                    className="w-full bg-gray-50 dark:bg-gray-900 border-none rounded-xl py-3 px-4 focus:ring-2 focus:ring-primary transition-colors text-base sm:text-sm font-medium dark:text-white appearance-none bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20fill%3D%22none%22%20viewBox%3D%220%200%2024%2024%22%20stroke%3D%22%236B7280%22%3E%3Cpath%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%20stroke-width%3D%222%22%20d%3D%22M19%209l-7%207-7-7%22%2F%3E%3C%2Fsvg%3E')] bg-[length:16px] bg-[right_12px_center] bg-no-repeat pr-10"
                     value={selectedBranch}
                     onChange={(e) => setSelectedBranch(e.target.value)}
                   >
@@ -318,6 +334,7 @@ const ImportData: React.FC = () => {
                   </div>
                   <button
                     onClick={handleClearFile}
+                    disabled={isUploading}
                     className="px-4 py-2 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/20 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 flex items-center gap-2"
                   >
                     <Trash2 size={16} />
@@ -384,7 +401,9 @@ const ImportData: React.FC = () => {
                 <div className="flex justify-end pt-4">
                   <button
                     onClick={() => setIsConfirmOpen(true)}
-                    disabled={isUploading || parsedData.length === 0}
+                    disabled={
+                      isUploading || isProcessing || !selectedBranch || parsedData.length === 0
+                    }
                     className="px-12 py-4 bg-primary text-white rounded-xl text-[10px] font-black uppercase tracking-widest shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 flex items-center gap-3"
                   >
                     {isUploading ? (

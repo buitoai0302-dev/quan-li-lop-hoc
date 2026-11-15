@@ -1,25 +1,30 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { bulkImportStudents, bulkImportOther } from '../api/import.api';
-import { getBranches } from '@/features/branches';
+import { useBranches } from '@/features/branches/hooks/useBranches';
 import toast from 'react-hot-toast';
-import Papa from 'papaparse';
-import * as XLSX from 'xlsx';
+import { readImportFile, validateImportFile, importFileErrorKey } from '@/utils/import-file';
+import { IMPORT_FILE_ERROR_PARAMS } from '@/utils/import-file-policy';
 import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
 import type { ApiErrorData } from '@/utils/errorHelper';
 import type { AxiosError } from 'axios';
-import type { Branch } from '@/types';
 
-export type ImportType = 'students' | 'teachers' | 'rooms' | 'classes';
+const IMPORT_TYPES = ['students', 'teachers', 'rooms', 'classes'] as const;
+export type ImportType = (typeof IMPORT_TYPES)[number];
+const isImportType = (value: string | null): value is ImportType =>
+  IMPORT_TYPES.some((type) => type === value);
 
 export const useImport = () => {
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
-  const [importType, setImportType] = useState<ImportType>(
-    (searchParams.get('type') as ImportType) || 'students'
-  );
-  const [branches, setBranches] = useState<Branch[]>([]);
+  const [importType, setImportType] = useState<ImportType>(() => {
+    const type = searchParams.get('type');
+    return isImportType(type) ? type : 'students';
+  });
+  const { branches, query: branchesQuery } = useBranches();
+  const processingRequestId = useRef(0);
+  const parseController = useRef<AbortController | null>(null);
   const [selectedBranch, setSelectedBranch] = useState<string>('');
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<Record<string, unknown>[]>([]);
@@ -28,90 +33,86 @@ export const useImport = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
-    const fetchBranches = async () => {
-      try {
-        const data = await getBranches();
-        setBranches(data);
-        if (data.length > 0) setSelectedBranch(data[0].id);
-      } catch (err) {
-        handleApiError(err as AxiosError<ApiErrorData>, t);
-      }
-    };
-    fetchBranches();
-  }, [t]);
+    setSelectedBranch((current) =>
+      branches.some((branch) => branch.id === current) ? current : branches[0]?.id || ''
+    );
+  }, [branches]);
 
   useEffect(() => {
-    const typeFromUrl = searchParams.get('type') as ImportType;
-    if (typeFromUrl && ['students', 'teachers', 'rooms', 'classes'].includes(typeFromUrl)) {
-      setImportType(typeFromUrl);
-    }
+    const typeFromUrl = searchParams.get('type');
+    if (isImportType(typeFromUrl)) setImportType(typeFromUrl);
   }, [searchParams]);
+
+  useEffect(
+    () => () => {
+      processingRequestId.current += 1;
+      parseController.current?.abort();
+    },
+    []
+  );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
     if (!selected) return;
+    processingRequestId.current += 1;
+    parseController.current?.abort();
+    setIsProcessing(false);
+    setFile(null);
+    setParsedData([]);
+    setHeaders([]);
+    try {
+      validateImportFile(selected);
+    } catch (error) {
+      toast.error(t(importFileErrorKey(error), IMPORT_FILE_ERROR_PARAMS));
+      e.target.value = '';
+      return;
+    }
     setFile(selected);
     setParsedData([]);
     setHeaders([]);
   };
 
-  const processFile = () => {
-    if (!file) return;
+  const processFile = async () => {
+    if (!file || isProcessing || isUploading) return;
+    const requestId = ++processingRequestId.current;
+    parseController.current?.abort();
+    const controller = new AbortController();
+    parseController.current = controller;
     setIsProcessing(true);
-    const fileExt = file.name.split('.').pop()?.toLowerCase();
-
-    if (fileExt === 'csv' || fileExt === 'tsv') {
-      Papa.parse(file, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          if (results.meta.fields) setHeaders(results.meta.fields);
-          setParsedData(results.data as Record<string, unknown>[]);
-          setIsProcessing(false);
-        },
-        error: (error) => {
-          toast.error(t('import.errors.readCsv', { message: error.message }));
-          setIsProcessing(false);
-        },
-      });
-    } else if (fileExt === 'xlsx' || fileExt === 'xls') {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = new Uint8Array(e.target?.result as ArrayBuffer);
-          const workbook = XLSX.read(data, { type: 'array' });
-          const firstSheetName = workbook.SheetNames[0];
-          const worksheet = workbook.Sheets[firstSheetName];
-          const json = XLSX.utils.sheet_to_json(worksheet, { defval: '' });
-          if (json.length > 0) {
-            setHeaders(Object.keys(json[0] as object));
-            setParsedData(json as Record<string, unknown>[]);
-          }
-          setIsProcessing(false);
-        } catch (err) {
-          toast.error(t('import.errors.readExcel'));
-          setIsProcessing(false);
-        }
-      };
-      reader.readAsArrayBuffer(file);
+    try {
+      const { data, headers: fields } = await readImportFile(file, controller.signal);
+      if (requestId !== processingRequestId.current) return;
+      setParsedData(data);
+      setHeaders(fields);
+      if (!data.length) toast.error(t('import.errors.noData'));
+    } catch (error) {
+      if (requestId !== processingRequestId.current || controller.signal.aborted) return;
+      setParsedData([]);
+      setHeaders([]);
+      toast.error(t(importFileErrorKey(error), IMPORT_FILE_ERROR_PARAMS));
+    } finally {
+      if (requestId === processingRequestId.current) setIsProcessing(false);
     }
   };
 
   const handleClearFile = () => {
+    processingRequestId.current += 1;
+    parseController.current?.abort();
+    setIsProcessing(false);
     setFile(null);
     setParsedData([]);
     setHeaders([]);
   };
 
   const handleImport = async () => {
-    if (!selectedBranch || parsedData.length === 0) return;
+    if (isUploading || isProcessing || !selectedBranch || parsedData.length === 0) return false;
     setIsUploading(true);
 
     const getValue = (row: Record<string, unknown>, possibleKeys: string[]) => {
       const rowKeys = Object.keys(row);
       for (const key of possibleKeys) {
         const matchedKey = rowKeys.find((rk) => rk.trim().toLowerCase() === key.toLowerCase());
-        if (matchedKey && row[matchedKey]) return row[matchedKey];
+        if (matchedKey && row[matchedKey] != null && row[matchedKey] !== '') return row[matchedKey];
       }
       return '';
     };
@@ -164,16 +165,9 @@ export const useImport = () => {
       }
     });
 
-    const validData = mappedData.filter(
-      (d: Record<string, unknown>) =>
-        Object.fromEntries(
-          importType === 'rooms' ? [['name', d.name]] : [['full_name', d.full_name || d.name]]
-        ) && (importType === 'classes' ? d.teacher_email : true)
-    );
-
     try {
       if (importType === 'students') {
-        const data = await bulkImportStudents(validData, selectedBranch);
+        const data = await bulkImportStudents(mappedData, selectedBranch);
         toast.success(
           t('success.IMPORT_SUCCESS', {
             students: data.students_count,
@@ -181,8 +175,8 @@ export const useImport = () => {
           })
         );
       } else {
-        const data = await bulkImportOther(importType, validData);
-        toast.success(data.message || t('common.success'));
+        const data = await bulkImportOther(importType, mappedData);
+        toast.success(t('import.result', { imported: data.successCount, skipped: data.skipCount }));
       }
       handleClearFile();
       return true;
@@ -198,6 +192,7 @@ export const useImport = () => {
     importType,
     setImportType,
     branches,
+    branchesQuery,
     selectedBranch,
     setSelectedBranch,
     file,

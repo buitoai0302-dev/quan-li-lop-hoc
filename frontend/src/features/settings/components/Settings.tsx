@@ -1,5 +1,9 @@
+import PageError from '@/components/common/PageError';
+import PageLoading from '@/components/common/PageLoading';
+import { useNavigationPrompt } from '@/hooks/useNavigationPrompt';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
   getTenant,
@@ -17,6 +21,28 @@ import ConfirmModal from '@/components/common/ConfirmModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/utils/constants';
 
+interface SettingsSnapshot {
+  centerName: string;
+  contactEmail: string;
+  fullName: string;
+  notifySessions: boolean;
+  menuSettings: Record<string, boolean>;
+}
+
+const DEFAULT_MENU_SETTINGS: Record<string, boolean> = {
+  dashboard: true,
+  schedule: true,
+  classes: true,
+  attendance: true,
+  students: true,
+  teachers: true,
+  rooms: true,
+  branches: true,
+  tuition: true,
+  import: true,
+  subscription: true,
+};
+
 type SettingSection = 'general' | 'profile' | 'features' | 'integration' | 'api' | 'appearance';
 
 import GeneralSettings from '@/features/settings/components/GeneralSettings';
@@ -28,9 +54,35 @@ import AppearanceSettings from '@/features/settings/components/AppearanceSetting
 
 const Settings: React.FC = () => {
   const { t } = useTranslation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { theme, setTheme } = useTheme();
   const { user, updateUser } = useAuth();
-  const [activeSection, setActiveSection] = useState<SettingSection>('general');
+  const canManageCenter = user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.SUPER_ADMIN;
+  const [activeSection, setActiveSection] = useState<SettingSection>(
+    canManageCenter ? 'general' : 'profile'
+  );
+  useEffect(() => {
+    const result = searchParams.get('google_sync');
+    if (result !== 'success' && result !== 'error') return;
+    setActiveSection('integration');
+    if (result === 'success')
+      toast.success(t('settings.googleCalendarConnected'), { id: 'google-connection' });
+    else {
+      const key =
+        searchParams.get('code') === 'GOOGLE_OAUTH_INVALID_STATE'
+          ? 'errors.GOOGLE_OAUTH_INVALID_STATE'
+          : 'errors.GOOGLE_CONNECTION_FAILED';
+      toast.error(t(key), { id: 'google-connection' });
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete('google_sync');
+    next.delete('code');
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams, t]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [savedSettings, setSavedSettings] = useState<SettingsSnapshot | null>(null);
 
   const [centerName, setCenterName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
@@ -42,19 +94,15 @@ const Settings: React.FC = () => {
   const [saving, setSaving] = useState(false);
   const [generatingKey, setGeneratingKey] = useState(false);
   const [syncing, setSyncing] = useState(false);
-  const [menuSettings, setMenuSettings] = useState<Record<string, boolean>>({
-    dashboard: true,
-    schedule: true,
-    classes: true,
-    attendance: true,
-    students: true,
-    teachers: true,
-    rooms: true,
-    branches: true,
-    tuition: true,
-    import: true,
-    subscription: true,
-  });
+  const [menuSettings, setMenuSettings] = useState<Record<string, boolean>>(DEFAULT_MENU_SETTINGS);
+  const isDirty =
+    savedSettings !== null &&
+    (centerName !== savedSettings.centerName ||
+      contactEmail !== savedSettings.contactEmail ||
+      fullName !== savedSettings.fullName ||
+      notifySessions !== savedSettings.notifySessions ||
+      JSON.stringify(menuSettings) !== JSON.stringify(savedSettings.menuSettings));
+  const blocker = useNavigationPrompt(isDirty);
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean;
     message: string;
@@ -62,50 +110,52 @@ const Settings: React.FC = () => {
   }>({ open: false, message: '', onConfirm: () => {} });
 
   useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setLoadError(false);
     const fetchSettings = async () => {
       try {
-        const [tenantData, userData] = await Promise.all([getTenant(), getCurrentUser()]);
-
-        setCenterName(tenantData.name || '');
-        setContactEmail(tenantData.contact_email || '');
-        setMenuSettings({
-          dashboard: true,
-          schedule: true,
-          classes: true,
-          attendance: true,
-          students: true,
-          teachers: true,
-          rooms: true,
-          branches: true,
-          tuition: true,
-          import: true,
-          subscription: true,
-          ...(tenantData.settings?.menu || {}),
-        });
-
-        setFullName(userData.full_name || '');
-        setNotifySessions(userData.notify_upcoming_sessions);
-        setIsGoogleConnected(userData.is_google_connected);
-
-        // Fetch API Key if available
-        try {
-          const apiData = await getApiKeyInfo();
-          if (apiData.hasAccess) {
-            setApiKey(apiData.apiKey || null);
-            setHasApiAccess(true);
-          } else {
-            setHasApiAccess(false);
+        const [userData, tenantData] = await Promise.all([
+          getCurrentUser(),
+          canManageCenter ? getTenant() : Promise.resolve(null),
+        ]);
+        if (cancelled) return;
+        const snapshot: SettingsSnapshot = {
+          centerName: tenantData?.name || '',
+          contactEmail: tenantData?.contact_email || '',
+          fullName: userData.full_name || '',
+          notifySessions: Boolean(userData.notify_upcoming_sessions),
+          menuSettings: { ...DEFAULT_MENU_SETTINGS, ...tenantData?.settings?.menu },
+        };
+        setCenterName(snapshot.centerName);
+        setContactEmail(snapshot.contactEmail);
+        setFullName(snapshot.fullName);
+        setNotifySessions(snapshot.notifySessions);
+        setMenuSettings(snapshot.menuSettings);
+        setSavedSettings(snapshot);
+        setIsGoogleConnected(Boolean(userData.is_google_connected));
+        if (canManageCenter) {
+          try {
+            const apiData = await getApiKeyInfo();
+            if (!cancelled) {
+              setApiKey(apiData.apiKey || null);
+              setHasApiAccess(apiData.hasAccess);
+            }
+          } catch {
+            if (!cancelled) setHasApiAccess(false);
           }
-        } catch (err) {
-          console.error('Failed to fetch API key info:', err);
-          setHasApiAccess(false);
         }
       } catch {
-        toast.error(t('common.error'));
+        if (!cancelled) setLoadError(true);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     };
-    fetchSettings();
-  }, [t]);
+    void fetchSettings();
+    return () => {
+      cancelled = true;
+    };
+  }, [canManageCenter, loadAttempt]);
 
   const handleSaveTenant = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,6 +163,7 @@ const Settings: React.FC = () => {
     setSaving(true);
     try {
       await updateTenantApi({ name: centerName, contact_email: contactEmail });
+      setSavedSettings((previous) => previous && { ...previous, centerName, contactEmail });
       toast.success(t('common.success'));
     } catch {
       toast.error(t('common.error'));
@@ -126,13 +177,14 @@ const Settings: React.FC = () => {
     setSaving(true);
     try {
       const data = await updateTenantApi({
-        name: centerName,
-        contact_email: contactEmail,
+        name: savedSettings?.centerName || centerName,
+        contact_email: savedSettings?.contactEmail ?? contactEmail,
         settings: { menu: menuSettings },
       });
 
       // Update local user context so menu updates immediately
       updateUser({ tenant_settings: data.settings as any });
+      setSavedSettings((previous) => previous && { ...previous, menuSettings });
 
       toast.success(t('common.success'));
     } catch {
@@ -150,6 +202,8 @@ const Settings: React.FC = () => {
         full_name: fullName,
         notify_upcoming_sessions: notifySessions,
       });
+      updateUser({ full_name: fullName, notify_upcoming_sessions: notifySessions });
+      setSavedSettings((previous) => previous && { ...previous, fullName, notifySessions });
       toast.success(t('common.success'));
     } catch {
       toast.error(t('common.error'));
@@ -281,20 +335,24 @@ const Settings: React.FC = () => {
     },
   ].filter((item) => user?.role && item.roles.includes(user.role));
 
+  if (loading) return <PageLoading />;
+  if (loadError) return <PageError onRetry={() => setLoadAttempt((attempt) => attempt + 1)} />;
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <div className="flex-1 flex flex-col lg:flex-row gap-3 sm:gap-4 max-w-6xl w-full mx-auto overflow-hidden pb-2 sm:pb-4">
         {/* Side Navigation Sub-menu */}
         <aside className="w-full lg:w-60 shrink-0 sticky top-0 z-20 self-start">
-          <div className="bg-white/90 dark:bg-gray-800/95 backdrop-blur-xl rounded-xl shadow-xl shadow-gray-200/20 dark:shadow-none border border-white dark:border-gray-700/50 p-1 lg:p-3 flex lg:flex-col items-center lg:items-stretch justify-start lg:justify-start gap-0.5 sm:gap-1 overflow-x-auto no-scrollbar">
+          <div className="bg-white/90 dark:bg-gray-800/95 backdrop-blur-xl rounded-xl shadow-xl shadow-gray-200/20 dark:shadow-none border border-white dark:border-gray-700/50 p-1 lg:p-3 grid grid-cols-3 sm:flex lg:flex-col items-center lg:items-stretch gap-0.5 sm:gap-1">
             {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveSection(item.id)}
-                className={`flex-1 lg:flex-none flex flex-col lg:flex-row items-center lg:justify-between px-0 py-2 lg:px-4 lg:py-3 rounded-lg lg:rounded-xl transition-all duration-300 group min-w-[54px] sm:min-w-[60px] lg:min-w-0 ${
+                aria-current={activeSection === item.id ? 'page' : undefined}
+                className={`flex-1 lg:flex-none flex flex-col lg:flex-row items-center lg:justify-between px-0 py-2 lg:px-4 lg:py-3 rounded-lg lg:rounded-xl transition-all duration-300 group min-w-0 ${
                   activeSection === item.id
                     ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]'
-                    : 'text-gray-400 dark:text-gray-500 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-primary'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 hover:text-primary'
                 }`}
               >
                 <div className="flex flex-col lg:flex-row items-center gap-1 lg:gap-3">
@@ -306,9 +364,7 @@ const Settings: React.FC = () => {
                         : 'group-hover:scale-110 transition-transform'
                     }
                   />
-                  <span
-                    className={`text-[9px] lg:text-sm font-bold truncate ${activeSection === item.id ? 'opacity-100' : 'opacity-60 lg:opacity-100'}`}
-                  >
+                  <span className={`text-xs lg:text-sm font-semibold truncate`}>
                     {item.id === 'general'
                       ? t('common.general')
                       : item.id === 'profile'
@@ -393,6 +449,19 @@ const Settings: React.FC = () => {
         </div>
       </div>
 
+      <ConfirmModal
+        isOpen={blocker.state === 'blocked'}
+        title={t('common.unsavedChanges')}
+        message={t('common.unsavedDescription')}
+        confirmText={t('common.leave')}
+        cancelText={t('common.stay')}
+        onConfirm={() => {
+          if (blocker.state === 'blocked') blocker.proceed();
+        }}
+        onClose={() => {
+          if (blocker.state === 'blocked') blocker.reset();
+        }}
+      />
       <ConfirmModal
         isOpen={confirmModal.open}
         title={t('common.confirm')}

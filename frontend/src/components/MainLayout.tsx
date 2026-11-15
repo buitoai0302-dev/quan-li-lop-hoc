@@ -10,7 +10,7 @@ import {
   MessageSquarePlus,
   SlidersHorizontal,
 } from 'lucide-react';
-import { getMenuItems } from '../routes';
+import { getMenuItems } from '../navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
@@ -20,6 +20,7 @@ import Sidebar from './Sidebar';
 import FeedbackModal from './FeedbackModal';
 import ActionHint from './common/ActionHint';
 import { useFCM } from '@/features/notifications/hooks/useFCM';
+import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '@/hooks/useMediaQuery';
 
 const MainLayout: React.FC = () => {
   useFCM(); // Initialize FCM notifications
@@ -33,6 +34,7 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
 
   useEffect(() => {
     const handleOpenFeedback = () => setIsFeedbackOpen(true);
@@ -100,7 +102,10 @@ const MainLayout: React.FC = () => {
       />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden flex flex-col relative custom-scrollbar bg-gray-50/50 dark:bg-slate-950/50">
+      <main
+        inert={isMobileMenuOpen && !isDesktop}
+        className="min-w-0 flex-1 overflow-hidden flex flex-col relative custom-scrollbar bg-gray-50/50 dark:bg-slate-950/50"
+      >
         {/* Impersonation Banner */}
         {localStorage.getItem('impersonatedTenantId') && (
           <div className="w-full z-[100] bg-rose-500 text-white px-4 py-2 flex items-center justify-center gap-4 text-xs font-bold shadow-md shrink-0">

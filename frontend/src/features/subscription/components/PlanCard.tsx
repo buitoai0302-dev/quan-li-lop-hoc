@@ -79,7 +79,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
         </p>
       )}
 
-      <div className="mb-4 flex items-center gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <div
           className={`flex size-10 shrink-0 items-center justify-center rounded-xl ${
             isFree
@@ -96,7 +96,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
           {isBusiness && <Shield size={24} fill="currentColor" />}
           {isEnterprise && <Crown size={24} fill="currentColor" />}
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <h3 className="break-words text-lg font-bold tracking-tight text-slate-900 dark:text-white">
             {plan.name}
           </h3>
@@ -134,12 +134,13 @@ const PlanCard: React.FC<PlanCardProps> = ({
           </div>
           {isYearly && monthlyPrice > 0 && (
             <div className="mt-1 flex flex-wrap items-baseline gap-x-1 text-xs text-slate-600 dark:text-slate-300">
-              Thanh toán{' '}
-              <span className="font-bold text-gray-600 dark:text-gray-300">
-                {isVi ? new Intl.NumberFormat('vi-VN').format(yearlyPrice) : yearlyPrice}
-                {isVi ? 'đ' : '$'}
-              </span>{' '}
-              / năm
+              {t('subscription.billedYearly', {
+                amount: new Intl.NumberFormat(isVi ? 'vi-VN' : 'en-US', {
+                  style: 'currency',
+                  currency: isVi ? 'VND' : 'USD',
+                  maximumFractionDigits: 0,
+                }).format(yearlyPrice),
+              })}
             </div>
           )}
         </div>

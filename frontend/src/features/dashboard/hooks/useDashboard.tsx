@@ -89,6 +89,7 @@ export const useDashboard = () => {
   return {
     stats: statsQuery.data,
     loading: statsQuery.isLoading,
+    statsQuery,
     chartPeriod,
     setChartPeriod,
     showOnboarding,

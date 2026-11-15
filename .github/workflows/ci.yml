@@ -28,7 +28,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Check tracked files and migration history
         run: node scripts/check-git-hygiene.cjs --base "$MIGRATION_BASE"
         env:
@@ -50,12 +50,12 @@ jobs:
           GOOGLE_CLIENT_SECRET: ci-oauth-client-secret
           ONLINE_PAYMENTS_ENABLED: 'false'
           DISABLE_BACKGROUND_JOBS: 'true'
-      - name: Verify data integrity on PostgreSQL
+      - name: Verify data integrity and auth security on PostgreSQL
         working-directory: backend
         run: |
           npm run db:init
           npm run db:migrate
-          npm run test:staging -- --runTestsByPath tests/staging/data-integrity.staging.test.ts
+          npm run test:staging -- --runTestsByPath tests/staging/data-integrity.staging.test.ts tests/staging/auth-security.staging.test.ts
         env:
           DB_HOST: 127.0.0.1
           DB_NAME: eduschedule_integrity_test
@@ -71,12 +71,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
       - name: Install frontend deps
         run: cd frontend && npm ci
       - name: TypeScript check
         run: cd frontend && npx tsc --noEmit
       - name: Lint check
         run: cd frontend && npm run lint -- --max-warnings=0
+      - name: Verify untrusted import parsing
+        run: cd frontend && npm run test:security
       - name: Production build
         run: cd frontend && npm run build

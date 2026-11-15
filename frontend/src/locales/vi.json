@@ -39,6 +39,10 @@
     "add": "Thêm mới",
     "filter": "Bộ lọc",
     "bulkAdd": "Ghi danh hàng loạt",
+    "bulkAddShort": "Ghi danh",
+    "addShort": "Thêm",
+    "selectAll": "Chọn tất cả",
+    "selectItem": "Chọn {{name}}",
     "edit": "Sửa",
     "delete": "Xóa",
     "save": "Lưu thông tin",
@@ -110,7 +114,12 @@
     "installApp": "Cài đặt ứng dụng",
     "processing": "Đang xử lý…",
     "tryDifferentSearch": "Thử từ khóa khác.",
-    "goBack": "Quay lại"
+    "goBack": "Quay lại",
+    "loadErrorTitle": "Không tải được dữ liệu",
+    "loadErrorDescription": "Kết nối đang gặp sự cố. Vui lòng thử lại để tải dữ liệu.",
+    "retry": "Thử lại",
+    "unsavedDescription": "Bạn có thay đổi chưa lưu. Rời trang và bỏ các thay đổi này?",
+    "selectedCount": "Đã chọn {{count}}"
   },
   "menu": {
     "dashboard": "Tổng quan",
@@ -200,6 +209,7 @@
     "actualRevenue": "Thực tế"
   },
   "import": {
+    "result": "Đã nhập {{imported}} bản ghi, bỏ qua {{skipped}} bản ghi.",
     "title": "Nhập dữ liệu hệ thống",
     "subtitle": "Tải lên tệp CSV hoặc Excel để thêm dữ liệu hàng loạt",
     "downloadTemplate": "Tải tệp mẫu",
@@ -230,7 +240,7 @@
       "endDate": "Ngày kết thúc"
     },
     "dropzoneText": "Kéo thả tệp vào đây hoặc click để chọn",
-    "dropzoneSub": "Hỗ trợ định dạng .csv, .xlsx, .xls",
+    "dropzoneSub": "Hỗ trợ định dạng .csv, .tsv, .xlsx, .xls",
     "analyzeFile": "Phân tích tệp",
     "rowCount": "{{count}} dòng dữ liệu",
     "clearFile": "Xóa tệp",
@@ -247,6 +257,11 @@
       "invalidFormat": "Định dạng tệp không được hỗ trợ",
       "readCsv": "Lỗi khi đọc tệp CSV: {{message}}",
       "readExcel": "Lỗi khi đọc tệp Excel",
+      "fileTooLarge": "Tệp vượt quá {{maxSizeMb}} MB. Vui lòng chia thành các tệp nhỏ hơn.",
+      "tooManyRows": "Tệp vượt quá {{maxRows}} dòng dữ liệu. Vui lòng chia tệp trước khi nhập.",
+      "tooManyColumns": "Tệp vượt quá {{maxColumns}} cột. Vui lòng bỏ các cột không cần thiết.",
+      "tooManySheets": "Tệp vượt quá {{maxSheets}} trang tính. Vui lòng chỉ giữ các trang cần nhập.",
+      "parseTimeout": "Tệp mất quá nhiều thời gian để đọc. Vui lòng kiểm tra hoặc chia nhỏ tệp.",
       "invalidData": "Dữ liệu không hợp lệ hoặc thiếu các trường bắt buộc",
       "invalid_file_type": "Chọn tệp Excel hoặc CSV hợp lệ.",
       "missing_file_or_tenant": "Chọn tệp và trung tâm.",
@@ -424,7 +439,8 @@
     "contactSales": "Liên hệ kinh doanh",
     "consultSubject": "Yêu cầu tư vấn EduSchedule",
     "consultBody": "Chào đội ngũ EduSchedule,\n\nTôi quan tâm đến các giải pháp tùy chỉnh cho trung tâm của mình. Tôi muốn yêu cầu một buổi tư vấn.\n\nThông tin liên hệ:\nEmail: {{email}}",
-    "policy": "Gói và tính năng hiện có được hiển thị ở trên. Yêu cầu nâng cấp sẽ được xem xét trước khi kích hoạt."
+    "policy": "Gói và tính năng hiện có được hiển thị ở trên. Yêu cầu nâng cấp sẽ được xem xét trước khi kích hoạt.",
+    "billedYearly": "Thanh toán {{amount}} / năm"
   },
   "admin": {
     "planRequestsTitle": "Yêu cầu nâng cấp gói",
@@ -622,7 +638,9 @@
     "systemShort": "Hệ thống",
     "login": "Đăng nhập",
     "statusPending": "Chờ xác thực email",
-    "statusPendingShort": "Chờ xác thực"
+    "statusPendingShort": "Chờ xác thực",
+    "planStatus": "Trạng thái gói {{name}}",
+    "planFeature": "Gói {{name}}: {{feature}}"
   },
   "attendance": {
     "disabledTitle": "Tính năng chưa được kích hoạt",
@@ -646,6 +664,7 @@
     "totalAbsent": "Vắng mặt",
     "totalLate": "Đi muộn",
     "quickMarkAll": "Đánh dấu tất cả Có mặt",
+    "quickMarkAllShort": "Cả lớp có mặt",
     "history": "Lịch sử điểm danh",
     "save": "Lưu điểm danh",
     "noSessionsDesc": "Không có ca học nào được xếp lịch cho ngày này. Hãy thử chọn ngày khác hoặc kiểm tra Lịch dạy.",
@@ -658,6 +677,8 @@
     "title": "Quản lý Lịch học",
     "manageSchedule": "Quản lý lịch dạy & học của trung tâm",
     "time": "Thời gian",
+    "dailySessions": "Các ca học trong ngày",
+    "noSessionsForDay": "Không có ca học trong ngày này.",
     "addSession": "Thêm ca học",
     "singleSession": "Một buổi",
     "multipleSessions": "Nhiều buổi",
@@ -666,6 +687,18 @@
     "invalidSessionTime": "Giờ kết thúc phải sau giờ bắt đầu.",
     "batchOverlap": "Buổi này trùng giờ với một buổi khác của lớp trong danh sách.",
     "editSession": "Sửa ca học",
+    "editSessionLabel": "Sửa buổi học {{name}}",
+    "viewSession": "Xem buổi học {{name}}",
+    "dragSession": "Di chuyển buổi học {{name}}",
+    "dragToChangeDate": "Kéo để đổi ngày, giữ nguyên giờ học",
+    "moveToDate": "Chuyển buổi học sang ngày khác",
+    "dropOnDate": "Thả vào ngày cần chuyển · Giữ nguyên giờ học",
+    "dragInstructions": "Nhấn Space hoặc Enter để bắt đầu chuyển buổi học. Dùng phím mũi tên để chọn ngày, nhấn Space hoặc Enter để thả, Escape để hủy.",
+    "dragStarted": "Đang di chuyển buổi học {{name}}. Chọn ngày đích.",
+    "dragOverDate": "Ngày đích {{date}}. Giờ học được giữ nguyên.",
+    "dragOutside": "Đang ở ngoài vùng thả. Thả tại đây sẽ không đổi lịch.",
+    "dragEnded": "Đã kết thúc kéo thả.",
+    "dragCancelled": "Đã hủy kéo thả. Lịch không thay đổi.",
     "sessionDetails": "Chi tiết ca học",
     "timeInfo": "Thông tin thời gian",
     "sessionDate": "Ngày học",
@@ -947,6 +980,8 @@
     "NOT_FOUND": "Không tìm thấy dữ liệu.",
     "LIMIT_EXCEEDED": "Bạn đã đạt giới hạn tối đa cho gói dịch vụ này.",
     "VALIDATION_ERROR": "Dữ liệu không hợp lệ.",
+    "CLASS_RECURRING_LIMIT_EXCEEDED": "Mỗi lần lưu lớp chỉ được gửi tối đa {{limit}} lịch học cố định.",
+    "CLASS_ENROLLMENT_LIMIT_EXCEEDED": "Mỗi danh sách ghi danh trong một yêu cầu chỉ được chứa tối đa {{limit}} học viên. Vui lòng chia thành nhiều lần lưu.",
     "MISSING_REQUIRED_FIELDS": "Vui lòng điền đầy đủ thông tin bắt buộc",
     "EMAIL_ALREADY_EXISTS": "Email này đã tồn tại trong hệ thống",
     "TEACHER_NOT_FOUND": "Không tìm thấy nhân sự/giáo viên.",
@@ -960,6 +995,8 @@
     "INVALID_CREDENTIALS": "Email hoặc mật khẩu không đúng.",
     "INVALID_CREDENTIALS_REMAINING": "Email hoặc mật khẩu không đúng. Còn {{remaining}} lần thử.",
     "INVALID_TOKEN": "Mã xác thực không hợp lệ.",
+    "GOOGLE_OAUTH_INVALID_STATE": "Phiên kết nối Google đã hết hạn hoặc không khớp trình duyệt. Vui lòng bắt đầu kết nối lại.",
+    "GOOGLE_CONNECTION_FAILED": "Không thể kết nối Google. Vui lòng thử lại.",
     "VERIFY_EMAIL_EXPIRED": "Mã xác thực email đã hết hạn hoặc không tồn tại.",
     "RESET_PASSWORD_EXPIRED": "Mã đặt lại mật khẩu đã hết hạn.",
     "USER_NOT_FOUND": "Không tìm thấy người dùng.",
@@ -977,6 +1014,9 @@
     "INVALID_AMOUNT": "Số tiền thanh toán phải lớn hơn 0",
     "PAYMENT_EXCEEDS_BALANCE": "Số tiền thanh toán vượt quá số tiền còn phải thu",
     "ALREADY_PAID": "Học phí này đã được thanh toán đầy đủ",
+    "TUITION_DUE_BELOW_PAID": "Số tiền phải thu không được thấp hơn số tiền đã thu",
+    "TUITION_STATUS_MISMATCH": "Trạng thái học phí phải khớp với số dư và hạn thanh toán",
+    "TUITION_WAIVED": "Khoản học phí này đã được miễn nên không thể ghi nhận thanh toán",
     "NO_STUDENTS_FOUND": "Lớp học không có học sinh hoặc không tìm thấy",
     "GOOGLE_LOGIN_FAILED": "Đăng nhập Google thất bại",
     "ACCOUNT_INACTIVE": "Tài khoản này đã ngừng hoạt động.",
@@ -1262,7 +1302,13 @@
     "failedDesc": "Giao dịch của bạn không thành công hoặc đã bị hủy. Vui lòng thử lại.",
     "backBtn": "Quay lại quản lý gói",
     "payVnpay": "Thanh toán qua VNPay",
-    "payMomo": "Thanh toán qua MoMo"
+    "payMomo": "Thanh toán qua MoMo",
+    "missingOrder": "Không tìm thấy mã giao dịch.",
+    "paymentFailed": "Thanh toán không thành công.",
+    "pendingConfirmation": "Chưa xác nhận được giao dịch. Vui lòng kiểm tra lại sau.",
+    "statusUnavailable": "Không thể kiểm tra trạng thái giao dịch. Vui lòng kiểm tra lại sau.",
+    "unconfirmedTitle": "Chưa xác nhận thanh toán",
+    "unconfirmedDescription": "Kiểm tra lại trạng thái trước khi thanh toán lần nữa. Liên hệ hỗ trợ nếu tài khoản đã bị trừ tiền."
   },
   "checkout": {
     "title": "Thanh toán",
@@ -1301,6 +1347,7 @@
     "PAYMENT_RECORDED_SUCCESS": "Đã ghi nhận khoản thanh toán."
   },
   "legal": {
+    "policies": "Chính sách",
     "documents": "Pháp lý",
     "home": "Trang chủ",
     "effectiveDate": "Có hiệu lực từ",

@@ -147,9 +147,9 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
                 key: ATTENDANCE_STATUS.PRESENT,
                 bgColor: 'bg-green-50/50 dark:bg-green-900/10',
                 borderColor: 'border-green-100 dark:border-green-800/30',
-                textColor: 'text-green-600',
-                labelColor: 'text-green-600/60',
-                totalColor: 'text-green-400',
+                textColor: 'text-green-700 dark:text-green-300',
+                labelColor: 'text-green-800 dark:text-green-200',
+                totalColor: 'text-green-700 dark:text-green-300',
                 value: stats.present,
                 showTotal: true,
               },
@@ -157,24 +157,24 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
                 key: ATTENDANCE_STATUS.ABSENT,
                 bgColor: 'bg-red-50/50 dark:bg-red-900/10',
                 borderColor: 'border-red-100 dark:border-red-800/30',
-                textColor: 'text-red-600',
-                labelColor: 'text-red-600/60',
+                textColor: 'text-red-700 dark:text-red-300',
+                labelColor: 'text-red-800 dark:text-red-200',
                 value: stats.absent,
               },
               {
                 key: ATTENDANCE_STATUS.LATE,
                 bgColor: 'bg-amber-50/50 dark:bg-amber-900/10',
                 borderColor: 'border-amber-100 dark:border-amber-800/30',
-                textColor: 'text-amber-600',
-                labelColor: 'text-amber-600/60',
+                textColor: 'text-amber-700 dark:text-amber-300',
+                labelColor: 'text-amber-800 dark:text-amber-200',
                 value: stats.late,
               },
               {
                 key: ATTENDANCE_STATUS.EXCUSED,
                 bgColor: 'bg-blue-50/50 dark:bg-blue-900/10',
                 borderColor: 'border-blue-100 dark:border-blue-800/30',
-                textColor: 'text-blue-600',
-                labelColor: 'text-blue-600/60',
+                textColor: 'text-blue-700 dark:text-blue-300',
+                labelColor: 'text-blue-800 dark:text-blue-200',
                 value: stats.excused,
               },
             ].map(
@@ -189,15 +189,13 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
                 showTotal,
               }) => (
                 <div key={key} className={`${bgColor} ${borderColor} p-2 lg:p-3 rounded-lg border`}>
-                  <div
-                    className={`text-[8px] lg:text-[10px] font-black uppercase tracking-widest mb-0.5 ${labelColor}`}
-                  >
+                  <div className={`text-xs font-semibold mb-0.5 ${labelColor}`}>
                     {t(`attendance.${key}`)}
                   </div>
                   <div className={`text-base lg:text-xl font-black ${textColor}`}>
                     {value}
                     {showTotal && (
-                      <span className={`text-[10px] font-medium ml-1 ${totalColor}`}>
+                      <span className={`text-xs font-medium ml-1 ${totalColor}`}>
                         / {stats.total}
                       </span>
                     )}

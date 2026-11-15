@@ -86,14 +86,16 @@ const MenuConfigSettings: React.FC<MenuConfigSettingsProps> = ({
                   )}
                 </div>
               </div>
-              <div
-                onClick={() => setMenuSettings((prev) => ({ ...prev, [key]: !prev[key] }))}
-                className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-300 ease-in-out ${menuSettings[key] ? 'bg-primary' : 'bg-gray-200 dark:bg-gray-700'}`}
-              >
-                <span
-                  className={`absolute top-1 h-3 w-3 rounded-full bg-white shadow-md transition-all duration-300 ease-in-out ${menuSettings[key] ? 'left-5' : 'left-1'}`}
-                />
-              </div>
+              <input
+                type="checkbox"
+                aria-label={t(`menu.${key}`)}
+                checked={menuSettings[key]}
+                disabled={saving}
+                onChange={(event) =>
+                  setMenuSettings((previous) => ({ ...previous, [key]: event.target.checked }))
+                }
+                className="size-5 shrink-0 rounded accent-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary"
+              />
             </div>
           ))}
       </div>

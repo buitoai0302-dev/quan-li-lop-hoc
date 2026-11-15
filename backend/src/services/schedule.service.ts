@@ -9,7 +9,6 @@ import {
 import { syncEventToGoogle, deleteEventFromGoogle } from './google.service';
 import { lockScheduleWrites } from './schedule-write.service';
 import { assertTenantReferences } from './tenant-reference.service';
-import { logger } from '../utils/logger';
 
 export interface GetScheduleParams {
   startDate: string;
@@ -124,7 +123,7 @@ export class ScheduleService {
   static async createSession(tenantId: string, userId: string | undefined, data: CreateSessionDTO) {
     try {
       const [session] = await ScheduleService.insertSessions(tenantId, [data]);
-      if (userId) await ScheduleService.syncCreatedSessions(tenantId, userId, [session.id]);
+      if (userId) await syncEventToGoogle(userId, tenantId, session.id);
       return { success: true, data: session };
     } catch (error) {
       if (error instanceof ScheduleConflictError) {
@@ -216,33 +215,7 @@ export class ScheduleService {
 
   private static async syncCreatedSessions(tenantId: string, userId: string, sessionIds: string[]) {
     for (const sessionId of sessionIds) {
-      try {
-        const result = await pool.query(
-          `SELECT s.teacher_id, s.notes, s.session_date::text AS session_date, s.start_time, s.end_time,
-                    c.name AS class_name, r.name AS room_name, t.full_name AS teacher_name
-             FROM schedule_sessions s
-             JOIN classes c ON c.tenant_id = s.tenant_id AND c.id = s.class_id
-             JOIN rooms r ON r.tenant_id = s.tenant_id AND r.id = s.room_id
-             JOIN teachers t ON t.tenant_id = s.tenant_id AND t.id = s.teacher_id
-             WHERE s.tenant_id = $1 AND s.id = $2 AND s.status <> $3`,
-          [tenantId, sessionId, SESSION_STATUS.CANCELLED]
-        );
-        const session = result.rows[0];
-        if (!session) continue;
-        await syncEventToGoogle(userId, {
-          id: sessionId,
-          className: session.class_name,
-          roomName: session.room_name,
-          teacherName: session.teacher_name,
-          teacherId: session.teacher_id,
-          notes: session.notes,
-          date: session.session_date,
-          startTime: session.start_time,
-          endTime: session.end_time,
-        });
-      } catch {
-        logger.warn({ tenantId, sessionId }, 'Schedule Google sync failed after commit');
-      }
+      await syncEventToGoogle(userId, tenantId, sessionId);
     }
   }
 
@@ -274,6 +247,9 @@ export class ScheduleService {
       const newSessionDate = data.sessionDate || session.session_date;
       const newStartTime = data.startTime || session.start_time;
       const newEndTime = data.endTime || session.end_time;
+      await assertTenantReferences(client, tenantId, 'classes', [data.classId]);
+      await assertTenantReferences(client, tenantId, 'rooms', [data.roomId]);
+      await assertTenantReferences(client, tenantId, 'teachers', [data.teacherId]);
 
       const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7, $8)`;
       const conflictParams = [
@@ -323,37 +299,15 @@ export class ScheduleService {
       client.release();
     }
 
-    if (userId) {
-      const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [
-        sessionData.class_id,
-      ]);
-      const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [
-        sessionData.room_id,
-      ]);
-      const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [
-        sessionData.teacher_id,
-      ]);
-
-      await syncEventToGoogle(userId, {
-        id: sessionData.id,
-        className: classRes.rows[0]?.name || 'Class',
-        roomName: roomRes.rows[0]?.name || 'Room',
-        teacherName: teacherRes.rows[0]?.full_name,
-        teacherId: sessionData.teacher_id,
-        notes: sessionData.notes,
-        date: sessionData.session_date,
-        startTime: sessionData.start_time,
-        endTime: sessionData.end_time,
-      });
-    }
+    if (userId) await syncEventToGoogle(userId, tenantId, sessionId);
 
     return { success: true, data: sessionData };
   }
 
   static async deleteSession(tenantId: string, userId: string | undefined, sessionId: string) {
     const result = await pool.query(
-      `UPDATE schedule_sessions SET status = 'cancelled' WHERE id = $1 AND tenant_id = $2 RETURNING *`,
-      [sessionId, tenantId]
+      'UPDATE schedule_sessions SET status = $3 WHERE id = $1 AND tenant_id = $2 RETURNING id',
+      [sessionId, tenantId, SESSION_STATUS.CANCELLED]
     );
 
     if (result.rows.length === 0) {
@@ -361,7 +315,7 @@ export class ScheduleService {
     }
 
     if (userId) {
-      await deleteEventFromGoogle(userId, sessionId);
+      await deleteEventFromGoogle(userId, tenantId, sessionId);
     }
 
     return true;

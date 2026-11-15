@@ -33,18 +33,21 @@ it('returns the committed batch while Google Calendar is still syncing', async (
     release: jest.fn(),
   };
   (pool.connect as jest.Mock).mockResolvedValue(client);
-  (pool.query as jest.Mock).mockImplementation(async () => {
-    expect(writes.at(-1)).toBe('COMMIT');
-    return { rows: [session] };
+  let finishSync!: (success: boolean) => void;
+  const sync = new Promise<boolean>((resolve) => {
+    finishSync = resolve;
   });
-  let finishSync!: () => void;
-  const sync = new Promise<void>((resolve) => { finishSync = resolve; });
-  jest.mocked(syncEventToGoogle).mockReturnValue(sync);
+  jest.mocked(syncEventToGoogle).mockImplementation(() => {
+    expect(writes[writes.length - 1]).toBe('COMMIT');
+    return sync;
+  });
   try {
-    await expect(ScheduleService.createSessions('tenant', 'user', [slot])).resolves.toEqual([session]);
-    expect(syncEventToGoogle).toHaveBeenCalledWith('user', expect.objectContaining({ id: session.id }));
+    await expect(ScheduleService.createSessions('tenant', 'user', [slot])).resolves.toEqual([
+      session,
+    ]);
+    expect(syncEventToGoogle).toHaveBeenCalledWith('user', 'tenant', session.id);
     expect(client.release).toHaveBeenCalledTimes(1);
   } finally {
-    finishSync();
+    finishSync(true);
   }
 });

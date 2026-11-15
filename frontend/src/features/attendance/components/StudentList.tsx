@@ -29,7 +29,7 @@ const StudentList: React.FC<StudentListProps> = ({
   } | null>(null);
 
   return (
-    <Card className="flex-1 min-h-0" scrollable>
+    <Card className="@container/attendance-list flex-1 min-h-0" scrollable>
       {attendanceLoading ? (
         <PageLoading />
       ) : !selectedSession ? (
@@ -48,9 +48,9 @@ const StudentList: React.FC<StudentListProps> = ({
             filteredAttendance.map((record) => (
               <div
                 key={record.student_id}
-                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 group hover:bg-gray-50/50 dark:hover:bg-gray-900/10 transition-colors"
+                className="flex flex-col justify-between gap-3 p-3 sm:p-4 @min-[42rem]/attendance-list:flex-row @min-[42rem]/attendance-list:items-center hover:bg-gray-50/50 dark:hover:bg-gray-900/10 transition-colors"
               >
-                <div className="flex items-center gap-4">
+                <div className="flex min-w-0 items-center gap-3">
                   <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-xs border border-primary/20 shrink-0">
                     {record.full_name.substring(0, 2).toUpperCase()}
                   </div>
@@ -58,10 +58,12 @@ const StudentList: React.FC<StudentListProps> = ({
                     <div className="text-sm font-bold text-gray-900 dark:text-white truncate">
                       {record.full_name}
                     </div>
-                    <div className="text-[10px] text-gray-400 truncate">{record.email}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                      {record.email}
+                    </div>
                   </div>
                 </div>
-                <div className="flex gap-1.5 sm:gap-2 shrink-0">
+                <div className="grid grid-cols-2 gap-1.5 @min-[24rem]/attendance-list:grid-cols-4 @min-[42rem]/attendance-list:shrink-0">
                   {[
                     ATTENDANCE_STATUS.PRESENT,
                     ATTENDANCE_STATUS.ABSENT,
@@ -78,20 +80,20 @@ const StudentList: React.FC<StudentListProps> = ({
                         handleStatusChange(record.student_id, status);
                       }}
                       disabled={isReadOnly}
-                      className={`inline-flex flex-1 items-center justify-center gap-0.5 rounded-lg border px-1.5 py-2 text-[9px] font-bold uppercase tracking-tight disabled:cursor-not-allowed disabled:opacity-40 sm:flex-none sm:gap-1 sm:px-3 sm:text-[10px] ${
+                      className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border px-2 py-2 text-xs font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-default sm:px-3 ${
                         changedStatus?.studentId === record.student_id
                           ? 'motion-safe:transition-colors motion-safe:duration-150'
                           : ''
                       } ${
                         record.status === status
                           ? status === ATTENDANCE_STATUS.PRESENT
-                            ? 'bg-green-500 border-green-500 text-white shadow-md'
+                            ? 'bg-emerald-700 border-emerald-700 text-white'
                             : status === ATTENDANCE_STATUS.ABSENT
-                              ? 'bg-red-500 border-red-500 text-white shadow-md'
+                              ? 'bg-red-700 border-red-700 text-white'
                               : status === ATTENDANCE_STATUS.LATE
-                                ? 'bg-amber-500 border-amber-500 text-white shadow-md'
-                                : 'bg-blue-500 border-blue-500 text-white shadow-md'
-                          : 'bg-white dark:bg-slate-800 border-gray-100 dark:border-slate-700 text-gray-400 hover:border-primary/30 dark:hover:border-primary/50'
+                                ? 'bg-amber-800 border-amber-800 text-white'
+                                : 'bg-blue-700 border-blue-700 text-white'
+                          : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-slate-600 dark:text-slate-200 enabled:hover:border-primary dark:enabled:hover:border-indigo-400'
                       }`}
                     >
                       {record.status === status && (

@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
@@ -24,7 +25,8 @@ import { fillMissingLegalDrafts } from '../legalDrafts';
 
 const AdminSettings: React.FC = () => {
   const { t } = useTranslation();
-  const { data: settingsData, isLoading } = useAdminSettings();
+  const pageQuery = useAdminSettings();
+  const { data: settingsData, isLoading } = pageQuery;
   const { mutate: updateSettingsMutate, isPending: isSaving } = useUpdateSettings();
 
   const [formData, setFormData] = useState<SystemSettings>({});
@@ -49,6 +51,15 @@ const AdminSettings: React.FC = () => {
   };
 
   if (isLoading) return <PageLoading />;
+
+  const failedQueries = [pageQuery].filter((query) => query.isError && query.data === undefined);
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
 
   return (
     <div className="h-full flex flex-col overflow-hidden">

@@ -1,15 +1,17 @@
-import { Link, NavLink } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 import { X, LogOut, ChevronDown, ChevronRight } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
 import ConfirmModal from './common/ConfirmModal';
 import ActionHint from './common/ActionHint';
+import SidebarLegalMenu from './SidebarLegalMenu';
 import type { User } from '@/types';
-import { getMenuItems } from '../routes';
-import type { MenuGroup, MenuItem } from '../routes';
-import { USER_ROLES, MENU_KEYS, ROUTES } from '../utils/constants';
+import { getMenuItems } from '../navigation';
+import type { MenuGroup, MenuItem } from '../navigation';
+import { USER_ROLES, MENU_KEYS } from '../utils/constants';
 import { usePWAInstall } from '@/hooks/usePWAInstall';
+import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -22,6 +24,44 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
   const { t } = useTranslation();
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const { isInstallable, promptInstall } = usePWAInstall();
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
+  const sidebarRef = useRef<HTMLElement>(null);
+  const closeSidebar = useEffectEvent(onClose);
+
+  useEffect(() => {
+    if (!isOpen || isDesktop) return;
+    const sidebar = sidebarRef.current;
+    const opener = document.activeElement as HTMLElement | null;
+    const focusable = () =>
+      Array.from(
+        sidebar?.querySelectorAll<HTMLElement>('button:not(:disabled), a[href], [tabindex="0"]') ||
+          []
+      ).filter((element) => !element.closest('[inert]') && element.getClientRects().length > 0);
+    focusable()[0]?.focus();
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || document.querySelector('[data-ui-dialog]')) return;
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeSidebar();
+      } else if (event.key === 'Tab') {
+        const items = focusable();
+        const first = items[0];
+        const last = items[items.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last?.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first?.focus();
+        }
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      if (opener?.isConnected && !document.querySelector('[data-ui-dialog]')) opener.focus();
+    };
+  }, [isOpen, isDesktop]);
 
   const menuItems = getMenuItems(t, user?.role);
 
@@ -87,6 +127,12 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
 
       {/* Sidebar */}
       <aside
+        ref={sidebarRef}
+        inert={!isDesktop && !isOpen}
+        aria-hidden={!isDesktop && !isOpen ? true : undefined}
+        role={!isDesktop && isOpen ? 'dialog' : undefined}
+        aria-modal={!isDesktop && isOpen ? true : undefined}
+        aria-label={t('common.menuButton')}
         className={`fixed lg:relative inset-y-0 left-0 z-[110] bg-white dark:bg-slate-950 border-r border-gray-200 dark:border-slate-800 shadow-xl flex flex-col transform transition-all duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'} ${isCollapsed ? 'sidebar--collapsed w-60 lg:w-[68px]' : 'w-60'}`}
       >
         <div
@@ -112,6 +158,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
             </div>
           </div>
           <button
+            type="button"
+            aria-label={t('common.close')}
             className="lg:hidden p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-all shrink-0"
             onClick={onClose}
           >
@@ -156,6 +204,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
               )}
 
               <div
+                inert={!expandedGroups[groupIdx] && !isCollapsed}
                 className={`space-y-1 transition-all duration-300 overflow-hidden ${expandedGroups[groupIdx] || isCollapsed ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'}`}
               >
                 {group.items.map((item) => (
@@ -246,7 +295,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
               >
                 <Download size={16} className="animate-bounce shrink-0" />
                 <span className="text-sm font-bold whitespace-nowrap overflow-hidden">
-                  {t('common.installApp', 'CÃ i Ä‘áº·t App')}
+                  {t('common.installApp')}
                 </span>
               </button>
             </div>
@@ -291,14 +340,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose, user, onLogout }) =>
           <div
             className={`mt-2 text-center transition-all duration-300 ${isCollapsed ? 'lg:hidden' : 'block'}`}
           >
-            <div className="mb-2 flex justify-center gap-3 text-xs text-gray-500 dark:text-gray-400">
-              <Link to={ROUTES.PRIVACY} onClick={onClose} className="hover:underline">
-                {t('landing.privacy')}
-              </Link>
-              <Link to={ROUTES.TERMS} onClick={onClose} className="hover:underline">
-                {t('landing.terms')}
-              </Link>
-            </div>
+            <SidebarLegalMenu onNavigate={onClose} />
             <p className="text-[8px] text-gray-400 dark:text-gray-500 font-medium uppercase tracking-widest truncate px-1">
               &copy; 2026 EduSchedule. All rights reserved.
             </p>

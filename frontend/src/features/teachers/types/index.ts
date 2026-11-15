@@ -3,6 +3,7 @@ import type { Teacher, TeacherFormData, Branch } from '@/types/schemas';
 import type { BaseTableProps } from '@/types';
 
 export interface TeacherTableProps extends BaseTableProps<Teacher> {
+  canManage: boolean;
   teachers: Teacher[];
 }
 

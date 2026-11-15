@@ -11,7 +11,12 @@ interface RowAction {
   mobilePrimary?: boolean;
 }
 
-export default function RowActions({ actions }: { actions: RowAction[] }) {
+interface RowActionsProps {
+  actions: RowAction[];
+  collapseBelow?: 'sm' | 'xl';
+}
+
+export default function RowActions({ actions, collapseBelow = 'sm' }: RowActionsProps) {
   const { t } = useTranslation();
   const menuId = useId();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -19,7 +24,9 @@ export default function RowActions({ actions }: { actions: RowAction[] }) {
 
   return (
     <>
-      <div className="hidden items-center justify-end gap-1 sm:flex">
+      <div
+        className={`hidden items-center justify-end gap-1 ${collapseBelow === 'xl' ? 'xl:flex' : 'sm:flex'}`}
+      >
         {actions.map(({ label, icon, onClick, tone }) => (
           <ActionHint key={label} label={label} showTouchLabel={false}>
             <button
@@ -32,7 +39,9 @@ export default function RowActions({ actions }: { actions: RowAction[] }) {
           </ActionHint>
         ))}
       </div>
-      <div className="inline-flex items-center justify-end sm:hidden">
+      <div
+        className={`inline-flex items-center justify-end ${collapseBelow === 'xl' ? 'xl:hidden' : 'sm:hidden'}`}
+      >
         {primaryAction && (
           <button
             type="button"
@@ -67,7 +76,7 @@ export default function RowActions({ actions }: { actions: RowAction[] }) {
         id={menuId}
         ref={menuRef}
         popover="auto"
-        className="menu-enter fixed left-auto m-0 w-52 max-w-[calc(100vw-1rem)] max-h-[calc(50dvh-1rem)] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 text-slate-800 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 sm:hidden"
+        className={`menu-enter fixed left-auto m-0 w-52 max-w-[calc(100vw-1rem)] max-h-[calc(50dvh-1rem)] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1 text-slate-800 shadow-xl dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 ${collapseBelow === 'xl' ? 'xl:hidden' : 'sm:hidden'}`}
       >
         {actions
           .filter((action) => !action.mobilePrimary)

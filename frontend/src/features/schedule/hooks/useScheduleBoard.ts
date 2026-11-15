@@ -59,7 +59,9 @@ export const useScheduleBoard = () => {
     localStorage.setItem('scheduleViewMode', mode);
   };
 
-  const [selectedBranch, setSelectedBranch] = useState<string>(user?.branch_id || '');
+  const [selectedBranch, setSelectedBranch] = useState<string>(
+    user?.role === USER_ROLES.STUDENT ? '' : user?.branch_id || ''
+  );
   const [selectedTeacher, setSelectedTeacher] = useState<string>(
     user?.role === USER_ROLES.TEACHER ? user.id : ''
   );
@@ -116,17 +118,18 @@ export const useScheduleBoard = () => {
   const branchesQuery = useQuery({
     queryKey: ['branches'],
     queryFn: () => getBranches(),
+    enabled: canEdit || user?.role === USER_ROLES.TEACHER,
   });
 
   const teachersQuery = useQuery({
     queryKey: ['teachers'],
     queryFn: () => getTeachers(),
+    enabled: canEdit || user?.role === USER_ROLES.TEACHER,
   });
 
   const classesQuery = useQuery({
     queryKey: ['classes'],
     queryFn: () => getClasses(),
-    enabled: canEdit || user?.role === USER_ROLES.TEACHER,
   });
 
   const roomsQuery = useQuery({
@@ -135,13 +138,21 @@ export const useScheduleBoard = () => {
     enabled: canEdit || user?.role === USER_ROLES.TEACHER,
   });
 
+  const activeQueries = [
+    sessionsQuery,
+    classesQuery,
+    ...(canEdit || user?.role === USER_ROLES.TEACHER
+      ? [branchesQuery, teachersQuery, roomsQuery]
+      : []),
+  ];
+
   // Mutations
   const updateSessionMutation = useMutation({
     mutationFn: ({ id, data }: { id: string; data: Record<string, unknown> }) =>
       updateSession(id, data),
     onSuccess: () => {
       toast.success(t('common.success'));
-      queryClient.invalidateQueries({ queryKey: ['sessions'] });
+      return queryClient.invalidateQueries({ queryKey: ['sessions'] });
     },
     onError: (error: AxiosError<ApiErrorData>) => handleApiError(error, t),
   });
@@ -219,14 +230,23 @@ export const useScheduleBoard = () => {
   return {
     sessions: sessionsQuery.data?.sessions || [],
     maxBatchSessions: sessionsQuery.data?.maxBatchSessions,
-    isLoading: sessionsQuery.isLoading,
+    isLoading: activeQueries.some((query) => query !== sessionsQuery && query.isLoading),
+    sessionsLoading: sessionsQuery.isLoading,
+    hasLoadError: activeQueries.some((query) => query.isError && query.data === undefined),
+    isFetching: activeQueries.some((query) => query.isFetching),
+    retryLoad: () =>
+      Promise.all(activeQueries.filter((query) => query.isError).map((query) => query.refetch())),
     selectedDate,
     setSelectedDate,
     viewMode,
     setViewMode,
     branches: branchesQuery.data || [],
     selectedBranch,
-    setSelectedBranch,
+    setSelectedBranch: (branchId: string) => {
+      setSelectedBranch(branchId);
+      if (user?.role !== USER_ROLES.TEACHER) setSelectedTeacher('');
+      setSelectedClass('');
+    },
     teachers: teachersQuery.data || [],
     selectedTeacher,
     setSelectedTeacher,

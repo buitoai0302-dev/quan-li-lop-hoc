@@ -4,6 +4,7 @@ import { LayoutGrid, ChevronUp, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/common/UI';
 import PageLoading from '@/components/common/PageLoading';
 import type { Session } from '../types';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface SessionListProps {
   sessions: Session[];
@@ -23,32 +24,41 @@ const SessionList: React.FC<SessionListProps> = ({
   onSelectSession,
 }) => {
   const { t } = useTranslation();
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+  const sessionsId = React.useId();
 
   return (
     <div
-      className={`w-full lg:w-72 lg:h-full shrink-0 flex flex-col transition-all duration-300 ${isSessionsExpanded ? 'h-[200px] sm:h-[240px] lg:h-full' : 'h-12 lg:h-full'}`}
+      className={`w-full lg:w-60 xl:w-72 lg:h-full shrink-0 flex flex-col motion-safe:transition-[height] motion-safe:duration-200 ${isSessionsExpanded ? 'h-[200px] sm:h-[240px] lg:h-full' : 'h-12 lg:h-full'}`}
     >
       <Card
         className="flex-1 flex flex-col overflow-hidden"
         header={
-          <div
-            className="flex items-center justify-between w-full cursor-pointer lg:cursor-default"
-            onClick={() => window.innerWidth < 1024 && setIsSessionsExpanded(!isSessionsExpanded)}
-          >
+          <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
               <LayoutGrid size={14} className="text-gray-400" />
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
                 {t('attendance.sessions')}
               </h3>
             </div>
-            <button className="p-1.5 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-lg transition-all active:scale-95 lg:hidden">
+            <button
+              type="button"
+              aria-label={t('attendance.sessions')}
+              aria-expanded={isSessionsExpanded}
+              aria-controls={sessionsId}
+              onClick={() => setIsSessionsExpanded(!isSessionsExpanded)}
+              className="-my-2 inline-flex size-11 items-center justify-center bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:text-primary dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-lg focus-visible:outline-2 focus-visible:outline-primary lg:hidden"
+            >
               {isSessionsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
           </div>
         }
-        scrollable={isSessionsExpanded || window.innerWidth >= 1024}
+        scrollable={isSessionsExpanded || isDesktop}
       >
-        <div className={`${!isSessionsExpanded && 'hidden lg:block'} p-3 space-y-2`}>
+        <div
+          id={sessionsId}
+          className={`${!isSessionsExpanded && 'hidden lg:block'} p-3 space-y-2`}
+        >
           {sessionsLoading ? (
             <PageLoading />
           ) : sessions.length === 0 ? (
