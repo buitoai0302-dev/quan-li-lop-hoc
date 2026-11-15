@@ -1,5 +1,9 @@
 import pool from '../../src/db';
-import { isAuthSchemaReady, isScheduleSchemaReady } from '../../src/services/readiness.service';
+import {
+  isAuthSchemaReady,
+  isScheduleSchemaReady,
+  isWorkflowSchemaReady,
+} from '../../src/services/readiness.service';
 
 jest.mock('../../src/db', () => ({ __esModule: true, default: { query: jest.fn() } }));
 
@@ -22,3 +26,10 @@ it.each([true, false])('requires all three schedule exclusions (ready: %s)', asy
   (pool.query as jest.Mock).mockResolvedValue({ rows: [{ ready }] });
   await expect(isScheduleSchemaReady()).resolves.toBe(ready);
 });
+it.each([true, false])(
+  'requires the workflow tables, columns and all enabled sync triggers (ready: %s)',
+  async (ready) => {
+    (pool.query as jest.Mock).mockResolvedValue({ rows: [{ ready }] });
+    await expect(isWorkflowSchemaReady()).resolves.toBe(ready);
+  }
+);

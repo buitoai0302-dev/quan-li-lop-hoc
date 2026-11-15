@@ -55,7 +55,7 @@ jobs:
         run: |
           npm run db:init
           npm run db:migrate
-          npm run test:staging -- --runTestsByPath tests/staging/data-integrity.staging.test.ts tests/staging/auth-security.staging.test.ts tests/staging/workflow.staging.test.ts
+          npm run test:staging -- --runTestsByPath tests/staging/data-integrity.staging.test.ts tests/staging/auth-security.staging.test.ts tests/staging/workflow.staging.test.ts tests/staging/google-sync.staging.test.ts
         env:
           DB_HOST: 127.0.0.1
           DB_NAME: eduschedule_integrity_test

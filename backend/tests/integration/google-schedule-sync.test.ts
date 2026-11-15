@@ -1,129 +1,101 @@
-import pool from '../../src/db';
-import { google } from 'googleapis';
-import { syncEventToGoogle, syncAllSessionsToGoogle } from '../../src/services/google.service';
-
-jest.mock('../../src/db', () => ({ __esModule: true, default: { query: jest.fn() } }));
-jest.mock('../../src/utils/config', () => ({
-  config: {
-    google: {
-      clientId: () => 'fixture-client-id',
-      clientSecret: () => 'fixture-client-secret',
-      redirectUri: () => 'http://localhost/api/google/callback',
-    },
-  },
-}));
-jest.mock('googleapis', () => ({
-  google: {
-    auth: { OAuth2: jest.fn(() => ({ setCredentials: jest.fn() })) },
-    calendar: jest.fn(),
-  },
-}));
-
-const query = pool.query as jest.Mock;
-const events = { insert: jest.fn(), update: jest.fn(), delete: jest.fn() };
-const session = {
-  class_name: 'QA class',
-  room_name: 'QA room',
-  teacher_name: 'QA teacher',
-  teacher_email: 'teacher@example.test',
-  session_date: '2090-01-02',
-  start_time: '08:00:00',
-  end_time: '09:00:00',
-  google_event_id: null,
-  notes: null,
+import {
+  CalendarEventDeletedError,
+  CalendarOwnershipError,
+  canAdoptLegacyEvent,
+  getGoogleFailure,
+  writePersonalEvent,
+} from '../../src/services/google-calendar-provider.service';
+import type { calendar_v3 } from 'googleapis';
+const link = {
+  id: 'link',
+  tenant_id: 'tenant',
+  user_id: 'user',
+  session_id: 'session',
+  event_id: 'abc123',
+  legacy_event_id: null,
+  legacy_confirmed: false,
 };
-
-beforeEach(() => {
-  jest.resetAllMocks();
-  (google.auth.OAuth2 as unknown as jest.Mock).mockImplementation(() => ({
-    setCredentials: jest.fn(),
-  }));
-  jest
-    .mocked(google.calendar)
-    .mockImplementation(() => ({ events }) as unknown as ReturnType<typeof google.calendar>);
+const payload = {
+  date: '2090-01-02',
+  startTime: '08:00:00',
+  endTime: '09:00:00',
+  className: 'QA class',
+  roomName: 'QA room',
+  teacherName: 'QA teacher',
+  notes: '',
+};
+const owned = {
+  id: link.event_id,
+  extendedProperties: { private: { eduTenant: 'tenant', eduUser: 'user', eduSession: 'session' } },
+};
+function fixture() {
+  const events = { get: jest.fn(), insert: jest.fn(), patch: jest.fn(), delete: jest.fn() };
+  return { events, calendar: { events } as unknown as calendar_v3.Calendar };
+}
+it('uses a persisted ID and Vietnam time without adding attendees', async () => {
+  const { events, calendar } = fixture();
+  events.get.mockRejectedValue({ code: 404 });
+  events.insert.mockResolvedValue({ data: { id: 'abc123' } });
+  await writePersonalEvent(calendar, link, payload, '1');
+  const body = events.insert.mock.calls[0][0].requestBody;
+  expect(body).toMatchObject({
+    id: 'abc123',
+    start: { dateTime: '2090-01-02T08:00:00+07:00', timeZone: 'Asia/Ho_Chi_Minh' },
+    extendedProperties: { private: { eduRevision: '1' } },
+  });
+  expect(body.attendees).toBeUndefined();
 });
-
-it('removes the newly created Google event if the session was cancelled during insertion', async () => {
-  query
-    .mockResolvedValueOnce({ rows: [{ google_access_token: 'fixture-token' }] })
-    .mockResolvedValueOnce({ rows: [session] })
-    .mockResolvedValueOnce({ rows: [] });
-  events.insert.mockResolvedValue({ data: { id: 'new-event' } });
-
-  await syncEventToGoogle('user', 'tenant', 'session');
-
-  expect(events.insert).toHaveBeenCalledWith(
-    expect.objectContaining({
-      requestBody: expect.objectContaining({
-        start: { dateTime: '2090-01-02T01:00:00.000Z', timeZone: 'Asia/Ho_Chi_Minh' },
-      }),
-    })
+it('verifies ownership after duplicate insert and never overwrites a foreign event', async () => {
+  const { events, calendar } = fixture();
+  events.get.mockRejectedValueOnce({ code: 404 }).mockResolvedValueOnce({ data: owned });
+  events.insert.mockRejectedValue({ code: 409 });
+  events.patch.mockResolvedValue({});
+  await writePersonalEvent(calendar, link, payload, '2');
+  expect(events.patch).toHaveBeenCalledTimes(1);
+  events.get.mockResolvedValue({ data: { id: 'abc123' } });
+  events.patch.mockClear();
+  await expect(writePersonalEvent(calendar, link, payload, '3')).rejects.toBeInstanceOf(
+    CalendarOwnershipError
   );
-  expect(query).toHaveBeenNthCalledWith(
-    3,
-    expect.stringContaining('AND status <> $4 AND google_event_id IS NULL'),
-    ['tenant', 'session', 'new-event', 'cancelled']
-  );
-  expect(events.delete).toHaveBeenCalledWith({ calendarId: 'primary', eventId: 'new-event' });
+  expect(events.patch).not.toHaveBeenCalled();
 });
-
-it('updates the linked event with current session details when another sync is already running', async () => {
-  query
-    .mockResolvedValueOnce({ rows: [{ google_access_token: 'fixture-token' }] })
-    .mockResolvedValueOnce({ rows: [session] })
-    .mockResolvedValueOnce({ rows: [{ id: 'session' }] })
-    .mockResolvedValueOnce({ rows: [{ google_access_token: 'fixture-token' }] })
-    .mockResolvedValueOnce({
-      rows: [{ ...session, google_event_id: 'new-event', start_time: '08:30:00' }],
-    });
-  events.insert.mockResolvedValue({ data: { id: 'new-event' } });
-
-  await Promise.all([
-    syncEventToGoogle('user', 'tenant', 'session'),
-    syncEventToGoogle('user', 'tenant', 'session'),
-  ]);
-
-  expect(events.insert).toHaveBeenCalledTimes(1);
-  expect(events.update).toHaveBeenCalledWith(
-    expect.objectContaining({
-      eventId: 'new-event',
-      requestBody: expect.objectContaining({
-        start: { dateTime: '2090-01-02T01:30:00.000Z', timeZone: 'Asia/Ho_Chi_Minh' },
-      }),
-    })
-  );
+it('treats a missing deletion as complete and categorizes provider errors', async () => {
+  const { events, calendar } = fixture();
+  events.get.mockRejectedValue({ code: 404 });
+  await writePersonalEvent(calendar, link, null, '2');
   expect(events.delete).not.toHaveBeenCalled();
+  expect(
+    getGoogleFailure({
+      response: { status: 403, data: { error: { errors: [{ reason: 'userRateLimitExceeded' }] } } },
+    }).transient
+  ).toBe(true);
+  expect(
+    getGoogleFailure({ response: { status: 400, data: { error: 'invalid_grant' } } }).auth
+  ).toBe(true);
+  expect(getGoogleFailure({ code: 400 }).transient).toBe(false);
+  expect(getGoogleFailure({ code: 'ECONNRESET' }).transient).toBe(true);
 });
-
-it('manual sync updates linked events, uses Vietnam time and counts only successful writes', async () => {
-  query
-    .mockResolvedValueOnce({ rows: [{ google_refresh_token: 'fixture-refresh' }] })
-    .mockResolvedValueOnce({ rows: [{ id: 'session' }, { id: 'failed-session' }] })
-    .mockResolvedValueOnce({ rows: [{ google_refresh_token: 'fixture-refresh' }] })
-    .mockResolvedValueOnce({ rows: [{ ...session, google_event_id: 'existing-event' }] })
-    .mockResolvedValueOnce({ rows: [{ google_refresh_token: 'fixture-refresh' }] })
-    .mockResolvedValueOnce({ rows: [{ ...session, google_event_id: 'failed-event' }] });
-  events.update
-    .mockResolvedValueOnce({})
-    .mockRejectedValueOnce(new Error('Synthetic provider failure'));
-  await expect(syncAllSessionsToGoogle('user', 'tenant')).resolves.toBe(1);
-  expect(events.insert).not.toHaveBeenCalled();
-  expect(events.update).toHaveBeenCalledWith(
-    expect.objectContaining({
-      eventId: 'existing-event',
-      requestBody: expect.objectContaining({
-        start: { dateTime: '2090-01-02T01:00:00.000Z', timeZone: 'Asia/Ho_Chi_Minh' },
-      }),
-    })
+it('requires a new persisted ID for tombstones without altering the deleted event', async () => {
+  const { events, calendar } = fixture();
+  events.get.mockResolvedValue({ data: { id: link.event_id, status: 'cancelled' } });
+  await expect(writePersonalEvent(calendar, link, payload, '4')).rejects.toBeInstanceOf(
+    CalendarEventDeletedError
   );
-  expect(query).toHaveBeenNthCalledWith(2, expect.stringContaining('WHERE s.tenant_id = $2'), [
-    'user',
-    'tenant',
-    'cancelled',
-    'teacher',
-  ]);
-  expect(query).toHaveBeenNthCalledWith(1, expect.stringContaining('tenant_id = $2'), [
-    'user',
-    'tenant',
-  ]);
+  await writePersonalEvent(calendar, link, null, '4');
+  expect(events.patch).not.toHaveBeenCalled();
+  expect(events.delete).not.toHaveBeenCalled();
+  events.get.mockRejectedValue({ code: 410 });
+  await expect(writePersonalEvent(calendar, link, payload, '4')).rejects.toBeInstanceOf(
+    CalendarEventDeletedError
+  );
+});
+it('never adopts a shared, recurring, or differently marked legacy event', () => {
+  const personal = { organizer: { self: true }, creator: { self: true } };
+  expect(canAdoptLegacyEvent(personal)).toBe(true);
+  for (const event of [
+    { ...personal, attendees: [{ email: 'other@example.test' }] },
+    { ...personal, recurrence: ['RRULE:FREQ=DAILY'] },
+    { ...personal, extendedProperties: { private: { eduUser: 'other' } } },
+  ])
+    expect(canAdoptLegacyEvent(event)).toBe(false);
 });

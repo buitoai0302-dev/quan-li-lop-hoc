@@ -138,8 +138,8 @@ export const useSettings = () => {
     if (syncing) return;
     setSyncing(true);
     try {
-      const data = await syncAllGoogle();
-      toast.success(data.message);
+      await syncAllGoogle();
+      toast.success(t('googleSync.queued'));
     } catch {
       toast.error(t('common.error'));
     } finally {

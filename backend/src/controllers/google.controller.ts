@@ -2,6 +2,11 @@ import { logger } from '../utils/logger';
 import { type Response, type NextFunction, type CookieOptions } from 'express';
 import type { AuthRequest } from '../middlewares/auth.middleware';
 import { syncAllSessionsToGoogle } from '../services/google.service';
+import { GoogleSyncService } from '../services/google-sync.service';
+import {
+  createGoogleSyncJobSchema,
+  retryGoogleSyncJobSchema,
+} from '../validators/google-sync.validator';
 import {
   startGoogleConnection,
   completeGoogleConnection,
@@ -70,8 +75,58 @@ export const disconnectGoogle = async (req: AuthRequest, res: Response, next: Ne
 export const syncAll = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
     if (!req.user) throw new AuthenticationError();
-    const count = await syncAllSessionsToGoogle(req.user.userId, req.user.tenantId);
-    res.json({ message: `Đã đồng bộ thành công ${count} buổi học lên Google Calendar`, count });
+    const job = await syncAllSessionsToGoogle(req.user.userId, req.user.tenantId);
+    const progress = await GoogleSyncService.progress(req.user.tenantId, req.user.userId, job.id);
+    res.status(202).json({
+      message: 'Đã xếp hàng đồng bộ Google Calendar',
+      count: 0,
+      jobId: job.id,
+      queuedCount: progress.total,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const createSyncJob = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) throw new AuthenticationError();
+    const body = createGoogleSyncJobSchema.parse({ body: req.body || {} }).body;
+    res
+      .status(202)
+      .json(await GoogleSyncService.createJob(req.user.tenantId, req.user.userId, body.requestId));
+  } catch (error) {
+    next(error);
+  }
+};
+export const syncProgress = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) throw new AuthenticationError();
+    res.json(
+      await GoogleSyncService.progress(
+        req.user.tenantId,
+        req.user.userId,
+        req.params.id as string | undefined
+      )
+    );
+  } catch (error) {
+    next(error);
+  }
+};
+export const retrySyncJob = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    if (!req.user) throw new AuthenticationError();
+    const body = retryGoogleSyncJobSchema.parse({ body: req.body || {} }).body;
+    res
+      .status(202)
+      .json(
+        await GoogleSyncService.retry(
+          req.user.tenantId,
+          req.user.userId,
+          req.params.id as string | undefined,
+          body.confirmLegacy
+        )
+      );
   } catch (error) {
     next(error);
   }

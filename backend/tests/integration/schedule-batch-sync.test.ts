@@ -1,17 +1,12 @@
 import pool from '../../src/db';
 import { ScheduleService } from '../../src/services/schedule.service';
-import { syncEventToGoogle } from '../../src/services/google.service';
 
 jest.mock('../../src/db', () => ({
   __esModule: true,
   default: { connect: jest.fn(), query: jest.fn() },
 }));
-jest.mock('../../src/services/google.service', () => ({
-  syncEventToGoogle: jest.fn(),
-  deleteEventFromGoogle: jest.fn(),
-}));
 
-it('returns the committed batch while Google Calendar is still syncing', async () => {
+it('returns the batch only after its transaction commits (outbox is queued by DB triggers)', async () => {
   const writes: string[] = [];
   const slot = {
     classId: '11111111-1111-4111-8111-111111111111',
@@ -33,21 +28,11 @@ it('returns the committed batch while Google Calendar is still syncing', async (
     release: jest.fn(),
   };
   (pool.connect as jest.Mock).mockResolvedValue(client);
-  let finishSync!: (success: boolean) => void;
-  const sync = new Promise<boolean>((resolve) => {
-    finishSync = resolve;
-  });
-  jest.mocked(syncEventToGoogle).mockImplementation(() => {
-    expect(writes[writes.length - 1]).toBe('COMMIT');
-    return sync;
-  });
-  try {
-    await expect(ScheduleService.createSessions('tenant', 'user', [slot])).resolves.toEqual([
-      session,
-    ]);
-    expect(syncEventToGoogle).toHaveBeenCalledWith('user', 'tenant', session.id);
-    expect(client.release).toHaveBeenCalledTimes(1);
-  } finally {
-    finishSync(true);
-  }
+  await expect(ScheduleService.createSessions('tenant', 'user', [slot])).resolves.toEqual([
+    session,
+  ]);
+  expect(writes[0]).toBe('BEGIN');
+  expect(writes[writes.length - 1]).toBe('COMMIT');
+  expect(client.release).toHaveBeenCalledTimes(1);
+  expect(pool.query).not.toHaveBeenCalled();
 });

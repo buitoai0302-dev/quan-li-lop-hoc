@@ -683,6 +683,26 @@
     "reloadNotice": "Discard unsaved changes and load the latest attendance?",
     "none": "Unmarked"
   },
+  "googleSync": {
+    "title": "Calendar sync status",
+    "personal": "Sessions are copied one way to your personal Google calendar. Saving a session and syncing it have separate statuses.",
+    "queued": "Sync queued. You can continue working.",
+    "empty": "No sessions to sync yet.",
+    "paused": "Sync is paused by configuration. Your changes remain queued.",
+    "reconnect": "Reconnect Google to resume syncing.",
+    "reconnectAction": "Reconnect Google",
+    "retry": "Retry sync",
+    "reviewLegacy": "Confirm legacy events",
+    "confirmLegacy": "Existing events are linked only when ownership in your personal Google calendar can be verified. Otherwise a separate copy will be created and the old event preserved. Continue?",
+    "states": {
+      "pending": "Pending",
+      "syncing": "Syncing",
+      "synced": "Synced",
+      "retry_needed": "Retry needed",
+      "connection_required": "Connection required",
+      "confirmation_required": "Confirmation required"
+    }
+  },
   "schedule": {
     "suggestions": {
       "find": "Find an available room or time",

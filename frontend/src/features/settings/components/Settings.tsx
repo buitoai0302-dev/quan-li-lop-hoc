@@ -20,6 +20,7 @@ import { Key, Building, User, Globe, Palette, ChevronRight, Zap } from 'lucide-r
 import ConfirmModal from '@/components/common/ConfirmModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/utils/constants';
+import { useQueryClient } from '@tanstack/react-query';
 
 interface SettingsSnapshot {
   centerName: string;
@@ -53,6 +54,7 @@ import ApiSettings from '@/features/settings/components/ApiSettings';
 import AppearanceSettings from '@/features/settings/components/AppearanceSettings';
 
 const Settings: React.FC = () => {
+  const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { theme, setTheme } = useTheme();
@@ -240,8 +242,9 @@ const Settings: React.FC = () => {
     if (syncing) return;
     setSyncing(true);
     try {
-      const data = await syncAllGoogle();
-      toast.success(data.message);
+      await syncAllGoogle();
+      await queryClient.invalidateQueries({ queryKey: ['google-sync'] });
+      toast.success(t('googleSync.queued'));
     } catch {
       toast.error(t('common.error'));
     } finally {

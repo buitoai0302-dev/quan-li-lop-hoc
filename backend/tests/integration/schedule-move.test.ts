@@ -1,14 +1,9 @@
 import pool from '../../src/db';
 import { ScheduleService } from '../../src/services/schedule.service';
-import { syncEventToGoogle } from '../../src/services/google.service';
 
 jest.mock('../../src/db', () => ({
   __esModule: true,
   default: { connect: jest.fn(), query: jest.fn() },
-}));
-jest.mock('../../src/services/google.service', () => ({
-  syncEventToGoogle: jest.fn(),
-  deleteEventFromGoogle: jest.fn(),
 }));
 
 const STORED_SESSION = {
@@ -42,13 +37,8 @@ function mockScheduleClient(conflicts: Array<{ conflict_type: string }> = []) {
   return client;
 }
 
-it('moves only the date, using the locked session fields and syncing after commit', async () => {
+it('moves only the date, using the locked session fields and committing before returning', async () => {
   const client = mockScheduleClient();
-  jest.mocked(syncEventToGoogle).mockImplementation(async () => {
-    expect(client.query).toHaveBeenLastCalledWith('COMMIT');
-    expect(client.release).toHaveBeenCalledTimes(1);
-    return true;
-  });
 
   const result = await ScheduleService.updateSession('tenant', 'user', 'session', {
     sessionDate: '2026-11-15',
@@ -80,7 +70,8 @@ it('moves only the date, using the locked session fields and syncing after commi
     'session',
     'tenant',
   ]);
-  expect(syncEventToGoogle).toHaveBeenCalledWith('user', 'tenant', 'session');
+  expect(client.query).toHaveBeenLastCalledWith('COMMIT');
+  expect(client.release).toHaveBeenCalledTimes(1);
 });
 
 it('rolls back a conflicting move without updating the session or syncing Google', async () => {
@@ -98,5 +89,4 @@ it('rolls back a conflicting move without updating the session or syncing Google
     false
   );
   expect(client.release).toHaveBeenCalledTimes(1);
-  expect(syncEventToGoogle).not.toHaveBeenCalled();
 });

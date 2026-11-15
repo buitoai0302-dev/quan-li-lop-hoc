@@ -6,7 +6,6 @@ import {
   ScheduleConflictError,
   scheduleWriteError,
 } from '../utils/errors';
-import { syncEventToGoogle, deleteEventFromGoogle } from './google.service';
 import { lockScheduleWrites } from './schedule-write.service';
 import { assertTenantReferences } from './tenant-reference.service';
 
@@ -132,7 +131,6 @@ export class ScheduleService {
   static async createSession(tenantId: string, userId: string | undefined, data: CreateSessionDTO) {
     try {
       const [session] = await ScheduleService.insertSessions(tenantId, [data]);
-      if (userId) await syncEventToGoogle(userId, tenantId, session.id);
       return { success: true, data: session };
     } catch (error) {
       if (error instanceof ScheduleConflictError) {
@@ -148,13 +146,6 @@ export class ScheduleService {
     sessions: CreateSessionDTO[]
   ) {
     const created = await ScheduleService.insertSessions(tenantId, sessions);
-    if (userId) {
-      void ScheduleService.syncCreatedSessions(
-        tenantId,
-        userId,
-        created.map(({ id }) => id)
-      );
-    }
     return created;
   }
 
@@ -220,12 +211,6 @@ export class ScheduleService {
     }
 
     return created;
-  }
-
-  private static async syncCreatedSessions(tenantId: string, userId: string, sessionIds: string[]) {
-    for (const sessionId of sessionIds) {
-      await syncEventToGoogle(userId, tenantId, sessionId);
-    }
   }
 
   static async updateSession(
@@ -308,8 +293,6 @@ export class ScheduleService {
       client.release();
     }
 
-    if (userId) await syncEventToGoogle(userId, tenantId, sessionId);
-
     return { success: true, data: sessionData };
   }
 
@@ -321,10 +304,6 @@ export class ScheduleService {
 
     if (result.rows.length === 0) {
       throw new NotFoundError('Session not found', ERROR_CODES.NOT_FOUND);
-    }
-
-    if (userId) {
-      await deleteEventFromGoogle(userId, tenantId, sessionId);
     }
 
     return true;

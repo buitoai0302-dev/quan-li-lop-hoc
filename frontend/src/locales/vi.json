@@ -686,6 +686,26 @@
     "reloadNotice": "Bỏ các thay đổi chưa lưu và tải điểm danh mới nhất?",
     "none": "Chưa điểm danh"
   },
+  "googleSync": {
+    "title": "Trạng thái đồng bộ lịch",
+    "personal": "Lịch học được sao chép một chiều sang lịch Google cá nhân. Lưu lịch và đồng bộ là hai trạng thái riêng.",
+    "queued": "Đã xếp hàng đồng bộ. Bạn có thể tiếp tục làm việc.",
+    "empty": "Chưa có buổi học cần đồng bộ.",
+    "paused": "Đồng bộ đang tạm dừng theo cấu hình. Các thay đổi đã được giữ trong hàng đợi.",
+    "reconnect": "Hãy kết nối lại Google để tiếp tục đồng bộ.",
+    "reconnectAction": "Kết nối lại Google",
+    "retry": "Thử đồng bộ lại",
+    "reviewLegacy": "Xác nhận lịch cũ",
+    "confirmLegacy": "Chỉ liên kết sự kiện cũ khi xác minh được quyền sở hữu trên lịch Google cá nhân. Nếu không xác minh được, hệ thống sẽ tạo bản riêng và giữ sự kiện cũ. Bạn muốn tiếp tục?",
+    "states": {
+      "pending": "Đang chờ",
+      "syncing": "Đang đồng bộ",
+      "synced": "Đã đồng bộ",
+      "retry_needed": "Cần thử lại",
+      "connection_required": "Cần kết nối lại",
+      "confirmation_required": "Cần xác nhận"
+    }
+  },
   "schedule": {
     "suggestions": {
       "find": "Tìm phòng hoặc giờ còn trống",
