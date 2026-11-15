@@ -5,6 +5,7 @@ import type { ClassData, Room, Teacher, Session } from '@/types';
 import type { TFunction } from 'i18next';
 import { isAxiosError } from 'axios';
 import type { CreateSessionRequest } from '../api/schedule.api';
+import SessionSuggestions from './SessionSuggestions';
 import { handleApiError, type ApiErrorData } from '@/utils/errorHelper';
 import SessionBatchFields, {
   type SessionBatchError,
@@ -407,6 +408,22 @@ const SessionFormModal: React.FC<SessionFormModalProps> = ({
                 </div>
               </div>
             </div>
+            <SessionSuggestions
+              disabled={isSubmitting}
+              request={{
+                session: formData,
+                excludeSessionId: editingSession?.id,
+                draftSessions: [],
+              }}
+              onSelect={(suggestion) =>
+                setFormData((current) => ({
+                  ...current,
+                  roomId: suggestion.roomId,
+                  startTime: suggestion.startTime,
+                  endTime: suggestion.endTime,
+                }))
+              }
+            />
           </>
         )}
       </form>

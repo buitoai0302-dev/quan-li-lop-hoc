@@ -684,6 +684,12 @@
     "none": "Unmarked"
   },
   "schedule": {
+    "suggestions": {
+      "find": "Find an available room or time",
+      "hint": "Select an option to update the draft. Availability is checked again when saving.",
+      "empty": "No available option between {{startTime}} and {{endTime}}. Try another date or teacher.",
+      "failed": "Could not check availability. Please try again."
+    },
     "title": "Schedule Management",
     "manageSchedule": "Manage teaching & learning schedule",
     "time": "Time",

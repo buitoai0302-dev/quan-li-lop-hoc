@@ -7,12 +7,20 @@ import {
   createSessions,
   updateSession,
   deleteSession,
+  getScheduleSuggestions,
 } from '../controllers/schedule.controller';
 import { requireRole } from '../middlewares/auth.middleware';
 import { validateUUID, validate } from '../middlewares/validate.middleware';
 import { z } from 'zod';
+import { scheduleSuggestionsSchema } from '../validators/schedule-suggestions.validator';
 
 const router = Router();
+router.post(
+  '/suggestions',
+  requireRole(ACCESS.ADMIN_STAFF),
+  validate(scheduleSuggestionsSchema),
+  getScheduleSuggestions
+);
 
 const createSessionSchema = z.object({
   body: z.object({

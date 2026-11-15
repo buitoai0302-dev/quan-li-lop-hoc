@@ -3,6 +3,8 @@ import express from 'express';
 import pinoHttp from 'pino-http';
 import dashboardRoutes from '../../src/routes/dashboard.routes';
 import studentRoutes from '../../src/routes/student.routes';
+import scheduleRoutes from '../../src/routes/schedule.routes';
+import { ScheduleSuggestionsService } from '../../src/services/schedule-suggestions.service';
 import { WorkItemsService } from '../../src/services/work-items.service';
 import { StudentProfileService } from '../../src/services/student-profile.service';
 import { errorMiddleware } from '../../src/middlewares/error.middleware';
@@ -12,6 +14,8 @@ import { tuitionListQuerySchema } from '../../src/validators/tuition.validator';
 
 jest.mock('../../src/services/work-items.service');
 jest.mock('../../src/services/student-profile.service');
+jest.mock('../../src/services/schedule.service', () => ({ ScheduleService: {} }));
+jest.mock('../../src/services/schedule-suggestions.service');
 jest.mock('../../src/services/student.service');
 jest.mock('../../src/services/dashboard.service');
 jest.mock('../../src/db', () => ({ __esModule:true, default: { query: jest.fn(() => { throw new Error('Unexpected database access'); }) } }));
@@ -19,6 +23,7 @@ jest.mock('../../src/db', () => ({ __esModule:true, default: { query: jest.fn(()
 const tenantId = '11111111-1111-4111-8111-111111111111';
 const studentId = '22222222-2222-4222-8222-222222222222';
 const app = express();
+app.use(express.json());
 app.use(pinoHttp({ logger, autoLogging: false }));
 app.use((req: AuthRequest, _res, next) => {
   req.tenantId = tenantId;
@@ -27,9 +32,19 @@ app.use((req: AuthRequest, _res, next) => {
 });
 app.use('/dashboard', dashboardRoutes);
 app.use('/students', studentRoutes);
+app.use('/schedule', scheduleRoutes);
 app.use(errorMiddleware);
 
 describe('Workflow endpoint contracts', () => {
+  it('restricts read-only suggestions to management and validates drafts before service access', async () => {
+    const session={classId:studentId,teacherId:studentId,roomId:studentId,sessionDate:'2026-11-15',startTime:'08:00',endTime:'09:00'};
+    jest.mocked(ScheduleSuggestionsService.suggest).mockResolvedValue({suggestions:[],window:{startTime:'07:00',endTime:'22:00'},stepMinutes:15});
+    for(const role of ['teacher','student','api_reader']) expect((await request(app).post('/schedule/suggestions').set('x-qa-role',role).send({session})).status).toBe(403);
+    for(const invalid of [{...session,sessionDate:'2026-02-30'},{...session,endTime:'07:00'},{...session,startTime:'25:00'}]) expect((await request(app).post('/schedule/suggestions').send({session:invalid})).status).toBe(400);
+    expect(ScheduleSuggestionsService.suggest).not.toHaveBeenCalled();
+    expect((await request(app).post('/schedule/suggestions').send({session})).status).toBe(200);
+    expect(ScheduleSuggestionsService.suggest).toHaveBeenCalledWith(tenantId,{session,draftSessions:[]});
+  });
   it('uses the effective authenticated tenant and bounded pagination', async () => {
     jest.mocked(WorkItemsService.getWorkItems).mockResolvedValue({businessDate:'2026-11-15',groups:[]});
     expect((await request(app).get('/dashboard/work-items?group=attendance&limit=20&offset=5')).status).toBe(200);

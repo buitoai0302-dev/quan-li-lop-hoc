@@ -97,6 +97,11 @@ Backend và frontend yêu cầu Node.js từ 22.12.0; CI dùng Node 22. Cài dep
 
 ## 7. Kiểm thử và điều kiện nghiệm thu
 
+### Cải tiến luồng công việc — giai đoạn 3
+
+- `POST /api/schedule/suggestions` chỉ đọc, dành cho quản lý/staff; nhận `session`, `excludeSessionId`, `draftSessions` và `window` tùy chọn. Giữ lớp, giáo viên, ngày và thời lượng; ưu tiên phòng còn hoạt động, đủ sức chứa tối đa của lớp trong cùng chi nhánh ở giờ cũ, rồi giờ gần nhất tại phòng cũ. Mặc định 07:00–22:00, bước 15 phút, tối đa sáu phương án; xét cả lớp/giáo viên/phòng và các buổi nháp khác.
+- Buổi đơn có nút tìm phương án; nhóm buổi hiển thị gợi ý tại dòng đang xung đột. Chọn chỉ sửa bản nháp, đổi đầu vào hủy kết quả cũ. Lưu vẫn dùng giao dịch/ràng buộc chống trùng hiện tại; lỗi 409 giữ dữ liệu để sửa. Không thay cả mẫu định kỳ trong giai đoạn này; không có migration mới.
+
 ### Cải tiến luồng công việc — giai đoạn 2
 
 - `GET /api/dashboard/work-items` trả nhóm điểm danh hôm nay còn thiếu, học phí chưa miễn có số dư và đến hạn, lớp đang hoạt động thiếu giáo viên hoặc lịch trong bảy ngày. Ngày theo Việt Nam; số dư tính bằng NUMERIC từ sổ payments. Giáo viên chỉ nhận buổi của mình; buổi không có học viên không tạo việc. Mặc định xem trước năm mục, phân trang từng nhóm tối đa 50 mục bằng `group`, `limit`, `offset`.

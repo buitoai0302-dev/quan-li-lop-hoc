@@ -687,6 +687,12 @@
     "none": "Chưa điểm danh"
   },
   "schedule": {
+    "suggestions": {
+      "find": "Tìm phòng hoặc giờ còn trống",
+      "hint": "Chọn phương án để sửa bản nháp. Hệ thống kiểm tra lại khi lưu.",
+      "empty": "Không còn phương án từ {{startTime}} đến {{endTime}}. Hãy thử ngày hoặc giáo viên khác.",
+      "failed": "Chưa kiểm tra được lịch trống. Vui lòng thử lại."
+    },
     "title": "Quản lý Lịch học",
     "manageSchedule": "Quản lý lịch dạy & học của trung tâm",
     "time": "Thời gian",

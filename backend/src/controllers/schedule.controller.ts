@@ -3,6 +3,25 @@ import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { ScheduleConflictError, ValidationError } from '../utils/errors';
 import { ScheduleService } from '../services/schedule.service';
+import { ScheduleSuggestionsService } from '../services/schedule-suggestions.service';
+import { scheduleSuggestionsSchema } from '../validators/schedule-suggestions.validator';
+
+export const getScheduleSuggestions = async (
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    res.json(
+      await ScheduleSuggestionsService.suggest(
+        (req.tenantId || req.user?.tenantId)!,
+        scheduleSuggestionsSchema.parse({ body: req.body }).body
+      )
+    );
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const getWeeklySchedule = async (
   req: AuthRequest,

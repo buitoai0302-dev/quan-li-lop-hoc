@@ -55,6 +55,8 @@ Các bộ test tạo và dọn tenant giả riêng. CI chạy cùng hai bộ tes
 
 ### Ngữ cảnh và điểm danh
 
+Giai đoạn 3: suite workflow PostgreSQL kiểm tra ưu tiên phòng cùng chi nhánh đủ sức chứa, giữ thời lượng/ngày/giáo viên/lớp, giới hạn sáu phương án, buổi nháp, giờ liền kề, buổi hủy, cửa sổ quá ngắn, ID chéo tenant và gợi ý đã hết chỗ khi lưu. API teacher/student/API reader bị từ chối; ngày/giờ sai bị chặn trước service. Trình duyệt kiểm tra chọn gợi ý không gọi API ghi, đầu vào mới bỏ kết quả cũ, 409 giữ nháp, từng dòng nhóm và Việt/Anh/mobile/PC.
+
 Giai đoạn 2: suite workflow còn kiểm tra nhóm việc theo tenant/giáo viên, buổi không có học viên, ảnh chụp của học viên đã xóa, lớp thiếu giáo viên/lịch, học phí miễn hoặc chưa đến hạn, số dư thập phân từ sổ thanh toán và phân trang hồ sơ. Thử API từ chối teacher/student/API reader khi đọc hồ sơ và từ chối ID tenant khác. Trình duyệt cần xác nhận link tới đúng đối tượng, phân trang, tab tải khi cần, nút trở lại hồ sơ sau thu/in, không ghi tiền chỉ vì mở panel, cập nhật tổng sau thanh toán, tiếng Việt/Anh và 320–1440 px.
 
 Chạy thêm `tests/staging/workflow.staging.test.ts` cùng biến môi trường PostgreSQL cô lập nêu trên. Bộ test kiểm tra hai kết nối lưu cùng phiên bản chỉ có một thành công, rollback khi audit thất bại, chỉ audit giá trị thay đổi, giữ học viên đã rời lớp, không suy luận danh sách quá khứ từ ghi danh hiện tại, xác nhận học viên cùng tenant không ghi danh lại, và từ chối giáo viên/tenant/ngày không hợp lệ. Migration mới cần thử trên DB rỗng lẫn DB có attendance giả trước khi rollout.

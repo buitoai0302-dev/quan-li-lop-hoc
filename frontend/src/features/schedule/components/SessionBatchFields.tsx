@@ -4,6 +4,7 @@ import { Button, Input, Select } from '@/components/common/UI';
 import ActionHint from '@/components/common/ActionHint';
 import type { ClassData, Room, Teacher } from '@/types';
 import type { TFunction } from 'i18next';
+import SessionSuggestions from './SessionSuggestions';
 
 export interface SessionDraft {
   classId: string;
@@ -250,6 +251,37 @@ export default function SessionBatchFields({
                 </Select>
               </label>
             </div>
+            {error?.rowId === row.id && (
+              <SessionSuggestions
+                request={{
+                  session: { ...row, classId },
+                  draftSessions: rows
+                    .filter(
+                      (other) =>
+                        other.id !== row.id &&
+                        other.sessionDate &&
+                        other.roomId &&
+                        other.teacherId &&
+                        other.startTime < other.endTime
+                    )
+                    .map((other) => ({ ...other, classId })),
+                }}
+                onSelect={(suggestion) =>
+                  onRowsChange(
+                    rows.map((current) =>
+                      current.id === row.id
+                        ? {
+                            ...current,
+                            roomId: suggestion.roomId,
+                            startTime: suggestion.startTime,
+                            endTime: suggestion.endTime,
+                          }
+                        : current
+                    )
+                  )
+                }
+              />
+            )}
           </fieldset>
         ))}
       </div>

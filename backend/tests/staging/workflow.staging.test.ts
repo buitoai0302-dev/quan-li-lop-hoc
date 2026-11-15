@@ -5,11 +5,14 @@ import { ROLES } from '../../src/utils/constants';
 import { WorkItemsService } from '../../src/services/work-items.service';
 import { StudentProfileService } from '../../src/services/student-profile.service';
 import { TuitionService } from '../../src/services/tuition.service';
+import { ScheduleSuggestionsService } from '../../src/services/schedule-suggestions.service';
+import { ScheduleService } from '../../src/services/schedule.service';
 
 jest.mock('../../src/db', () => {
   const { Pool } = jest.requireActual<typeof import('pg')>('pg');
   return { __esModule: true, default: new Pool({ connectionString: process.env.PG_INTEGRITY_TEST_URL, connectionTimeoutMillis: 5000 }) };
 });
+jest.mock('../../src/services/google.service', () => ({ syncEventToGoogle: jest.fn(), deleteEventFromGoogle: jest.fn() }));
 
 const url = process.env.PG_INTEGRITY_TEST_URL;
 const describePostgres = url ? describe : describe.skip;
@@ -65,6 +68,42 @@ describePostgres('workflow data integrity', () => {
     expect((await AttendanceService.getHistory(f.tenantId, f.today, f.actor)).items).toHaveLength(1);
     await pool.query('DELETE FROM class_students WHERE tenant_id = $1 AND student_id = $2', [f.tenantId, f.students[0]]);
     expect((await AttendanceService.getAttendanceBySession(f.tenantId, f.today, f.actor)).data.attendance).toHaveLength(2);
+  });
+
+  it('suggests adequate same-branch rooms first, respects drafts and rejects stale availability at save', async () => {
+    const f = await fixture();
+    const roomId = (await pool.query("INSERT INTO rooms (tenant_id, branch_id, name, capacity) VALUES ($1,$2,'Alternative',30) RETURNING id", [f.tenantId, f.branchId])).rows[0].id;
+    const smallId = (await pool.query("INSERT INTO rooms (tenant_id, branch_id, name, capacity) VALUES ($1,$2,'Too small',5) RETURNING id", [f.tenantId, f.branchId])).rows[0].id;
+    const date = (await pool.query('SELECT session_date::text FROM schedule_sessions WHERE tenant_id=$1 AND id=$2', [f.tenantId,f.today])).rows[0].session_date;
+    const session = {classId:f.classId,teacherId:f.teacherId,roomId:f.roomId,sessionDate:date,startTime:'08:00',endTime:'09:00'};
+    const baseline = (await pool.query('SELECT count(*)::int AS count FROM schedule_sessions WHERE tenant_id=$1',[f.tenantId])).rows[0].count;
+    const result = await ScheduleSuggestionsService.suggest(f.tenantId,{session,excludeSessionId:f.today,draftSessions:[]});
+    expect(result.suggestions[0]).toMatchObject({roomId,kind:'room',startTime:'08:00',endTime:'09:00'});
+    expect(result.suggestions).toHaveLength(6);
+    expect(result.suggestions.some(item=>item.roomId===smallId)).toBe(false);
+    expect((await pool.query('SELECT count(*)::int AS count FROM schedule_sessions WHERE tenant_id=$1',[f.tenantId])).rows[0].count).toBe(baseline);
+    const draft = {...session,roomId};
+    const withDraft = await ScheduleSuggestionsService.suggest(f.tenantId,{session,excludeSessionId:f.today,draftSessions:[draft]});
+    expect(withDraft.suggestions.every(item=>item.endTime<='08:00'||item.startTime>='09:00')).toBe(true);
+    // A suggestion does not reserve anything: another committed session must still win.
+    await pool.query("INSERT INTO schedule_sessions (tenant_id,class_id,teacher_id,room_id,session_date,start_time,end_time) VALUES ($1,$2,$3,$4,$5,'07:00','08:00')",[f.tenantId,f.classId,f.teacherId,f.roomId,date]);
+    const save = await ScheduleService.updateSession(f.tenantId,undefined,f.today,{...session,startTime:'07:00',endTime:'08:00'});
+    expect(save.success).toBe(false);
+    const b = await fixture();
+    await expect(ScheduleSuggestionsService.suggest(b.tenantId,{session,draftSessions:[]})).rejects.toMatchObject({errorCode:'INVALID_TENANT_REFERENCE'});
+    await expect(ScheduleSuggestionsService.suggest(f.tenantId,{session,excludeSessionId:b.today,draftSessions:[]})).rejects.toMatchObject({errorCode:'SESSION_NOT_FOUND'});
+  });
+
+  it('allows adjacent and cancelled sessions while retaining teacher/class conflicts and bounded windows', async () => {
+    const f=await fixture();
+    const date=(await pool.query('SELECT session_date::text FROM schedule_sessions WHERE tenant_id=$1 AND id=$2',[f.tenantId,f.today])).rows[0].session_date;
+    const session={classId:f.classId,teacherId:f.teacherId,roomId:f.roomId,sessionDate:date,startTime:'08:00',endTime:'09:00'};
+    const request={session,draftSessions:[],window:{startTime:'07:00',endTime:'10:00'}};
+    const result=await ScheduleSuggestionsService.suggest(f.tenantId,request);
+    expect(result.suggestions.map(item=>item.startTime)).toEqual(['07:00','09:00']);
+    await pool.query("UPDATE schedule_sessions SET status='cancelled' WHERE tenant_id=$1 AND id=$2",[f.tenantId,f.today]);
+    expect((await ScheduleSuggestionsService.suggest(f.tenantId,request)).suggestions[0].startTime).toBe('07:45');
+    expect((await ScheduleSuggestionsService.suggest(f.tenantId,{...request,window:{startTime:'08:00',endTime:'08:30'}})).suggestions).toEqual([]);
   });
 
   it('requires historical evidence or explicit confirmation without re-enrollment', async () => {

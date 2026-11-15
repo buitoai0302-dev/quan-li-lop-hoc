@@ -1,6 +1,38 @@
 import api from '@/api';
 import { CreatedSessionsResponseSchema, SessionSchema, safeParseArray } from '@/types/schemas';
 import type { Session } from '@/types/schemas';
+import { z } from 'zod';
+
+export type SuggestionSlot = Pick<
+  CreateSessionRequest,
+  'classId' | 'teacherId' | 'roomId' | 'sessionDate' | 'startTime' | 'endTime'
+>;
+export interface SuggestionsRequest {
+  session: SuggestionSlot;
+  excludeSessionId?: string;
+  draftSessions: SuggestionSlot[];
+}
+const SuggestionResponseSchema = z.object({
+  suggestions: z.array(
+    z.object({
+      classId: z.string().uuid(),
+      teacherId: z.string().uuid(),
+      roomId: z.string().uuid(),
+      sessionDate: z.string(),
+      startTime: z.string(),
+      endTime: z.string(),
+      roomName: z.string(),
+      kind: z.enum(['room', 'time']),
+    })
+  ),
+  window: z.object({ startTime: z.string(), endTime: z.string() }),
+  stepMinutes: z.number(),
+});
+export type ScheduleSuggestion = z.infer<typeof SuggestionResponseSchema>['suggestions'][number];
+export const getScheduleSuggestions = (request: SuggestionsRequest, signal?: AbortSignal) =>
+  api
+    .post('/schedule/suggestions', request, { signal })
+    .then(({ data }) => SuggestionResponseSchema.parse(data));
 
 export interface SessionsPayload {
   sessions: Session[];
