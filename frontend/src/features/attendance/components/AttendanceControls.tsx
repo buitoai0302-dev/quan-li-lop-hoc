@@ -27,6 +27,8 @@ interface AttendanceControlsProps {
   searchTerm: string;
   setSearchTerm: (v: string) => void;
   dateInputRef: React.RefObject<HTMLInputElement | null>;
+  viewActions?: React.ReactNode;
+  sessionActions?: React.ReactNode;
   headerActions?: React.ReactNode;
 }
 
@@ -45,13 +47,15 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
   searchTerm,
   setSearchTerm,
   dateInputRef,
+  viewActions,
+  sessionActions,
   headerActions,
 }) => {
   const { t } = useTranslation();
 
   return (
     <div className="relative z-[60] shrink-0 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex flex-wrap items-center gap-2 p-3">
+      <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
         <div className="flex w-full items-center gap-1.5 sm:w-auto">
           <button
             type="button"
@@ -101,46 +105,53 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
         </div>
 
         {selectedSession && (
-          <div className="relative w-full sm:min-w-40 sm:max-w-sm sm:flex-1">
-            <Search
-              aria-hidden="true"
-              className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
-              size={14}
-            />
-            <input
-              type="search"
-              aria-label={t('common.search')}
-              placeholder={t('common.search')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-base text-slate-900 placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-primary dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-400 sm:h-9 sm:text-xs"
-            />
+          <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto sm:min-w-[21rem] sm:flex-1">
+            <div className="relative min-w-0 flex-1">
+              <Search
+                aria-hidden="true"
+                className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400"
+                size={14}
+              />
+              <input
+                type="search"
+                aria-label={t('common.search')}
+                placeholder={t('common.search')}
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="h-11 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-base text-slate-900 placeholder:text-slate-500 focus-visible:outline-2 focus-visible:outline-primary dark:border-slate-700 dark:bg-slate-950 dark:text-white dark:placeholder:text-slate-400 sm:h-9 sm:text-xs"
+              />
+            </div>
+
+            <div className="flex shrink-0 items-center gap-2">
+              {viewActions}
+              <button
+                type="button"
+                onClick={() => setIsControlsExpanded(!isControlsExpanded)}
+                aria-expanded={isControlsExpanded}
+                aria-label={t('attendance.stats')}
+                title={t('attendance.stats')}
+                className="inline-flex size-11 items-center justify-center gap-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-primary aria-expanded:border-primary/35 aria-expanded:bg-primary/5 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:h-9 sm:w-auto sm:px-2.5"
+              >
+                <ClipboardCheck aria-hidden="true" size={15} />
+                <span className="hidden sm:inline">{t('attendance.stats')}</span>
+                {isControlsExpanded ? (
+                  <ChevronUp aria-hidden="true" size={14} className="hidden sm:inline" />
+                ) : (
+                  <ChevronDown aria-hidden="true" size={14} className="hidden sm:inline" />
+                )}
+              </button>
+            </div>
           </div>
         )}
+      </div>
 
-        <div className="flex w-full flex-wrap items-center gap-2 sm:ml-auto sm:w-auto">
-          {headerActions}
-          {selectedSession && (
-            <button
-              type="button"
-              onClick={() => setIsControlsExpanded(!isControlsExpanded)}
-              aria-expanded={isControlsExpanded}
-              className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-primary dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800 sm:min-h-9"
-            >
-              <ClipboardCheck aria-hidden="true" size={15} />
-              {t('attendance.stats')}
-              {isControlsExpanded ? (
-                <ChevronUp aria-hidden="true" size={14} />
-              ) : (
-                <ChevronDown aria-hidden="true" size={14} />
-              )}
-            </button>
-          )}
-        </div>
+      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-slate-200 px-3 py-2 dark:border-slate-800">
+        {sessionActions}
+        {headerActions}
       </div>
 
       {selectedSession && isControlsExpanded && (
-        <div className="filter-enter border-t border-slate-200 p-3 dark:border-slate-800">
+        <div className="filter-enter border-t border-slate-200 px-3 py-2.5 dark:border-slate-800">
           <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
             {[
               {
@@ -188,11 +199,14 @@ const AttendanceControls: React.FC<AttendanceControlsProps> = ({
                 value,
                 showTotal,
               }) => (
-                <div key={key} className={`${bgColor} ${borderColor} p-2 lg:p-3 rounded-lg border`}>
-                  <div className={`text-xs font-semibold mb-0.5 ${labelColor}`}>
+                <div
+                  key={key}
+                  className={`${bgColor} ${borderColor} flex flex-wrap items-center justify-between gap-x-2 rounded-lg border px-2.5 py-1.5 sm:px-3`}
+                >
+                  <div className={`text-xs font-semibold ${labelColor}`}>
                     {t(`attendance.${key}`)}
                   </div>
-                  <div className={`text-base lg:text-xl font-black ${textColor}`}>
+                  <div className={`text-base font-bold tabular-nums ${textColor}`}>
                     {value}
                     {showTotal && (
                       <span className={`text-xs font-medium ml-1 ${totalColor}`}>

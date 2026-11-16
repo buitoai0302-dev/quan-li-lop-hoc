@@ -7,6 +7,17 @@ import EmptyState from '@/components/common/EmptyState';
 import { ATTENDANCE_STATUS } from '@/utils/constants';
 import type { AttendanceRecord, Session } from '../types';
 
+const STATUS_BUTTON_COLORS = {
+  [ATTENDANCE_STATUS.PRESENT]:
+    'border-emerald-300 bg-emerald-50 text-emerald-800 dark:border-emerald-400/40 dark:bg-emerald-400/10 dark:text-emerald-200',
+  [ATTENDANCE_STATUS.ABSENT]:
+    'border-red-300 bg-red-50 text-red-800 dark:border-red-400/40 dark:bg-red-400/10 dark:text-red-200',
+  [ATTENDANCE_STATUS.LATE]:
+    'border-amber-300 bg-amber-50 text-amber-800 dark:border-amber-400/40 dark:bg-amber-400/10 dark:text-amber-200',
+  [ATTENDANCE_STATUS.EXCUSED]:
+    'border-blue-300 bg-blue-50 text-blue-800 dark:border-blue-400/40 dark:bg-blue-400/10 dark:text-blue-200',
+};
+
 interface StudentListProps {
   attendanceLoading: boolean;
   selectedSession: Session | null;
@@ -51,7 +62,7 @@ const StudentList: React.FC<StudentListProps> = ({
                 className="flex flex-col justify-between gap-3 p-3 sm:p-4 @min-[42rem]/attendance-list:flex-row @min-[42rem]/attendance-list:items-center hover:bg-gray-50/50 dark:hover:bg-gray-900/10 transition-colors"
               >
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-black text-xs border border-primary/20 shrink-0">
+                  <div className="flex size-10 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/10 text-xs font-bold text-indigo-700 dark:text-indigo-200">
                     {record.full_name.substring(0, 2).toUpperCase()}
                   </div>
                   <div className="min-w-0">
@@ -63,7 +74,7 @@ const StudentList: React.FC<StudentListProps> = ({
                     </div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-1.5 @min-[24rem]/attendance-list:grid-cols-4 @min-[42rem]/attendance-list:shrink-0">
+                <div className="grid grid-cols-2 gap-1.5 @min-[29rem]/attendance-list:grid-cols-4 @min-[42rem]/attendance-list:w-[27rem] @min-[42rem]/attendance-list:shrink-0">
                   {[
                     ATTENDANCE_STATUS.PRESENT,
                     ATTENDANCE_STATUS.ABSENT,
@@ -80,35 +91,29 @@ const StudentList: React.FC<StudentListProps> = ({
                         handleStatusChange(record.student_id, status);
                       }}
                       disabled={isReadOnly}
-                      className={`inline-flex min-h-11 items-center justify-center gap-1 rounded-lg border px-2 py-2 text-xs font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-default sm:px-3 ${
+                      className={`inline-flex min-h-11 min-w-0 items-center justify-center gap-1 rounded-lg border px-2 py-1.5 text-xs font-semibold leading-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-default lg:@min-[42rem]/attendance-list:min-h-9 ${
                         changedStatus?.studentId === record.student_id
                           ? 'motion-safe:transition-colors motion-safe:duration-150'
                           : ''
                       } ${
                         record.status === status
-                          ? status === ATTENDANCE_STATUS.PRESENT
-                            ? 'bg-emerald-700 border-emerald-700 text-white'
-                            : status === ATTENDANCE_STATUS.ABSENT
-                              ? 'bg-red-700 border-red-700 text-white'
-                              : status === ATTENDANCE_STATUS.LATE
-                                ? 'bg-amber-800 border-amber-800 text-white'
-                                : 'bg-blue-700 border-blue-700 text-white'
-                          : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-600 text-slate-600 dark:text-slate-200 enabled:hover:border-primary dark:enabled:hover:border-indigo-400'
+                          ? STATUS_BUTTON_COLORS[status]
+                          : 'border-slate-200 bg-white text-slate-700 enabled:hover:border-slate-400 enabled:hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:enabled:hover:border-slate-500 dark:enabled:hover:bg-slate-800'
                       }`}
                     >
-                      {record.status === status && (
-                        <Check
-                          aria-hidden="true"
-                          size={11}
-                          className={`shrink-0 ${
-                            changedStatus?.studentId === record.student_id &&
-                            changedStatus.status === status
-                              ? 'motion-safe:animate-[attendance-check-in_160ms_ease-out]'
-                              : ''
-                          }`}
-                        />
-                      )}
-                      {t(`attendance.${status}`)}
+                      <Check
+                        aria-hidden="true"
+                        size={11}
+                        className={`shrink-0 ${record.status === status ? '' : 'invisible'} ${
+                          changedStatus?.studentId === record.student_id &&
+                          changedStatus.status === status
+                            ? 'motion-safe:animate-[attendance-check-in_160ms_ease-out]'
+                            : ''
+                        }`}
+                      />
+                      <span className="@min-[42rem]/attendance-list:whitespace-nowrap">
+                        {t(`attendance.${status}`)}
+                      </span>
                     </button>
                   ))}
                 </div>

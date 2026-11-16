@@ -7,6 +7,7 @@ import { USER_ROLES } from '@/utils/constants';
 import EmptyState from '@/components/common/EmptyState';
 import PageError from '@/components/common/PageError';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import ExportMenu from '@/components/common/ExportMenu';
 
 // Local components
 import { useAttendance } from '@/features/attendance/hooks/useAttendance';
@@ -158,7 +159,10 @@ const AttendancePage: React.FC = () => {
     );
 
   return (
-    <div ref={scrollRef} className="flex-1 min-h-0 flex flex-col gap-3 sm:gap-4 overflow-hidden">
+    <div
+      ref={scrollRef}
+      className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto lg:overflow-hidden"
+    >
       <ConfirmModal
         isOpen={confirmReload}
         onClose={() => setConfirmReload(false)}
@@ -198,6 +202,37 @@ const AttendancePage: React.FC = () => {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         dateInputRef={dateInputRef}
+        viewActions={
+          <ExportMenu
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
+            disabled={filteredAttendance.length === 0}
+            align="responsive"
+          />
+        }
+        sessionActions={
+          selectedSession && (
+            <div className="flex flex-wrap items-center gap-x-3 text-xs font-medium">
+              {user?.role !== USER_ROLES.TEACHER && (
+                <button
+                  type="button"
+                  className="min-h-11 rounded text-slate-600 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary dark:text-slate-300 sm:min-h-9"
+                  onClick={() => setShowHistory(true)}
+                >
+                  {t('attendance.history')}
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={saving}
+                className="min-h-11 rounded text-slate-600 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50 dark:text-slate-300 sm:min-h-9"
+                onClick={() => setConfirmReload(true)}
+              >
+                {t('attendance.reloadTitle')}
+              </button>
+            </div>
+          )
+        }
         headerActions={
           <AttendanceHeader
             selectedSession={selectedSession}
@@ -211,33 +246,10 @@ const AttendancePage: React.FC = () => {
             unmarkedCount={unmarkedCount}
             canUndo={canUndo}
             handleUndo={handleUndo}
-            onExportExcel={handleExportExcel}
-            onExportPDF={handleExportPDF}
           />
         }
       />
 
-      {selectedSession && (
-        <div className="flex shrink-0 flex-wrap gap-3 text-xs">
-          {user?.role !== USER_ROLES.TEACHER && (
-            <button
-              type="button"
-              className="min-h-9 text-primary"
-              onClick={() => setShowHistory(true)}
-            >
-              {t('attendance.history')}
-            </button>
-          )}
-          <button
-            type="button"
-            disabled={saving}
-            className="min-h-9 text-primary"
-            onClick={() => setConfirmReload(true)}
-          >
-            {t('attendance.reloadTitle')}
-          </button>
-        </div>
-      )}
       {policy?.reasonRequired && (
         <HistoricalAttendance
           reason={reason}
@@ -247,7 +259,7 @@ const AttendancePage: React.FC = () => {
           disabled={saving}
         />
       )}
-      <div className="flex-1 flex flex-col lg:flex-row gap-3 sm:gap-4 overflow-hidden min-h-0">
+      <div className="flex flex-none flex-col gap-3 lg:min-h-0 lg:flex-1 lg:flex-row lg:overflow-hidden">
         <SessionList
           sessions={sessions}
           selectedSession={selectedSession}

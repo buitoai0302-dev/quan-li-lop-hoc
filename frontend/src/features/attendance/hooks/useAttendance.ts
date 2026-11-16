@@ -15,6 +15,7 @@ import type { Student } from '@/types/schemas';
 import { useNavigationPrompt } from '@/hooks/useNavigationPrompt';
 import { isDateKey, isText, useWorkflowScope, useWorkflowState } from '@/hooks/useWorkflowState';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '@/hooks/useMediaQuery';
 
 const businessDate = () =>
   new Intl.DateTimeFormat('en-CA', {
@@ -53,8 +54,12 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
   const [isDirty, setIsDirty] = useState(false);
   const [undo, setUndo] = useState<{ records: AttendanceRecord[]; dirty: boolean } | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
-  const [isControlsExpanded, setIsControlsExpanded] = useState(true);
-  const [isSessionsExpanded, setIsSessionsExpanded] = useState(true);
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
+  const [desktopStatsExpanded, setDesktopStatsExpanded] = useState(true);
+  const [mobileStatsExpanded, setMobileStatsExpanded] = useState(false);
+  const isControlsExpanded = isDesktop ? desktopStatsExpanded : mobileStatsExpanded;
+  const setIsControlsExpanded = isDesktop ? setDesktopStatsExpanded : setMobileStatsExpanded;
+  const [isSessionsExpanded, setIsSessionsExpanded] = useState(() => !selectedSessionId);
   const blocker = useNavigationPrompt(isDirty);
   useEffect(() => {
     if (isDirty) return;
@@ -105,9 +110,9 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
   const selectSession = (sessionId: string) => {
     resetDraft();
     setSelectedSessionId(sessionId);
-    if (window.innerWidth < 1024) {
+    if (!isDesktop) {
       setIsSessionsExpanded(false);
-      setIsControlsExpanded(false);
+      setMobileStatsExpanded(false);
     }
   };
   const policy = attendanceQuery.data?.editingPolicy;

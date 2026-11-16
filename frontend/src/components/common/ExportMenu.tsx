@@ -117,6 +117,9 @@ const ExportMenu: React.FC<ExportMenuProps> = ({
           ref={buttonRef}
           id={triggerId}
           type="button"
+          aria-label={t(
+            loading ? 'export.exporting' : onImport ? 'common.actions' : 'export.button'
+          )}
           aria-haspopup="menu"
           aria-controls={open ? menuId : undefined}
           aria-expanded={open}
