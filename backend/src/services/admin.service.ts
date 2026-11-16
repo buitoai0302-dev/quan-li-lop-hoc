@@ -134,7 +134,14 @@ export class AdminService {
       client = await pool.connect();
       await client.query('BEGIN');
 
-      if (name || priceVnd !== undefined || priceUsd !== undefined || isActive !== undefined) {
+      if (
+        name ||
+        priceVnd !== undefined ||
+        priceUsd !== undefined ||
+        yearlyPriceVnd !== undefined ||
+        yearlyPriceUsd !== undefined ||
+        isActive !== undefined
+      ) {
         const updates: string[] = [];
         const params: any[] = [];
         if (name) {
@@ -190,9 +197,11 @@ export class AdminService {
           'google_calendar_sync',
           'attendance_tracking',
           'advanced_analytics',
+          'advanced_reports',
           'api_access',
           'multi_branch',
           'custom_domain',
+          'sso_saml',
           'yearly_chart',
         ];
         for (const [key, value] of Object.entries(features)) {

@@ -1,14 +1,15 @@
 import PageError from '@/components/common/PageError';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
+import { isAxiosError } from 'axios';
 import { handleApiError } from '@/utils/errorHelper';
 import { Save, Info, Building, Zap, Shield, Crown, Settings } from 'lucide-react';
-import { PLAN_CODES, PLAN_FIELDS } from '@/utils/constants';
+import { PLAN_CODES } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
 import PageLoading from '@/components/common/PageLoading';
 import { Card, Button, Input } from '@/components/common/UI';
-import type { Plan } from '@/types';
+import type { AdminPlan } from '../api/admin.api';
 
 import { useAdminPlans, useUpdatePlan } from '../hooks/useAdmin';
 
@@ -17,38 +18,23 @@ const AdminPlans: React.FC = () => {
 
   const pageQuery = useAdminPlans();
   const { data: fetchedPlans, isLoading: loading } = pageQuery;
-  const { mutate: updatePlanMutate } = useUpdatePlan();
+  const { mutateAsync: updatePlan } = useUpdatePlan();
 
-  const [plans, setPlans] = useState<Plan[]>([]);
+  const [drafts, setDrafts] = useState<Partial<Record<string, AdminPlan>>>({});
   const [savingId, setSavingId] = useState<string | null>(null);
+  const plans = fetchedPlans?.map((plan) => drafts[plan.id] ?? plan) ?? [];
 
-  useEffect(() => {
-    if (fetchedPlans) {
-      setPlans(fetchedPlans);
-    }
-  }, [fetchedPlans]);
-
-  const handleUpdateField = (
-    planId: string,
-    category: typeof PLAN_FIELDS.LIMITS | typeof PLAN_FIELDS.FEATURES,
-    key: string,
-    value: unknown
-  ) => {
-    setPlans((prev) =>
-      prev.map((p) => {
-        if (p.id !== planId) return p;
-        return {
-          ...p,
-          [category]: { ...p[category], [key]: value },
-        };
-      })
-    );
+  const updateDraft = (plan: AdminPlan, changes: Partial<AdminPlan>) => {
+    setDrafts((current) => ({
+      ...current,
+      [plan.id]: { ...(current[plan.id] ?? plan), ...changes },
+    }));
   };
 
-  const handleSavePlan = (plan: Plan) => {
+  const handleSavePlan = async (plan: AdminPlan) => {
     setSavingId(plan.id);
-    updatePlanMutate(
-      {
+    try {
+      await updatePlan({
         id: plan.id,
         data: {
           name: plan.name,
@@ -57,21 +43,23 @@ const AdminPlans: React.FC = () => {
           yearlyPriceVnd: plan.yearly_price_vnd,
           yearlyPriceUsd: plan.yearly_price_usd,
           isActive: plan.is_active,
-          limits: plan.limits as any,
-          features: plan.features as any,
+          limits: plan.limits,
+          features: plan.features,
         },
-      },
-      {
-        onSuccess: () => {
-          toast.success(t('common.success'));
-          setSavingId(null);
-        },
-        onError: (error: any) => {
-          handleApiError(error, t);
-          setSavingId(null);
-        },
-      }
-    );
+      });
+      setDrafts((current) => {
+        if (current[plan.id] !== plan) return current;
+        const remaining = { ...current };
+        delete remaining[plan.id];
+        return remaining;
+      });
+      toast.success(t('common.success'));
+    } catch (error) {
+      if (isAxiosError(error)) handleApiError(error, t);
+      else toast.error(t('common.error'));
+    } finally {
+      setSavingId(null);
+    }
   };
 
   if (loading) return <PageLoading />;
@@ -139,13 +127,7 @@ const AdminPlans: React.FC = () => {
                         role="switch"
                         aria-checked={plan.is_active}
                         aria-label={t('admin.planStatus', { name: plan.name })}
-                        onClick={() =>
-                          setPlans((prev) =>
-                            prev.map((p) =>
-                              p.id === plan.id ? { ...p, is_active: !p.is_active } : p
-                            )
-                          )
-                        }
+                        onClick={() => updateDraft(plan, { is_active: !plan.is_active })}
                         className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary ${plan.is_active ? 'bg-emerald-500' : 'bg-gray-300 dark:bg-gray-600'}`}
                       >
                         <span
@@ -159,6 +141,7 @@ const AdminPlans: React.FC = () => {
                   <Button
                     onClick={() => handleSavePlan(plan)}
                     loading={savingId === plan.id}
+                    disabled={savingId !== null}
                     className="w-full uppercase tracking-[0.15em] text-[10px]"
                     icon={<Save size={16} strokeWidth={3} />}
                   >
@@ -180,14 +163,8 @@ const AdminPlans: React.FC = () => {
                         <Input
                           id={`${plan.id}-vnd-month`}
                           type="number"
-                          value={plan.price_vnd}
-                          onChange={(e) =>
-                            setPlans((prev) =>
-                              prev.map((p) =>
-                                p.id === plan.id ? { ...p, price_vnd: Number(e.target.value) } : p
-                              )
-                            )
-                          }
+                          value={Number.isNaN(plan.price_vnd) ? '' : plan.price_vnd}
+                          onChange={(e) => updateDraft(plan, { price_vnd: e.target.valueAsNumber })}
                           size="sm"
                         />
                       </div>
@@ -201,14 +178,9 @@ const AdminPlans: React.FC = () => {
                         <Input
                           id={`${plan.id}-usd-month`}
                           type="number"
-                          value={plan.price_usd}
-                          onChange={(e) =>
-                            setPlans((prev) =>
-                              prev.map((p) =>
-                                p.id === plan.id ? { ...p, price_usd: Number(e.target.value) } : p
-                              )
-                            )
-                          }
+                          step="0.01"
+                          value={Number.isNaN(plan.price_usd) ? '' : plan.price_usd}
+                          onChange={(e) => updateDraft(plan, { price_usd: e.target.valueAsNumber })}
                           size="sm"
                         />
                       </div>
@@ -225,15 +197,11 @@ const AdminPlans: React.FC = () => {
                         <Input
                           id={`${plan.id}-vnd-year`}
                           type="number"
-                          value={plan.yearly_price_vnd || 0}
+                          value={
+                            Number.isNaN(plan.yearly_price_vnd) ? '' : (plan.yearly_price_vnd ?? 0)
+                          }
                           onChange={(e) =>
-                            setPlans((prev) =>
-                              prev.map((p) =>
-                                p.id === plan.id
-                                  ? { ...p, yearly_price_vnd: Number(e.target.value) }
-                                  : p
-                              )
-                            )
+                            updateDraft(plan, { yearly_price_vnd: e.target.valueAsNumber })
                           }
                           size="sm"
                         />
@@ -248,15 +216,12 @@ const AdminPlans: React.FC = () => {
                         <Input
                           id={`${plan.id}-usd-year`}
                           type="number"
-                          value={plan.yearly_price_usd || 0}
+                          step="0.01"
+                          value={
+                            Number.isNaN(plan.yearly_price_usd) ? '' : (plan.yearly_price_usd ?? 0)
+                          }
                           onChange={(e) =>
-                            setPlans((prev) =>
-                              prev.map((p) =>
-                                p.id === plan.id
-                                  ? { ...p, yearly_price_usd: Number(e.target.value) }
-                                  : p
-                              )
-                            )
+                            updateDraft(plan, { yearly_price_usd: e.target.valueAsNumber })
                           }
                           size="sm"
                         />
@@ -286,12 +251,12 @@ const AdminPlans: React.FC = () => {
                                   type="number"
                                   value={value}
                                   onChange={(e) =>
-                                    handleUpdateField(
-                                      plan.id,
-                                      PLAN_FIELDS.LIMITS,
-                                      key,
-                                      parseInt(e.target.value, 10)
-                                    )
+                                    updateDraft(plan, {
+                                      limits: {
+                                        ...plan.limits,
+                                        [key]: parseInt(e.target.value, 10),
+                                      },
+                                    })
                                   }
                                   className="w-full bg-gray-50 dark:bg-gray-900/50 border-none rounded-xl px-4 py-2.5 text-xs font-black text-gray-900 dark:text-white focus:ring-2 focus:ring-primary transition-all outline-none"
                                 />
@@ -330,7 +295,9 @@ const AdminPlans: React.FC = () => {
                                   feature: t(`admin.featureLabels.${key}`, key),
                                 })}
                                 onClick={() =>
-                                  handleUpdateField(plan.id, PLAN_FIELDS.FEATURES, key, !value)
+                                  updateDraft(plan, {
+                                    features: { ...plan.features, [key]: !value },
+                                  })
                                 }
                                 className={`relative h-5 w-9 shrink-0 cursor-pointer rounded-full transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary ${value ? 'bg-primary shadow-lg shadow-primary/20' : 'bg-gray-300 dark:bg-gray-700'}`}
                               >
