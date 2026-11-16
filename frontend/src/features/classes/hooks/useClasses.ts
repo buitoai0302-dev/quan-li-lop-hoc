@@ -8,7 +8,7 @@ import type { ClassData, Branch, Teacher, Room, Student } from '@/types/schemas'
 /**
  * Hook to manage class data and related entities using TanStack Query
  */
-export const useClasses = () => {
+export const useClasses = (includeEditorData = true) => {
   // Individual queries for each entity type for better caching and parallel fetching
   const classesQuery = useQuery<ClassData[]>({
     queryKey: ['classes'],
@@ -23,34 +23,28 @@ export const useClasses = () => {
   const teachersQuery = useQuery<Teacher[]>({
     queryKey: ['teachers'],
     queryFn: () => getTeachers(),
+    enabled: includeEditorData,
   });
 
   const roomsQuery = useQuery<Room[]>({
     queryKey: ['rooms'],
     queryFn: () => getRooms(),
+    enabled: includeEditorData,
   });
 
   const studentsQuery = useQuery<Student[]>({
     queryKey: ['students'],
     queryFn: () => getStudents(),
+    enabled: includeEditorData,
   });
 
-  const isLoading =
-    classesQuery.isLoading ||
-    branchesQuery.isLoading ||
-    teachersQuery.isLoading ||
-    roomsQuery.isLoading ||
-    studentsQuery.isLoading;
-
-  const refreshData = async () => {
-    await Promise.all([
-      classesQuery.refetch(),
-      branchesQuery.refetch(),
-      teachersQuery.refetch(),
-      roomsQuery.refetch(),
-      studentsQuery.refetch(),
-    ]);
-  };
+  const activeQueries = [
+    classesQuery,
+    branchesQuery,
+    ...(includeEditorData ? [teachersQuery, roomsQuery, studentsQuery] : []),
+  ];
+  const isLoading = activeQueries.some((query) => query.isLoading);
+  const refreshData = () => Promise.all(activeQueries.map((query) => query.refetch()));
 
   return {
     classes: classesQuery.data || [],
@@ -59,6 +53,8 @@ export const useClasses = () => {
     rooms: roomsQuery.data || [],
     allStudents: studentsQuery.data || [],
     loading: isLoading,
+    hasLoadError: activeQueries.some((query) => query.isError && query.data === undefined),
+    isFetching: activeQueries.some((query) => query.isFetching),
     refreshClasses: refreshData,
   };
 };

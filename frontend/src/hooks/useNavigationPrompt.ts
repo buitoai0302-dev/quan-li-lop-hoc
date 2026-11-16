@@ -15,10 +15,7 @@ export const useNavigationPrompt = (isDirty: boolean) => {
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       if (isDirty) {
-        const message = t(
-          'attendance.unsavedDesc',
-          'You have unsaved changes. Are you sure you want to leave?'
-        );
+        const message = t('common.unsavedDescription');
         e.preventDefault();
         e.returnValue = message;
         return message;
@@ -27,19 +24,19 @@ export const useNavigationPrompt = (isDirty: boolean) => {
 
     if (isDirty) {
       window.addEventListener('beforeunload', handleBeforeUnload);
-      window.onbeforeunload = handleBeforeUnload;
     }
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.onbeforeunload = null;
     };
   }, [isDirty, t]);
 
   // 2. Handle internal navigation (React Router blocker)
   const blocker = useBlocker(
     ({ currentLocation, nextLocation }) =>
-      isDirty && currentLocation.pathname !== nextLocation.pathname
+      isDirty &&
+      (currentLocation.pathname !== nextLocation.pathname ||
+        currentLocation.search !== nextLocation.search)
   );
 
   return blocker;

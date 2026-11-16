@@ -4,6 +4,7 @@ import type { BulkGenerateDto, CreateTuitionDto, RecordPaymentDto } from '../api
 import toast from 'react-hot-toast';
 import { t } from 'i18next';
 import { TUITION_STATUS } from '@/utils/constants';
+import { useWorkflowScope } from '@/hooks/useWorkflowState';
 
 const KEYS = {
   list: (params?: Record<string, string>) => ['tuitions', params],
@@ -11,17 +12,21 @@ const KEYS = {
   payments: (id: string) => ['tuitions', id, 'payments'],
 };
 
-export const useTuitions = (params?: Record<string, string>) =>
-  useQuery({
-    queryKey: KEYS.list(params),
-    queryFn: () => tuitionApi.list(params),
+export const useTuitions = (params?: Record<string, string>) => {
+  const scope = useWorkflowScope();
+  return useQuery({
+    queryKey: [...KEYS.list(params), scope],
+    queryFn: ({ signal }) => tuitionApi.list(params, signal),
   });
+};
 
-export const useOverdueTuitions = () =>
-  useQuery({
-    queryKey: KEYS.overdue(),
+export const useOverdueTuitions = () => {
+  const scope = useWorkflowScope();
+  return useQuery({
+    queryKey: [...KEYS.overdue(), scope],
     queryFn: tuitionApi.overdue,
   });
+};
 
 export const useCreateTuition = () => {
   const qc = useQueryClient();
@@ -73,12 +78,14 @@ export const useDeleteTuition = () => {
   });
 };
 
-export const useTuitionPayments = (tuitionId: string, enabled = true) =>
-  useQuery({
-    queryKey: KEYS.payments(tuitionId),
+export const useTuitionPayments = (tuitionId: string, enabled = true) => {
+  const scope = useWorkflowScope();
+  return useQuery({
+    queryKey: [...KEYS.payments(tuitionId), scope],
     queryFn: () => tuitionApi.getPayments(tuitionId),
     enabled,
   });
+};
 
 export const useRecordPayment = (tuitionId: string) => {
   const qc = useQueryClient();

@@ -36,7 +36,7 @@ export interface SelectProps
 const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, children, icon, size, variant, ...props }, ref) => {
     return (
-      <div className="relative group w-full">
+      <div className="relative group w-full min-w-0">
         {icon && (
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-primary transition-colors duration-200 pointer-events-none z-10">
             {React.isValidElement(icon)

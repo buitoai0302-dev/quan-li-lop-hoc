@@ -10,6 +10,7 @@ import {
 import { requireRole } from '../middlewares/auth.middleware';
 import { validateUUID, validate } from '../middlewares/validate.middleware';
 import { z } from 'zod';
+import { bulkStudentImportSchema } from '../validators/import.validator';
 
 const studentBodySchema = z.object({
   full_name: z.string().min(1, 'Họ và tên không được để trống'),
@@ -28,25 +29,28 @@ const updateStudentSchema = z.object({
 });
 
 const bulkImportSchema = z.object({
-  body: z.object({
-    branch_id: z.string().uuid('ID chi nhánh không hợp lệ'),
-    students: z
-      .array(
-        z.object({
-          full_name: z.string().min(1),
-          email: z.string().email().optional().nullable(),
-          phone: z.string().optional().nullable(),
-          class_name: z.string().optional().nullable(),
-        })
-      )
-      .min(1, 'Danh sách học sinh không được trống'),
-  }),
+  body: bulkStudentImportSchema,
 });
 import { enforceLimit } from '../middlewares/feature.middleware';
+import { getStudentProfile, getStudentHistory } from '../controllers/workflow.controller';
+import { studentHistoryRequestSchema } from '../validators/workflow.validator';
 
 const router = Router();
 
 router.get('/', requireRole(ACCESS.ADMIN_STAFF_TEACHER), getStudents);
+router.get(
+  '/:id/profile',
+  requireRole(ACCESS.ADMIN_STAFF),
+  validateUUID(['id']),
+  getStudentProfile
+);
+router.get(
+  '/:id/history',
+  requireRole(ACCESS.ADMIN_STAFF),
+  validateUUID(['id']),
+  validate(studentHistoryRequestSchema),
+  getStudentHistory
+);
 router.post(
   '/',
   requireRole(ACCESS.ADMIN_STAFF),

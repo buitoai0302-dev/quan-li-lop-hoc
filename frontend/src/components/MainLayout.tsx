@@ -8,9 +8,9 @@ import {
   Monitor,
   HelpCircle,
   MessageSquarePlus,
-  Ellipsis,
+  SlidersHorizontal,
 } from 'lucide-react';
-import { getMenuItems } from '../routes';
+import { getMenuItems } from '../navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
 import { useTheme } from '../contexts/ThemeContext';
@@ -20,8 +20,11 @@ import Sidebar from './Sidebar';
 import FeedbackModal from './FeedbackModal';
 import ActionHint from './common/ActionHint';
 import { useFCM } from '@/features/notifications/hooks/useFCM';
+import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '@/hooks/useMediaQuery';
+import { useWorkflowScope } from '@/hooks/useWorkflowState';
 
 const MainLayout: React.FC = () => {
+  const workflowScope = useWorkflowScope();
   useFCM(); // Initialize FCM notifications
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -33,6 +36,7 @@ const MainLayout: React.FC = () => {
   const location = useLocation();
   const { t, i18n } = useTranslation();
   const { theme, setTheme } = useTheme();
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
 
   useEffect(() => {
     const handleOpenFeedback = () => setIsFeedbackOpen(true);
@@ -100,7 +104,10 @@ const MainLayout: React.FC = () => {
       />
 
       {/* Main Content */}
-      <main className="flex-1 overflow-hidden flex flex-col relative custom-scrollbar bg-gray-50/50 dark:bg-slate-950/50">
+      <main
+        inert={isMobileMenuOpen && !isDesktop}
+        className="min-w-0 flex-1 overflow-hidden flex flex-col relative custom-scrollbar bg-gray-50/50 dark:bg-slate-950/50"
+      >
         {/* Impersonation Banner */}
         {localStorage.getItem('impersonatedTenantId') && (
           <div className="w-full z-[100] bg-rose-500 text-white px-4 py-2 flex items-center justify-center gap-4 text-xs font-bold shadow-md shrink-0">
@@ -138,17 +145,16 @@ const MainLayout: React.FC = () => {
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <NotificationPopover />
             <div className="relative sm:hidden" ref={quickActionsRef}>
-              <ActionHint label={t('common.moreActions')} showTouchLabel={false}>
+              <ActionHint label={t('common.quickSettings')} showTouchLabel={false}>
                 <button
                   ref={quickActionsButtonRef}
                   type="button"
                   onClick={() => setIsQuickActionsOpen((open) => !open)}
-                  aria-label={t('common.moreActions')}
                   aria-expanded={isQuickActionsOpen}
                   aria-controls="mobile-quick-actions"
                   className="flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 bg-gray-50 text-gray-600 hover:bg-gray-100 focus-visible:ring-2 focus-visible:ring-primary dark:border-gray-600 dark:bg-gray-700/50 dark:text-gray-300 dark:hover:bg-gray-600"
                 >
-                  <Ellipsis size={20} aria-hidden="true" />
+                  <SlidersHorizontal size={18} aria-hidden="true" />
                 </button>
               </ActionHint>
               {isQuickActionsOpen && (
@@ -244,7 +250,7 @@ const MainLayout: React.FC = () => {
         </header>
 
         <div className="flex-1 overflow-hidden p-3 md:p-5 flex flex-col">
-          <Outlet />
+          <Outlet key={workflowScope} />
         </div>
         <HelpWidget isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
         <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />

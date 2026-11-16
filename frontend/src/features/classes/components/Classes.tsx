@@ -1,11 +1,8 @@
+import { USER_ROLES } from '@/utils/constants';
+import { useAuth } from '@/contexts/AuthContext';
+import PageError from '@/components/common/PageError';
 import React, { useState, useCallback } from 'react';
-import {
-  getClassSchedules,
-  getClassEnrollments,
-  enrollStudent,
-  unenrollStudent,
-  enrollBulk,
-} from '@/features/classes';
+import { getClassSchedules, getClassEnrollments } from '@/features/classes';
 import { Modal, Card, Button, FormPanelActions } from '@/components/common/UI';
 import { BookOpen } from 'lucide-react';
 import ConfirmModal from '@/components/common/ConfirmModal';
@@ -13,7 +10,7 @@ import Pagination from '@/components/common/Pagination';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import PageHeader from '@/components/common/PageHeader';
 import { exportToExcel, exportToPDF } from '@/utils/export';
 import type { ExportColumn } from '@/utils/export';
@@ -44,12 +41,29 @@ import {
 const Classes: React.FC = () => {
   const { t } = useTranslation();
   const formId = React.useId();
+  const panelRequestId = React.useRef(0);
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const { user } = useAuth();
+  const canManageClasses =
+    user?.role === USER_ROLES.ADMIN ||
+    user?.role === USER_ROLES.SUPER_ADMIN ||
+    user?.role === USER_ROLES.STAFF;
   const startDateRef = React.useRef<HTMLInputElement>(null);
   const endDateRef = React.useRef<HTMLInputElement>(null);
   const [originalSchedules, setOriginalSchedules] = useState('[]');
 
-  const { classes, branches, teachers, rooms, allStudents, loading, refreshClasses } = useClasses();
+  const {
+    classes,
+    branches,
+    teachers,
+    rooms,
+    allStudents,
+    loading,
+    hasLoadError,
+    isFetching,
+    refreshClasses,
+  } = useClasses(canManageClasses);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -58,6 +72,7 @@ const Classes: React.FC = () => {
   const [isFilterVisible, setIsFilterVisible] = useState(false);
   const [recurringSchedules, setRecurringSchedules] = useState<RecurringSchedule[]>([]);
   const [enrollments, setEnrollments] = useState<Enrollment[]>([]);
+  const [originalEnrollmentIds, setOriginalEnrollmentIds] = useState<Set<string>>(() => new Set());
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [isBulkEnrollOpen, setIsBulkEnrollOpen] = useState(false);
 
@@ -65,6 +80,7 @@ const Classes: React.FC = () => {
   const [branchFilter, setBranchFilter] = useState('');
 
   const [editingClass, setEditingClass] = useState<ClassBasicFormData | null>(null);
+  const [highlightedClassId, setHighlightedClassId] = useState<string | null>(null);
 
   const filteredClasses = React.useMemo(() => {
     return classes.filter((cls) => {
@@ -91,27 +107,29 @@ const Classes: React.FC = () => {
 
   const handleOpenModal = useCallback(
     async (cls?: ClassData) => {
+      const requestId = ++panelRequestId.current;
       if (cls) {
-        setEditingId(cls.id);
-        setEditingClass({
-          name: cls.name,
-          max_capacity: cls.max_capacity,
-          branch_id: cls.branch_id,
-          teacher_id: cls.teacher_id || '',
-          start_date: cls.start_date ? cls.start_date.substring(0, 10) : '',
-          end_date: cls.end_date ? cls.end_date.substring(0, 10) : '',
-        });
-
-        // Fetch additional details for editing
         try {
           const [schedulesData, enrollmentsData] = await Promise.all([
             getClassSchedules(cls.id),
             getClassEnrollments(cls.id),
           ]);
+          if (requestId !== panelRequestId.current) return;
+          setEditingId(cls.id);
+          setEditingClass({
+            name: cls.name,
+            max_capacity: cls.max_capacity,
+            branch_id: cls.branch_id,
+            teacher_id: cls.teacher_id || '',
+            start_date: cls.start_date ? cls.start_date.substring(0, 10) : '',
+            end_date: cls.end_date ? cls.end_date.substring(0, 10) : '',
+          });
           setOriginalSchedules(JSON.stringify(schedulesData));
           setRecurringSchedules(schedulesData);
           setEnrollments(enrollmentsData);
+          setOriginalEnrollmentIds(new Set(enrollmentsData.map(({ id }) => id)));
         } catch (error) {
+          if (requestId !== panelRequestId.current) return;
           handleApiError(error as AxiosError<ApiErrorData>, t);
           return;
         }
@@ -121,18 +139,31 @@ const Classes: React.FC = () => {
         setOriginalSchedules('[]');
         setRecurringSchedules([]);
         setEnrollments([]);
+        setOriginalEnrollmentIds(new Set());
       }
+      setSelectedStudentId('');
       setIsModalOpen(true);
     },
     [t]
   );
 
   const handleCloseModal = useCallback(() => {
+    panelRequestId.current += 1;
     setIsModalOpen(false);
     setEditingId(null);
     setRecurringSchedules([]);
     setEnrollments([]);
   }, []);
+
+  React.useEffect(() => {
+    const classId = params.get('classId');
+    if (!classId || loading || !canManageClasses) return;
+    const cls = classes.find((item) => item.id === classId);
+    const next = new URLSearchParams(params);
+    next.delete('classId');
+    setParams(next, { replace: true });
+    if (cls) void handleOpenModal(cls);
+  }, [params, setParams, classes, loading, canManageClasses, handleOpenModal]);
 
   const { mutate: createClassMutate, isPending: isCreating } = useCreateClass();
   const { mutate: updateClassMutate, isPending: isUpdating } = useUpdateClass();
@@ -140,6 +171,19 @@ const Classes: React.FC = () => {
   const { mutate: deleteBulkClassesMutate } = useDeleteBulkClasses();
 
   const isSubmitting = isCreating || isUpdating;
+  const enrollmentIds = React.useMemo(
+    () => new Set(enrollments.map(({ id }) => id)),
+    [enrollments]
+  );
+  const enrollmentChanges = React.useMemo(
+    () => ({
+      add: [...enrollmentIds].filter((id) => !originalEnrollmentIds.has(id)),
+      remove: [...originalEnrollmentIds].filter((id) => !enrollmentIds.has(id)),
+    }),
+    [enrollmentIds, originalEnrollmentIds]
+  );
+  const enrollmentsChanged =
+    enrollmentChanges.add.length > 0 || enrollmentChanges.remove.length > 0;
 
   const handleSubmit = useCallback(
     (data: ClassBasicFormData) => {
@@ -161,14 +205,28 @@ const Classes: React.FC = () => {
               room_id: schedule.room_id || null,
             }))
           : undefined,
-        enrollments: enrollments.map((e) => e.id),
       };
 
-      if (editingId) {
+      if (editingId && editingClass) {
         updateClassMutate(
-          { id: editingId, data: payload },
+          {
+            id: editingId,
+            data: {
+              name: data.name !== editingClass.name ? data.name : undefined,
+              branch_id: data.branch_id !== editingClass.branch_id ? data.branch_id : undefined,
+              max_capacity:
+                data.max_capacity !== editingClass.max_capacity ? data.max_capacity : undefined,
+              teacher_id:
+                data.teacher_id !== editingClass.teacher_id ? payload.teacher_id : undefined,
+              start_date: data.start_date !== editingClass.start_date ? data.start_date : undefined,
+              end_date: data.end_date !== editingClass.end_date ? data.end_date : undefined,
+              recurring_schedules: payload.recurring_schedules,
+              enrollment_changes: enrollmentsChanged ? enrollmentChanges : undefined,
+            },
+          },
           {
             onSuccess: () => {
+              setHighlightedClassId(editingId);
               toast.success(t('common.success'));
               handleCloseModal();
             },
@@ -178,15 +236,19 @@ const Classes: React.FC = () => {
           }
         );
       } else {
-        createClassMutate(payload, {
-          onSuccess: () => {
-            toast.success(t('common.success'));
-            handleCloseModal();
-          },
-          onError: (error: unknown) => {
-            handleApiError(error as AxiosError<ApiErrorData>, t);
-          },
-        });
+        createClassMutate(
+          { ...payload, enrollments: enrollmentChanges.add },
+          {
+            onSuccess: ({ data: savedClass }) => {
+              if (typeof savedClass?.id === 'string') setHighlightedClassId(savedClass.id);
+              toast.success(t('common.success'));
+              handleCloseModal();
+            },
+            onError: (error: unknown) => {
+              handleApiError(error as AxiosError<ApiErrorData>, t);
+            },
+          }
+        );
       }
     },
     [
@@ -194,7 +256,8 @@ const Classes: React.FC = () => {
       editingClass,
       recurringSchedules,
       originalSchedules,
-      enrollments,
+      enrollmentChanges,
+      enrollmentsChanged,
       t,
       handleCloseModal,
       createClassMutate,
@@ -230,90 +293,37 @@ const Classes: React.FC = () => {
     });
   }, [selectedIds, deleteBulkClassesMutate, t, clearSelection]);
 
-  const handleEnrollStudent = useCallback(async () => {
+  const addDraftEnrollments = useCallback(
+    (studentIds: string[]) => {
+      const selectedIds = new Set(studentIds);
+      const enrolledAt = new Date().toISOString();
+      setEnrollments((current) => {
+        const enrolledIds = new Set(current.map(({ id }) => id));
+        const additions = allStudents
+          .filter(({ id }) => selectedIds.has(id) && !enrolledIds.has(id))
+          .map(({ id, full_name, email }) => ({ id, full_name, email, enrolled_at: enrolledAt }));
+        return [...current, ...additions];
+      });
+    },
+    [allStudents]
+  );
+
+  const handleEnrollStudent = () => {
     if (!selectedStudentId) return;
+    addDraftEnrollments([selectedStudentId]);
+    setSelectedStudentId('');
+  };
 
-    if (editingId) {
-      try {
-        await enrollStudent(editingId, selectedStudentId);
-        toast.success(t('common.success'));
-        // Refresh local enrollments
-        const data = await getClassEnrollments(editingId);
-        setEnrollments(data);
-        setSelectedStudentId('');
-        refreshClasses();
-      } catch (error: unknown) {
-        handleApiError(error as AxiosError<ApiErrorData>, t);
-      }
-    } else {
-      const student = allStudents.find((s) => String(s.id) === String(selectedStudentId));
-      if (student && !enrollments.find((e) => String(e.id) === String(student.id))) {
-        setEnrollments([
-          ...enrollments,
-          {
-            id: student.id,
-            full_name: student.full_name,
-            email: student.email,
-            enrolled_at: new Date().toISOString(),
-          },
-        ]);
-        setSelectedStudentId('');
-      }
-    }
-  }, [editingId, selectedStudentId, enrollments, allStudents, t, refreshClasses]);
+  const handleBulkEnroll = (studentIds: string[]) => {
+    if (studentIds.length === 0) return;
+    addDraftEnrollments(studentIds);
+    setIsBulkEnrollOpen(false);
+  };
 
-  const handleBulkEnroll = useCallback(
-    async (studentIds: string[]) => {
-      if (studentIds.length === 0) return;
+  const handleUnenrollStudent = (studentId: string) => {
+    setEnrollments((current) => current.filter(({ id }) => id !== studentId));
+  };
 
-      if (editingId) {
-        try {
-          await enrollBulk(editingId, studentIds);
-          toast.success(t('common.success'));
-          const data = await getClassEnrollments(editingId);
-          setEnrollments(data);
-          setIsBulkEnrollOpen(false);
-          refreshClasses();
-        } catch (error: unknown) {
-          handleApiError(error as AxiosError<ApiErrorData>, t);
-        }
-      } else {
-        const newEnrollments = [...enrollments];
-        studentIds.forEach((id) => {
-          const student = allStudents.find((s) => s.id === id);
-          if (student && !newEnrollments.find((e) => e.id === student.id)) {
-            newEnrollments.push({
-              id: student.id,
-              full_name: student.full_name,
-              email: student.email,
-              enrolled_at: new Date().toISOString(),
-            });
-          }
-        });
-        setEnrollments(newEnrollments);
-        setIsBulkEnrollOpen(false);
-      }
-    },
-    [editingId, enrollments, allStudents, t, refreshClasses]
-  );
-
-  const handleUnenrollStudent = useCallback(
-    async (studentId: string) => {
-      if (editingId) {
-        try {
-          await unenrollStudent(editingId, studentId);
-          toast.success(t('common.success'));
-          setEnrollments(enrollments.filter((e) => e.id !== studentId));
-          refreshClasses();
-        } catch (error: unknown) {
-          handleApiError(error as AxiosError<ApiErrorData>, t);
-        }
-      } else {
-        setEnrollments(enrollments.filter((e) => e.id !== studentId));
-      }
-    },
-    [editingId, enrollments, t, refreshClasses]
-  );
   const handleExportExcel = () => {
     const columns: ExportColumn<any>[] = [
       { header: t('classes.name'), accessor: 'name' },
@@ -334,6 +344,8 @@ const Classes: React.FC = () => {
     exportToPDF(filteredClasses, columns, t('classes.title'));
   };
 
+  if (hasLoadError) return <PageError onRetry={refreshClasses} retrying={isFetching} />;
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <PageHeader
@@ -343,12 +355,12 @@ const Classes: React.FC = () => {
             isFilterVisible={isFilterVisible}
             onToggleFilter={() => setIsFilterVisible(!isFilterVisible)}
             selectedCount={selectedIds.length}
-            onBulkDelete={() => setIsBulkDeleteModalOpen(true)}
+            onBulkDelete={canManageClasses ? () => setIsBulkDeleteModalOpen(true) : undefined}
             onExportExcel={handleExportExcel}
             onExportPDF={handleExportPDF}
             isExportDisabled={filteredClasses.length === 0}
-            onImport={() => navigate('/import?type=classes')}
-            onAdd={() => handleOpenModal()}
+            onImport={canManageClasses ? () => navigate('/import?type=classes') : undefined}
+            onAdd={canManageClasses ? () => handleOpenModal() : undefined}
             addLabel={t('common.add')}
           />
         }
@@ -362,6 +374,7 @@ const Classes: React.FC = () => {
           }}
         >
           <FilterSelect
+            label={t('classes.branch')}
             value={branchFilter}
             onChange={(e) => setBranchFilter(e.target.value)}
             placeholder={t('import.selectBranch')}
@@ -396,16 +409,24 @@ const Classes: React.FC = () => {
             </div>
           ) : filteredClasses.length === 0 ? (
             <EmptyState
-              title={searchQuery || branchFilter ? t('common.noResults') : t('classes.noClasses')}
+              title={
+                searchQuery || branchFilter
+                  ? t('common.noResults')
+                  : canManageClasses
+                    ? t('classes.noClasses')
+                    : t('classes.noData')
+              }
               description={
                 searchQuery || branchFilter
                   ? t('common.tryDifferentSearch')
-                  : t('classes.createFirstClass')
+                  : canManageClasses
+                    ? t('classes.createFirstClass')
+                    : undefined
               }
-              showArrow={!(searchQuery || branchFilter)}
+              showArrow={canManageClasses && !(searchQuery || branchFilter)}
               icon={BookOpen}
               action={
-                !(searchQuery || branchFilter) ? (
+                canManageClasses && !(searchQuery || branchFilter) ? (
                   <Button
                     onClick={() => handleOpenModal()}
                     className="px-6 py-2.5 rounded-lg text-sm font-semibold"
@@ -417,6 +438,9 @@ const Classes: React.FC = () => {
             />
           ) : (
             <ClassTable
+              canManage={canManageClasses}
+              highlightedClassId={highlightedClassId}
+              onHighlightEnd={() => setHighlightedClassId(null)}
               classes={paginatedClasses}
               onEdit={handleOpenModal}
               onDelete={(id) => setDeletingId(id)}
@@ -435,12 +459,12 @@ const Classes: React.FC = () => {
         title={editingId ? t('classes.editClass') : t('classes.addClass')}
         placement="right"
         width="clamp(600px, 58vw, 860px)"
+        bodyClassName="hide-scrollbar"
         closeLabel={t('common.close')}
         closeBlocked={isSubmitting}
         confirmCloseMessage={t('common.discardPanelChanges')}
         hasUnsavedChanges={
-          JSON.stringify(recurringSchedules) !== originalSchedules ||
-          (!editingId && enrollments.length > 0)
+          JSON.stringify(recurringSchedules) !== originalSchedules || enrollmentsChanged
         }
         footer={(requestClose) => (
           <FormPanelActions formId={formId} onCancel={requestClose} isSubmitting={isSubmitting} />
@@ -449,6 +473,7 @@ const Classes: React.FC = () => {
         <ClassForm
           id={formId}
           initialData={editingClass || undefined}
+          isSubmitting={isSubmitting}
           onSubmit={handleSubmit}
           branches={branches}
           teachers={teachers}

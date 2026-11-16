@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React, { useState, useMemo, useCallback } from 'react';
 
 import { Modal, Card, Button, FormPanelActions } from '@/components/common/UI';
@@ -39,8 +40,8 @@ const Rooms: React.FC = () => {
   const { t } = useTranslation();
   const formId = React.useId();
   const navigate = useNavigate();
-  const { rooms, loading: roomsLoading } = useRooms();
-  const { branches, loading: branchesLoading } = useBranches();
+  const { rooms, loading: roomsLoading, query: roomsQuery } = useRooms();
+  const { branches, loading: branchesLoading, query: branchesQuery } = useBranches();
 
   const loading = roomsLoading || branchesLoading;
 
@@ -190,6 +191,17 @@ const Rooms: React.FC = () => {
     exportToPDF(filteredRooms, columns, t('rooms.title'));
   };
 
+  const failedQueries = [roomsQuery, branchesQuery].filter(
+    (query) => query.isError && query.data === undefined
+  );
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <PageHeader
@@ -218,6 +230,7 @@ const Rooms: React.FC = () => {
           }}
         >
           <FilterSelect
+            label={t('classes.branch')}
             value={branchFilter}
             onChange={(e) => setBranchFilter(e.target.value)}
             placeholder={t('import.selectBranch')}

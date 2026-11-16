@@ -9,8 +9,6 @@ import { vi, enUS } from 'date-fns/locale';
 
 import { Users, BookOpen, Calendar, Activity, UserCheck } from 'lucide-react';
 
-const ROLES_WITHOUT_ONBOARDING = [USER_ROLES.TEACHER, USER_ROLES.STUDENT, USER_ROLES.STAFF];
-
 export const useDashboard = () => {
   const { t, i18n } = useTranslation();
   const { user } = useAuth();
@@ -18,7 +16,7 @@ export const useDashboard = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   useEffect(() => {
-    if (user && !user.onboarding_completed && !ROLES_WITHOUT_ONBOARDING.includes(user.role)) {
+    if (user?.role === USER_ROLES.ADMIN && !user.onboarding_completed) {
       setShowOnboarding(true);
     }
   }, [user]);
@@ -89,6 +87,7 @@ export const useDashboard = () => {
   return {
     stats: statsQuery.data,
     loading: statsQuery.isLoading,
+    statsQuery,
     chartPeriod,
     setChartPeriod,
     showOnboarding,

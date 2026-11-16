@@ -6,6 +6,9 @@ import { fileURLToPath, URL } from 'node:url';
 
 // https://vite.dev/config/
 export default defineConfig({
+  // This parser is imported only from a Worker; pre-bundle it so the first
+  // import in development does not restart Vite and interrupt file parsing.
+  optimizeDeps: { include: ['papaparse'] },
   plugins: [
     react(),
     tailwindcss(),

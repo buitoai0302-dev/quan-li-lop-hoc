@@ -34,8 +34,13 @@ import systemRoutes from './routes/system.routes';
 import notificationRoutes from './routes/notification.routes';
 import { initNotificationJobs } from './cron/notification.cron';
 import { initBackupJobs } from './cron/backup.cron';
+import { initGoogleSyncJobs } from './cron/google-sync.cron';
 import boss from './cron/queue';
-import pool from './db';
+import {
+  isAuthSchemaReady,
+  isScheduleSchemaReady,
+  isWorkflowSchemaReady,
+} from './services/readiness.service';
 
 import { errorMiddleware } from './middlewares/error.middleware';
 import { NotFoundError } from './utils/errors';
@@ -105,7 +110,12 @@ const backgroundJobsDisabled = process.env.DISABLE_BACKGROUND_JOBS === 'true';
 let jobsReady = backgroundJobsDisabled;
 app.get('/ready', async (req, res) => {
   try {
-    await pool.query('SELECT 1');
+    const schemaReady = await Promise.all([
+      isAuthSchemaReady(),
+      isScheduleSchemaReady(),
+      isWorkflowSchemaReady(),
+    ]);
+    if (schemaReady.some((ready) => !ready)) return res.status(503).json({ status: 'unavailable' });
     if (!jobsReady) return res.status(503).json({ status: 'starting' });
     return res.json({ status: 'ready' });
   } catch {
@@ -145,6 +155,7 @@ if (backgroundJobsDisabled) {
       logger.info('[pg-boss] Queue started successfully');
       await initNotificationJobs();
       await initBackupJobs();
+      await initGoogleSyncJobs();
       jobsReady = true;
     })
     .catch((err: Error) => {

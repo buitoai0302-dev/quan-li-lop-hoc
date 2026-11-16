@@ -66,9 +66,7 @@ export const useUpdatePlan = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdatePlanPayload }) => updatePlan(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-plans'] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['admin-plans'] }),
   });
 };
 

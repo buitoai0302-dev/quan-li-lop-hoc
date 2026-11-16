@@ -6,9 +6,24 @@ Hướng dẫn này chỉ dùng dữ liệu giả lập. Không trỏ các lện
 
 Trong thư mục backend: npm ci; npx tsc --noEmit; npx tsc --noEmit -p tests/tsconfig.json; npm run test:contracts; npm test -- --runInBand.
 
-Trong thư mục frontend: npm ci; npm run lint; npm run build. Nếu Windows hạn chế quyền đọc thư mục tạm hệ thống, đặt TEMP và TMP tới một thư mục có quyền ghi bên trong frontend trước khi build.
+Trong thư mục frontend: npm ci; npm run test:security; npm run lint; npm run build. Nếu Windows hạn chế quyền đọc thư mục tạm hệ thống, đặt TEMP và TMP tới một thư mục có quyền ghi bên trong frontend trước khi build.
+
+Dùng Node.js >=22.12.0, tương ứng CI Node 22. Chạy `npm audit --omit=dev` trong cả backend và frontend sau khi cập nhật lockfile; kết quả này chỉ áp dụng dependency production. Không dùng `npm audit fix --force` để tự nâng major. Khi thay dependency bắc cầu, giữ kiểm thử thực tế: `email-transport.test.ts` dựng email tiếng Việt và chặn đọc file bằng Nodemailer mà không gửi SMTP; ca pg-boss trong `data-integrity.staging.test.ts` khởi tạo schema riêng, gửi/lấy/hoàn tất job giả rồi dọn schema trên DB cô lập. Không dùng DB pilot cho smoke test hàng đợi.
+
+Các ca trong `class.test.ts` kiểm tra giới hạn 56 mục lịch định kỳ và 1.000 ID mỗi mảng ghi danh ở tạo/sửa lớp và ghi danh hàng loạt. Kiểm tra giá trị đúng giới hạn được chấp nhận, vượt một mục bị HTTP 400 với mã và `params.limit` phù hợp, service không được gọi, và 10.000 phần tử sai bị từ chối theo chiều dài mà không tạo lỗi cho từng phần tử. Bổ sung cùng lúc catalog lỗi và locale Việt/Anh khi thay hợp đồng này.
 
 Cấu hình Jest mặc định chạy test ở backend/tests/integration. Dù tên thư mục là integration, các test hiện tại chủ yếu dùng mock cho DB hoặc dịch vụ. Bài gọi HTTP vào staging nằm ở backend/tests/staging và chỉ chạy bằng npm run test:staging.
+
+## Hồi quy kéo thả lịch trước khi thử trên staging
+
+Kiểm tra trên trình duyệt với API giả được chặn hoàn toàn, sau đó nghiệm thu bằng dữ liệu giả trên staging:
+
+- Kéo bằng chuột từ tay nắm hoặc tên buổi ở Ngày/Tuần/Tháng. Một lần thả sang ngày khác chỉ gửi một `PUT` với `sessionDate`, giữ nguyên giờ có giây, phòng, giáo viên, lớp, loại buổi và ghi chú.
+- Chế độ Ngày giữ bảng hàng ngang trên PC và thẻ trên mobile; bảy ngày đích chỉ hiện khi kéo. Kiểm tra Space/Enter, các phím mũi tên, Escape, thả cùng ngày và thả ngoài vùng lịch. Các thao tác hủy không ghi dữ liệu.
+- Trùng lịch (409) và lỗi hệ thống giữ buổi tại ngày cũ, hiện thông báo theo ngôn ngữ. Trong lúc lưu, không cho gửi lần kéo thứ hai. Xem/sửa bằng nhấp vẫn hoạt động; giáo viên/học viên không có điều khiển kéo hoặc sửa.
+- Với cảm ứng, giữ tay nắm rồi kéo; vuốt nội dung thẻ vẫn cuộn. Kéo buổi không được kích hoạt vuốt chuyển ngày. Kiểm tra 320/390/768/1024/1440 px, Việt/Anh, sáng/tối và giảm chuyển động.
+
+Các ca API/service cô lập nằm ở `backend/tests/integration/schedule.test.ts` và `schedule-move.test.ts`. Chúng kiểm tra hợp đồng và rollback qua mock, không thay thế nghiệm thu PostgreSQL thật.
 
 ## Tạo môi trường staging mới
 
@@ -23,8 +38,42 @@ Cấu hình Jest mặc định chạy test ở backend/tests/integration. Dù t�
 Sau khi chạy migration trên PostgreSQL staging, đặt `PG_INTEGRITY_TEST_URL` tới
 `eduschedule_staging` với `sslmode=verify-full` và đặt
 `PG_INTEGRITY_CONFIRMATION=isolated-synthetic-staging`. Trong backend, chạy
-`npm run test:staging -- --runTestsByPath tests/staging/data-integrity.staging.test.ts`.
-Bộ test tạo và dọn hai tenant riêng. CI chạy cùng bộ test trên PostgreSQL 16 mới.
+`npm run test:staging -- --runTestsByPath tests/staging/data-integrity.staging.test.ts tests/staging/auth-security.staging.test.ts tests/staging/workflow.staging.test.ts tests/staging/google-sync.staging.test.ts`.
+Các bộ test tạo và dọn tenant giả riêng. CI chạy cả bốn bộ test trên PostgreSQL 16 mới.
+
+## Hồi quy bảo mật phiên, OAuth và nhập tệp
+
+- Chạy migration mới `20261114_auth_sessions.sql` trên DB trống và DB thử có tài khoản/refresh token cũ. Xác nhận mật khẩu không bị thay, phiên bản khởi đầu là 0, sau đó thử đổi mật khẩu và rollback giao dịch. Đo thời gian khóa với dữ liệu đại diện; mức chờ khóa tối đa 5 giây không phải cam kết thời gian migration. Backend mới cần schema này trước khi khởi động.
+- Kiểm tra `/ready` trả 503 `unavailable` khi thiếu cột phiên bản, trigger thu hồi phiên, bảng OAuth, một trong ba ràng buộc loại trừ lịch hoặc schema workflow điểm danh/đồng bộ Google bắt buộc. Sau các migration tương ứng và khởi tạo job (hoặc tắt job theo cấu hình), endpoint mới trả 200 `ready`; `/health` vẫn chỉ kiểm tra tiến trình.
+- `auth-security.staging.test.ts` dùng các kết nối PostgreSQL độc lập cho hai reset cùng token, reset cạnh tranh refresh và hai callback cùng state. Kiểm tra đúng một lần tiêu thụ, access/refresh cũ bị từ chối sau reset, mật khẩu mới đăng nhập được, admin/giáo viên reset có hiệu lực, rollback không làm mất phiên, và cách ly tenant. Google/email được mock; không phát sinh yêu cầu ra nhà cung cấp.
+- Với OAuth thật trên staging, bắt đầu từ Cài đặt → Tích hợp; xác nhận cookie HTTP-only ràng buộc trình duyệt được gửi về callback, state không phải access JWT và PKCE S256 được chấp nhận. Thử thiếu/sai cookie, callback lặp, state hết hạn, reset mật khẩu trong lúc kết nối, người dùng hủy ở Google và bắt đầu lại. Thông báo Việt/Anh không lộ code/token; response đăng nhập không chứa credential Google. Kiểm tra đúng cặp host frontend/backend production và trình duyệt chặn cookie bên thứ ba; không nới state/cookie để vượt kiểm tra.
+- `npm run test:security` kiểm tra parser thật với XLS/XLSX/CSV/TSV có Unicode, ranh giới dòng/cột/sheet/dung lượng và tệp sai định dạng. Giới hạn là 5 MiB, 500 dòng dữ liệu, 64 cột, 10 sheet; chỉ đọc sheet đầu. Không tự cắt bớt dữ liệu vượt giới hạn.
+- Kiểm tra trình duyệt cả màn nhập học viên và panel nhập người dùng: xem trước, thay/hủy tệp, đóng panel, rời route, timeout 10 giây và thông báo Việt/Anh. Parser phải chạy trong Worker và Worker bị dừng khi hoàn tất/lỗi/hủy. Chặn mọi API thật bằng fixture nếu dùng frontend local đang trỏ DB pilot. Thử tải mẫu và export để xác nhận nâng SheetJS không làm hỏng luồng xuất.
+- Sau triển khai backend đồng bộ, thử đăng nhập/refresh/reset và kết nối Google bằng tài khoản staging. Không coi test mock hoặc thời gian migration local là nghiệm thu provider/production. Báo cáo bảo mật, log và artifact trình duyệt lưu ngoài Git.
+
+## Nghiệm thu dữ liệu và luồng nghiệp vụ
+
+### Đồng bộ Google Calendar bền vững
+
+Chạy `tests/staging/google-sync.staging.test.ts` cùng biến `PG_INTEGRITY_TEST_URL` và xác nhận DB cô lập nêu trên. Suite dùng PostgreSQL thật và provider giả; không gửi lên Google. Bao gồm rollback lịch/outbox, nhóm và định kỳ/sinh lại/xóa, ghi danh/giáo viên nhiều người dùng, cách ly tenant, job idempotent, mất phản hồi insert/patch, hai worker, revision mới khi đang gửi, đổi kết nối, lỗi tạm thời/vĩnh viễn, giới hạn retry, tombstone, legacy không rõ chủ và cờ tắt jobs. Ca tiến trình con bị dừng thật xác nhận khóa được nhả và dòng `syncing` được nhận lại. Ca pg-boss khởi động lại consumer với schema riêng xác nhận drain hơn 20 mục, rồi dọn schema thử nghiệm.
+
+- Kiểm tra HTTP qua `google-sync-jobs.test.ts`: 202 khác hoàn tất, tenant cá nhân khi impersonate, các vai trò người dùng, từ chối chưa đăng nhập/API reader, ID/body sai và từ chối job không thuộc người dùng. Không dùng payload để đổi chủ sở hữu. Các test provider còn kiểm tra Việt Nam, không thêm attendees và không ghi vào sự kiện mang dấu của đối tượng khác.
+- Thử migration trên DB rỗng và DB có dữ liệu giả trước giai đoạn 4: cả tài khoản kết nối/chưa kết nối, `google_event_id` cũ và attendance. Xác nhận nguồn không đổi, chỉ lịch từ hôm nay được tạo link mới. Giữ khóa ghi trên `schedule_sessions` bằng kết nối khác; migration phải thất bại sau khoảng 5 giây chờ và rollback toàn bộ schema mới. Thả khóa, chạy lại và ghi thời gian áp dụng thực tế; kết quả local không đại diện thời gian khóa production. Không chỉnh migration đã commit hoặc checksum đã ghi.
+- Trình duyệt phải chặn mọi API thật trước navigation: mở trạng thái không tạo job; bấm đồng bộ chỉ báo đã xếp hàng; trạng thái paused vẫn giữ số mục chờ. Retry chỉ gửi một yêu cầu, không xếp lại thành công; xác nhận legacy không ghi trước khi xác nhận và lỗi giữ popup. Kiểm tra kết nối lại đi qua OAuth hiện hữu, lỗi/refetch, trạng thái không còn mục chờ, Việt/Anh, sáng/tối, 320/390/768/1440 px, bàn phím và reduced motion.
+- Cổng phát hành riêng: tài khoản Google staging thử consent/refresh, Calendar `primary`, mất mạng rồi retry, sửa/hủy/bật lại/xóa, đổi tài khoản Google và lỗi token thật. Kiểm tra trước/sau số sự kiện, ownership markers, giờ Việt Nam và không thêm người tham dự. Legacy của người khác/chuỗi sự kiện không bị ghi đè. Nghiệm thu quyền, quota và khởi động lại dịch vụ trên cấu hình staging; chưa coi mock là nghiệm thu provider.
+- Rollout: sao lưu mã hóa và thử phục hồi; tắt consumer, dừng writer Google cũ và các đường ghi lịch/người dùng/ghi danh; áp dụng migration rồi backend/frontend tương ứng. Kiểm tra `/ready`, lưu lịch và hàng đợi trước khi bật consumer đã nghiệm thu. Rollback tắt consumer và giữ outbox với backend tương thích, không phục hồi writer trực tiếp cũ. Link và trạng thái cũ không được tự dọn trong migration.
+
+### Ngữ cảnh và điểm danh
+
+Giai đoạn 3: suite workflow PostgreSQL kiểm tra ưu tiên phòng cùng chi nhánh đủ sức chứa, giữ thời lượng/ngày/giáo viên/lớp, giới hạn sáu phương án, buổi nháp, giờ liền kề, buổi hủy, cửa sổ quá ngắn, ID chéo tenant và gợi ý đã hết chỗ khi lưu. API teacher/student/API reader bị từ chối; ngày/giờ sai bị chặn trước service. Trình duyệt kiểm tra chọn gợi ý không gọi API ghi, đầu vào mới bỏ kết quả cũ, 409 giữ nháp, từng dòng nhóm và Việt/Anh/mobile/PC.
+
+Giai đoạn 2: suite workflow còn kiểm tra nhóm việc theo tenant/giáo viên, buổi không có học viên, ảnh chụp của học viên đã xóa, lớp thiếu giáo viên/lịch, học phí miễn hoặc chưa đến hạn, số dư thập phân từ sổ thanh toán và phân trang hồ sơ. Thử API từ chối teacher/student/API reader khi đọc hồ sơ và từ chối ID tenant khác. Trình duyệt cần xác nhận link tới đúng đối tượng, phân trang, tab tải khi cần, nút trở lại hồ sơ sau thu/in, không ghi tiền chỉ vì mở panel, cập nhật tổng sau thanh toán, tiếng Việt/Anh và 320–1440 px.
+
+Chạy thêm `tests/staging/workflow.staging.test.ts` cùng biến môi trường PostgreSQL cô lập nêu trên. Bộ test kiểm tra hai kết nối lưu cùng phiên bản chỉ có một thành công, rollback khi audit thất bại, chỉ audit giá trị thay đổi, giữ học viên đã rời lớp, không suy luận danh sách quá khứ từ ghi danh hiện tại, xác nhận học viên cùng tenant không ghi danh lại, và từ chối giáo viên/tenant/ngày không hợp lệ. Migration mới cần thử trên DB rỗng lẫn DB có attendance giả trước khi rollout.
+
+Trình duyệt: thay trạng thái rồi kích hoạt refetch/lỗi 409 phải giữ bản nháp; hàng loạt giữ các trạng thái đã có, hiển thị số ảnh hưởng và hoàn tác đúng một lần; lưu tiếp chỉ đổi buổi sau thành công. Kiểm tra lịch sử/lý do Việt–Anh. Trở lại bốn màn hình sau panel/đổi route phải giữ lọc, ngày, trang và cuộn; link điều hướng thắng dữ liệu nhớ. Thử hai tài khoản/tenant, storage sai định dạng, lựa chọn đã xóa, pagination rỗng, 320/390/768/1440 px, sáng/tối, bàn phím và giảm chuyển động. Chặn tất cả API thật trước khi mở trang local.
+
+`data-integrity.staging.test.ts` còn kiểm tra hai yêu cầu cùng sinh học phí theo lớp/kỳ, tổng hợp theo học viên và trạng thái, đọc quá hạn lặp lại không sửa DB, rollback import khi đầy lớp, hai import tranh chỗ cuối, ngày sinh/số điện thoại sau import và hai import lớp cùng tên. Các ca này dùng DB PostgreSQL cô lập đã nêu ở trên; không trỏ vào DB pilot. Nghiệm thu Calendar nằm trong mục đồng bộ bền vững ở trên; provider mock không thay thế nghiệm thu OAuth/Google thật.
 
 Trên bản sao staging có lịch, xác nhận quyền cài `btree_gist` và đo thời gian
 migration chống trùng lịch khi tạm dừng ghi lịch. Migration đợi khóa bảng tối đa

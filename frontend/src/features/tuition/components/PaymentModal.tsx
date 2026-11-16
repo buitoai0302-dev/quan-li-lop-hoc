@@ -1,6 +1,6 @@
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import { Modal, FormPanelActions } from '@/components/common/UI';
+import { Modal, FormPanelActions, Input, Select } from '@/components/common/UI';
 import { useRecordPayment } from '../hooks/useTuition';
 import type { RecordPaymentDto, Tuition } from '../api/tuition.api';
 import { handleApiError } from '@/utils/errorHelper';
@@ -13,7 +13,10 @@ import { formatCurrency } from '@/utils/formatters';
 interface Props {
   tuition: Tuition;
   onClose: () => void;
+  backLabel?: string;
 }
+
+const PAYMENT_AMOUNT_STEP_VND = 0.01;
 
 const getPaymentMethods = (t: import('i18next').TFunction) => [
   { value: PAYMENT_METHODS.CASH, label: `💵 ${t('tuition.paymentMethods.cash')}` },
@@ -26,10 +29,13 @@ const getPaymentMethods = (t: import('i18next').TFunction) => [
   { value: PAYMENT_METHODS.OTHER, label: `🔧 ${t('tuition.paymentMethods.other')}` },
 ];
 
-const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
+const PaymentModal: React.FC<Props> = ({ tuition, onClose, backLabel }) => {
+  const [isOpen, setIsOpen] = React.useState(true);
+  const closePanel = () => setIsOpen(false);
+  const fieldPrefix = React.useId();
   const { t } = useTranslation();
   const formId = React.useId();
-  const remaining = Number(tuition.amount_due) - Number(tuition.amount_paid);
+  const remaining = Number((Number(tuition.amount_due) - Number(tuition.amount_paid)).toFixed(2));
 
   const { mutate, isPending } = useRecordPayment(tuition.id);
   const {
@@ -46,8 +52,9 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
   });
 
   const onSubmit = (data: RecordPaymentDto) => {
+    if (isPending) return;
     mutate(data, {
-      onSuccess: onClose,
+      onSuccess: closePanel,
       onError: (err) => handleApiError(err as AxiosError<ApiErrorData>, t),
     });
   };
@@ -57,8 +64,9 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
 
   return (
     <Modal
-      isOpen
-      onClose={onClose}
+      isOpen={isOpen}
+      onClose={closePanel}
+      onAfterClose={onClose}
       placement="right"
       width="clamp(480px, 44vw, 560px)"
       title={t('tuition.payment.title')}
@@ -69,6 +77,7 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
         <FormPanelActions
           formId={formId}
           onCancel={requestClose}
+          cancelLabel={backLabel}
           isSubmitting={isPending}
           submitLabel={t('tuition.payment.submit')}
           submittingLabel={t('tuition.payment.submitting')}
@@ -77,28 +86,30 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
     >
       <p className="text-sm text-slate-600 dark:text-slate-300">{tuition.student_name}</p>
       {/* Info */}
-      <div className="mt-3 p-3 bg-gray-50 dark:bg-slate-800 rounded-xl grid grid-cols-3 gap-3 text-center">
-        <div>
-          <div className="text-[10px] text-gray-400 uppercase font-bold">
+      <div className="mt-3 rounded-xl bg-gray-50 p-3 dark:bg-slate-800 grid grid-cols-1 gap-2 sm:grid-cols-3 sm:gap-3 sm:text-center">
+        <div className="flex items-center justify-between gap-3 sm:block">
+          <div className="text-xs font-medium text-slate-600 dark:text-slate-300">
             {t('tuition.payment.amountDue')}
           </div>
-          <div className="text-sm font-black text-gray-900 dark:text-white">
+          <div className="text-sm font-semibold tabular-nums text-gray-900 dark:text-white">
             {formatCurrency(tuition.amount_due)}
           </div>
         </div>
-        <div>
-          <div className="text-[10px] text-gray-400 uppercase font-bold">
+        <div className="flex items-center justify-between gap-3 sm:block">
+          <div className="text-xs font-medium text-slate-600 dark:text-slate-300">
             {t('tuition.payment.amountPaid')}
           </div>
-          <div className="text-sm font-black text-emerald-600">
+          <div className="text-sm font-semibold tabular-nums text-emerald-700 dark:text-emerald-300">
             {formatCurrency(tuition.amount_paid)}
           </div>
         </div>
-        <div>
-          <div className="text-[10px] text-gray-400 uppercase font-bold">
+        <div className="flex items-center justify-between gap-3 sm:block">
+          <div className="text-xs font-medium text-slate-600 dark:text-slate-300">
             {t('tuition.payment.remaining')}
           </div>
-          <div className="text-sm font-black text-rose-500">{formatCurrency(remaining)}</div>
+          <div className="text-sm font-semibold tabular-nums text-rose-700 dark:text-rose-300">
+            {formatCurrency(remaining)}
+          </div>
         </div>
       </div>
 
@@ -106,60 +117,67 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
       <form id={formId} onSubmit={handleSubmit(onSubmit)} className="mt-5 space-y-4">
         <div>
           <label
-            htmlFor="payment-amount"
-            className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+            htmlFor={fieldPrefix + '-amount_paid'}
+            className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
           >
             {t('tuition.payment.amount')} *
           </label>
-          <input
-            id="payment-amount"
+          <Input
+            aria-invalid={!!errors.amount_paid}
+            aria-describedby={errors.amount_paid ? fieldPrefix + '-amount_paid-error' : undefined}
+            id={fieldPrefix + '-amount_paid'}
             type="number"
-            min={1}
+            inputMode="decimal"
+            min={PAYMENT_AMOUNT_STEP_VND}
             max={remaining}
+            step={PAYMENT_AMOUNT_STEP_VND}
             {...register('amount_paid', {
+              valueAsNumber: true,
               required: t('tuition.payment.amountRequired'),
-              min: { value: 1, message: 'Tối thiểu 1 VNĐ' },
+              min: { value: PAYMENT_AMOUNT_STEP_VND, message: t('errors.INVALID_AMOUNT') },
             })}
-            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            className="min-w-0 text-base tabular-nums sm:text-sm"
           />
           {errors.amount_paid && (
-            <p className="text-rose-500 text-xs mt-1">{errors.amount_paid.message}</p>
+            <p id={fieldPrefix + '-amount_paid-error'} className="form-field-error">
+              {errors.amount_paid.message}
+            </p>
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 min-[400px]:grid-cols-2 gap-3">
           <div>
             <label
               htmlFor="payment-date"
-              className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+              className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
             >
               {t('tuition.receipt.date')}
             </label>
-            <input
+            <Input
               id="payment-date"
               type="date"
               {...register('payment_date')}
-              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+              className="min-w-0 text-base sm:text-sm"
             />
           </div>
           <div>
             <label
               htmlFor="payment-method"
-              className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+              className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
             >
               {t('tuition.payment.method')}
             </label>
-            <select
+            <Select
               id="payment-method"
               {...register('payment_method')}
-              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+              className="min-w-0 text-base sm:text-sm"
             >
               {getPaymentMethods(t).map((m) => (
                 <option key={m.value} value={m.value}>
                   {m.label}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
         </div>
 
@@ -169,16 +187,17 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
           <div>
             <label
               htmlFor="payment-reference"
-              className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+              className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
             >
               {t('tuition.payment.reference')}
             </label>
-            <input
+            <Input
               id="payment-reference"
               type="text"
               {...register('reference_code')}
               placeholder="TXN1234567890"
-              className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+              spellCheck={false}
+              className="min-w-0 text-base sm:text-sm"
             />
           </div>
         )}
@@ -186,16 +205,16 @@ const PaymentModal: React.FC<Props> = ({ tuition, onClose }) => {
         <div>
           <label
             htmlFor="payment-notes"
-            className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5"
+            className="mb-1.5 block text-sm font-semibold text-slate-700 dark:text-slate-200"
           >
             {t('tuition.bulk.notes')}
           </label>
-          <input
+          <Input
             id="payment-notes"
             type="text"
             {...register('notes')}
             placeholder={t('tuition.bulk.notesPlaceholder')}
-            className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30"
+            className="min-w-0 text-base sm:text-sm"
           />
         </div>
       </form>

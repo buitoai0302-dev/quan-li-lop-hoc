@@ -1,3 +1,5 @@
+import { USER_ROLES } from '@/utils/constants';
+import PageError from '@/components/common/PageError';
 import React, { useState, useMemo, useCallback } from 'react';
 import { Modal, Card, Button, FormPanelActions } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
@@ -39,8 +41,10 @@ const Teachers: React.FC = () => {
   const formId = React.useId();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { teachers, loading: teachersLoading } = useTeachers();
-  const { branches, loading: branchesLoading } = useBranches();
+  const canManageTeachers =
+    user?.role === USER_ROLES.ADMIN || user?.role === USER_ROLES.SUPER_ADMIN;
+  const { teachers, loading: teachersLoading, query: teachersQuery } = useTeachers();
+  const { branches, loading: branchesLoading, query: branchesQuery } = useBranches();
 
   const loading = teachersLoading || branchesLoading;
 
@@ -207,7 +211,10 @@ const Teachers: React.FC = () => {
       { header: t('teachers.name'), accessor: 'full_name' },
       { header: t('teachers.email'), accessor: 'email' },
       { header: t('teachers.phone'), accessor: 'phone' },
-      { header: t('common.status'), accessor: (t) => (t.is_active ? 'Active' : 'Inactive') },
+      {
+        header: t('common.status'),
+        accessor: (teacher) => t(teacher.is_active ? 'common.active' : 'common.inactive'),
+      },
     ];
     exportToExcel(filteredTeachers, columns, t('teachers.title'));
   };
@@ -222,6 +229,17 @@ const Teachers: React.FC = () => {
     exportToPDF(filteredTeachers, columns, t('teachers.title'));
   };
 
+  const failedQueries = [teachersQuery, branchesQuery].filter(
+    (query) => query.isError && query.data === undefined
+  );
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
+
   return (
     <div className="h-full flex flex-col overflow-hidden">
       <PageHeader
@@ -231,12 +249,12 @@ const Teachers: React.FC = () => {
             isFilterVisible={isFilterVisible}
             onToggleFilter={() => setIsFilterVisible(!isFilterVisible)}
             selectedCount={selectedIds.length}
-            onBulkDelete={() => setIsBulkDeleteModalOpen(true)}
+            onBulkDelete={canManageTeachers ? () => setIsBulkDeleteModalOpen(true) : undefined}
             onExportExcel={handleExportExcel}
             onExportPDF={handleExportPDF}
             isExportDisabled={filteredTeachers.length === 0}
             onImport={() => navigate('/import?type=teachers')}
-            onAdd={() => handleOpenModal()}
+            onAdd={canManageTeachers ? () => handleOpenModal() : undefined}
             addLabel={t('common.add')}
           />
         }
@@ -250,6 +268,7 @@ const Teachers: React.FC = () => {
           }}
         >
           <FilterSelect
+            label={t('classes.branch')}
             value={branchFilter}
             onChange={(e) => setBranchFilter(e.target.value)}
             placeholder={t('import.selectBranch')}
@@ -283,16 +302,24 @@ const Teachers: React.FC = () => {
           </div>
         ) : filteredTeachers.length === 0 ? (
           <EmptyState
-            title={searchTerm || branchFilter ? t('common.noResults') : t('teachers.noData')}
+            title={
+              searchTerm || branchFilter
+                ? t('common.noResults')
+                : canManageTeachers
+                  ? t('teachers.noData')
+                  : t('common.noData')
+            }
             description={
               searchTerm || branchFilter
                 ? t('common.tryDifferentSearch')
-                : t('teachers.createFirstTeacher', 'Thêm giáo viên đầu tiên của bạn')
+                : canManageTeachers
+                  ? t('teachers.createFirstTeacher')
+                  : undefined
             }
-            showArrow={!(searchTerm || branchFilter)}
+            showArrow={canManageTeachers && !(searchTerm || branchFilter)}
             icon={UserCheck}
             action={
-              !(searchTerm || branchFilter) ? (
+              canManageTeachers && !(searchTerm || branchFilter) ? (
                 <Button
                   onClick={() => handleOpenModal()}
                   className="px-6 py-2.5 rounded-lg text-sm font-semibold"
@@ -304,6 +331,7 @@ const Teachers: React.FC = () => {
           />
         ) : (
           <TeacherTable
+            canManage={canManageTeachers}
             teachers={paginatedTeachers}
             onEdit={handleOpenModal}
             onDelete={(id) => setDeletingId(id)}

@@ -1,6 +1,7 @@
 import { Response, NextFunction } from 'express';
 import { AuthRequest } from '../middlewares/auth.middleware';
 import { AttendanceService } from '../services/attendance.service';
+import { AuthenticationError } from '../utils/errors';
 
 export const getAttendanceBySession = async (
   req: AuthRequest,
@@ -8,17 +9,16 @@ export const getAttendanceBySession = async (
   next: NextFunction
 ) => {
   try {
-    const tenantId = req.tenantId || req.user?.tenantId;
+    const actor = req.user;
+    if (!actor) throw new AuthenticationError();
+    const tenantId = req.tenantId || actor.tenantId;
     const { sessionId } = req.params;
 
     const result = await AttendanceService.getAttendanceBySession(
-      tenantId as string,
-      sessionId as string
+      tenantId,
+      sessionId as string,
+      actor
     );
-
-    if (!result.success) {
-      return res.status(403).json(result);
-    }
 
     res.json(result.data);
   } catch (error) {
@@ -28,21 +28,38 @@ export const getAttendanceBySession = async (
 
 export const recordAttendance = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const tenantId = req.tenantId || req.user?.tenantId;
+    const actor = req.user;
+    if (!actor) throw new AuthenticationError();
+    const tenantId = req.tenantId || actor.tenantId;
     const { sessionId } = req.params;
-    const { records } = req.body;
+    const { records, expectedVersion, reason, confirmedStudentIds } = req.body;
 
     const result = await AttendanceService.recordAttendance(
-      tenantId as string,
+      tenantId,
       sessionId as string,
-      records
+      records,
+      actor,
+      { expectedVersion, reason, confirmedStudentIds }
     );
 
-    if (!result.success) {
-      return res.status(result.error === 'SESSION_DATE_RESTRICTED' ? 400 : 403).json(result);
-    }
-
     res.json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getAttendanceHistory = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const actor = req.user;
+    if (!actor) throw new AuthenticationError();
+    res.json(
+      await AttendanceService.getHistory(
+        req.tenantId || actor.tenantId,
+        req.params.sessionId as string,
+        actor,
+        Number(req.query.offset || 0)
+      )
+    );
   } catch (error) {
     next(error);
   }

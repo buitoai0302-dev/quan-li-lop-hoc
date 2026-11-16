@@ -35,6 +35,9 @@ export const config = {
     ]),
   ],
   google: {
+    syncJobsEnabled: () =>
+      process.env.GOOGLE_CALENDAR_SYNC_JOBS_ENABLED === 'true' &&
+      process.env.DISABLE_BACKGROUND_JOBS !== 'true',
     clientId: () => getEnv('GOOGLE_CLIENT_ID'),
     clientSecret: () => getEnv('GOOGLE_CLIENT_SECRET'),
     redirectUri: () => `${config.backendUrl()}/api/google/callback`,

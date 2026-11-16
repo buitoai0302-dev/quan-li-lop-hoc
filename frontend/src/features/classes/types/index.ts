@@ -21,12 +21,16 @@ export interface BulkEnrollModalProps {
 }
 
 export interface ClassTableProps extends BaseTableProps<ClassData> {
+  canManage: boolean;
+  highlightedClassId?: string | null;
+  onHighlightEnd?: () => void;
   classes: ClassData[];
 }
 
 export interface ClassFormProps {
   id: string;
   initialData?: ClassBasicFormData;
+  isSubmitting: boolean;
   onSubmit: (data: ClassBasicFormData) => void;
   branches: Branch[];
   teachers: Teacher[];

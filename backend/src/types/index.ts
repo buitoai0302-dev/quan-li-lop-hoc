@@ -10,6 +10,7 @@ export interface BaseFilters extends PaginationFilters {
 }
 
 export interface TuitionFilters extends PaginationFilters {
+  tuition_id?: string;
   status?: string;
   class_id?: string;
   billing_period?: string;
@@ -50,11 +51,12 @@ export interface CreateClassDto {
     room_id?: string | null;
     notes?: string | null;
   }>;
-  enrollments?: any[];
+  enrollments?: string[];
 }
 
 export interface UpdateClassDto extends Partial<CreateClassDto> {
   status?: string;
+  enrollment_changes?: { add: string[]; remove: string[] };
 }
 
 export interface CreateTuitionDto {
@@ -77,14 +79,6 @@ export interface BulkGenerateTuitionDto {
   billing_cycle?: string;
   notes?: string;
   skip_existing?: boolean;
-}
-
-export interface UpdateTuitionDto {
-  amount?: number | string;
-  discount?: number | string;
-  due_date?: string;
-  status?: string;
-  notes?: string;
 }
 
 export interface RecordPaymentDto {

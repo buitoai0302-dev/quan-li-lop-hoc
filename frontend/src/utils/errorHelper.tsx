@@ -9,7 +9,7 @@ export interface ApiErrorData {
   message?: string;
   error?: string;
   params?: Record<string, string | number>;
-  slot?: { date: string; startTime: string; endTime: string };
+  slot?: { index?: number; date: string; startTime: string; endTime: string };
   conflicts?: Array<{
     conflict_type: string;
     conflict_id?: string;

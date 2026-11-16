@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React, { useState, useMemo, useCallback } from 'react';
 
 import { Modal, Card, Button, FormPanelActions } from '@/components/common/UI';
@@ -34,7 +35,7 @@ import {
 const Branches: React.FC = () => {
   const { t } = useTranslation();
   const formId = React.useId();
-  const { branches, loading } = useBranches();
+  const { branches, loading, query: branchesQuery } = useBranches();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -171,6 +172,17 @@ const Branches: React.FC = () => {
     ];
     exportToPDF(filteredBranches, columns, t('branches.title'));
   };
+
+  const failedQueries = [branchesQuery].filter(
+    (query) => query.isError && query.data === undefined
+  );
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
 
   return (
     <div className="h-full flex flex-col overflow-hidden">

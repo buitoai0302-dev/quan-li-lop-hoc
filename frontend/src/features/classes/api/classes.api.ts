@@ -19,6 +19,10 @@ type ClassPayload = Omit<ClassBasicFormData, 'teacher_id'> & {
   enrollments?: string[];
 };
 
+type UpdateClassPayload = Partial<ClassPayload> & {
+  enrollment_changes?: { add: string[]; remove: string[] };
+};
+
 export const getClasses = () =>
   api.get<unknown>('/classes').then((res) => safeParseArray(ClassSchema, res.data, 'getClasses'));
 
@@ -33,7 +37,8 @@ export const getClassEnrollments = (classId: string) =>
     .then((res) => safeParseArray(EnrollmentSchema, res.data, 'getClassEnrollments'));
 
 export const createClass = (data: ClassPayload) => api.post('/classes', data);
-export const updateClass = (id: string, data: ClassPayload) => api.put(`/classes/${id}`, data);
+export const updateClass = (id: string, data: UpdateClassPayload) =>
+  api.put(`/classes/${id}`, data);
 export const deleteClass = (id: string) => api.delete(`/classes/${id}`);
 
 export const enrollStudent = (classId: string, studentId: string) =>

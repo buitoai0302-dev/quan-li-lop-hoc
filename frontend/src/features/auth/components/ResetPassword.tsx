@@ -126,11 +126,14 @@ const ResetPassword: React.FC = () => {
             <form className="space-y-4" onSubmit={handleSubmit}>
               {/* New password */}
               <div className="space-y-1.5">
-                <Label className="text-slate-400 dark:text-gray-500 ml-1">
+                <Label htmlFor="new-password" className="text-slate-400 dark:text-gray-500 ml-1">
                   {t('auth.newPassword')}
                 </Label>
                 <div className="relative group">
                   <Input
+                    id="new-password"
+                    name="password"
+                    autoComplete="new-password"
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
@@ -142,6 +145,8 @@ const ResetPassword: React.FC = () => {
                   />
                   <button
                     type="button"
+                    aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                    aria-pressed={showPassword}
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-primary transition-colors z-10"
                   >
@@ -174,10 +179,16 @@ const ResetPassword: React.FC = () => {
 
               {/* Confirm password */}
               <div className="space-y-1.5">
-                <Label className="text-slate-400 dark:text-gray-500 ml-1">
+                <Label
+                  htmlFor="confirm-password"
+                  className="text-slate-400 dark:text-gray-500 ml-1"
+                >
                   {t('auth.confirmPassword')}
                 </Label>
                 <Input
+                  id="confirm-password"
+                  name="confirmPassword"
+                  autoComplete="new-password"
                   type={showPassword ? 'text' : 'password'}
                   required
                   value={confirmPassword}

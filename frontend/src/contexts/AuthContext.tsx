@@ -3,6 +3,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getCurrentUser, logout as logoutApi } from '@/features/auth';
 import { queryClient } from '@/utils/queryClient';
 import type { User } from '@/types';
+import { resetApiScope } from '@/api';
 export type { User };
 
 interface AuthContextType {
@@ -14,6 +15,11 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+const clearTenantImpersonation = () => {
+  localStorage.removeItem('impersonatedTenantId');
+  localStorage.removeItem('impersonatedTenantName');
+};
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -41,16 +47,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Access token lưu localStorage (ngắn hạn, ~15 phút)
   // Refresh token nằm trong httpOnly cookie — không cần lưu thủ công
   const login = (token: string, userData: User) => {
+    resetApiScope();
+    void queryClient.cancelQueries();
+    queryClient.clear();
+    clearTenantImpersonation();
     localStorage.setItem('token', token);
     setUser(userData);
   };
 
   const logout = () => {
+    resetApiScope();
+    void queryClient.cancelQueries();
     // Thu hồi refresh token phía server (xoá khỏi DB + xoá cookie)
     logoutApi().catch(() => {});
 
     // Xoá access token
     localStorage.removeItem('token');
+    clearTenantImpersonation();
 
     // Xoá sạch cache TanStack Query
     queryClient.clear();
@@ -60,6 +73,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const updateUser = (updates: Partial<User>) => {
+    if (
+      (updates.id && updates.id !== user?.id) ||
+      (updates.tenant_id && updates.tenant_id !== user?.tenant_id)
+    ) {
+      resetApiScope();
+      void queryClient.cancelQueries();
+      queryClient.clear();
+    }
     setUser((prev) => (prev ? { ...prev, ...updates } : prev));
   };
 

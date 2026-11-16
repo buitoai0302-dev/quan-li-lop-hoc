@@ -37,4 +37,32 @@ describe('Session revocation', () => {
     expect((await request(app).get('/private').set('Authorization', `Bearer ${token}`)).status)
       .toBe(401);
   });
+
+  it.each([undefined, 0, 1])('rejects an older session version %s after a password reset', async (sessionVersion) => {
+    (pool.query as jest.Mock).mockResolvedValue({ rows: [{
+      user_active: true, tenant_active: true, role: 'admin', session_version: 2,
+    }] });
+    const oldToken = jwt.sign({ userId: 'user-a', tenantId: 'tenant-a', role: 'admin',
+      email: 'a@example.test', ...(sessionVersion !== undefined && { sessionVersion }),
+    }, secret);
+    const response = await request(app).get('/private').set('Authorization', `Bearer ${oldToken}`);
+    expect(response.status).toBe(401);
+    expect(response.body.code).toBe('INVALID_TOKEN');
+  });
+
+  it.each([undefined, 0, 2])('allows a matching session version %s', async (sessionVersion) => {
+    (pool.query as jest.Mock).mockResolvedValue({ rows: [{
+      user_active: true, tenant_active: true, role: 'admin', session_version: sessionVersion ?? 0,
+    }] });
+    const validToken = jwt.sign({ userId: 'user-a', tenantId: 'tenant-a', role: 'admin',
+      email: 'a@example.test', ...(sessionVersion !== undefined && { sessionVersion }),
+    }, secret);
+    expect((await request(app).get('/private').set('Authorization', `Bearer ${validToken}`)).status).toBe(200);
+  });
+
+  it('rejects OAuth-shaped JWTs before querying the database', async () => {
+    const stateToken = jwt.sign({ userId: 'user-a' }, secret);
+    expect((await request(app).get('/private').set('Authorization', `Bearer ${stateToken}`)).status).toBe(401);
+    expect(pool.query).not.toHaveBeenCalled();
+  });
 });

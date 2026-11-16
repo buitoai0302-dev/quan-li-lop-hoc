@@ -55,7 +55,14 @@ const ConfirmModal: React.FC<ConfirmModalProps> = ({
   const theme = getThemeClasses();
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={title}
+      size="sm"
+      closeBlocked={isLoading}
+      closeLabel={t('common.close')}
+    >
       <div className="flex flex-col items-center text-center">
         <div
           className={`w-14 h-14 rounded-full ${theme.iconBg} flex items-center justify-center mb-4 shadow-sm shrink-0`}

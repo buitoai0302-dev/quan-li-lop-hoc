@@ -22,21 +22,26 @@ const FilterBar: React.FC<FilterBarProps> = ({
   if (!isVisible) return null;
 
   return (
-    <div className="flex flex-col sm:flex-row gap-3 w-full">
+    <div className="filter-enter grid w-full grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] items-center gap-2 lg:flex">
       {/* Search Input */}
-      <div className="relative flex-1 sm:min-w-[240px] max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={14} />
+      <div className="relative min-w-0 flex-1 lg:max-w-md">
+        <Search
+          aria-hidden="true"
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          size={14}
+        />
         <input
-          type="text"
+          type="search"
+          aria-label={searchPlaceholder || t('common.search')}
           placeholder={searchPlaceholder || t('common.search')}
-          className="w-full pl-9 pr-4 py-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg text-xs font-medium text-gray-900 dark:text-white placeholder:text-gray-400 dark:placeholder:text-gray-500 focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+          className="h-11 w-full rounded-lg border border-gray-200 bg-white pl-9 pr-2 text-base font-medium text-gray-900 outline-none placeholder:text-slate-500 focus:ring-2 focus:ring-primary/30 dark:border-gray-700 dark:bg-gray-800 dark:text-white dark:placeholder:text-slate-400 sm:text-sm lg:h-9"
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
         />
       </div>
 
       {/* Extra Filters (Selects, etc.) */}
-      {children && <div className="flex flex-col sm:flex-row gap-3">{children}</div>}
+      {children}
     </div>
   );
 };

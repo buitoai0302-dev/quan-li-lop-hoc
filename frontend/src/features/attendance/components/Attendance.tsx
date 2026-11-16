@@ -1,11 +1,13 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { USER_ROLES } from '@/utils/constants';
 
 import EmptyState from '@/components/common/EmptyState';
+import PageError from '@/components/common/PageError';
 import ConfirmModal from '@/components/common/ConfirmModal';
+import ExportMenu from '@/components/common/ExportMenu';
 
 // Local components
 import { useAttendance } from '@/features/attendance/hooks/useAttendance';
@@ -16,12 +18,17 @@ import StudentList from '@/features/attendance/components/StudentList';
 import { exportToExcel, exportToPDF } from '@/utils/export';
 import type { ExportColumn } from '@/utils/export';
 import type { AttendanceRecord } from '@/features/attendance/types';
+import { useWorkflowScroll } from '@/hooks/useWorkflowState';
+import HistoricalAttendance from './HistoricalAttendance';
+import AttendanceHistory from './AttendanceHistory';
 
 const AttendancePage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const dateInputRef = useRef<HTMLInputElement>(null);
   const isAttendanceEnabled = user?.tenant_settings?.menu?.attendance !== false;
+  const [showHistory, setShowHistory] = useState(false);
+  const [confirmReload, setConfirmReload] = useState(false);
 
   const {
     sessions,
@@ -30,6 +37,8 @@ const AttendancePage: React.FC = () => {
     selectedDate,
     sessionsLoading,
     attendanceLoading,
+    sessionsQuery,
+    attendanceQuery,
     saving,
     searchTerm,
     setSearchTerm,
@@ -53,7 +62,16 @@ const AttendancePage: React.FC = () => {
     confirmLeave,
     cancelLeave,
     fetchAttendance,
+    unmarkedCount,
+    canUndo,
+    handleUndo,
+    policy,
+    reason,
+    setReason,
+    confirmStudent,
+    reloadAttendance,
   } = useAttendance(isAttendanceEnabled);
+  const scrollRef = useWorkflowScroll('attendance', !attendanceLoading && !sessionsLoading);
 
   const handleExportExcel = () => {
     if (!filteredAttendance.length) return;
@@ -129,8 +147,35 @@ const AttendancePage: React.FC = () => {
     );
   }
 
+  const failedQueries = [sessionsQuery, attendanceQuery].filter(
+    (query) => query.isError && query.data === undefined
+  );
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
+
   return (
-    <div className="flex-1 min-h-0 flex flex-col gap-3 sm:gap-4 overflow-hidden">
+    <div
+      ref={scrollRef}
+      className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto lg:overflow-hidden"
+    >
+      <ConfirmModal
+        isOpen={confirmReload}
+        onClose={() => setConfirmReload(false)}
+        onConfirm={() => {
+          setConfirmReload(false);
+          void reloadAttendance();
+        }}
+        title={t('attendance.reloadTitle')}
+        message={t('attendance.reloadNotice')}
+      />
+      {showHistory && selectedSession && (
+        <AttendanceHistory sessionId={selectedSession.id} onClose={() => setShowHistory(false)} />
+      )}
       <ConfirmModal
         isOpen={!!(blocker.state === 'blocked' || pendingAction)}
         onClose={cancelLeave}
@@ -157,6 +202,37 @@ const AttendancePage: React.FC = () => {
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         dateInputRef={dateInputRef}
+        viewActions={
+          <ExportMenu
+            onExportExcel={handleExportExcel}
+            onExportPDF={handleExportPDF}
+            disabled={filteredAttendance.length === 0}
+            align="responsive"
+          />
+        }
+        sessionActions={
+          selectedSession && (
+            <div className="flex flex-wrap items-center gap-x-3 text-xs font-medium">
+              {user?.role !== USER_ROLES.TEACHER && (
+                <button
+                  type="button"
+                  className="min-h-11 rounded text-slate-600 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary dark:text-slate-300 sm:min-h-9"
+                  onClick={() => setShowHistory(true)}
+                >
+                  {t('attendance.history')}
+                </button>
+              )}
+              <button
+                type="button"
+                disabled={saving}
+                className="min-h-11 rounded text-slate-600 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50 dark:text-slate-300 sm:min-h-9"
+                onClick={() => setConfirmReload(true)}
+              >
+                {t('attendance.reloadTitle')}
+              </button>
+            </div>
+          )
+        }
         headerActions={
           <AttendanceHeader
             selectedSession={selectedSession}
@@ -165,14 +241,25 @@ const AttendancePage: React.FC = () => {
             isReadOnly={isReadOnly}
             isFutureDate={isFutureDate}
             handleMarkAllAsPresent={handleMarkAllAsPresent}
-            handleSave={handleSave}
-            onExportExcel={handleExportExcel}
-            onExportPDF={handleExportPDF}
+            handleSave={() => handleSave()}
+            handleSaveNext={() => handleSave(true)}
+            unmarkedCount={unmarkedCount}
+            canUndo={canUndo}
+            handleUndo={handleUndo}
           />
         }
       />
 
-      <div className="flex-1 flex flex-col lg:flex-row gap-3 sm:gap-4 overflow-hidden min-h-0">
+      {policy?.reasonRequired && (
+        <HistoricalAttendance
+          reason={reason}
+          setReason={setReason}
+          existingIds={attendance.map((record) => record.student_id)}
+          confirmStudent={confirmStudent}
+          disabled={saving}
+        />
+      )}
+      <div className="flex flex-none flex-col gap-3 lg:min-h-0 lg:flex-1 lg:flex-row lg:overflow-hidden">
         <SessionList
           sessions={sessions}
           selectedSession={selectedSession}
@@ -186,7 +273,7 @@ const AttendancePage: React.FC = () => {
           attendanceLoading={attendanceLoading}
           selectedSession={selectedSession}
           filteredAttendance={filteredAttendance}
-          isReadOnly={isReadOnly}
+          isReadOnly={isReadOnly || saving}
           handleStatusChange={handleStatusChange}
         />
       </div>

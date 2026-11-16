@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { ROLES, HTTP_HEADERS, API_PRINCIPALS } from '../utils/constants';
+import { ROLES, HTTP_HEADERS, API_PRINCIPALS, ERROR_CODES } from '../utils/constants';
 
 export interface AuthRequest extends Request {
   user?: {
@@ -9,6 +9,7 @@ export interface AuthRequest extends Request {
     branchId: string | null;
     role: string;
     email: string;
+    sessionVersion?: number;
   };
   tenantId?: string;
 }
@@ -29,9 +30,20 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as any;
+    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+    if (
+      typeof decoded === 'string' ||
+      typeof decoded.userId !== 'string' ||
+      typeof decoded.tenantId !== 'string' ||
+      typeof decoded.role !== 'string' ||
+      typeof decoded.email !== 'string' ||
+      (decoded.sessionVersion !== undefined &&
+        (!Number.isSafeInteger(decoded.sessionVersion) || decoded.sessionVersion < 0))
+    ) {
+      return res.status(401).json({ error: 'Invalid token', code: ERROR_CODES.INVALID_TOKEN });
+    }
     const status = await pool.query(
-      `SELECT u.is_active AS user_active, u.role, t.is_active AS tenant_active
+      `SELECT u.is_active AS user_active, u.role, u.session_version, t.is_active AS tenant_active
        FROM users u JOIN tenants t ON t.id = u.tenant_id
        WHERE u.id = $1 AND u.tenant_id = $2`,
       [decoded.userId, decoded.tenantId]
@@ -44,7 +56,18 @@ export const authMiddleware = async (req: AuthRequest, res: Response, next: Next
     ) {
       return res.status(401).json({ error: 'Account inactive' });
     }
-    req.user = decoded;
+    // Legacy JWTs represent version zero only; a password reset invalidates them too.
+    if (status.rows[0].session_version !== (decoded.sessionVersion ?? 0)) {
+      return res.status(401).json({ error: 'Session revoked', code: ERROR_CODES.INVALID_TOKEN });
+    }
+    req.user = {
+      userId: decoded.userId,
+      tenantId: decoded.tenantId,
+      branchId: typeof decoded.branchId === 'string' ? decoded.branchId : null,
+      role: decoded.role,
+      email: decoded.email,
+      sessionVersion: decoded.sessionVersion ?? 0,
+    };
 
     // Also inject tenantId so it can replace tenantMiddleware logic for authenticated routes
     if (decoded.tenantId) {

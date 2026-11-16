@@ -1,4 +1,6 @@
-import React, { useState, useMemo, useCallback, useId } from 'react';
+import PageError from '@/components/common/PageError';
+import React, { useState, useMemo, useCallback, useId, useEffect } from 'react';
+import { isText, useWorkflowState, useWorkflowScroll } from '@/hooks/useWorkflowState';
 
 import { Modal, Card, FormPanelActions } from '@/components/common/UI';
 import ConfirmModal from '@/components/common/ConfirmModal';
@@ -7,7 +9,11 @@ import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 import { handleApiError } from '@/utils/errorHelper';
 import { Users } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { USER_ROLES } from '@/utils/constants';
+import StudentProfile from './StudentProfile';
+import { isProfileTab } from '../api/student-profile.api';
 import PageHeader from '@/components/common/PageHeader';
 import SkeletonTable from '@/components/common/SkeletonTable';
 import FilterBar from '@/components/common/FilterBar';
@@ -38,9 +44,27 @@ const Students: React.FC = () => {
   const { t } = useTranslation();
   const studentFormId = useId();
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const { user } = useAuth();
+  const canManage = [USER_ROLES.ADMIN, USER_ROLES.STAFF, USER_ROLES.SUPER_ADMIN].some(
+    (role) => role === user?.role
+  );
+  const [profileStudentId, setProfileStudentId] = useState<string | null>(null);
+  const requestedStudentId = params.get('studentId');
+  const initialTab = params.get('tab');
+  const closeProfile = () => {
+    setProfileStudentId(null);
+    if (requestedStudentId) {
+      const next = new URLSearchParams(params);
+      next.delete('studentId');
+      next.delete('tab');
+      next.delete('tuitionId');
+      setParams(next, { replace: true });
+    }
+  };
   const dobInputRef = React.useRef<HTMLInputElement>(null);
-  const { students, loading: studentsLoading } = useStudents();
-  const { branches, loading: branchesLoading } = useBranches();
+  const { students, loading: studentsLoading, query: studentsQuery } = useStudents();
+  const { branches, loading: branchesLoading, query: branchesQuery } = useBranches();
 
   const loading = studentsLoading || branchesLoading;
 
@@ -50,8 +74,18 @@ const Students: React.FC = () => {
   const [isBulkDeleteModalOpen, setIsBulkDeleteModalOpen] = useState(false);
   const [isFilterVisible, setIsFilterVisible] = useState(false);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [branchFilter, setBranchFilter] = useState('');
+  const [searchQuery, setSearchQuery] = useWorkflowState('students', 'search', '', isText, true);
+  const [branchFilter, setBranchFilter] = useWorkflowState('students', 'branch', '', isText);
+  const scrollRef = useWorkflowScroll('students', !loading);
+  useEffect(() => {
+    if (
+      !branchesLoading &&
+      branchesQuery.isSuccess &&
+      branchFilter &&
+      !branches.some((branch) => branch.id === branchFilter)
+    )
+      setBranchFilter('');
+  }, [branchesLoading, branchesQuery.isSuccess, branchFilter, branches, setBranchFilter]);
 
   const [editingStudent, setEditingStudent] = useState<StudentFormData | null>(null);
 
@@ -76,7 +110,7 @@ const Students: React.FC = () => {
     itemsPerPage,
     setItemsPerPage,
     paginatedItems: paginatedStudents,
-  } = usePagination(filteredStudents);
+  } = usePagination(filteredStudents, 'students', !loading);
   const { selectedIds, handleSelectAll, handleSelectOne, clearSelection } =
     useSelection(paginatedStudents);
 
@@ -156,7 +190,7 @@ const Students: React.FC = () => {
         handleApiError(error as AxiosError<ApiErrorData>, t);
       },
     });
-  }, [deletingId, t, deleteStudentMutate, clearSelection]);
+  }, [deletingId, t, deleteStudentMutate, clearSelection, setDeletingId]);
 
   const handleBulkDelete = useCallback(() => {
     if (selectedIds.length === 0) return;
@@ -171,7 +205,7 @@ const Students: React.FC = () => {
         setIsBulkDeleteModalOpen(false);
       },
     });
-  }, [selectedIds, deleteBulkStudentsMutate, t, clearSelection]);
+  }, [selectedIds, deleteBulkStudentsMutate, t, clearSelection, setIsBulkDeleteModalOpen]);
 
   const handleExportExcel = () => {
     const columns: ExportColumn<Student>[] = [
@@ -220,8 +254,19 @@ const Students: React.FC = () => {
     );
   };
 
+  const failedQueries = [studentsQuery, branchesQuery].filter(
+    (query) => query.isError && query.data === undefined
+  );
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
+
   return (
-    <div className="h-full flex flex-col overflow-hidden relative">
+    <div ref={scrollRef} className="h-full flex flex-col overflow-hidden relative">
       <PageHeader
         icon={Users}
         actions={
@@ -248,6 +293,7 @@ const Students: React.FC = () => {
           }}
         >
           <FilterSelect
+            label={t('classes.branch')}
             value={branchFilter}
             onChange={(e) => setBranchFilter(e.target.value)}
             placeholder={t('import.selectBranch')}
@@ -303,6 +349,7 @@ const Students: React.FC = () => {
         ) : (
           <StudentTable
             students={paginatedStudents}
+            onProfile={canManage ? (student) => setProfileStudentId(student.id) : undefined}
             onEdit={handleOpenModal}
             onDelete={setDeletingId}
             selectedIds={selectedIds}
@@ -313,6 +360,15 @@ const Students: React.FC = () => {
         )}
       </Card>
 
+      {canManage && (profileStudentId || requestedStudentId) && (
+        <StudentProfile
+          key={profileStudentId || requestedStudentId!}
+          studentId={(profileStudentId || requestedStudentId)!}
+          initialTab={isProfileTab(initialTab) ? initialTab : undefined}
+          tuitionId={params.get('tuitionId') || undefined}
+          onClose={closeProfile}
+        />
+      )}
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}

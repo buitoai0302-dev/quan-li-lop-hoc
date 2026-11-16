@@ -27,6 +27,7 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
   editingId,
   t,
 }) => {
+  const fieldPrefix = React.useId();
   const schema = getTeacherSchema(t);
   const {
     register,
@@ -61,33 +62,49 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
   }, [initialData, reset, branches]);
 
   return (
-    <form id={id} onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+    <form id={id} onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="sm:col-span-2">
-          <Label required className="ml-1">
+          <Label htmlFor={fieldPrefix + '-full_name'} required className="ml-1">
             {t('teachers.name')}
           </Label>
           <Input
+            aria-invalid={!!errors.full_name}
+            aria-describedby={errors.full_name ? fieldPrefix + '-full_name-error' : undefined}
+            id={fieldPrefix + '-full_name'}
+            aria-required="true"
             variant="muted"
             placeholder={t('teachers.namePlaceholder')}
             className={errors.full_name ? 'ring-2 ring-red-500' : ''}
             {...register('full_name')}
           />
           {errors.full_name && (
-            <p className="text-red-500 text-[10px] mt-1.5 ml-1 font-bold">
+            <p id={fieldPrefix + '-full_name-error'} className="form-field-error">
               {errors.full_name.message}
             </p>
           )}
         </div>
         <div>
-          <Label className="ml-1">{t('teachers.phone')}</Label>
-          <Input variant="muted" placeholder="09xxx..." icon={<Phone />} {...register('phone')} />
+          <Label htmlFor={fieldPrefix + '-phone'} className="ml-1">
+            {t('teachers.phone')}
+          </Label>
+          <Input
+            id={fieldPrefix + '-phone'}
+            variant="muted"
+            placeholder="09xxx..."
+            icon={<Phone />}
+            {...register('phone')}
+          />
         </div>
         <div>
-          <Label required className="ml-1">
+          <Label htmlFor={fieldPrefix + '-branch_id'} required className="ml-1">
             {t('classes.branch')}
           </Label>
           <Select
+            aria-invalid={!!errors.branch_id}
+            aria-describedby={errors.branch_id ? fieldPrefix + '-branch_id-error' : undefined}
+            id={fieldPrefix + '-branch_id'}
+            aria-required="true"
             variant="muted"
             className={errors.branch_id ? 'ring-2 ring-red-500' : ''}
             {...register('branch_id')}
@@ -102,7 +119,7 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
             ))}
           </Select>
           {errors.branch_id && (
-            <p className="text-red-500 text-[10px] mt-1.5 ml-1 font-bold">
+            <p id={fieldPrefix + '-branch_id-error'} className="form-field-error">
               {errors.branch_id.message}
             </p>
           )}
@@ -111,10 +128,14 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
 
       <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10 space-y-5">
         <div>
-          <Label required className="ml-1">
+          <Label htmlFor={fieldPrefix + '-email'} required className="ml-1">
             {t('teachers.email')}
           </Label>
           <Input
+            aria-invalid={!!errors.email}
+            aria-describedby={errors.email ? fieldPrefix + '-email-error' : undefined}
+            id={fieldPrefix + '-email'}
+            aria-required="true"
             type="email"
             variant={editingId ? 'muted' : 'white'}
             disabled={!!editingId}
@@ -124,12 +145,17 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
             {...register('email')}
           />
           {errors.email && (
-            <p className="text-red-500 text-[10px] mt-1.5 ml-1 font-bold">{errors.email.message}</p>
+            <p id={fieldPrefix + '-email-error'} className="form-field-error">
+              {errors.email.message}
+            </p>
           )}
         </div>
         <div>
-          <Label className="ml-1">{t('teachers.specialization')}</Label>
+          <Label htmlFor={fieldPrefix + '-specialization'} className="ml-1">
+            {t('teachers.specialization')}
+          </Label>
           <Input
+            id={fieldPrefix + '-specialization'}
             variant="white"
             placeholder={t('teachers.specPlaceholder')}
             icon={<Briefcase />}
@@ -139,8 +165,11 @@ const TeacherForm: React.FC<TeacherFormProps> = ({
       </div>
 
       <div>
-        <Label className="ml-1">{t('common.status')}</Label>
+        <Label htmlFor={fieldPrefix + '-is_active'} className="ml-1">
+          {t('common.status')}
+        </Label>
         <Select
+          id={fieldPrefix + '-is_active'}
           variant="muted"
           {...register('is_active', { setValueAs: (v) => v === 'true' || v === true })}
         >

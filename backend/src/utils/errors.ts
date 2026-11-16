@@ -41,7 +41,7 @@ export interface ScheduleConflict {
 export class ScheduleConflictError extends AppError {
   constructor(
     public readonly conflicts: ScheduleConflict[],
-    public readonly slot?: { date: string; startTime: string; endTime: string }
+    public readonly slot?: { index?: number; date: string; startTime: string; endTime: string }
   ) {
     super('SCHEDULE_CONFLICT', 409, ERROR_CODES.SCHEDULE_CONFLICT);
   }

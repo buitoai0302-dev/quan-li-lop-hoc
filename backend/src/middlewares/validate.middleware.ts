@@ -1,9 +1,14 @@
 import { Request, Response, NextFunction } from 'express';
-import { ZodError } from 'zod';
+import { ZodError, ZodType } from 'zod';
 import { ValidationError } from '../utils/errors';
 import { ERROR_CODES } from '../utils/constants';
 
-export const validate = (schema: any) => {
+const ARRAY_LIMIT_MESSAGES = new Map<string, string>([
+  [ERROR_CODES.CLASS_RECURRING_LIMIT_EXCEEDED, 'Too many recurring schedule entries'],
+  [ERROR_CODES.CLASS_ENROLLMENT_LIMIT_EXCEEDED, 'Too many enrollment entries'],
+]);
+
+export const validate = (schema: ZodType) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       await schema.parseAsync({
@@ -12,14 +17,24 @@ export const validate = (schema: any) => {
         params: req.params,
       });
       next();
-    } catch (error: any) {
-      if (error && error.issues && error.issues.length > 0) {
-        next(new ValidationError(error.issues[0].message, ERROR_CODES.VALIDATION_ERROR));
-      } else if (error && error.errors && error.errors.length > 0) {
-        next(new ValidationError(error.errors[0].message, ERROR_CODES.VALIDATION_ERROR));
-      } else {
+    } catch (error: unknown) {
+      if (!(error instanceof ZodError) || !error.issues.length) {
         next(error);
+        return;
       }
+      const issue = error.issues[0];
+      const limitMessage = ARRAY_LIMIT_MESSAGES.get(issue.message);
+      if (
+        issue.code === 'too_big' &&
+        issue.origin === 'array' &&
+        limitMessage &&
+        typeof issue.maximum === 'number' &&
+        Number.isSafeInteger(issue.maximum)
+      ) {
+        next(new ValidationError(limitMessage, issue.message, { limit: issue.maximum }));
+        return;
+      }
+      next(new ValidationError(issue.message, ERROR_CODES.VALIDATION_ERROR));
     }
   };
 };

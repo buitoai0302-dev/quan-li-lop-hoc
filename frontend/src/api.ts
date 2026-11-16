@@ -9,8 +9,17 @@ const api = axios.create({
   withCredentials: true, // Gửi kèm httpOnly cookie trong mọi request
 });
 
+let scopeController = new AbortController();
+export const resetApiScope = () => {
+  scopeController.abort();
+  scopeController = new AbortController();
+};
+
 // Request interceptor: gắn access token vào mọi request
 api.interceptors.request.use((config) => {
+  config.signal = config.signal
+    ? AbortSignal.any([scopeController.signal, config.signal as AbortSignal])
+    : scopeController.signal;
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -43,7 +52,11 @@ api.interceptors.response.use(
     const originalRequest = error.config;
 
     // Nếu 401 và chưa retry, thử refresh token
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.signal?.aborted
+    ) {
       // Bỏ qua nếu là request login (để hiển thị lỗi sai mật khẩu thay vì reload)
       if (originalRequest.url?.includes('/auth/login')) {
         return Promise.reject(error);
@@ -74,7 +87,7 @@ api.interceptors.response.use(
         const { data } = await axios.post(
           `${apiBaseUrl}/auth/refresh`,
           {},
-          { withCredentials: true }
+          { withCredentials: true, signal: originalRequest.signal }
         );
 
         const newToken = data.token;
@@ -87,6 +100,7 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
+        if (axios.isCancel(refreshError)) return Promise.reject(refreshError);
         localStorage.removeItem('token');
         window.location.href = '/login';
         return Promise.reject(refreshError);

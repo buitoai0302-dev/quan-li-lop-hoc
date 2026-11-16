@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
@@ -40,6 +41,7 @@ import QuickStat from '@/features/dashboard/components/QuickStat';
 import { useDashboard } from '@/features/dashboard/hooks/useDashboard';
 import UsageBar from '@/features/dashboard/components/UsageBar';
 import SetupChecklist from '@/features/dashboard/components/SetupChecklist';
+import WorkItems from './components/WorkItems';
 
 const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
 
@@ -49,6 +51,7 @@ const Dashboard: React.FC = () => {
   const navigate = useNavigate();
   const {
     stats,
+    statsQuery,
     loading,
     chartPeriod,
     setChartPeriod,
@@ -69,6 +72,15 @@ const Dashboard: React.FC = () => {
   if (loading) {
     return <PageLoading />;
   }
+
+  const failedQueries = [statsQuery].filter((query) => query.isError && query.data === undefined);
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
 
   return (
     <div className="h-full overflow-auto custom-scrollbar px-3 sm:px-4 py-3">
@@ -93,6 +105,9 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
+        {user?.role !== USER_ROLES.STUDENT &&
+          (user?.role !== USER_ROLES.SUPER_ADMIN ||
+            localStorage.getItem('impersonatedTenantId')) && <WorkItems />}
         {[USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN].includes(user?.role || '') && (
           <SetupChecklist
             hasBranches={(stats?.usage?.branches?.used || 0) > 0}

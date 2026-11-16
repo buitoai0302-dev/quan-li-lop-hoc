@@ -1,131 +1,252 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { getAttendanceForSession, saveAttendance } from '../api/attendance.api';
 import { getWeeklySchedule } from '@/features/schedule';
 import toast from 'react-hot-toast';
-import { format } from 'date-fns';
+import { format, addDays, parseISO } from 'date-fns';
 import { ATTENDANCE_STATUS } from '@/utils/constants';
 import { normalizeSearchStr } from '@/utils/string';
-import type { Session, AttendanceRecord, AttendanceStats, PendingAction } from '../types';
+import { handleApiError } from '@/utils/errorHelper';
+import type { ApiErrorData } from '@/utils/errorHelper';
+import type { AxiosError } from 'axios';
+import type { AttendanceRecord, AttendanceStats, PendingAction } from '../types';
+import type { Student } from '@/types/schemas';
 import { useNavigationPrompt } from '@/hooks/useNavigationPrompt';
+import { isDateKey, isText, useWorkflowScope, useWorkflowState } from '@/hooks/useWorkflowState';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '@/hooks/useMediaQuery';
+
+const businessDate = () =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
 
 export const useAttendance = (isAttendanceEnabled: boolean) => {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-
-  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
+  const scope = useWorkflowScope();
+  const [params, setParams] = useSearchParams();
+  const [selectedSessionId, setSelectedSessionId] = useWorkflowState(
+    'attendance',
+    'session',
+    '',
+    isText,
+    false,
+    params.get('sessionId') || undefined
+  );
+  const [selectedDate, setSelectedDate] = useWorkflowState(
+    'attendance',
+    'date',
+    businessDate(),
+    isDateKey,
+    false,
+    params.get('date') || undefined
+  );
+  const [searchTerm, setSearchTerm] = useWorkflowState('attendance', 'search', '', isText, true);
   const [localAttendance, setLocalAttendance] = useState<AttendanceRecord[]>([]);
-  const [selectedDate, setSelectedDate] = useState(format(new Date(), 'yyyy-MM-dd'));
-  const [searchTerm, setSearchTerm] = useState('');
+  const [version, setVersion] = useState(0);
+  const [reason, setReason] = useState('');
+  const [confirmedStudentIds, setConfirmedStudentIds] = useState<string[]>([]);
   const [isDirty, setIsDirty] = useState(false);
+  const [undo, setUndo] = useState<{ records: AttendanceRecord[]; dirty: boolean } | null>(null);
   const [pendingAction, setPendingAction] = useState<PendingAction>(null);
-  const [isControlsExpanded, setIsControlsExpanded] = useState(true);
-  const [isSessionsExpanded, setIsSessionsExpanded] = useState(true);
-
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
+  const [desktopStatsExpanded, setDesktopStatsExpanded] = useState(true);
+  const [mobileStatsExpanded, setMobileStatsExpanded] = useState(false);
+  const isControlsExpanded = isDesktop ? desktopStatsExpanded : mobileStatsExpanded;
+  const setIsControlsExpanded = isDesktop ? setDesktopStatsExpanded : setMobileStatsExpanded;
+  const [isSessionsExpanded, setIsSessionsExpanded] = useState(() => !selectedSessionId);
   const blocker = useNavigationPrompt(isDirty);
-
-  // Fetch sessions for the selected date
-  const sessionsQuery = useQuery({
-    queryKey: ['sessions', selectedDate],
-    queryFn: async () => {
-      const data = await getWeeklySchedule(selectedDate, selectedDate);
-      return data.sessions as Session[];
-    },
-    enabled: isAttendanceEnabled,
-  });
-
-  // Fetch attendance for the selected session
-  const attendanceQuery = useQuery({
-    queryKey: ['attendance', selectedSessionId],
-    queryFn: async () => {
-      if (!selectedSessionId) return null;
-      return getAttendanceForSession(selectedSessionId);
-    },
-    enabled: !!selectedSessionId,
-  });
-
-  // Sync query data with local state for editing
   useEffect(() => {
-    if (attendanceQuery.data) {
-      setLocalAttendance(attendanceQuery.data.attendance);
-      setIsDirty(false);
-    }
-  }, [attendanceQuery.data]);
+    if (isDirty) return;
+    const next = new URLSearchParams(params);
+    next.set('date', selectedDate);
+    if (selectedSessionId) next.set('sessionId', selectedSessionId);
+    else next.delete('sessionId');
+    if (next.toString() !== params.toString()) setParams(next, { replace: true });
+  }, [params, setParams, selectedDate, selectedSessionId, isDirty]);
 
+  const sessionsQuery = useQuery({
+    queryKey: ['sessions', scope, 'attendance', selectedDate],
+    queryFn: async ({ signal }) =>
+      (await getWeeklySchedule(selectedDate, selectedDate, undefined, undefined, undefined, signal))
+        .sessions,
+    enabled: isAttendanceEnabled && !!scope,
+  });
+  const attendanceQuery = useQuery({
+    queryKey: ['attendance', scope, selectedSessionId],
+    queryFn: ({ signal }) => getAttendanceForSession(selectedSessionId, signal),
+    enabled: isAttendanceEnabled && !!scope && !!selectedSessionId,
+  });
+  useEffect(() => {
+    if (attendanceQuery.data && !isDirty) {
+      setLocalAttendance(attendanceQuery.data.attendance);
+      setVersion(attendanceQuery.data.version);
+    }
+  }, [attendanceQuery.data, isDirty]);
+  useEffect(() => {
+    if (
+      sessionsQuery.data &&
+      selectedSessionId &&
+      !isDirty &&
+      !sessionsQuery.data.some((session) => session.id === selectedSessionId)
+    ) {
+      setSelectedSessionId('');
+      setLocalAttendance([]);
+    }
+  }, [sessionsQuery.data, selectedSessionId, isDirty, setSelectedSessionId]);
+
+  const resetDraft = () => {
+    setIsDirty(false);
+    setUndo(null);
+    setReason('');
+    setConfirmedStudentIds([]);
+    setLocalAttendance([]);
+  };
+  const selectSession = (sessionId: string) => {
+    resetDraft();
+    setSelectedSessionId(sessionId);
+    if (!isDesktop) {
+      setIsSessionsExpanded(false);
+      setMobileStatsExpanded(false);
+    }
+  };
+  const policy = attendanceQuery.data?.editingPolicy;
   const saveMutation = useMutation({
-    mutationFn: async (records: { student_id: string; status: string }[]) => {
-      if (!selectedSessionId) return;
-      return saveAttendance(selectedSessionId, records);
-    },
-    onSuccess: () => {
+    mutationFn: ({
+      next: _next,
+      ...payload
+    }: {
+      next: boolean;
+      sessionId: string;
+      records: { student_id: string; status: string }[];
+      expectedVersion: number;
+      reason: string;
+      confirmedStudentIds: string[];
+    }) => saveAttendance(payload.sessionId, payload.records, payload),
+    onSuccess: async (_data, variables) => {
       toast.success(t('attendance.saveSuccess'));
       setIsDirty(false);
-      setPendingAction(null);
-      queryClient.invalidateQueries({ queryKey: ['attendance', selectedSessionId] });
+      setUndo(null);
+      setReason('');
+      setConfirmedStudentIds([]);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['attendance', scope, variables.sessionId] }),
+        queryClient.invalidateQueries({ queryKey: ['sessions'] }),
+        queryClient.invalidateQueries({ queryKey: ['work-items'] }),
+        queryClient.invalidateQueries({ queryKey: ['student-profile'] }),
+      ]);
+      if (variables.next) {
+        const { data: sessions } = await sessionsQuery.refetch();
+        const next = sessions
+          ?.filter(
+            (session) =>
+              session.id !== variables.sessionId &&
+              (session.student_count || 0) > (session.attendance_count || 0)
+          )
+          .sort((a, b) => a.start_time.localeCompare(b.start_time) || a.id.localeCompare(b.id))[0];
+        if (next) selectSession(next.id);
+        else toast.success(t('attendance.noNextSession'));
+      }
     },
-    onError: (error) => {
-      console.error('Save attendance error:', error);
-      toast.error(t('errors.INTERNAL_ERROR'));
-    },
+    onError: (error) => handleApiError(error as AxiosError<ApiErrorData>, t),
   });
-
-  const handleFetchAttendance = (sessionId: string, force = false) => {
-    if (isDirty && !force) {
+  const handleFetchAttendance = (sessionId: string) => {
+    if (saveMutation.isPending) return;
+    if (isDirty) {
       setPendingAction({ type: 'session', id: sessionId });
       return;
     }
-    setSelectedSessionId(sessionId);
-
-    // Auto-collapse sessions list on mobile after selection
-    if (window.innerWidth < 1024) {
-      setIsSessionsExpanded(false);
-      setIsControlsExpanded(false);
-    }
+    selectSession(sessionId);
   };
-
-  const handleDateChange = (newDate: string) => {
-    if (isDirty) {
-      setPendingAction({ type: 'date', date: newDate });
-    } else {
-      setSelectedDate(newDate);
-      setSelectedSessionId(null);
-      setLocalAttendance([]);
-
-      // Auto-expand sessions list on mobile to let user select a new session
-      if (window.innerWidth < 1024) {
-        setIsSessionsExpanded(true);
-      }
-    }
+  const changeDate = (date: string) => {
+    resetDraft();
+    setSelectedDate(date);
+    setSelectedSessionId('');
+    setIsSessionsExpanded(true);
   };
-
+  const handleDateChange = (date: string) => {
+    if (!isDateKey(date) || saveMutation.isPending) return;
+    if (isDirty) setPendingAction({ type: 'date', date });
+    else changeDate(date);
+  };
   const handleStatusChange = (studentId: string, status: AttendanceRecord['status']) => {
+    if (!policy?.editable || saveMutation.isPending) return;
     setIsDirty(true);
-    setLocalAttendance((prev) =>
-      prev.map((record) => (record.student_id === studentId ? { ...record, status } : record))
+    setUndo(null);
+    setLocalAttendance((records) =>
+      records.map((record) => (record.student_id === studentId ? { ...record, status } : record))
     );
   };
-
+  const unmarkedCount = localAttendance.filter(
+    (record) => record.status === ATTENDANCE_STATUS.NONE
+  ).length;
   const handleMarkAllAsPresent = () => {
+    if (!policy?.editable || !unmarkedCount || saveMutation.isPending) return;
+    setUndo({ records: localAttendance, dirty: isDirty });
     setIsDirty(true);
-    setLocalAttendance((prev) =>
-      prev.map((record) => ({ ...record, status: ATTENDANCE_STATUS.PRESENT }))
+    setLocalAttendance((records) =>
+      records.map((record) =>
+        record.status === ATTENDANCE_STATUS.NONE
+          ? { ...record, status: ATTENDANCE_STATUS.PRESENT }
+          : record
+      )
     );
   };
-
-  const handleSave = async () => {
-    const records = localAttendance
-      .filter((r) => r.status !== ATTENDANCE_STATUS.NONE)
-      .map((r) => ({ student_id: r.student_id, status: r.status }));
-
-    if (records.length === 0) {
-      toast.error(t('attendance.selectSessionDesc'));
+  const handleUndo = () => {
+    if (undo && !saveMutation.isPending) {
+      setLocalAttendance(undo.records);
+      setIsDirty(undo.dirty);
+      setUndo(null);
+    }
+  };
+  const handleSave = (next = false) => {
+    if (!policy?.editable || saveMutation.isPending) return;
+    if (policy.reasonRequired && !reason.trim()) {
+      toast.error(t('errors.ATTENDANCE_REASON_REQUIRED'));
       return;
     }
-
-    saveMutation.mutate(records);
+    const records = localAttendance
+      .filter((record) => record.status !== ATTENDANCE_STATUS.NONE)
+      .map(({ student_id, status }) => ({ student_id, status }));
+    if (!records.length) return;
+    saveMutation.mutate({
+      next,
+      sessionId: selectedSessionId,
+      records,
+      expectedVersion: version,
+      reason,
+      confirmedStudentIds: confirmedStudentIds.filter((id) =>
+        records.some((record) => record.student_id === id)
+      ),
+    });
   };
-
+  const confirmStudent = (student: Student) => {
+    if (
+      !policy?.canConfirmStudents ||
+      saveMutation.isPending ||
+      localAttendance.some((record) => record.student_id === student.id)
+    )
+      return;
+    setLocalAttendance((records) => [
+      ...records,
+      {
+        student_id: student.id,
+        full_name: student.full_name,
+        email: student.email,
+        status: ATTENDANCE_STATUS.NONE,
+        attendance_id: null,
+        marked_at: null,
+      },
+    ]);
+    setConfirmedStudentIds((ids) => [...ids, student.id]);
+    setIsDirty(true);
+    setUndo(null);
+  };
   const stats: AttendanceStats = useMemo(
     () => ({
       present: localAttendance.filter((r) => r.status === ATTENDANCE_STATUS.PRESENT).length,
@@ -136,72 +257,39 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
     }),
     [localAttendance]
   );
-
   const filteredAttendance = useMemo(
     () =>
       localAttendance.filter(
-        (r) => {
-          const normalizedSearch = normalizeSearchStr(searchTerm);
-          return (
-            normalizeSearchStr(r.full_name).includes(normalizedSearch) ||
-            (r.email && normalizeSearchStr(r.email).includes(normalizedSearch))
-          );
-        }
+        (record) =>
+          normalizeSearchStr(record.full_name).includes(normalizeSearchStr(searchTerm)) ||
+          (record.email &&
+            normalizeSearchStr(record.email).includes(normalizeSearchStr(searchTerm)))
       ),
     [localAttendance, searchTerm]
   );
-
   const confirmLeave = () => {
     if (blocker.state === 'blocked') {
+      resetDraft();
       blocker.proceed();
-    } else if (pendingAction) {
-      setIsDirty(false);
-      if (pendingAction.type === 'date' && pendingAction.date) {
-        setSelectedDate(pendingAction.date);
-        setSelectedSessionId(null);
-        setLocalAttendance([]);
-        // Auto-expand sessions list on mobile
-        if (window.innerWidth < 1024) {
-          setIsSessionsExpanded(true);
-        }
-      } else if (pendingAction.type === 'session' && pendingAction.id) {
-        handleFetchAttendance(pendingAction.id, true);
-      }
-      setPendingAction(null);
-    }
+    } else if (pendingAction?.type === 'date' && pendingAction.date) changeDate(pendingAction.date);
+    else if (pendingAction?.id) selectSession(pendingAction.id);
+    setPendingAction(null);
   };
-
   const cancelLeave = () => {
     if (blocker.state === 'blocked') blocker.reset();
     setPendingAction(null);
   };
-
-  const isReadOnly = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selDate = new Date(selectedDate);
-    selDate.setHours(0, 0, 0, 0);
-    // Read-only if it's NOT today (either past or future)
-    return selDate.getTime() !== today.getTime();
-  }, [selectedDate]);
-
-  const isFutureDate = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const selDate = new Date(selectedDate);
-    selDate.setHours(0, 0, 0, 0);
-    return selDate > today;
-  }, [selectedDate]);
-
   return {
     sessions: sessionsQuery.data || [],
     selectedSession: attendanceQuery.data?.session || null,
     attendance: localAttendance,
     selectedDate,
-    isReadOnly,
-    isFutureDate,
+    isReadOnly: !policy?.editable,
+    isFutureDate: policy?.isFuture ?? false,
     sessionsLoading: sessionsQuery.isLoading,
     attendanceLoading: attendanceQuery.isLoading,
+    sessionsQuery,
+    attendanceQuery,
     saving: saveMutation.isPending,
     searchTerm,
     setSearchTerm,
@@ -218,21 +306,21 @@ export const useAttendance = (isAttendanceEnabled: boolean) => {
     handleStatusChange,
     handleMarkAllAsPresent,
     handleSave,
+    unmarkedCount,
+    handleUndo,
+    canUndo: !!undo,
+    policy,
+    reason,
+    setReason,
+    confirmStudent,
+    reloadAttendance: async () => {
+      resetDraft();
+      await attendanceQuery.refetch();
+    },
     handlePrevDay: () =>
-      handleDateChange(
-        format(
-          new Date(new Date(selectedDate).setDate(new Date(selectedDate).getDate() - 1)),
-          'yyyy-MM-dd'
-        )
-      ),
-    handleNextDay: () =>
-      handleDateChange(
-        format(
-          new Date(new Date(selectedDate).setDate(new Date(selectedDate).getDate() + 1)),
-          'yyyy-MM-dd'
-        )
-      ),
-    handleToday: () => handleDateChange(format(new Date(), 'yyyy-MM-dd')),
+      handleDateChange(format(addDays(parseISO(selectedDate), -1), 'yyyy-MM-dd')),
+    handleNextDay: () => handleDateChange(format(addDays(parseISO(selectedDate), 1), 'yyyy-MM-dd')),
+    handleToday: () => handleDateChange(businessDate()),
     confirmLeave,
     cancelLeave,
     fetchAttendance: handleFetchAttendance,

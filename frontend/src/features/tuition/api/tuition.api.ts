@@ -78,8 +78,8 @@ export interface RecordPaymentDto {
 const BASE = '/tuitions';
 
 export const tuitionApi = {
-  list: (params?: Record<string, string>) =>
-    api.get<TuitionListResponse>(BASE, { params }).then((r) => r.data),
+  list: (params?: Record<string, string>, signal?: AbortSignal) =>
+    api.get<TuitionListResponse>(BASE, { params, signal }).then((r) => r.data),
 
   overdue: () => api.get<Tuition[]>(`${BASE}/overdue`).then((r) => r.data),
 

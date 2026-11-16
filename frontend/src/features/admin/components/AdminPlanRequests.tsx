@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Check, X, Clock, Building, Zap, Crown, Shield, FileText } from 'lucide-react';
@@ -5,6 +6,7 @@ import { getPlanRequests, approvePlanRequest, rejectPlanRequest } from '@/featur
 import toast from 'react-hot-toast';
 import { PLAN_REQUEST_STATUS, PLAN_REQUEST_ACTIONS } from '@/utils/constants';
 import PageHeader from '@/components/common/PageHeader';
+import RowActions from '@/components/common/RowActions';
 import { Card, Badge, Button } from '@/components/common/UI';
 import PageLoading from '@/components/common/PageLoading';
 import type { PlanRequest } from '@/types';
@@ -14,6 +16,7 @@ const AdminPlanRequests: React.FC = () => {
   const { t, i18n } = useTranslation();
   const [requests, setRequests] = useState<PlanRequest[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     id: string | null;
@@ -21,15 +24,17 @@ const AdminPlanRequests: React.FC = () => {
   }>({ isOpen: false, id: null, action: PLAN_REQUEST_ACTIONS.APPROVE });
 
   const fetchRequests = useCallback(async () => {
+    setLoading(true);
+    setLoadError(false);
     try {
       const data = await getPlanRequests();
       setRequests(data);
-    } catch (err) {
-      toast.error(t('common.error'));
+    } catch {
+      setLoadError(true);
     } finally {
       setLoading(false);
     }
-  }, [t]);
+  }, []);
 
   useEffect(() => {
     fetchRequests();
@@ -65,6 +70,7 @@ const AdminPlanRequests: React.FC = () => {
   };
 
   if (loading) return <PageLoading />;
+  if (loadError) return <PageError onRetry={fetchRequests} />;
 
   return (
     <div className="h-full flex flex-col overflow-hidden">
@@ -87,22 +93,22 @@ const AdminPlanRequests: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           <Card className="overflow-hidden" scrollable={true}>
             <div className="overflow-x-auto">
-              <table className="w-full text-left">
+              <table className="management-table w-full table-fixed text-left">
                 <thead className="sticky top-0 z-10 bg-gray-50 dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 shadow-sm">
                   <tr>
-                    <th className="px-3 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="px-3 py-3 sm:px-3 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest ">
                       {t('admin.organization')}
                     </th>
-                    <th className="hidden sm:table-cell px-3 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="hidden xl:table-cell px-3 py-3 sm:px-3 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-40">
                       {t('admin.plan')}
                     </th>
-                    <th className="px-3 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="px-2 py-3 text-[10px] font-black uppercase tracking-normal text-gray-400  sm:px-3 sm:py-4 w-24 sm:w-32">
                       {t('common.status')}
                     </th>
-                    <th className="hidden sm:table-cell px-3 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                    <th className="hidden xl:table-cell px-3 py-3 sm:px-3 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest w-32">
                       {t('admin.createdAt')}
                     </th>
-                    <th className="px-3 py-3 sm:px-6 sm:py-4 text-[10px] font-black text-gray-400 uppercase tracking-widest text-right">
+                    <th className="whitespace-nowrap px-2 py-3 text-right text-[10px] font-black uppercase tracking-normal text-gray-400  sm:px-3 sm:py-4 w-16 sm:w-28">
                       {t('common.actions')}
                     </th>
                   </tr>
@@ -124,9 +130,9 @@ const AdminPlanRequests: React.FC = () => {
                         key={req.id}
                         className="hover:bg-gray-50/50 dark:hover:bg-gray-900/30 transition-colors group"
                       >
-                        <td className="px-3 py-3 sm:px-6 sm:py-5 whitespace-nowrap">
+                        <td className="px-3 py-3 sm:px-3 sm:py-5 whitespace-nowrap">
                           <div className="flex items-center gap-2 sm:gap-3">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-indigo-50 dark:bg-indigo-900/30 flex items-center justify-center text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-800/30 shadow-sm shrink-0">
+                            <div className="hidden size-10 shrink-0 items-center justify-center rounded-xl border border-indigo-100 bg-indigo-50 text-indigo-600 shadow-sm dark:border-indigo-800/30 dark:bg-indigo-900/30 dark:text-indigo-400 sm:flex">
                               <Building size={16} className="sm:w-5 sm:h-5" />
                             </div>
                             <div className="min-w-0">
@@ -137,7 +143,7 @@ const AdminPlanRequests: React.FC = () => {
                                 <p className="text-[10px] text-primary font-bold truncate">
                                   {req.contact_email}
                                 </p>
-                                <span className="sm:hidden px-1.5 py-0.5 bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 text-[8px] font-black uppercase rounded tracking-widest border border-blue-200 dark:border-blue-800 shrink-0 w-fit">
+                                <span className="w-fit max-w-full truncate rounded border border-blue-200 bg-blue-50 px-1.5 py-0.5 text-[8px] font-bold uppercase text-blue-600 dark:border-blue-800 dark:bg-blue-900/30 dark:text-blue-400 xl:hidden">
                                   {t(
                                     `admin.planNames.${(req.plan_name || 'FREE').split(' ')[0].toUpperCase()}`
                                   )}
@@ -146,7 +152,7 @@ const AdminPlanRequests: React.FC = () => {
                             </div>
                           </div>
                         </td>
-                        <td className="hidden sm:table-cell px-3 py-3 sm:px-6 sm:py-5">
+                        <td className="hidden xl:table-cell px-3 py-3 sm:px-3 sm:py-5">
                           <div className="flex items-center gap-3">
                             <div
                               className={`w-9 h-9 rounded-lg flex items-center justify-center shadow-sm border ${
@@ -174,10 +180,10 @@ const AdminPlanRequests: React.FC = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="px-3 py-3 sm:px-6 sm:py-5">
+                        <td className="px-2 py-3 sm:px-3 sm:py-5">
                           <RequestStatusBadge status={req.status} labelFunc={getStatusLabel} />
                         </td>
-                        <td className="hidden sm:table-cell px-3 py-3 sm:px-6 sm:py-5">
+                        <td className="hidden xl:table-cell px-3 py-3 sm:px-3 sm:py-5">
                           <div className="flex flex-col">
                             <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
                               {new Date(req.created_at).toLocaleDateString(
@@ -192,40 +198,33 @@ const AdminPlanRequests: React.FC = () => {
                             </span>
                           </div>
                         </td>
-                        <td className="px-3 py-3 sm:px-6 sm:py-5 text-right">
+                        <td className="px-2 py-3 text-right sm:px-3 sm:py-5">
                           {req.status === PLAN_REQUEST_STATUS.PENDING && (
-                            <div className="flex justify-end gap-1.5 sm:gap-2">
-                              <Button
-                                size="xs"
-                                variant="secondary"
-                                onClick={() =>
-                                  setConfirmModal({
-                                    isOpen: true,
-                                    id: req.id,
-                                    action: PLAN_REQUEST_ACTIONS.APPROVE,
-                                  })
-                                }
-                                className="bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/30 px-2 sm:px-3 flex items-center justify-center gap-0 sm:gap-1.5"
-                              >
-                                <Check size={14} strokeWidth={4} />
-                                <span className="hidden sm:inline">{t('admin.approve')}</span>
-                              </Button>
-                              <Button
-                                size="xs"
-                                variant="destructive"
-                                onClick={() =>
-                                  setConfirmModal({
-                                    isOpen: true,
-                                    id: req.id,
-                                    action: PLAN_REQUEST_ACTIONS.REJECT,
-                                  })
-                                }
-                                className="shadow-rose-500/30 px-2 sm:px-3 flex items-center justify-center gap-0 sm:gap-1.5"
-                              >
-                                <X size={14} strokeWidth={4} />
-                                <span className="hidden sm:inline">{t('admin.reject')}</span>
-                              </Button>
-                            </div>
+                            <RowActions
+                              actions={[
+                                {
+                                  label: t('admin.approve'),
+                                  icon: <Check size={16} />,
+                                  onClick: () =>
+                                    setConfirmModal({
+                                      isOpen: true,
+                                      id: req.id,
+                                      action: PLAN_REQUEST_ACTIONS.APPROVE,
+                                    }),
+                                },
+                                {
+                                  label: t('admin.reject'),
+                                  icon: <X size={16} />,
+                                  tone: 'danger',
+                                  onClick: () =>
+                                    setConfirmModal({
+                                      isOpen: true,
+                                      id: req.id,
+                                      action: PLAN_REQUEST_ACTIONS.REJECT,
+                                    }),
+                                },
+                              ]}
+                            />
                           )}
                         </td>
                       </tr>
@@ -302,7 +301,7 @@ const RequestStatusBadge: React.FC<{ status: string; labelFunc: (s: string) => s
   return (
     <Badge
       variant={isPending ? 'warning' : isApproved ? 'success' : 'destructive'}
-      className="gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-4 sm:py-1.5 text-[8px] sm:text-[10px] whitespace-nowrap"
+      className="gap-1 sm:gap-1.5 px-2 py-0.5 sm:px-4 sm:py-1.5 max-w-full text-[8px] sm:text-[10px] whitespace-normal sm:whitespace-nowrap"
     >
       {isPending && <Clock size={10} className="sm:w-3 sm:h-3" />}
       {isApproved && <Check size={10} className="sm:w-3 sm:h-3" />}

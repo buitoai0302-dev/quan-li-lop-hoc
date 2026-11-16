@@ -1,8 +1,13 @@
-import { ERROR_CODES } from '../utils/constants';
+import { ERROR_CODES, SESSION_STATUS } from '../utils/constants';
 import pool from '../db';
-import { ValidationError, NotFoundError, scheduleWriteError } from '../utils/errors';
-import { syncEventToGoogle, deleteEventFromGoogle } from './google.service';
+import {
+  ValidationError,
+  NotFoundError,
+  ScheduleConflictError,
+  scheduleWriteError,
+} from '../utils/errors';
 import { lockScheduleWrites } from './schedule-write.service';
+import { assertTenantReferences } from './tenant-reference.service';
 
 export interface GetScheduleParams {
   startDate: string;
@@ -47,11 +52,20 @@ export class ScheduleService {
              c.name as class_name, 
              t.full_name as teacher_name, 
              r.name as room_name,
-             r.branch_id
+             r.branch_id,
+             (SELECT count(DISTINCT student_id)::int FROM (
+                SELECT ars.student_id FROM attendance_session_students ars
+                  JOIN students st ON st.id = ars.student_id AND st.tenant_id = ars.tenant_id AND NOT st.is_deleted
+                  WHERE ars.tenant_id = s.tenant_id AND ars.session_id = s.id
+                UNION SELECT student_id FROM attendance a WHERE a.tenant_id = s.tenant_id AND a.session_id = s.id
+                UNION SELECT cs.student_id FROM class_students cs JOIN students st ON st.id = cs.student_id AND st.tenant_id = cs.tenant_id AND NOT st.is_deleted
+                  WHERE cs.tenant_id = s.tenant_id AND cs.class_id = s.class_id AND s.session_date >= (CURRENT_TIMESTAMP AT TIME ZONE 'Asia/Ho_Chi_Minh')::date
+             ) roster) AS student_count,
+             (SELECT count(*)::int FROM attendance a WHERE a.tenant_id = s.tenant_id AND a.session_id = s.id) AS attendance_count
       FROM schedule_sessions s
-      JOIN classes c ON s.class_id = c.id AND c.is_deleted = false
-      JOIN teachers t ON s.teacher_id = t.id AND t.is_deleted = false
-      JOIN rooms r ON s.room_id = r.id AND r.is_deleted = false
+      JOIN classes c ON s.class_id = c.id AND c.tenant_id = s.tenant_id AND c.is_deleted = false
+      JOIN teachers t ON s.teacher_id = t.id AND t.tenant_id = s.tenant_id AND t.is_deleted = false
+      JOIN rooms r ON s.room_id = r.id AND r.tenant_id = s.tenant_id AND r.is_deleted = false
       WHERE s.tenant_id = $1 
         AND s.session_date >= $2 
         AND s.session_date <= $3
@@ -85,7 +99,7 @@ export class ScheduleService {
       );
       if (studentRes.rows.length > 0) {
         sqlParams.push(studentRes.rows[0].id);
-        sql += ` AND s.class_id IN (SELECT class_id FROM class_students WHERE student_id = $${sqlParams.length})`;
+        sql += ` AND s.class_id IN (SELECT class_id FROM class_students WHERE tenant_id = $1 AND student_id = $${sqlParams.length})`;
         if (params.classId) {
           sqlParams.push(params.classId);
           sql += ` AND s.class_id = $${sqlParams.length}`;
@@ -115,79 +129,88 @@ export class ScheduleService {
   }
 
   static async createSession(tenantId: string, userId: string | undefined, data: CreateSessionDTO) {
+    try {
+      const [session] = await ScheduleService.insertSessions(tenantId, [data]);
+      return { success: true, data: session };
+    } catch (error) {
+      if (error instanceof ScheduleConflictError) {
+        return { success: false, conflicts: error.conflicts };
+      }
+      throw error;
+    }
+  }
+
+  static async createSessions(
+    tenantId: string,
+    userId: string | undefined,
+    sessions: CreateSessionDTO[]
+  ) {
+    const created = await ScheduleService.insertSessions(tenantId, sessions);
+    return created;
+  }
+
+  private static async insertSessions(tenantId: string, sessions: CreateSessionDTO[]) {
     const client = await pool.connect();
-    let sessionData;
+    const created = [];
+    let slot: ScheduleConflictError['slot'];
     try {
       await client.query('BEGIN');
       await lockScheduleWrites(client, tenantId);
-
-      const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)`;
-      const conflictParams = [
+      await assertTenantReferences(
+        client,
         tenantId,
-        data.teacherId,
-        data.roomId,
-        data.classId,
-        data.sessionDate,
-        data.startTime,
-        data.endTime,
-      ];
+        'classes',
+        sessions.map(({ classId }) => classId)
+      );
+      await assertTenantReferences(
+        client,
+        tenantId,
+        'rooms',
+        sessions.map(({ roomId }) => roomId)
+      );
+      await assertTenantReferences(
+        client,
+        tenantId,
+        'teachers',
+        sessions.map(({ teacherId }) => teacherId)
+      );
 
-      const conflictResult = await client.query(conflictSql, conflictParams);
+      for (const [index, data] of sessions.entries()) {
+        slot = { index, date: data.sessionDate, startTime: data.startTime, endTime: data.endTime };
+        const params = [
+          tenantId,
+          data.teacherId,
+          data.roomId,
+          data.classId,
+          data.sessionDate,
+          data.startTime,
+          data.endTime,
+        ];
+        const conflicts = await client.query(
+          'SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7)',
+          params
+        );
+        if (conflicts.rows.length) throw new ScheduleConflictError(conflicts.rows, slot);
 
-      if (conflictResult.rows.length > 0) {
-        await client.query('ROLLBACK');
-        return { success: false, conflicts: conflictResult.rows };
+        const result = await client.query(
+          `INSERT INTO schedule_sessions
+             (tenant_id, teacher_id, room_id, class_id, session_date, start_time, end_time, session_type, notes)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+           RETURNING *, session_date::text AS session_date`,
+          [...params, data.sessionType || 'lecture', data.notes || '']
+        );
+        created.push(result.rows[0]);
       }
-
-      const insertSql = `
-        INSERT INTO schedule_sessions 
-          (tenant_id, class_id, room_id, teacher_id, session_date, start_time, end_time, session_type, notes)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-        RETURNING *, session_date::text as session_date
-      `;
-      const insertParams = [
-        tenantId,
-        data.classId,
-        data.roomId,
-        data.teacherId,
-        data.sessionDate,
-        data.startTime,
-        data.endTime,
-        data.sessionType || 'lecture',
-        data.notes || '',
-      ];
-
-      const newSession = await client.query(insertSql, insertParams);
-      sessionData = newSession.rows[0];
 
       await client.query('COMMIT');
     } catch (error) {
       await client.query('ROLLBACK');
-      throw scheduleWriteError(error);
+      throw scheduleWriteError(error, slot);
     } finally {
       client.release();
     }
 
-    if (userId) {
-      const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [data.classId]);
-      const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [data.roomId]);
-      const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [
-        data.teacherId,
-      ]);
-
-      await syncEventToGoogle(userId, {
-        id: sessionData.id,
-        className: classRes.rows[0]?.name || 'Class',
-        roomName: roomRes.rows[0]?.name || 'Room',
-        teacherName: teacherRes.rows[0]?.full_name,
-        teacherId: data.teacherId,
-        notes: sessionData.notes,
-        date: sessionData.session_date,
-        startTime: sessionData.start_time,
-        endTime: sessionData.end_time,
-      });
-    }
-    return { success: true, data: sessionData };
+    return created;
   }
 
   static async updateSession(
@@ -218,6 +241,9 @@ export class ScheduleService {
       const newSessionDate = data.sessionDate || session.session_date;
       const newStartTime = data.startTime || session.start_time;
       const newEndTime = data.endTime || session.end_time;
+      await assertTenantReferences(client, tenantId, 'classes', [data.classId]);
+      await assertTenantReferences(client, tenantId, 'rooms', [data.roomId]);
+      await assertTenantReferences(client, tenantId, 'teachers', [data.teacherId]);
 
       const conflictSql = `SELECT * FROM check_schedule_conflict($1, $2, $3, $4, $5, $6, $7, $8)`;
       const conflictParams = [
@@ -267,45 +293,17 @@ export class ScheduleService {
       client.release();
     }
 
-    if (userId) {
-      const classRes = await pool.query('SELECT name FROM classes WHERE id = $1', [
-        sessionData.class_id,
-      ]);
-      const roomRes = await pool.query('SELECT name FROM rooms WHERE id = $1', [
-        sessionData.room_id,
-      ]);
-      const teacherRes = await pool.query('SELECT full_name FROM teachers WHERE id = $1', [
-        sessionData.teacher_id,
-      ]);
-
-      await syncEventToGoogle(userId, {
-        id: sessionData.id,
-        className: classRes.rows[0]?.name || 'Class',
-        roomName: roomRes.rows[0]?.name || 'Room',
-        teacherName: teacherRes.rows[0]?.full_name,
-        teacherId: sessionData.teacher_id,
-        notes: sessionData.notes,
-        date: sessionData.session_date,
-        startTime: sessionData.start_time,
-        endTime: sessionData.end_time,
-      });
-    }
-
     return { success: true, data: sessionData };
   }
 
   static async deleteSession(tenantId: string, userId: string | undefined, sessionId: string) {
     const result = await pool.query(
-      `UPDATE schedule_sessions SET status = 'cancelled' WHERE id = $1 AND tenant_id = $2 RETURNING *`,
-      [sessionId, tenantId]
+      'UPDATE schedule_sessions SET status = $3 WHERE id = $1 AND tenant_id = $2 RETURNING id',
+      [sessionId, tenantId, SESSION_STATUS.CANCELLED]
     );
 
     if (result.rows.length === 0) {
       throw new NotFoundError('Session not found', ERROR_CODES.NOT_FOUND);
-    }
-
-    if (userId) {
-      await deleteEventFromGoogle(userId, sessionId);
     }
 
     return true;

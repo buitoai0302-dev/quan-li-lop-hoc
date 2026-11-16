@@ -1,3 +1,4 @@
+import PageError from '@/components/common/PageError';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatDistanceToNow } from 'date-fns';
@@ -14,7 +15,8 @@ const ActivityLog: React.FC = () => {
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(20);
 
-  const { data, isLoading: loading } = useActivities(page, limit);
+  const pageQuery = useActivities(page, limit);
+  const { data, isLoading: loading } = pageQuery;
 
   const activities = data?.activities || [];
   const pagination = data?.pagination || { page: 1, totalPages: 1, total: 0, limit: 20 };
@@ -44,6 +46,15 @@ const ActivityLog: React.FC = () => {
       return dateStr;
     }
   };
+
+  const failedQueries = [pageQuery].filter((query) => query.isError && query.data === undefined);
+  if (failedQueries.length > 0)
+    return (
+      <PageError
+        retrying={failedQueries.some((query) => query.isFetching)}
+        onRetry={() => Promise.all(failedQueries.map((query) => query.refetch()))}
+      />
+    );
 
   return (
     <div className="h-full flex flex-col overflow-hidden">

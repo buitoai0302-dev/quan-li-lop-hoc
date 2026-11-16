@@ -4,6 +4,7 @@ import { LayoutGrid, ChevronUp, ChevronDown } from 'lucide-react';
 import { Card } from '@/components/common/UI';
 import PageLoading from '@/components/common/PageLoading';
 import type { Session } from '../types';
+import { DESKTOP_MEDIA_QUERY, useMediaQuery } from '@/hooks/useMediaQuery';
 
 interface SessionListProps {
   sessions: Session[];
@@ -23,32 +24,42 @@ const SessionList: React.FC<SessionListProps> = ({
   onSelectSession,
 }) => {
   const { t } = useTranslation();
+  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
+  const sessionsId = React.useId();
 
   return (
-    <div
-      className={`w-full lg:w-72 lg:h-full shrink-0 flex flex-col transition-all duration-300 ${isSessionsExpanded ? 'h-[200px] sm:h-[240px] lg:h-full' : 'h-12 lg:h-full'}`}
-    >
+    <div className="flex w-full shrink-0 flex-col lg:h-full lg:w-60 xl:w-72">
       <Card
         className="flex-1 flex flex-col overflow-hidden"
+        bodyClassName="max-h-40 lg:max-h-none"
         header={
-          <div
-            className="flex items-center justify-between w-full cursor-pointer lg:cursor-default"
-            onClick={() => window.innerWidth < 1024 && setIsSessionsExpanded(!isSessionsExpanded)}
-          >
-            <div className="flex items-center gap-2">
-              <LayoutGrid size={14} className="text-gray-400" />
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-slate-400">
-                {t('attendance.sessions')}
+          <div className="flex items-center justify-between w-full">
+            <div className="flex min-w-0 items-center gap-2">
+              <LayoutGrid size={14} className="shrink-0 text-gray-400" />
+              <h3 className="truncate text-xs font-semibold text-slate-600 dark:text-slate-300">
+                {!isDesktop && !isSessionsExpanded && selectedSession
+                  ? selectedSession.class_name
+                  : t('attendance.sessions')}
               </h3>
             </div>
-            <button className="p-1.5 bg-slate-50 dark:bg-slate-800 text-slate-400 dark:text-slate-300 hover:text-primary dark:hover:text-blue-400 border border-slate-200 dark:border-slate-700 rounded-lg transition-all active:scale-95 lg:hidden">
+            <button
+              type="button"
+              aria-label={t('attendance.sessions')}
+              aria-expanded={isSessionsExpanded}
+              aria-controls={sessionsId}
+              onClick={() => setIsSessionsExpanded(!isSessionsExpanded)}
+              className="-my-2 ml-2 inline-flex size-11 shrink-0 items-center justify-center rounded-lg border border-slate-200 bg-slate-50 text-slate-600 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-blue-400 lg:hidden"
+            >
               {isSessionsExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
           </div>
         }
-        scrollable={isSessionsExpanded || window.innerWidth >= 1024}
+        scrollable={isSessionsExpanded || isDesktop}
       >
-        <div className={`${!isSessionsExpanded && 'hidden lg:block'} p-3 space-y-2`}>
+        <div
+          id={sessionsId}
+          className={`${!isSessionsExpanded && 'hidden lg:block'} space-y-2 p-2 lg:p-3`}
+        >
           {sessionsLoading ? (
             <PageLoading />
           ) : sessions.length === 0 ? (
@@ -62,7 +73,7 @@ const SessionList: React.FC<SessionListProps> = ({
               <button
                 key={s.id}
                 onClick={() => onSelectSession(s.id)}
-                className={`w-full text-left px-4 py-3 rounded-xl transition-all duration-200 ${selectedSession?.id === s.id ? 'bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]' : 'hover:bg-gray-50 dark:hover:bg-slate-800/50 text-gray-600 dark:text-gray-400'}`}
+                className={`w-full rounded-lg border px-3 py-2 text-left transition-colors duration-200 lg:px-4 lg:py-3 ${selectedSession?.id === s.id ? 'border-indigo-200 bg-indigo-50 text-indigo-800 dark:border-indigo-400/35 dark:bg-indigo-400/10 dark:text-indigo-200' : 'border-transparent text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800/50'}`}
               >
                 <div className="font-bold text-sm truncate">{s.class_name}</div>
                 <div className="text-[10px] opacity-70 font-medium">

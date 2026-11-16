@@ -31,7 +31,7 @@ const app = express();
 app.use(express.json());
 app.use(pinoHttp({ logger, autoLogging: false }));
 
-// IMPORTANT: Register mock middlewares manually if needed, 
+// IMPORTANT: Register mock middlewares manually if needed,
 // but since they are imported in tuition.routes, the mock will apply.
 app.use('/api/tuitions', tuitionRoutes);
 app.use(errorMiddleware);
@@ -43,9 +43,7 @@ describe('Tuition Integration Tests', () => {
 
   describe('GET /api/tuitions', () => {
     it('should return 200 and a list of tuitions', async () => {
-      const mockData = [
-        { id: '1', title: 'Tuition 1', amount: 1000 },
-      ];
+      const mockData = [{ id: '1', title: 'Tuition 1', amount: 1000 }];
       (TuitionService.getTuitions as jest.Mock<any>).mockResolvedValue(mockData);
 
       const res = await request(app).get('/api/tuitions');
@@ -61,15 +59,13 @@ describe('Tuition Integration Tests', () => {
       const mockResponse = { id: '2', title: 'New Tuition' };
       (TuitionService.createTuition as jest.Mock<any>).mockResolvedValue(mockResponse);
 
-      const res = await request(app)
-        .post('/api/tuitions')
-        .send({
-          class_id: '11111111-1111-4111-8111-111111111111',
-          student_id: '22222222-2222-4222-8222-222222222222',
-          title: 'New Tuition',
-          amount: 500000,
-          due_date: '2023-12-31'
-        });
+      const res = await request(app).post('/api/tuitions').send({
+        class_id: '11111111-1111-4111-8111-111111111111',
+        student_id: '22222222-2222-4222-8222-222222222222',
+        title: 'New Tuition',
+        amount: 500000,
+        due_date: '2023-12-31',
+      });
 
       expect(res.status).toBe(201);
       expect(res.body).toEqual(mockResponse);
@@ -81,15 +77,50 @@ describe('Tuition Integration Tests', () => {
     });
 
     it('should return 400 validation error if required fields are missing', async () => {
-      const res = await request(app)
-        .post('/api/tuitions')
-        .send({
-          title: 'Missing other fields'
-        });
+      const res = await request(app).post('/api/tuitions').send({
+        title: 'Missing other fields',
+      });
 
       // Assuming zod validation is in place on the route
       expect(res.status).toBe(400);
       expect(res.body.code).toBe('VALIDATION_ERROR');
     });
+  });
+
+  it('rejects malformed tuition updates before calling the service', async () => {
+    const res = await request(app)
+      .patch('/api/tuitions/22222222-2222-4222-8222-222222222222')
+      .send({ discount: -1 });
+    expect(res.status).toBe(400);
+    expect(res.body.code).toBe('VALIDATION_ERROR');
+    expect(TuitionService.updateTuition).not.toHaveBeenCalled();
+  });
+
+  it('accepts the Other payment method displayed in the payment form', async () => {
+    (TuitionService.recordPayment as jest.Mock<any>).mockResolvedValue({
+      payment: {},
+      tuition: {},
+    });
+    const res = await request(app)
+      .post('/api/tuitions/22222222-2222-4222-8222-222222222222/payments')
+      .send({ amount_paid: 123.45, payment_method: 'other', payment_date: '2026-11-14' });
+    expect(res.status).toBe(201);
+  });
+
+  it('rejects impossible payment dates and invalid bulk discounts before writing', async () => {
+    const payment = await request(app)
+      .post('/api/tuitions/22222222-2222-4222-8222-222222222222/payments')
+      .send({ amount_paid: 100, payment_date: '2026-02-31' });
+    expect(payment.status).toBe(400);
+    const bulk = await request(app).post('/api/tuitions/bulk-generate').send({
+      class_id: '11111111-1111-4111-8111-111111111111',
+      amount: 100,
+      discount: 200,
+      due_date: '2026-11-14',
+      billing_period: '2026-11',
+    });
+    expect(bulk.status).toBe(400);
+    expect(TuitionService.recordPayment).not.toHaveBeenCalled();
+    expect(TuitionService.bulkGenerateTuitions).not.toHaveBeenCalled();
   });
 });

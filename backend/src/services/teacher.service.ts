@@ -183,7 +183,7 @@ export class TeacherService {
       );
     }
 
-    await pool.query('DELETE FROM refresh_tokens WHERE user_id = $1', [userResult.rows[0].id]);
+    // Password-change trigger revokes sessions in the same atomic update.
     import('./email.service').then(({ sendPasswordResetEmail }) => {
       sendPasswordResetEmail(email, resetToken).catch(() => {});
     });

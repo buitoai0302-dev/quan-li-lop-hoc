@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components */
-import React, { useEffect, useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { cva, type VariantProps } from 'class-variance-authority';
 import { X } from 'lucide-react';
@@ -42,14 +42,17 @@ const modalVariants = cva('relative flex flex-col overflow-hidden', {
 
 let scrollLockCount = 0;
 let previousBodyOverflow = '';
+const PANEL_EXIT_DURATION_MS = 180;
 
 export interface ModalProps
   extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof modalVariants> {
   isOpen: boolean;
   onClose: () => void;
+  onAfterClose?: () => void;
   title: string;
   closeLabel?: string;
   width?: React.CSSProperties['width'];
+  bodyClassName?: string;
   backdrop?: 'transparent' | 'dim' | 'none';
   closeOnBackdropClick?: boolean;
   footer?: React.ReactNode | ((requestClose: () => void) => React.ReactNode);
@@ -66,6 +69,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       size,
       placement = 'center',
       width,
+      bodyClassName,
       backdrop = placement === 'right' ? 'transparent' : 'dim',
       closeOnBackdropClick = placement !== 'right',
       footer,
@@ -74,6 +78,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
       hasUnsavedChanges = false,
       isOpen,
       onClose,
+      onAfterClose,
       title,
       closeLabel = 'Đóng / Close',
       children,
@@ -87,25 +92,76 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
     const [isConfirmingClose, setIsConfirmingClose] = useState(false);
     const modalRef = useRef<HTMLDivElement>(null);
     const dirtyRef = useRef(false);
+    const requestCloseRef = useRef<() => void>(() => {});
+    const afterCloseRef = useRef(onAfterClose);
+    const [panelContent, setPanelContent] = useState<Pick<
+      ModalProps,
+      'title' | 'children' | 'footer'
+    > | null>(null);
     const titleId = useId();
     const confirmMessageId = useId();
     const isPanel = placement === 'right';
+    const isExiting = !isOpen && isPanel && panelContent !== null;
+    const isRendered = isOpen || isExiting;
     const isModal = backdrop !== 'none';
     const panelWidth = typeof width === 'number' ? `${width}px` : width;
     const panelStyle = { ...style, '--modal-panel-width': panelWidth } as React.CSSProperties;
 
+    // Retain the last open content when a caller closes and resets its form together.
+    if (
+      isOpen &&
+      isPanel &&
+      (panelContent?.title !== title ||
+        panelContent.children !== children ||
+        panelContent.footer !== footer)
+    ) {
+      setPanelContent({ title, children, footer });
+    }
+
+    useLayoutEffect(() => {
+      if (!isExiting) return;
+      const panel = modalRef.current;
+      let cancelled = false;
+      const finish = () => {
+        if (cancelled) return;
+        setPanelContent(null);
+        afterCloseRef.current?.();
+      };
+      const animation =
+        panel?.animate && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? panel.animate(
+              [{ transform: getComputedStyle(panel).transform }, { transform: 'translateX(100%)' }],
+              {
+                duration: PANEL_EXIT_DURATION_MS,
+                easing: 'ease-in',
+                fill: 'forwards',
+              }
+            )
+          : null;
+      if (animation) void animation.finished.then(finish, finish);
+      else queueMicrotask(finish);
+      return () => {
+        cancelled = true;
+        animation?.cancel();
+      };
+    }, [isExiting]);
+
     const requestClose = () => {
-      if (closeBlocked) return;
+      if (!isOpen || closeBlocked) return;
       if (confirmCloseMessage && (dirtyRef.current || hasUnsavedChanges)) {
         setIsConfirmingClose(true);
         return;
       }
       onClose();
     };
-    const closeOnEscape = React.useEffectEvent(requestClose);
+    // Keep keyboard handlers current even when retaining panel content causes a render retry.
+    useLayoutEffect(() => {
+      requestCloseRef.current = requestClose;
+      afterCloseRef.current = onAfterClose;
+    });
 
     useEffect(() => {
-      if (!isOpen) return;
+      if (!isRendered) return;
       const opener = document.activeElement as HTMLElement | null;
       const dialog = modalRef.current;
       const focusable = () =>
@@ -113,19 +169,26 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           dialog?.querySelectorAll<HTMLElement>(
             'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
           ) || []
-        ).filter((el) => el.getClientRects().length > 0);
+        ).filter(
+          (el) => el.tabIndex >= 0 && !el.closest('[inert]') && el.getClientRects().length > 0
+        );
       (focusable()[0] || dialog)?.focus();
       if (isModal && scrollLockCount++ === 0) {
         previousBodyOverflow = document.body.style.overflow;
         document.body.style.overflow = 'hidden';
       }
       const onKeyDown = (e: KeyboardEvent) => {
+        if (e.defaultPrevented) return;
         const dialogs = document.querySelectorAll('[data-ui-dialog]');
         if (dialogs[dialogs.length - 1] !== dialog) return;
+        if (dialog?.inert) {
+          if (e.key === 'Escape' || (isModal && e.key === 'Tab')) e.preventDefault();
+          return;
+        }
         if (!isModal && !dialog?.contains(document.activeElement)) return;
         if (e.key === 'Escape') {
           e.preventDefault();
-          closeOnEscape();
+          requestCloseRef.current();
           return;
         }
         if (!isModal || e.key !== 'Tab') return;
@@ -154,12 +217,11 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
         const top = dialogs[dialogs.length - 1];
         if (opener?.isConnected && (!top || top.contains(opener))) opener.focus();
       };
-    }, [isOpen, isModal]);
+    }, [isRendered, isModal]);
 
-    if (!isOpen) {
-      if (isConfirmingClose) setIsConfirmingClose(false);
-      return null;
-    }
+    if (!isOpen && isConfirmingClose) setIsConfirmingClose(false);
+    if (!isRendered) return null;
+    const visibleContent = isExiting ? panelContent : { title, children, footer };
 
     return createPortal(
       <div
@@ -201,6 +263,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           role="dialog"
           aria-modal={isModal || undefined}
           aria-labelledby={titleId}
+          inert={isExiting}
           tabIndex={-1}
           onChangeCapture={(event) => {
             if (
@@ -221,7 +284,7 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
                 isPanel ? 'break-words' : 'truncate uppercase tracking-wider'
               )}
             >
-              {title}
+              {visibleContent.title}
             </h3>
             <button
               type="button"
@@ -237,18 +300,21 @@ const Modal = React.forwardRef<HTMLDivElement, ModalProps>(
           <div
             className={cn(
               'px-6 py-4 overflow-y-auto custom-scrollbar flex-1 min-h-0 bg-transparent',
-              isPanel && 'overscroll-contain px-4 sm:px-6'
+              isPanel && 'overscroll-contain px-4 sm:px-6',
+              bodyClassName
             )}
           >
-            {children}
+            {visibleContent.children}
           </div>
-          {footer && (
+          {visibleContent.footer && (
             <div className="shrink-0 border-t border-slate-200 bg-slate-50 px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6 dark:border-slate-800 dark:bg-slate-900">
-              {typeof footer === 'function' ? footer(requestClose) : footer}
+              {typeof visibleContent.footer === 'function'
+                ? visibleContent.footer(requestClose)
+                : visibleContent.footer}
             </div>
           )}
         </div>
-        {isConfirmingClose && confirmCloseMessage && (
+        {isOpen && isConfirmingClose && confirmCloseMessage && (
           <Modal
             isOpen
             onClose={() => setIsConfirmingClose(false)}
