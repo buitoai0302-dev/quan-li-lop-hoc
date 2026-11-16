@@ -16,6 +16,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const clearTenantImpersonation = () => {
+  localStorage.removeItem('impersonatedTenantId');
+  localStorage.removeItem('impersonatedTenantName');
+};
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -45,6 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     resetApiScope();
     void queryClient.cancelQueries();
     queryClient.clear();
+    clearTenantImpersonation();
     localStorage.setItem('token', token);
     setUser(userData);
   };
@@ -57,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Xoá access token
     localStorage.removeItem('token');
+    clearTenantImpersonation();
 
     // Xoá sạch cache TanStack Query
     queryClient.clear();
