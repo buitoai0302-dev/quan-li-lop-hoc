@@ -99,6 +99,8 @@ Backend và frontend yêu cầu Node.js từ 22.12.0; CI dùng Node 22. Cài dep
 
 ### Cải tiến luồng công việc — giai đoạn 4
 
+Worker Google Calendar mặc định tạm dừng. Sau nghiệm thu provider, đặt `GOOGLE_CALENDAR_SYNC_JOBS_ENABLED=true` và khởi động lại backend để xử lý hàng đợi. `DISABLE_BACKGROUND_JOBS=true` tắt toàn bộ job nền, kể cả Google Calendar.
+
 - Đồng bộ một chiều sang lịch `primary` của tài khoản Google đang kết nối, không thêm người tham dự. Quyền nhận lịch được kiểm tra từ người dùng/tenant hiện tại: quản lý trong tenant, giáo viên được phân công, học viên đang ghi danh. Tenant cá nhân lấy từ `req.user.tenantId`, không lấy tenant đang impersonate. Buổi mới chỉ được sao chép từ hôm nay theo giờ Việt Nam; các liên kết đã có tiếp tục nhận sửa/hủy/xóa dù buổi được chuyển về quá khứ. Sự kiện quá khứ của cơ chế cũ không được tự dò hay di chuyển.
 - Migration `20261115_google_sync_outbox.sql` thêm liên kết cá nhân, outbox, job, job item và phiên bản kết nối. Trigger ghi công việc khi lịch được tạo/sửa/hủy/xóa, khi tên lớp/phòng/giáo viên hoặc quyền/ghi danh/kết nối thay đổi. Cùng một payload/quyền/kết nối không làm tăng revision. Backfill chỉ xếp hàng, không gọi Google. Link không có FK tới buổi học để yêu cầu xóa còn tồn tại sau hard delete/sinh lại lịch định kỳ.
 - `POST /api/google/sync-jobs` nhận `{ requestId?: UUID }`, trả 202 `{ id }`. Khóa trùng theo tài khoản, tenant và requestId. `GET /api/google/sync-jobs` trả tiến độ hiện tại của tài khoản; `GET /:id` giới hạn các link thuộc job đó. Response có `id`, `paused`, `total`, `counts`, `items` (tối đa 50 mục gần nhất, không chứa credential). Các mục theo trạng thái hiện tại của buổi; revision mới thay thế revision cũ, không phải bản chụp bất biến của lần bấm.

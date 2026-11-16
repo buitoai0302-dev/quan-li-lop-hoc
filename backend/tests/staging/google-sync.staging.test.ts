@@ -150,6 +150,7 @@ describePostgres('durable personal Google calendar sync', () => {
     failPatch = null;
     delayInsert = false;
     delete process.env.DISABLE_BACKGROUND_JOBS;
+    process.env.GOOGLE_CALENDAR_SYNC_JOBS_ENABLED = 'true';
     jest.mocked(getPersonalCalendar).mockImplementation(
       (accessToken) =>
         ({
@@ -317,6 +318,12 @@ describePostgres('durable personal Google calendar sync', () => {
     await expect(GoogleSyncService.retry(f.tenantId, g.userId, a.id)).rejects.toMatchObject({
       errorCode: 'NOT_FOUND',
     });
+    delete process.env.GOOGLE_CALENDAR_SYNC_JOBS_ENABLED;
+    await expect(GoogleSyncService.processPending()).resolves.toBe(false);
+    await GoogleSyncService.processLink(f.linkId);
+    expect(insert).not.toHaveBeenCalled();
+    expect((await GoogleSyncService.progress(f.tenantId, f.userId, a.id)).paused).toBe(true);
+    process.env.GOOGLE_CALENDAR_SYNC_JOBS_ENABLED = 'true';
     process.env.DISABLE_BACKGROUND_JOBS = 'true';
     await GoogleSyncService.processLink(f.linkId);
     expect(insert).not.toHaveBeenCalled();

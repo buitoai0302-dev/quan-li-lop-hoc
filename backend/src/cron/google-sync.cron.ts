@@ -1,8 +1,10 @@
 import boss from './queue';
 import { GOOGLE_SYNC } from '../utils/google-sync';
+import { config } from '../utils/config';
 import { GoogleSyncService } from '../services/google-sync.service';
 
 export async function initGoogleSyncJobs(queue = boss) {
+  if (!config.google.syncJobsEnabled()) return;
   await queue.work(GOOGLE_SYNC.JOB_NAME, async () => {
     if (await GoogleSyncService.processPending()) await queue.send(GOOGLE_SYNC.JOB_NAME, {});
   });

@@ -9,6 +9,7 @@ import {
   type CalendarPayload,
 } from '../utils/google-sync';
 import { logger } from '../utils/logger';
+import { config } from '../utils/config';
 import {
   CalendarEventDeletedError,
   CalendarOwnershipError,
@@ -137,7 +138,7 @@ export class GoogleSyncService {
     );
     return {
       id: jobId || null,
-      paused: process.env.DISABLE_BACKGROUND_JOBS === 'true',
+      paused: !config.google.syncJobsEnabled(),
       counts,
       total: Object.values(counts).reduce((sum, count) => sum + count, 0),
       items: result.rows[0].items,
@@ -198,7 +199,7 @@ export class GoogleSyncService {
   }
 
   static async processPending() {
-    if (process.env.DISABLE_BACKGROUND_JOBS === 'true') return false;
+    if (!config.google.syncJobsEnabled()) return false;
     const pending = await pool.query<{ link_id: string }>(
       `SELECT link_id FROM google_sync_outbox
       WHERE (state=$1 OR state=$2 OR (state=$3 AND next_attempt_at<=now())) ORDER BY updated_at,link_id LIMIT $4`,
@@ -216,7 +217,7 @@ export class GoogleSyncService {
   }
 
   static async processLink(linkId: string) {
-    if (process.env.DISABLE_BACKGROUND_JOBS === 'true') return;
+    if (!config.google.syncJobsEnabled()) return;
     const client = await pool.connect();
     let lockKey: string | undefined;
     try {
